@@ -32,7 +32,6 @@ export const useGuiasPage = (cursoSlug: string) => {
     c => c.nome === cursoSlugToNome[cursoSlug as keyof typeof cursoSlugToNome]
   );
 
-  // Get guias for the curso - now using cursoSlug directly for local provider
   const { data: guias, isLoading: guiasLoading, error: guiasError } = useGuias(cursoSlug);
 
   // Fetch all sections for all guias using useQueries

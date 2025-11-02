@@ -7,7 +7,8 @@
 jest.mock("../local-file-guias-provider");
 
 const mockContentFiles = {
-  "./ciencia-da-computacao/bem-vindo/sobre-o-curso/content.md": `# Sobre o Curso
+  // Ciência da Computação - Bem Vindo
+  "./ciencia-da-computacao/bem-vindo/Sobre o Curso.md": `# Sobre o Curso
   
 Este é o curso de Ciência da Computação.
 
@@ -15,11 +16,16 @@ Este é o curso de Ciência da Computação.
 
 Formar profissionais na área de computação.`,
 
-  "./ciencia-da-computacao/bem-vindo/grade-curricular/content.md": `# Grade Curricular
+  "./ciencia-da-computacao/bem-vindo/Grade Curricular.md": `# Grade Curricular
 
 Veja abaixo a grade do curso.`,
 
-  "./ciencia-da-computacao/cadeiras/principais-cadeiras/calculo-I/content.md": `# Cálculo I
+  // Ciência da Computação - Cadeiras (with sub-contents)
+  "./ciencia-da-computacao/cadeiras/Principais Cadeiras.md": `# Principais Cadeiras
+
+As principais disciplinas do curso.`,
+
+  "./ciencia-da-computacao/cadeiras/Principais Cadeiras/Cálculo I.md": `# Cálculo I
 
 Disciplina de cálculo diferencial e integral.
 
@@ -29,31 +35,44 @@ Disciplina de cálculo diferencial e integral.
 - Derivadas
 - Integrais`,
 
-  "./ciencia-da-computacao/cadeiras/principais-cadeiras/programacao-I/content.md": `# Programação I
+  "./ciencia-da-computacao/cadeiras/Principais Cadeiras/Programação I.md": `# Programação I
 
 Introdução à programação.`,
 
-  "./ciencia-da-computacao/cadeiras/principais-cadeiras/estrutura-dados/content.md": `# Estrutura de Dados
+  "./ciencia-da-computacao/cadeiras/Principais Cadeiras/Estrutura de Dados.md": `# Estrutura de Dados
 
 Estudo de estruturas de dados.`,
 
-  "./ciencia-da-computacao/laboratorios/laico/content.md": `# LAICO
+  // Ciência da Computação - Laboratórios
+  "./ciencia-da-computacao/laboratorios/LAICO.md": `# LAICO
 
 Laboratório de Aplicações de Informática Avançada.`,
 
-  "./engenharia-da-computacao/bem-vindo/sobre-o-curso/content.md": `# Engenharia da Computação
+  // Engenharia da Computação - Bem Vindo
+  "./engenharia-da-computacao/bem-vindo/Sobre o Curso.md": `# Engenharia da Computação
 
 Curso de engenharia focado em hardware e software.`,
 
-  "./engenharia-da-computacao/cadeiras/principais-cadeiras/circuitos-digitais/content.md": `# Circuitos Digitais
+  // Engenharia da Computação - Cadeiras (with sub-contents)
+  "./engenharia-da-computacao/cadeiras/Principais Cadeiras.md": `# Principais Cadeiras
+
+Disciplinas fundamentais da engenharia.`,
+
+  "./engenharia-da-computacao/cadeiras/Principais Cadeiras/Circuitos Digitais.md": `# Circuitos Digitais
 
 Estudo de circuitos lógicos.`,
 
-  "./ciencias-de-dados-e-inteligencia-artificial/bem-vindo/sobre-o-curso/content.md": `# Ciências de Dados e IA
+  // Ciências de Dados e IA - Bem Vindo
+  "./ciencias-de-dados-e-inteligencia-artificial/bem-vindo/Sobre o Curso.md": `# Ciências de Dados e IA
 
 Curso focado em análise de dados e inteligência artificial.`,
 
-  "./ciencias-de-dados-e-inteligencia-artificial/cadeiras/principais-cadeiras/machine-learning/content.md": `# Machine Learning
+  // Ciências de Dados e IA - Cadeiras (with sub-contents)
+  "./ciencias-de-dados-e-inteligencia-artificial/cadeiras/Principais Cadeiras.md": `# Principais Cadeiras
+
+As disciplinas essenciais do curso.`,
+
+  "./ciencias-de-dados-e-inteligencia-artificial/cadeiras/Principais Cadeiras/Machine Learning.md": `# Machine Learning
 
 Introdução ao aprendizado de máquina.`,
 };
@@ -152,11 +171,11 @@ describe("LocalFileGuiasProvider", () => {
       expect(sobreOCurso).toBeDefined();
       expect(gradeCurricular).toBeDefined();
 
-      expect(sobreOCurso?.titulo).toBe("Sobre O Curso");
+      expect(sobreOCurso?.titulo).toBe("Sobre o Curso");
       expect(sobreOCurso?.conteudo).toContain("Ciência da Computação");
     });
 
-    it("should generate auto-index for sections without content.md", async () => {
+    it("should append sub-content links to sections with subsections", async () => {
       const secoes = await provider.getSecoes("cadeiras", "ciencia-da-computacao");
 
       expect(secoes.length).toBeGreaterThan(0);
@@ -164,11 +183,12 @@ describe("LocalFileGuiasProvider", () => {
       const principaisCadeiras = findSecaoBySlug(secoes, "principais-cadeiras");
       expect(principaisCadeiras).toBeDefined();
 
-      // Should have auto-generated index with links to subsections
-      expect(principaisCadeiras?.conteudo).toContain("Conteúdo disponível");
-      expect(principaisCadeiras?.conteudo).toContain("Calculo I");
-      expect(principaisCadeiras?.conteudo).toContain("Programacao I");
-      expect(principaisCadeiras?.conteudo).toContain("Estrutura Dados");
+      // Should have main content plus auto-generated sub-content links
+      expect(principaisCadeiras?.conteudo).toContain("Principais Cadeiras");
+      expect(principaisCadeiras?.conteudo).toContain("Conteúdo relacionado");
+      expect(principaisCadeiras?.conteudo).toContain("Cálculo I");
+      expect(principaisCadeiras?.conteudo).toContain("Programação I");
+      expect(principaisCadeiras?.conteudo).toContain("Estrutura de Dados");
 
       // Should have absolute URLs
       expect(principaisCadeiras?.conteudo).toContain(
@@ -207,13 +227,15 @@ describe("LocalFileGuiasProvider", () => {
       expect(subsecoes.length).toBeGreaterThan(0);
       subsecoes.forEach(assertValidSubSecao);
 
-      const calculoI = subsecoes.find(s => s.slug === "calculo-I");
-      const programacaoI = subsecoes.find(s => s.slug === "programacao-I");
+      const calculoI = subsecoes.find(s => s.slug === "calculo-i");
+      const programacaoI = subsecoes.find(s => s.slug === "programacao-i");
+      const estruturaDados = subsecoes.find(s => s.slug === "estrutura-de-dados");
 
       expect(calculoI).toBeDefined();
       expect(programacaoI).toBeDefined();
+      expect(estruturaDados).toBeDefined();
 
-      expect(calculoI?.titulo).toBe("Calculo I");
+      expect(calculoI?.titulo).toBe("Cálculo I");
       expect(calculoI?.conteudo).toContain("Cálculo I");
       expect(calculoI?.conteudo).toContain("Limites");
     });
@@ -251,16 +273,27 @@ describe("LocalFileGuiasProvider", () => {
     });
   });
 
-  describe("slugToName (via public methods)", () => {
-    it("should convert kebab-case to Title Case in titles", async () => {
+  describe("filenameToTitle and filenameToSlug (via public methods)", () => {
+    it("should preserve nice filename titles and generate proper slugs", async () => {
       const guias = await provider.getByCurso("ciencia-da-computacao");
 
+      // Folder names (slugs) should be converted to Title Case
       const bemVindo = findGuiaBySlug(guias, "bem-vindo");
       expect(bemVindo?.titulo).toBe("Bem Vindo");
 
+      // File names with nice formatting should be preserved
       const secoes = await provider.getSecoes("bem-vindo", "ciencia-da-computacao");
       const sobreOCurso = findSecaoBySlug(secoes, "sobre-o-curso");
-      expect(sobreOCurso?.titulo).toBe("Sobre O Curso");
+      expect(sobreOCurso?.titulo).toBe("Sobre o Curso"); // From "Sobre o Curso.md"
+    });
+
+    it("should normalize accents and special characters in slugs", async () => {
+      const subsecoes = await provider.getSubSecoes("principais-cadeiras", "ciencia-da-computacao");
+
+      // "Cálculo I.md" should have slug "calculo-i"
+      const calculoI = subsecoes.find(s => s.slug === "calculo-i");
+      expect(calculoI).toBeDefined();
+      expect(calculoI?.titulo).toBe("Cálculo I"); // Title keeps accents
     });
   });
 
@@ -317,15 +350,25 @@ describe("LocalFileGuiasProvider", () => {
       expect(guias.length).toBeGreaterThan(0);
     });
 
-    it("should only process content.md files", async () => {
+    it("should only process .md files", async () => {
       const secoes = await provider.getSecoes("bem-vindo", "ciencia-da-computacao");
 
-      // Should only get sections with content.md files
+      // Should only get sections from .md files
       secoes.forEach(secao => {
-        // All sections should have valid slugs from content.md files
+        // All sections should have valid slugs from markdown files
         expect(secao.slug).toBeTruthy();
         expect(secao.titulo).toBeTruthy();
+        expect(secao.conteudo).toBeTruthy();
       });
+    });
+
+    it("should handle filenames with spaces and special characters", async () => {
+      const secoes = await provider.getSecoes("bem-vindo", "ciencia-da-computacao");
+
+      // "Sobre o Curso.md" should be parsed correctly
+      const sobreOCurso = findSecaoBySlug(secoes, "sobre-o-curso");
+      expect(sobreOCurso).toBeDefined();
+      expect(sobreOCurso?.titulo).toBe("Sobre o Curso"); // Preserves original formatting
     });
   });
 });
