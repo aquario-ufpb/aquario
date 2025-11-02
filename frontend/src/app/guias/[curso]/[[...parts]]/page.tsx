@@ -113,14 +113,55 @@ export default function GuiasCursoPage() {
     return "# Sub-seção não encontrada";
   }, [parts, secoesData, subSecoesData, guiaTree, cursoSlug, cursoSlugToNome]);
 
-  const currentTitle = useMemo(() => {
-    if (!parts || parts.length === 0) {
-      const cursoNome = cursoSlugToNome[cursoSlug as keyof typeof cursoSlugToNome] || "Curso";
-      return `${cursoNome} - Índice`;
+  const breadcrumbs = useMemo(() => {
+    const crumbs: Array<{ label: string; href?: string }> = [{ label: "Guias", href: "/guias" }];
+
+    if (!cursoSlug) {
+      return crumbs;
     }
-    const partsList = parts || [];
-    return [cursoSlug, ...partsList].join(" / ").replace(/-/g, " ");
-  }, [cursoSlug, parts, cursoSlugToNome]);
+
+    const cursoNome = cursoSlugToNome[cursoSlug as keyof typeof cursoSlugToNome] || cursoSlug;
+    crumbs.push({ label: cursoNome, href: `/guias/${cursoSlug}` });
+
+    if (!parts || parts.length === 0) {
+      crumbs.push({ label: "Índice" });
+      return crumbs;
+    }
+
+    const [guiaSlug, secaoSlug, subSlug] = parts;
+
+    if (guiaSlug && guiaTree) {
+      const guia = guiaTree.find(g => g.slug === guiaSlug);
+      if (guia) {
+        crumbs.push({ label: guia.titulo, href: `/guias/${cursoSlug}` });
+
+        if (secaoSlug) {
+          const secao = guia.secoes?.find(s => s.slug === secaoSlug);
+          if (secao) {
+            crumbs.push({
+              label: secao.titulo,
+              href: `/guias/${cursoSlug}/${guiaSlug}/${secaoSlug}`,
+            });
+
+            if (subSlug) {
+              const subSecao = secao.subsecoes?.find(sub => sub.slug === subSlug);
+              if (subSecao) {
+                crumbs.push({ label: subSecao.titulo });
+              } else {
+                crumbs.push({ label: subSlug });
+              }
+            }
+          } else {
+            crumbs.push({ label: secaoSlug });
+          }
+        }
+      } else {
+        crumbs.push({ label: guiaSlug });
+      }
+    }
+
+    return crumbs;
+  }, [cursoSlug, parts, cursoSlugToNome, guiaTree]);
 
   if (isLoading) {
     return <div className="p-8">Carregando…</div>;
@@ -153,17 +194,16 @@ export default function GuiasCursoPage() {
                 <AlignJustify size={12} />
               </Button>
             </SheetTrigger>
-            <SheetContent side={"left"}>
-              <SheetHeader>
+            <SheetContent side={"left"} className="p-0">
+              <SheetHeader className="px-6 pt-6">
                 <SheetTitle className="pb-4">O que procura?</SheetTitle>
               </SheetHeader>
               <GuideIndex cursoSlug={cursoSlug} guias={guiaTree} />
             </SheetContent>
           </Sheet>
         </div>
-        <div className="w-[1.5px] bg-gray-500 opacity-30 flex-shrink-0"></div>
         <div className="flex-1 flex flex-col h-full overflow-hidden px-8">
-          <MarkdownRenderer content={currentContent} title={currentTitle} />
+          <MarkdownRenderer content={currentContent} breadcrumbs={breadcrumbs} />
         </div>
       </div>
     </div>
