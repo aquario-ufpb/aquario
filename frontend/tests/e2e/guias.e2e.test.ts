@@ -20,10 +20,11 @@ test.describe("Guias - User Navigation Flow", () => {
     const header = page.locator("text=Centro de Informática");
     await expect(header).toBeVisible({ timeout: 10000 });
 
-    // Should show content area (either sidebar or instructions)
+    // Should show content area (either sidebar or welcome message)
     const body = page.locator("body");
     const bodyText = await body.textContent();
-    expect(bodyText).toContain("Selecione"); // "Selecione uma seção à esquerda"
+    // Check for either the old "Selecione" message or the new "Bem-vindo" welcome message
+    expect(bodyText).toMatch(/Selecione|Bem-vindo|Bem vindo/i);
   });
 
   test("should navigate through guide hierarchy: Course → Guia → Seção → Subseção", async ({
@@ -130,14 +131,21 @@ test.describe("Guias - Responsive Design", () => {
     await page.goto("/guias/ciencia-da-computacao");
     await page.waitForLoadState("networkidle");
 
-    // Content should be visible and not overflow
-    const body = page.locator("body");
-    await expect(body).toBeVisible();
+    // Check that key content is visible (header with course name)
+    const header = page.locator("text=Centro de Informática");
+    await expect(header).toBeVisible({ timeout: 10000 });
+
+    // Check that page has content (text content should be present)
+    const pageContent = page.locator("body");
+    const contentText = await pageContent.textContent();
+    expect(contentText).toBeTruthy();
+    expect(contentText!.length).toBeGreaterThan(10);
 
     // Check that content fits in viewport (no horizontal scroll needed)
-    const bodyWidth = await body.evaluate(el => el.scrollWidth);
+    const html = page.locator("html");
+    const scrollWidth = await html.evaluate(el => el.scrollWidth);
     const viewportWidth = page.viewportSize()!.width;
-    expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 1); // +1 for rounding
+    expect(scrollWidth).toBeLessThanOrEqual(viewportWidth + 1); // +1 for rounding
   });
 
   test("should be usable on tablet viewport", async ({ page }) => {
@@ -147,8 +155,14 @@ test.describe("Guias - Responsive Design", () => {
     await page.goto("/guias/ciencia-da-computacao");
     await page.waitForLoadState("networkidle");
 
-    const body = page.locator("body");
-    await expect(body).toBeVisible();
+    // Check that key content is visible
+    const header = page.locator("text=Centro de Informática");
+    await expect(header).toBeVisible({ timeout: 10000 });
+
+    // Check that page has content
+    const pageContent = page.locator("body");
+    const contentText = await pageContent.textContent();
+    expect(contentText).toBeTruthy();
   });
 });
 
