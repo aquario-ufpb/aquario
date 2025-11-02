@@ -184,15 +184,30 @@ test.describe("Guias - Edge Cases", () => {
     // Wait a moment for styles to load
     await page.waitForTimeout(100);
 
-    // Check that content has some styling applied
-    const mainContent = page.locator('main, [class*="container"]').first();
-    if ((await mainContent.count()) > 0) {
-      const backgroundColor = await mainContent.evaluate(
-        el => window.getComputedStyle(el).backgroundColor
-      );
+    // Check that content has some styling applied - check for the header gradient or any visible content
+    const header = page.locator("text=Centro de Informática");
+    await expect(header).toBeVisible({ timeout: 5000 });
 
-      // Should have some background color (not default transparent)
-      expect(backgroundColor).toBeTruthy();
-    }
+    // Check that the page has rendered content with proper styling
+    // Look for any visible text content that indicates the page has loaded properly
+    const pageContent = page.locator("body");
+    const contentText = await pageContent.textContent();
+    expect(contentText).toBeTruthy();
+    expect(contentText!.length).toBeGreaterThan(50);
+
+    // Check that at least one element has non-transparent styling (gradient header should have background)
+    const hasStyledContent = await page.evaluate(() => {
+      const elements = document.querySelectorAll("div");
+      for (const el of Array.from(elements).slice(0, 10)) {
+        const bg = window.getComputedStyle(el).backgroundColor;
+        // Check if background is not transparent (rgba(0,0,0,0) or transparent)
+        if (bg && !bg.includes("rgba(0, 0, 0, 0)") && bg !== "transparent") {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    expect(hasStyledContent).toBe(true);
   });
 });
