@@ -203,7 +203,15 @@ export default function GuiasCursoPage() {
           </Sheet>
         </div>
         <div className="flex-1 flex flex-col h-full overflow-hidden px-8">
-          <MarkdownRenderer content={currentContent} breadcrumbs={breadcrumbs} />
+          <MarkdownRenderer
+            content={currentContent}
+            breadcrumbs={breadcrumbs}
+            basePath={
+              parts && parts.length > 0
+                ? `/guias/${cursoSlug}/${parts.join("/")}`
+                : `/guias/${cursoSlug}`
+            }
+          />
         </div>
       </div>
     </div>
