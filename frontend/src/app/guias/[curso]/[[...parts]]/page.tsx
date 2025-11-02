@@ -41,7 +41,39 @@ export default function GuiasCursoPage() {
 
   const currentContent = useMemo(() => {
     if (!parts || parts.length === 0) {
-      return "# Selecione uma seção à esquerda";
+      const cursoNome = cursoSlugToNome[cursoSlug as keyof typeof cursoSlugToNome] || "Curso";
+      let summary = `# Bem-vindo ao curso ${cursoNome}\n\nAqui estão todos os tópicos disponíveis para explorar:\n\n`;
+
+      if (guiaTree && guiaTree.length > 0) {
+        guiaTree.forEach((guia, guiaIndex) => {
+          summary += `## ${guia.titulo}\n\n`;
+
+          if (guia.secoes && guia.secoes.length > 0) {
+            guia.secoes.forEach(secao => {
+              const secaoUrl = `/guias/${cursoSlug}/${guia.slug}/${secao.slug}`;
+              summary += `- [${secao.titulo}](${secaoUrl})`;
+
+              if (secao.subsecoes && secao.subsecoes.length > 0) {
+                summary += "\n";
+                secao.subsecoes.forEach(subsecao => {
+                  const subsecaoUrl = `${secaoUrl}/${subsecao.slug}`;
+                  summary += `  - [${subsecao.titulo}](${subsecaoUrl})\n`;
+                });
+              } else {
+                summary += "\n";
+              }
+            });
+          }
+
+          if (guiaIndex < guiaTree.length - 1) {
+            summary += "\n";
+          }
+        });
+      } else {
+        summary += "Nenhum tópico disponível no momento.";
+      }
+
+      return summary;
     }
 
     // URL structure: /guias/{curso}/{guia}/{secao}/{subsecao?}
@@ -79,12 +111,16 @@ export default function GuiasCursoPage() {
     }
 
     return "# Sub-seção não encontrada";
-  }, [parts, secoesData, subSecoesData]);
+  }, [parts, secoesData, subSecoesData, guiaTree, cursoSlug, cursoSlugToNome]);
 
   const currentTitle = useMemo(() => {
+    if (!parts || parts.length === 0) {
+      const cursoNome = cursoSlugToNome[cursoSlug as keyof typeof cursoSlugToNome] || "Curso";
+      return `${cursoNome} - Índice`;
+    }
     const partsList = parts || [];
     return [cursoSlug, ...partsList].join(" / ").replace(/-/g, " ");
-  }, [cursoSlug, parts]);
+  }, [cursoSlug, parts, cursoSlugToNome]);
 
   if (isLoading) {
     return <div className="p-8">Carregando…</div>;
