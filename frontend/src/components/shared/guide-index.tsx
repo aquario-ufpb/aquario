@@ -28,8 +28,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
   return (
-    <div className="flex h-[100vh] overflow-y-auto ">
-      <div className={`space-y-4 w-full top-0 left-0 p-4 ${inter.className}`}>
+    <div className="h-full overflow-y-auto flex flex-col">
+      <div className={`space-y-4 w-full p-4 flex-1 ${inter.className}`}>
         {guias.map(guia => (
           <div key={guia.slug}>
             <p className="text-sm mb-1 ml-6 text-gray-500">{guia.titulo}</p>

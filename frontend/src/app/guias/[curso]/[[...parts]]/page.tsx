@@ -94,7 +94,7 @@ export default function GuiasCursoPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="fixed inset-x-0 top-[60px] bottom-0 flex flex-col overflow-hidden">
       <GradientHeaderComponent
         academicCenter="Centro de Informática"
         courses={[
@@ -106,8 +106,8 @@ export default function GuiasCursoPage() {
         onCourseChange={handleCourseChange}
       />
 
-      <div className="flex md:flex-row w-full flex-col">
-        <div className="relative w-[300px] hidden md:block">
+      <div className="flex md:flex-row w-full flex-col flex-1 min-h-0 overflow-hidden">
+        <div className="w-[300px] hidden md:flex flex-col h-full overflow-hidden">
           <GuideIndex cursoSlug={cursoSlug} guias={guiaTree} />
         </div>
         <div className="md:hidden pl-4 pt-4 pb-4">
@@ -125,8 +125,8 @@ export default function GuiasCursoPage() {
             </SheetContent>
           </Sheet>
         </div>
-        <div className="w-[1.5px] min-h-full bg-gray-500 opacity-30"></div>
-        <div className="px-8 w-full overscroll-contain ">
+        <div className="w-[1.5px] bg-gray-500 opacity-30 flex-shrink-0"></div>
+        <div className="flex-1 flex flex-col h-full overflow-hidden px-8">
           <MarkdownRenderer content={currentContent} title={currentTitle} />
         </div>
       </div>
