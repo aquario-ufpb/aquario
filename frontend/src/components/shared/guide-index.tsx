@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link from "next/link";
 import { Inter } from "next/font/google";
 
 type SubSectionNode = {
@@ -34,16 +35,16 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
             <p className="text-sm mb-1 ml-6 text-gray-500">{guia.titulo}</p>
             {guia.secoes.map(secao => (
               <div key={secao.slug} className="ml-6">
-                <a href={`/guias/${cursoSlug}/${guia.slug}/${secao.slug}`}>
+                <Link href={`/guias/${cursoSlug}/${guia.slug}/${secao.slug}`}>
                   <p className="py-1.5 hover:underline">{secao.titulo}</p>
-                </a>
+                </Link>
                 {secao.subsecoes?.map(sub => (
-                  <a
+                  <Link
                     key={sub.slug}
                     href={`/guias/${cursoSlug}/${guia.slug}/${secao.slug}/${sub.slug}`}
                   >
                     <p className="ml-4 py-1 hover:underline">{sub.titulo}</p>
-                  </a>
+                  </Link>
                 ))}
               </div>
             ))}
