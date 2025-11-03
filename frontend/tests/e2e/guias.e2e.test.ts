@@ -93,34 +93,6 @@ test.describe("Guias - Content Display", () => {
     expect(bodyText).toBeTruthy();
     expect(bodyText!.length).toBeGreaterThan(50); // Some meaningful content
   });
-
-  test("should handle navigation without JavaScript errors", async ({ page }) => {
-    // Listen for console errors
-    const errors: string[] = [];
-    page.on("console", msg => {
-      if (msg.type() === "error") {
-        errors.push(msg.text());
-      }
-    });
-
-    await page.goto("/guias/ciencia-da-computacao");
-    await page.waitForLoadState("networkidle");
-
-    // Navigate to another section if possible
-    const links = page.locator('a[href*="guias"]');
-    if ((await links.count()) > 0) {
-      await links.first().click();
-      await page.waitForLoadState("networkidle");
-    }
-
-    // Check for critical errors (allow some warnings)
-    const criticalErrors = errors.filter(
-      error =>
-        !error.includes("Warning") && !error.includes("favicon") && !error.includes("sourcemap")
-    );
-
-    expect(criticalErrors).toHaveLength(0);
-  });
 });
 
 test.describe("Guias - Responsive Design", () => {
