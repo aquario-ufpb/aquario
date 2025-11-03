@@ -56,6 +56,7 @@
     "next": "^14.2.18",
     "next-themes": "^0.3.0",
     "posthog-js": "^1.284.0",
+    "posthog-node": "^5.11.0",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^9.0.1",
