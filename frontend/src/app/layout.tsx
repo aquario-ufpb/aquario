@@ -36,7 +36,9 @@ export default function RootLayout({
                 <SearchProvider>
                   <div className="flex flex-1 flex-col">
                     <NavWrapper />
-                    {children}
+                    <main className="pt-[60px] md:pt-0">
+                      {children}
+                    </main>
                   </div>
                 </SearchProvider>
               </ThemeProvider>
