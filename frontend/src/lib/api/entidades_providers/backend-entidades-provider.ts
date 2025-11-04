@@ -17,6 +17,7 @@ export class BackendEntidadesProvider implements EntidadesDataProvider {
   //   }));
   // }
 
+  // eslint-disable-next-line require-await
   async getAll(): Promise<Entidade[]> {
     // TODO: Implement backend integration
     throw new Error("Backend provider not implemented yet");
@@ -34,7 +35,8 @@ export class BackendEntidadesProvider implements EntidadesDataProvider {
   //   return response.json();
   // }
 
-  async getBySlug(slug: string): Promise<Entidade | null> {
+  // eslint-disable-next-line require-await
+  async getBySlug(_slug: string): Promise<Entidade | null> {
     // TODO: Implement backend integration
     throw new Error("Backend provider not implemented yet");
   }
@@ -48,7 +50,8 @@ export class BackendEntidadesProvider implements EntidadesDataProvider {
   //   return response.json();
   // }
 
-  async getByTipo(tipo: TipoEntidade): Promise<Entidade[]> {
+  // eslint-disable-next-line require-await
+  async getByTipo(_tipo: TipoEntidade): Promise<Entidade[]> {
     // TODO: Implement backend integration
     throw new Error("Backend provider not implemented yet");
   }
