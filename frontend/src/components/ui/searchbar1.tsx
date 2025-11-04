@@ -45,7 +45,9 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
       if (/\b(ciencia\s*da\s*computacao|cc|programacao|algoritmos)\b/.test(normalizedQuery)) {
         items.push({ label: "Guias: Ciência da Computação", href: "/guias/ciencia-da-computacao" });
       }
-      if (/\b(engenharia\s*da\s*computacao|ec|eletronica|hardware|embarcados)\b/.test(normalizedQuery)) {
+      if (
+        /\b(engenharia\s*da\s*computacao|ec|eletronica|hardware|embarcados)\b/.test(normalizedQuery)
+      ) {
         items.push({
           label: "Guias: Engenharia da Computação",
           href: "/guias/engenharia-da-computacao",
