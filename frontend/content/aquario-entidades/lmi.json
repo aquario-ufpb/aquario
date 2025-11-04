@@ -1,9 +1,13 @@
 {
   "name": "LMI",
+  "subtitle": "Laboratório de Medidas e Instrumentação",
   "description": "Laboratório de Medidas e Instrumentação. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
   "tipo": "LABORATORIO",
   "imagePath": "./assets/LMI.png",
   "contato_email": "lmi@ci.ufpb.br",
+  "instagram": "https://www.instagram.com/lmi.ufpb/",
+  "website": "https://lmi.ci.ufpb.br",
+  "linkedin": "https://www.linkedin.com/company/laboratório-de-medidas-e-instrumentação-lmi-ufpb/",
   "location": "CI - 3o andar - CI-312",
   "people": [
     {

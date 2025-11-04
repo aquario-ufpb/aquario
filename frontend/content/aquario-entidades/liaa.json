@@ -1,9 +1,12 @@
 {
   "name": "LIAA",
-  "description": "Laboratório de Inteligência Artificial Aplicada. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "subtitle": "Laboratório de Inteligência Artificial Aplicada",
+  "description": "O Laboratório de Inteligência Artificial Aplicada tem o objetivo de investigar a aplicação de técnicas da Inteligência Artificial à solução de problemas em diferentes domínios do conhecimento, tais como, Informática em Saúde, Cidades Inteligentes, TV Digital Interativa, etc.",
   "tipo": "LABORATORIO",
   "imagePath": "./assets/LIAA.png",
   "contato_email": "natasha@ci.ufpb.br",
+  "instagram": "https://www.instagram.com/liaa.ufpb/",
+  "linkedin": "https://www.linkedin.com/company/liaa-ufpb/",
   "location": "Centro de Informática - UFPB",
   "people": [
     {

@@ -1,9 +1,13 @@
 {
   "name": "LASER",
-  "description": "Laboratório de Engenharia de Sistemas e Robótica. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes.",
+  "subtitle": "Laboratório de Engenharia de Sistemas e Robótica",
+  "description": "O Laboratório de Engenharia de Sistemas e Robótica (LASER) faz parte do Centro de Informática (CI) da Universidade Federal da Paraíba (UFPB). Localizado nas instalações da unidade Mangabeira do Campus I da UFPB, o laboratório desenvolve projetos de pesquisa em hardware e software voltados para as áreas de Robótica, Sistemas Embarcados e Inteligência Artificial.\n\nAtualmente, o LASER destaca-se por projetos de excelência nas áreas de Veículos Aéreos Não Tripulados (Drones), Robótica, Otimização, Logística e Transporte. O LASER também funciona como ponto de presença para empresas, que possuem laboratórios integrados com o LASER para o desenvolvimento de pesquisa aplicada e treinamento de recursos humanos.",
   "tipo": "LABORATORIO",
   "order": 4,
   "imagePath": "./assets/LASER.png",
+  "instagram": "https://www.instagram.com/laser_laboratory/",
+  "website": "https://www.ci.ufpb.br/laser/",
+  "linkedin": "https://www.linkedin.com/company/laser-ufpb/",
   "contato_email": "laser@ci.ufpb.br",
   "location": "Centro de Informática - UFPB",
   "people": [

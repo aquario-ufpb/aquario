@@ -1,10 +1,9 @@
 {
   "name": "Dhauz",
-  "description": "Empresa de tecnologia.",
+  "description": "Empresa de tecnologia focada no desenvolvimento de soluções digitais e serviços tecnológicos. A Dhauz atua no mercado oferecendo produtos e serviços inovadores para transformação digital de empresas e organizações. Hoje tem parceria com o ARIA e LASER",
   "tipo": "EMPRESA",
   "imagePath": "./assets/Dhauz.png",
   "contato_email": "",
-  "website": "",
-  "location": "",
-  "people": []
+  "website": "https://www.dhauz.com.br",
+  "location": ""
 }

@@ -1,10 +1,10 @@
 {
   "name": "TNS-LATAM",
-  "description": "Empresa de tecnologia.",
+  "description": "Empresa de tecnologia focada no desenvolvimento de soluções e serviços tecnológicos. A TNS-LATAM atua no mercado oferecendo produtos e serviços inovadores para transformação digital de empresas e organizações na região da América Latina.",
   "tipo": "EMPRESA",
   "imagePath": "./assets/TNS.png",
   "contato_email": "",
-  "website": "",
+  "website": "https://www.tns-latam.com",
   "location": "",
   "people": []
 }

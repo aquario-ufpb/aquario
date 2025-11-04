@@ -1,10 +1,11 @@
 {
   "name": "IEEE",
-  "description": "Grupo estudantil ligado ao IEEE no CI/UFPB.",
+  "subtitle": "Institute of Electrical and Electronics Engineers",
+  "description": "Grupo estudantil vinculado ao IEEE (Institute of Electrical and Electronics Engineers) no Centro de Informática da UFPB. O IEEE é uma organização profissional global dedicada ao avanço da tecnologia em benefício da humanidade, com mais de 486.000 membros em mais de 160 países.\n\nO ramo estudantil do IEEE no CI/UFPB possui diversos capítulos especializados, incluindo RAS (Robotics and Automation Society), CS (Computer Society), PES (Power & Energy Society) e PELS IAS (Power Electronics Society / Industry Applications Society). O grupo promove atividades educacionais, projetos técnicos, eventos e oportunidades de networking para estudantes interessados em engenharia elétrica, eletrônica e computação.",
   "tipo": "GRUPO_ESTUDANTIL",
-  "imagePath": "/lab.jpg",
+  "imagePath": "./assets/IEEE.png",
   "contato_email": "",
-  "instagram": "",
-  "location": "Centro de Informática - UFPB",
-  "people": [{ "name": "Líder", "email": "", "role": "Coordenação", "profession": "Discente" }]
+  "instagram": "https://www.instagram.com/ramoieee.ufpb/",
+  "linkedin": "",
+  "location": "Centro de Informática - UFPB"
 }

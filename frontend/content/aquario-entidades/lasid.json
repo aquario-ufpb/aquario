@@ -1,6 +1,7 @@
 {
   "name": "LASID",
-  "description": "Laboratório de Sistemas Digitais. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "subtitle": "Laboratório de Sistemas Digitais",
+  "description": "O Laboratório de Arquitetura, Sistemas Integráveis e Circuitos – LASIC tem implantado uma sólida base de ensino e pesquisa voltada para o projeto de sistemas digitais integráveis, com especial ênfase nas telecomunicações e redes.",
   "tipo": "LABORATORIO",
   "imagePath": "./assets/LASID.png",
   "contato_email": "lsalesbarros@ci.ufpb.br",

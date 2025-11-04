@@ -1,10 +1,9 @@
 {
   "name": "PaCode",
-  "description": "Grupo estudantil de programação e maratonas.",
+  "description": "Grupo de Estudos para Programação Competitiva da Universidade Federal da Paraíba.",
   "tipo": "GRUPO_ESTUDANTIL",
   "imagePath": "./assets/Pacode.png",
   "contato_email": "",
-  "instagram": "",
-  "location": "Centro de Informática - UFPB",
-  "people": [{ "name": "Líder", "email": "", "role": "Coordenação", "profession": "Discente" }]
+  "instagram": "https://www.instagram.com/pacodeufpb/",
+  "location": "Centro de Informática - UFPB"
 }

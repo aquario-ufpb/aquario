@@ -1,9 +1,11 @@
 {
   "name": "CortechX",
-  "description": "CortechX é uma organização estudantil do Centro de Informática da UFPB que promove atividades relacionadas à tecnologia e inovação.",
+  "description": "A CortechX é uma liga acadêmica de tecnologia e Interação Humano-Computador (IHC), dedicada ao desenvolvimento de projetos práticos que exploram conexões entre tecnologia, mente e sociedade. A liga atua em áreas como inteligência artificial, neurociência, EEG, análise de comportamento e inovação de mercado, sempre com foco em criar soluções que gerem impacto real.\n\nO propósito da CortechX é transformar sinais, dados e interações em experiências tecnológicas significativas, que aproximem seres humanos e sistemas inteligentes. A liga acredita na integração entre conhecimento científico e aplicação prática, fomentando a interdisciplinaridade, o empreendedorismo e o desenvolvimento de tecnologias centradas no ser humano.\n\nSeja em pesquisas acadêmicas, produtos digitais ou experiências interativas, a CortechX trabalha para tornar a tecnologia mais humana e a mente mais conectada ao futuro.",
   "tipo": "LIGA_ACADEMICA",
   "imagePath": "./assets/CortechX.png",
   "contato_email": "",
-  "instagram": "cortechx.ufpb",
-  "location": "Centro de Informática - UFPB"
+  "instagram": "https://www.instagram.com/cortechx.ufpb/",
+  "linkedin": "https://www.linkedin.com/company/cortechx.ufpb/",
+  "location": "Centro de Informática - UFPB",
+  "people": []
 }

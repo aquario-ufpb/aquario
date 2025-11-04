@@ -1,9 +1,12 @@
 {
   "name": "LIM",
-  "description": "Laboratório de Interação e Mídia. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "subtitle": "Laboratório de Interação e Mídia",
+  "description": "Nascido em 2018 como uma iniciativa para gerar soluções acadêmicas e mercadológicas que visam o desenvolvimento social e tecnológico, o Laboratório de Interação e Mídia (L.I.M) abarca e dá suporte a projetos como o Academia dá Pé, Projeto águas e o Grupo de Pesquisa Design Audiovisual. A principal área de estudo do LIM é a Interação Humano Computador, mas se ramifica numa interdisciplinaridade que tange sstudos em Narrativas, Saúde, Design Universal, Ensino e Aprendizado e Jogos. Além disso, o laboratório conta com um corpo interdisciplinar vasto, contando com alunos, técnicos e pesquisadores que formam um conjunto de currículos variado, contando as áreas de Ciências e Engenharia da Computação, Comunicação, Comunicação em Mídias Digitais, Jornalismo, Relações Públicas (quem lembrar bota mais), que contribuem a fim de gerar soluções para uma sociedade contemporânea e dinâmica.",
   "tipo": "LABORATORIO",
   "imagePath": "./assets/LIM.png",
   "contato_email": "valdecir@ci.ufpb.br",
+  "instagram": "https://www.instagram.com/lim.ufpb/",
+  "linkedin": "https://www.linkedin.com/company/ufpblim/",
   "location": "CI - 3o andar - CI-319",
   "people": [
     {

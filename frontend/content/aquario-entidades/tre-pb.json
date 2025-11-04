@@ -1,10 +1,10 @@
 {
   "name": "TRE-PB",
-  "description": "Tribunal Regional Eleitoral da Paraíba.",
+  "description": "O Tribunal Regional Eleitoral da Paraíba (TRE-PB) é um órgão da Justiça Eleitoral responsável pela organização e fiscalização das eleições no estado da Paraíba. O TRE-PB atua na administração da justiça eleitoral, garantindo o processo democrático e a realização de eleições livres e transparentes em todo o território paraibano.\n\nO tribunal é responsável por processos eleitorais, registro de candidaturas, prestação de contas eleitorais, julgamento de ações eleitorais e outras questões relacionadas ao processo eleitoral no estado.",
   "tipo": "EMPRESA",
   "imagePath": "./assets/TRE PB.png",
   "contato_email": "",
-  "website": "",
-  "location": "",
+  "website": "https://www.tre-pb.jus.br",
+  "location": "João Pessoa, Paraíba",
   "people": []
 }

@@ -1,11 +1,14 @@
 {
   "name": "LOG",
-  "description": "Laboratório de Otimização e Grafos.",
+  "subtitle": "Grupo de Otimização e Logística",
+  "description": "O Grupo de Logística e Otimização (LOG) faz parte do Laboratório de Engenharia de Sistemas e Robótica (LASER) da Universidade Federal da Paraíba (UFPB). Fundado em 2016, o grupo atua na área de pesquisa com foco em Pesquisa Operacional, Logística, Programação de Tarefas (Scheduling), Metaheurísticas, Programação Inteira, Otimização Combinatória e Clustering.\n\nO LOG desenvolve pesquisas avançadas em otimização e logística, contribuindo para a solução de problemas complexos de planejamento e gestão através de métodos matemáticos e algoritmos de otimização.",
   "tipo": "LABORATORIO",
+  "order": 5,
   "imagePath": "./assets/Log.png",
   "contato_email": "",
+  "instagram": "https://www.instagram.com/log.ufpb/",
+  "linkedin": "https://www.linkedin.com/showcase/log-ufpb/",
+  "website": "https://laser.ci.ufpb.br/",
   "location": "Centro de Informática - UFPB",
-  "people": [
-    { "name": "Coordenador(a)", "email": "", "role": "Responsável", "profession": "Professor(a)" }
-  ]
+  "founding_date": "2016"
 }

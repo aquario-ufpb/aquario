@@ -1,9 +1,11 @@
 {
   "name": "LAR",
-  "description": "Laboratório de Redes. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "subtitle": "Laboratório de Redes",
+  "description": "LAR é um laboratório de pesquisa e desenvolvimento em redes. O laboratório é composto por professores e discentes do Centro de Informática da UFPB, e tem como objetivo pesquisar e desenvolver redes de computadores.",
   "tipo": "LABORATORIO",
   "imagePath": "./assets/LAR.png",
   "contato_email": "iguatemi@ci.ufpb.br",
+  "instagram": "https://www.instagram.com/lar_ufpb/",
   "location": "CI - 3o andar - CI-317",
   "people": [
     {

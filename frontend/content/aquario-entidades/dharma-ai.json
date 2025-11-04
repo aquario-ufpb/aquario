@@ -1,10 +1,9 @@
 {
   "name": "DHARMA-AI",
-  "description": "Empresa de inteligência artificial.",
+  "description": "Empresa especializada em soluções de inteligência artificial. A DHARMA-AI desenvolve tecnologias e serviços baseados em IA para auxiliar empresas e organizações em processos de automação, análise de dados e tomada de decisões inteligentes. Hoje tem parceria com o TRIL",
   "tipo": "EMPRESA",
   "imagePath": "./assets/DHARMA.png",
   "contato_email": "",
-  "website": "",
-  "location": "",
-  "people": []
+  "website": "https://www.dharma-ai.com.br",
+  "location": ""
 }

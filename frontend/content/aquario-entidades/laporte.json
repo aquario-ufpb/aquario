@@ -1,6 +1,7 @@
 {
   "name": "LAPORTE",
-  "description": "Laboratório de Pesquisa Operacional e Estatística. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "subtitle": "Laboratório de Pesquisa Operacional e Estatística",
+  "description": "LAPORTE é um laboratório de pesquisa e desenvolvimento em pesquisa operacional e estatística. O laboratório é composto por professores e discentes do Centro de Informática da UFPB, e tem como objetivo pesquisar e desenvolver pesquisa operacional e estatística.",
   "tipo": "LABORATORIO",
   "imagePath": "./assets/LAPORTE.png",
   "contato_email": "bruno@ci.ufpb.br",

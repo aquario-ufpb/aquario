@@ -1,10 +1,10 @@
 {
   "name": "Atoptima",
-  "description": "Empresa de otimização e analytics.",
+  "description": "Atoptima é uma empresa que utiliza inteligência artificial para tomada de decisão, ajudando organizações a aprimorar seu desempenho operacional e descarbonizar suas cadeias de suprimentos. Especialista em solucionadores de otimização, a Atoptima oferece soluções inovadoras para planejamento de transporte e roteirização de veículos, paletização 3D e carregamento de caminhões/containers, picking e slotting em armazéns, agendamento de produção e planejamento estratégico de redes. Com mais de 25 anos de pesquisa em otimização matemática (MIT, Univ. Cambridge, X-Polytechnique, Inria, CNRS), a Atoptima se destaca ao resolver problemas complexos do setor com performance superior e recursos avançados, entregando resultados até 40x mais rápidos e ganhos acima de 10% em relação aos solucionadores de mercado. Com a Atoptima, sua empresa faz mais e melhor, consumindo menos recursos.",
   "tipo": "EMPRESA",
   "imagePath": "./assets/Atoptima.png",
   "contato_email": "",
-  "website": "",
+  "website": "https://www.atoptima.com/",
   "location": "",
   "people": []
 }

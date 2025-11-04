@@ -1,11 +1,11 @@
 {
   "name": "LAGID",
-  "description": "Laboratório de Algoritmos e Gestão da Informação e Dados.",
+  "subtitle": "Laboratório de Algoritmos e Gestão da Informação e Dados",
+  "description": "LAGID é um laboratório de pesquisa e desenvolvimento em algoritmos e gestão da informação e dados. O laboratório é composto por professores e discentes do Centro de Informática da UFPB, e tem como objetivo pesquisar e desenvolver algoritmos e sistemas de gestão da informação e dados.",
   "tipo": "LABORATORIO",
   "imagePath": "./assets/LAGID.png",
-  "contato_email": "",
-  "location": "Centro de Informática - UFPB",
-  "people": [
-    { "name": "Coordenador(a)", "email": "", "role": "Responsável", "profession": "Professor(a)" }
-  ]
+  "contato_email": "lagid.ufpb@gmail.com",
+  "instagram": "https://www.instagram.com/lagid.ufpb/",
+  "website": "https://sites.google.com/view/lagid/",
+  "location": "Centro de Informática - UFPB"
 }
