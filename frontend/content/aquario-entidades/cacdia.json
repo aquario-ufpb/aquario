@@ -1,0 +1,10 @@
+{
+  "name": "CACDIA",
+  "description": "Centro Acadêmico de Ciências de Dados e IA.",
+  "tipo": "CENTRO_ACADEMICO",
+  "imagePath": "./assets/CA CDIA.png",
+  "contato_email": "",
+  "instagram": "",
+  "location": "Centro de Informática - UFPB",
+  "people": [{ "name": "Coordenação", "email": "", "role": "Diretoria", "profession": "Discente" }]
+}

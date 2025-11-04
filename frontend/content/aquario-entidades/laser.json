@@ -2,6 +2,7 @@
   "name": "LASER",
   "description": "Laboratório de Engenharia de Sistemas e Robótica. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes.",
   "tipo": "LABORATORIO",
+  "order": 4,
   "imagePath": "./assets/LASER.png",
   "contato_email": "laser@ci.ufpb.br",
   "location": "Centro de Informática - UFPB",

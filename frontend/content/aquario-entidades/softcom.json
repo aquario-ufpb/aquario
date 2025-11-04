@@ -1,0 +1,10 @@
+{
+  "name": "Softcom",
+  "description": "Empresa de software.",
+  "tipo": "EMPRESA",
+  "imagePath": "./assets/Softcom.png",
+  "contato_email": "",
+  "website": "",
+  "location": "",
+  "people": []
+}

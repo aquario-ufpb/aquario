@@ -1,0 +1,10 @@
+{
+  "name": "B3",
+  "description": "Brasil, Bolsa, Balcão (B3).",
+  "tipo": "EMPRESA",
+  "imagePath": "./assets/B3.png",
+  "contato_email": "",
+  "website": "",
+  "location": "",
+  "people": []
+}

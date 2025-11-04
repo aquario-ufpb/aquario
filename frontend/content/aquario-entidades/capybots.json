@@ -1,0 +1,10 @@
+{
+  "name": "CapyBots",
+  "description": "Grupo estudantil de robótica.",
+  "tipo": "GRUPO_ESTUDANTIL",
+  "imagePath": "./assets/CapyBots.png",
+  "contato_email": "",
+  "instagram": "",
+  "location": "Centro de Informática - UFPB",
+  "people": [{ "name": "Líder", "email": "", "role": "Coordenação", "profession": "Discente" }]
+}

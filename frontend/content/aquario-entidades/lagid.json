@@ -1,0 +1,11 @@
+{
+  "name": "LAGID",
+  "description": "Laboratório de Algoritmos e Gestão da Informação e Dados.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/LAGID.png",
+  "contato_email": "",
+  "location": "Centro de Informática - UFPB",
+  "people": [
+    { "name": "Coordenador(a)", "email": "", "role": "Responsável", "profession": "Professor(a)" }
+  ]
+}

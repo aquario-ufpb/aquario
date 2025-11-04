@@ -1,0 +1,10 @@
+{
+  "name": "DHARMA-AI",
+  "description": "Empresa de inteligência artificial.",
+  "tipo": "EMPRESA",
+  "imagePath": "./assets/DHARMA.png",
+  "contato_email": "",
+  "website": "",
+  "location": "",
+  "people": []
+}

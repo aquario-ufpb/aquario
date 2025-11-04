@@ -2,6 +2,7 @@
   "name": "TRIL",
   "description": "Laboratório de Tecnologias e Inovação em Lógica. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes.",
   "tipo": "LABORATORIO",
+  "order": 1,
   "imagePath": "./assets/TRIL.png",
   "contato_email": "tril@ci.ufpb.br",
   "location": "CI - 3o andar - CI-315",

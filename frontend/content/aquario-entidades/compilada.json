@@ -1,7 +1,7 @@
 {
   "name": "Compilada",
   "description": "A Associação Atlética Acadêmica do Centro de Informática (Compilada) foi criada em 2020, atuando como o braço esportivo do Centro Acadêmico de Engenharia de Computação da UFPB (CAECOMP). A Compilada foca em estimular a integração dos(as) discentes do Centro de Informática, fortalecer o senso de união e representatividade, permitir a construção de uma rede de contatos variados, desenvolver habilidades interpessoais e incentivar a adesão às práticas esportivas.",
-  "tipo": "LIGA_ACADEMICA",
+  "tipo": "ATLETICA",
   "imagePath": "./assets/Compilada.png",
   "instagram": "compiladaufpb",
   "location": "Centro de Informática - UFPB"

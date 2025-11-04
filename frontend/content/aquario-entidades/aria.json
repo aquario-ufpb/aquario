@@ -2,6 +2,7 @@
   "name": "ARIA",
   "description": "Laboratório de Aplicações em Inteligência Artificial. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
   "tipo": "LABORATORIO",
+  "order": 1,
   "imagePath": "./assets/ARIA.png",
   "contato_email": "aria@ci.ufpb.br",
   "location": "LIEPE - 1o andar",

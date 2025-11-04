@@ -1,0 +1,10 @@
+{
+  "name": "Zoox Smart Data",
+  "description": "Empresa de tecnologia e dados.",
+  "tipo": "EMPRESA",
+  "imagePath": "./assets/Zoox.png",
+  "contato_email": "",
+  "website": "",
+  "location": "",
+  "people": []
+}

@@ -1,0 +1,10 @@
+{
+  "name": "QUASAR",
+  "description": "Grupo estudantil de tecnologia e inovação.",
+  "tipo": "GRUPO_ESTUDANTIL",
+  "imagePath": "./assets/QUASAR.png",
+  "contato_email": "",
+  "instagram": "",
+  "location": "Centro de Informática - UFPB",
+  "people": [{ "name": "Líder", "email": "", "role": "Coordenação", "profession": "Discente" }]
+}

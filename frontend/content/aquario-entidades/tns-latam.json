@@ -1,0 +1,10 @@
+{
+  "name": "TNS-LATAM",
+  "description": "Empresa de tecnologia.",
+  "tipo": "EMPRESA",
+  "imagePath": "./assets/TNS.png",
+  "contato_email": "",
+  "website": "",
+  "location": "",
+  "people": []
+}

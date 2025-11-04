@@ -1,7 +1,7 @@
 {
   "name": "Núcleo Colab",
   "description": "Núcleo de Incubação e Inovação Colaborativa. Projeto voltado para os alunos do Centro de Informática da UFPB, com o objetivo de apoiar estudantes e estimular a inovação tecnológica por meio do empreendedorismo, pesquisa e ensino, transformando ideias em soluções reais. O CoLab está na vanguarda de diversas áreas tecnológicas, promovendo projetos interdisciplinares e colaboração com a indústria, incluindo Ciência de Dados, Engenharia da Computação, Sistemas da Informação e Inteligência Artificial.",
-  "tipo": "LIGA_ACADEMICA",
+  "tipo": "GRUPO_ESTUDANTIL",
   "imagePath": "./assets/Colab.png",
   "contato_email": "",
   "website": "https://sites.google.com/academico.ufpb.br/colabciufpb/home",

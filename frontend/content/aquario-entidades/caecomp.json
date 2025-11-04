@@ -1,0 +1,10 @@
+{
+  "name": "CAECOMP",
+  "description": "Centro Acadêmico de Engenharia de Computação.",
+  "tipo": "CENTRO_ACADEMICO",
+  "imagePath": "./assets/CA ENGENHARIA.png",
+  "contato_email": "",
+  "instagram": "",
+  "location": "Centro de Informática - UFPB",
+  "people": [{ "name": "Coordenação", "email": "", "role": "Diretoria", "profession": "Discente" }]
+}

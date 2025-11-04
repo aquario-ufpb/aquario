@@ -1,0 +1,10 @@
+{
+  "name": "Cangaço no Espaço",
+  "description": "Grupo estudantil focado em robótica/competição.",
+  "tipo": "GRUPO_ESTUDANTIL",
+  "imagePath": "./assets/Cangaço no Espaço.png",
+  "contato_email": "",
+  "instagram": "",
+  "location": "Centro de Informática - UFPB",
+  "people": [{ "name": "Líder", "email": "", "role": "Coordenação", "profession": "Discente" }]
+}

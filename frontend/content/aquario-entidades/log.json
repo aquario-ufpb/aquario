@@ -1,0 +1,11 @@
+{
+  "name": "LOG",
+  "description": "Laboratório de Otimização e Grafos.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/Log.png",
+  "contato_email": "",
+  "location": "Centro de Informática - UFPB",
+  "people": [
+    { "name": "Coordenador(a)", "email": "", "role": "Responsável", "profession": "Professor(a)" }
+  ]
+}

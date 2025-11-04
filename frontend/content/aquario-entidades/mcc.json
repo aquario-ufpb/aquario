@@ -1,7 +1,7 @@
 {
   "name": "MCC",
   "description": "Meninas na Ciência da Computação. O grupo Meninas na Ciência da Computação (MCC) possui seu processo seletivo sendo realizado por meio de edital lançado por meio do Programa de Bolsas de Extensão (PROBEX) e pelo programa UFPB no seu Município. Sempre que os editais oficiais são lançados no site do PROBEX, o processo seletivo é aberto, contudo, editais internos podem ser publicados buscando contemplar as necessidades do grupo.",
-  "tipo": "LIGA_ACADEMICA",
+  "tipo": "GRUPO_ESTUDANTIL",
   "imagePath": "./assets/MCC.png",
   "instagram": "mccufpb",
   "location": "Centro de Informática - UFPB"

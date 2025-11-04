@@ -3,21 +3,45 @@
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { entidadesService } from "@/lib/api/entidades";
-import { Entidade, TipoEntidade } from "@/lib/types";
+import { Entidade } from "@/lib/types";
 import Link from "next/link";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 function EntidadeCard({ entidade }: { entidade: Entidade }) {
+  const getBadgeText = () => {
+    switch (entidade.tipo) {
+      case "LABORATORIO":
+        return "LAB";
+      case "GRUPO_ESTUDANTIL":
+        return "GRUPO";
+      case "LIGA_ESTUDANTIL":
+        return "LIGA";
+      case "CENTRO_ACADEMICO":
+        return "CA";
+      case "ATLETICA":
+        return "ATLETICA";
+      case "EMPRESA":
+        return "EMPRESA";
+      default:
+        return "OUTRO";
+    }
+  };
+
   const getBadgeVariant = () => {
     switch (entidade.tipo) {
       case "LABORATORIO":
         return "default";
-      case "GRUPO_PESQUISA":
+      case "GRUPO_ESTUDANTIL":
         return "secondary";
-      case "LIGA_ACADEMICA":
+      case "LIGA_ESTUDANTIL":
         return "outline";
+      case "CENTRO_ACADEMICO":
+        return "secondary";
+      case "ATLETICA":
+        return "outline";
+      case "EMPRESA":
+        return "default";
       default:
         return "destructive";
     }
@@ -25,20 +49,39 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
 
   return (
     <Link href={`/entidade/${entidade.slug}`}>
-      <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-        <CardContent className="flex flex-col items-center text-center p-6">
-          <Avatar className="w-24 h-24 mb-4">
-            <AvatarImage
-              src={entidade.imagePath || ""}
-              alt={entidade.name}
-              className="object-cover"
-            />
-            <AvatarFallback>{entidade.name.substring(0, 2)}</AvatarFallback>
-          </Avatar>
-          <CardTitle className="text-lg font-semibold truncate w-full">{entidade.name}</CardTitle>
-          <Badge variant={getBadgeVariant()} className="mt-2">
-            {entidade.tipo.replace("_", " ")}
-          </Badge>
+      <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+        <CardContent className="p-4">
+          <div className="flex gap-4">
+            {/* Image on the left */}
+            <div className="flex-shrink-0 flex items-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={entidade.imagePath || ""}
+                alt={entidade.name}
+                className="w-20 h-20 object-contain rounded"
+                onError={e => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                }}
+              />
+            </div>
+
+            {/* Content on the right */}
+            <div className="flex-1 min-w-0">
+              {/* Name with badge */}
+              <div className="flex items-start gap-2 mb-2">
+                <h3 className="text-lg font-semibold truncate flex-1">{entidade.name}</h3>
+                <Badge variant={getBadgeVariant()} className="flex-shrink-0">
+                  {getBadgeText()}
+                </Badge>
+              </div>
+
+              {/* Description */}
+              {entidade.description && (
+                <p className="text-sm text-muted-foreground line-clamp-3">{entidade.description}</p>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
     </Link>
@@ -48,15 +91,12 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
 export default function EntidadesPage() {
   const [entidades, setEntidades] = useState<Entidade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"Todos" | TipoEntidade>("Todos");
-  const [filteredEntidades, setFilteredEntidades] = useState<Entidade[]>([]);
 
   useEffect(() => {
     const fetchEntidades = async () => {
       try {
         const data = await entidadesService.getAll();
         setEntidades(data);
-        setFilteredEntidades(data);
       } catch (error) {
         console.error("Error fetching entidades:", error);
       } finally {
@@ -67,56 +107,117 @@ export default function EntidadesPage() {
     fetchEntidades();
   }, []);
 
-  useEffect(() => {
-    if (activeTab === "Todos") {
-      setFilteredEntidades(entidades);
-    } else {
-      setFilteredEntidades(entidades.filter(e => e.tipo === activeTab));
+  // Group entidades by tipo per requested sections
+  // Sort by order (lower numbers first), then alphabetically by name
+  const sortEntidades = (a: Entidade, b: Entidade) => {
+    // If both have order, sort by order
+    if (a.order !== null && a.order !== undefined && b.order !== null && b.order !== undefined) {
+      return a.order - b.order;
     }
-  }, [activeTab, entidades]);
+    // If only a has order, it comes first
+    if (a.order !== null && a.order !== undefined) {
+      return -1;
+    }
+    // If only b has order, it comes first
+    if (b.order !== null && b.order !== undefined) {
+      return 1;
+    }
+    // If neither has order, sort alphabetically
+    return a.name.localeCompare(b.name);
+  };
 
-  const tabs = ["Todos", "LABORATORIO", "GRUPO_PESQUISA", "LIGA_ACADEMICA", "OUTRO"] as const;
+  const laboratorios = entidades.filter(e => e.tipo === "LABORATORIO").sort(sortEntidades);
+
+  const gruposELigas = entidades
+    .filter(
+      e => e.tipo === "GRUPO_ESTUDANTIL" || e.tipo === "LIGA_ESTUDANTIL" || e.tipo === "OUTRO"
+    )
+    .sort(sortEntidades);
+
+  const centrosEAtleticas = entidades
+    .filter(e => e.tipo === "CENTRO_ACADEMICO" || e.tipo === "ATLETICA")
+    .sort(sortEntidades);
+
+  const empresasParceiras = entidades.filter(e => e.tipo === "EMPRESA").sort(sortEntidades);
 
   return (
-    <div className="container mx-auto p-4 pt-24">
-      <h1 className="text-3xl font-bold mb-8">Entidades</h1>
-
-      <div className="flex gap-4 mb-8 flex-wrap">
-        {tabs.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab as "Todos" | TipoEntidade)}
-            className={`px-4 py-2 rounded-full transition-all duration-200 ${
-              activeTab === tab
-                ? "bg-primary text-primary-foreground"
-                : "bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700"
-            }`}
-          >
-            {tab === "Todos" ? "Todos" : tab.replace("_", " ")}
-          </button>
-        ))}
-      </div>
+    <div className="container mx-auto p-4 pt-12">
+      <h1 className="text-3xl font-bold mb-8 max-w-[50%]">
+        Procure Laboratórios, ligas acadêmicas, grupos de pesquisa e outros
+      </h1>
 
       {isLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <div key={index} className="space-y-2 flex flex-col items-center">
-              <Skeleton className="h-24 w-24 rounded-full" />
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">Laboratórios</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="p-4">
+                  <div className="flex gap-4">
+                    <Skeleton className="w-20 h-20 rounded flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {filteredEntidades.length > 0 ? (
-            filteredEntidades.map(entidade => (
-              <EntidadeCard key={entidade.id} entidade={entidade} />
-            ))
-          ) : (
-            <p className="col-span-full text-center text-muted-foreground">
-              Nenhuma entidade encontrada.
-            </p>
+        <div className="space-y-8">
+          {/* Laboratórios */}
+          {laboratorios.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold">Laboratórios</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {laboratorios.map(entidade => (
+                  <EntidadeCard key={entidade.id} entidade={entidade} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Grupos e Ligas (inclui Outros) */}
+          {gruposELigas.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold">Grupos e Ligas</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {gruposELigas.map(entidade => (
+                  <EntidadeCard key={entidade.id} entidade={entidade} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Centros Acadêmicos e Atléticas */}
+          {centrosEAtleticas.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold">Centros Acadêmicos e Atléticas</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {centrosEAtleticas.map(entidade => (
+                  <EntidadeCard key={entidade.id} entidade={entidade} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Empresas Parceiras */}
+          {empresasParceiras.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold">Empresas Parceiras</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {empresasParceiras.map(entidade => (
+                  <EntidadeCard key={entidade.id} entidade={entidade} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {entidades.length === 0 && (
+            <p className="text-center text-muted-foreground">Nenhuma entidade encontrada.</p>
           )}
         </div>
       )}

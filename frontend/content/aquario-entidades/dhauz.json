@@ -1,0 +1,10 @@
+{
+  "name": "Dhauz",
+  "description": "Empresa de tecnologia.",
+  "tipo": "EMPRESA",
+  "imagePath": "./assets/Dhauz.png",
+  "contato_email": "",
+  "website": "",
+  "location": "",
+  "people": []
+}

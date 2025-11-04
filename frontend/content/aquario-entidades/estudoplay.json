@@ -1,0 +1,10 @@
+{
+  "name": "EstudoPlay",
+  "description": "Empresa de educação e tecnologia.",
+  "tipo": "EMPRESA",
+  "imagePath": "./assets/EstudoPlay.png",
+  "contato_email": "",
+  "website": "",
+  "location": "",
+  "people": []
+}

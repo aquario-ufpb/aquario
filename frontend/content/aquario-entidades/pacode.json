@@ -1,0 +1,10 @@
+{
+  "name": "PaCode",
+  "description": "Grupo estudantil de programação e maratonas.",
+  "tipo": "GRUPO_ESTUDANTIL",
+  "imagePath": "./assets/Pacode.png",
+  "contato_email": "",
+  "instagram": "",
+  "location": "Centro de Informática - UFPB",
+  "people": [{ "name": "Líder", "email": "", "role": "Coordenação", "profession": "Discente" }]
+}

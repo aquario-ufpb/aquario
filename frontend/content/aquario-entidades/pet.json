@@ -1,7 +1,8 @@
 {
   "name": "PET",
   "description": "Programa de Educação Tutorial. O PET é um programa de ensino, pesquisa e extensão que visa proporcionar aos alunos participantes, sob a orientação de um professor tutor, condições para a realização de atividades extracurriculares que complementem a sua formação acadêmica.",
-  "tipo": "LIGA_ACADEMICA",
+  "tipo": "GRUPO_ESTUDANTIL",
+  "order": 3,
   "imagePath": "./assets/PET.png",
   "location": "CI - 3o andar - CI-305"
 }

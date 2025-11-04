@@ -1,0 +1,10 @@
+{
+  "name": "TRE-PB",
+  "description": "Tribunal Regional Eleitoral da Paraíba.",
+  "tipo": "EMPRESA",
+  "imagePath": "./assets/TRE PB.png",
+  "contato_email": "",
+  "website": "",
+  "location": "",
+  "people": []
+}

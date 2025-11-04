@@ -1,0 +1,10 @@
+{
+  "name": "CACIC",
+  "description": "Centro Acadêmico de Ciência da Computação.",
+  "tipo": "CENTRO_ACADEMICO",
+  "imagePath": "./assets/CA CC.png",
+  "contato_email": "",
+  "instagram": "",
+  "location": "Centro de Informática - UFPB",
+  "people": [{ "name": "Coordenação", "email": "", "role": "Diretoria", "profession": "Discente" }]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "IEEE",
+  "description": "Grupo estudantil ligado ao IEEE no CI/UFPB.",
+  "tipo": "GRUPO_ESTUDANTIL",
+  "imagePath": "/lab.jpg",
+  "contato_email": "",
+  "instagram": "",
+  "location": "Centro de Informática - UFPB",
+  "people": [{ "name": "Líder", "email": "", "role": "Coordenação", "profession": "Discente" }]
+}

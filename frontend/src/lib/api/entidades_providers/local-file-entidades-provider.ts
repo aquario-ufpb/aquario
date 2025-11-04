@@ -3,14 +3,17 @@ import { EntidadesDataProvider } from "./entidades-provider.interface";
 
 type EntidadeJson = {
   name: string;
+  subtitle?: string;
   description?: string;
-  tipo: TipoEntidade;
+  tipo: string; // accept legacy and new values, normalize later
   imagePath: string;
   contato_email: string;
   instagram?: string;
   linkedin?: string;
   website?: string;
   location?: string;
+  founding_date?: string;
+  order?: number;
   people: Array<{
     name: string;
     email: string;
@@ -68,7 +71,7 @@ export class LocalFileEntidadesProvider implements EntidadesDataProvider {
 
   getByTipo(tipo: TipoEntidade): Promise<Entidade[]> {
     const entidades: Entidade[] = Object.keys(this.entidadesData)
-      .filter(slug => this.entidadesData[slug].tipo === tipo)
+      .filter(slug => this.normalizeTipo(this.entidadesData[slug].tipo) === tipo)
       .map(slug => {
         const data = this.entidadesData[slug];
         return this.jsonToEntidade(data, slug);
@@ -102,16 +105,54 @@ export class LocalFileEntidadesProvider implements EntidadesDataProvider {
       id: `entidade-${slug}`,
       name: data.name,
       slug: slug,
+      subtitle: data.subtitle || null,
       description: data.description || null,
-      tipo: data.tipo,
+      tipo: this.normalizeTipo(data.tipo),
       imagePath: imagePath,
       contato_email: data.contato_email,
       instagram: data.instagram || null,
       linkedin: data.linkedin || null,
       website: data.website || null,
       location: data.location || null,
+      founding_date: data.founding_date || null,
       people: data.people || [],
+      order: data.order || null,
     };
+  }
+
+  private normalizeTipo(value: string): TipoEntidade {
+    const v = (value || "").toUpperCase().replace(/\s+/g, "_");
+    // Map legacy values to new canonical set
+    switch (v) {
+      case "LABORATORIO":
+        return "LABORATORIO";
+      case "GRUPO_PESQUISA":
+        return "GRUPO_ESTUDANTIL";
+      case "LIGA_ACADEMICA":
+        return "LIGA_ESTUDANTIL";
+      case "OUTRO":
+        return "OUTRO";
+      case "CENTROS_ACADEMICOS":
+        return "CENTRO_ACADEMICO";
+      case "ATLETICAS":
+        return "ATLETICA";
+      case "LIGAS_ESTUDANTIS":
+        return "LIGA_ESTUDANTIL";
+      case "GRUPOS_ESTUDANTIS":
+        return "GRUPO_ESTUDANTIL";
+      case "OUTROS":
+        return "OUTRO";
+      case "EMPRESAS":
+        return "EMPRESA";
+      case "CENTRO_ACADEMICO":
+      case "ATLETICA":
+      case "LIGA_ESTUDANTIL":
+      case "GRUPO_ESTUDANTIL":
+      case "EMPRESA":
+        return v as TipoEntidade;
+      default:
+        return "OUTRO";
+    }
   }
 
   private getFilenameFromKey(key: string): string {
