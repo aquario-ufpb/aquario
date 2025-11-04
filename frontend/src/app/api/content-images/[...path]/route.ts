@@ -97,16 +97,45 @@ export async function GET(_request: unknown, { params }: { params: { path: strin
   try {
     const slugPath = params.path;
 
-    // Construct the full path to the content directory
-    const contentDir = join(process.cwd(), "content", "aquario-guias");
+    // Check if this is an entidades image request (starts with "entidades" or "assets/entidades")
+    let contentDir: string;
+    let searchPath = slugPath;
+
+    if (slugPath[0] === "entidades" || slugPath[0] === "assets") {
+      // Handle entidades images: /api/content-images/entidades/assets/ARIA.png
+      // or /api/content-images/assets/entidades/ARIA.png
+      if (slugPath[0] === "assets" && slugPath[1] === "entidades") {
+        contentDir = join(process.cwd(), "content", "aquario-entidades", "assets");
+        searchPath = slugPath.slice(2); // Remove "assets/entidades" prefix
+      } else if (slugPath[0] === "entidades") {
+        contentDir = join(process.cwd(), "content", "aquario-entidades");
+        searchPath = slugPath.slice(1); // Remove "entidades" prefix
+      } else {
+        contentDir = join(process.cwd(), "content", "aquario-guias");
+      }
+    } else {
+      // Default to guias
+      contentDir = join(process.cwd(), "content", "aquario-guias");
+    }
 
     // Security: Ensure we're working within the content directory
     if (!contentDir.startsWith(join(process.cwd(), "content"))) {
       return new NextResponse("Forbidden", { status: 403 });
     }
 
-    // Resolve slug path to actual filesystem path
-    const resolvedPath = resolvePath(slugPath, contentDir);
+    // For entidades assets, directly resolve the filename
+    let resolvedPath: string | null;
+    if (contentDir.includes("aquario-entidades") && contentDir.endsWith("assets")) {
+      // Direct file lookup in assets folder
+      if (searchPath.length === 0) {
+        return new NextResponse("Image not found", { status: 404 });
+      }
+      const filename = searchPath.join("/");
+      resolvedPath = join(contentDir, filename);
+    } else {
+      // Use the existing slug-based resolution for guias
+      resolvedPath = resolvePath(searchPath, contentDir);
+    }
 
     if (!resolvedPath || !existsSync(resolvedPath)) {
       return new NextResponse("Image not found", { status: 404 });
@@ -114,7 +143,7 @@ export async function GET(_request: unknown, { params }: { params: { path: strin
 
     // Security: Ensure the resolved path is within the content directory
     const resolvedFullPath = resolvedPath;
-    if (!resolvedFullPath.startsWith(contentDir)) {
+    if (!resolvedFullPath.startsWith(join(process.cwd(), "content"))) {
       return new NextResponse("Forbidden", { status: 403 });
     }
 

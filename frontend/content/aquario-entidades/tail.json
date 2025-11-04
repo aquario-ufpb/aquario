@@ -1,0 +1,8 @@
+{
+  "name": "TAIL",
+  "description": "Technology and Artificial Intelligence League. A TAIL realiza seu processo seletivo duas vezes por ano, normalmente, no início de cada semestre letivo. O processo seletivo pode ser realizado por graduandos(as) de diversas áreas, e o número de vagas em cada processo pode variar em média de 10 a 20, dependendo da demanda do grupo e da quantidade de membros ativos.",
+  "tipo": "LIGA_ACADEMICA",
+  "imagePath": "./assets/TAIL.png",
+  "instagram": "tailufpb",
+  "location": "Centro de Informática - UFPB"
+}

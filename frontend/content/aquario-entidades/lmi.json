@@ -1,0 +1,22 @@
+{
+  "name": "LMI",
+  "description": "Laboratório de Medidas e Instrumentação. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/LMI.png",
+  "contato_email": "lmi@ci.ufpb.br",
+  "location": "CI - 3o andar - CI-312",
+  "people": [
+    {
+      "name": "Ruy Altafim",
+      "email": "",
+      "role": "Responsável",
+      "profession": "Professor"
+    },
+    {
+      "name": "Mardson Amorim",
+      "email": "",
+      "role": "Responsável",
+      "profession": "Professor"
+    }
+  ]
+}

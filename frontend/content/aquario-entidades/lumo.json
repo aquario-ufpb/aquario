@@ -1,0 +1,16 @@
+{
+  "name": "LUMO",
+  "description": "Laboratório de Computação Ubíqua e Móvel. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/LUMO.png",
+  "contato_email": "contato@lumo.ci.ufpb.br",
+  "location": "CI - 3o andar - CI-318",
+  "people": [
+    {
+      "name": "Danielle Rousy",
+      "email": "",
+      "role": "Responsável",
+      "profession": "Professora"
+    }
+  ]
+}

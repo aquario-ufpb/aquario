@@ -1,0 +1,9 @@
+{
+  "name": "Connecta CI",
+  "description": "Connecta CI é uma organização estudantil do Centro de Informática da UFPB que promove conexões entre estudantes, professores e profissionais da área de tecnologia.",
+  "tipo": "LIGA_ACADEMICA",
+  "imagePath": "./assets/ConnectaCi.png",
+  "contato_email": "",
+  "instagram": "connectaci",
+  "location": "Centro de Informática - UFPB"
+}

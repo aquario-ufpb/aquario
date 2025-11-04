@@ -1,0 +1,22 @@
+{
+  "name": "LIAA",
+  "description": "Laboratório de Inteligência Artificial Aplicada. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/LIAA.png",
+  "contato_email": "natasha@ci.ufpb.br",
+  "location": "Centro de Informática - UFPB",
+  "people": [
+    {
+      "name": "Natasha Correia",
+      "email": "natasha@ci.ufpb.br",
+      "role": "Responsável",
+      "profession": "Professora"
+    },
+    {
+      "name": "Clauirton de Siebra",
+      "email": "clauirton@ci.ufpb.br",
+      "role": "Responsável",
+      "profession": "Professor"
+    }
+  ]
+}

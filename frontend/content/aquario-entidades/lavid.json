@@ -1,0 +1,16 @@
+{
+  "name": "LAVID",
+  "description": "Laboratório de Aplicações de Vídeo Digital. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/LAVID.png",
+  "contato_email": "contato@lavid.ufpb.br",
+  "location": "LIEPE - 1o andar",
+  "people": [
+    {
+      "name": "Raoni Kuleska",
+      "email": "",
+      "role": "Responsável",
+      "profession": "Professor"
+    }
+  ]
+}

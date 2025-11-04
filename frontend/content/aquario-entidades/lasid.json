@@ -1,0 +1,22 @@
+{
+  "name": "LASID",
+  "description": "Laboratório de Sistemas Digitais. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/LASID.png",
+  "contato_email": "lsalesbarros@ci.ufpb.br",
+  "location": "CI - 3o andar - CI-320",
+  "people": [
+    {
+      "name": "Luciano Sales",
+      "email": "lsalesbarros@ci.ufpb.br",
+      "role": "Responsável",
+      "profession": "Professor"
+    },
+    {
+      "name": "Camila Mara Vital Barros",
+      "email": "camila.barros@ci.ufpb.br",
+      "role": "Responsável",
+      "profession": "Professora"
+    }
+  ]
+}

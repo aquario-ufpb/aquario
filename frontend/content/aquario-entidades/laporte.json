@@ -1,0 +1,16 @@
+{
+  "name": "LAPORTE",
+  "description": "Laboratório de Pesquisa Operacional e Estatística. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/laporte.png",
+  "contato_email": "bruno@ci.ufpb.br",
+  "location": "CI - 3o andar - CI-316",
+  "people": [
+    {
+      "name": "Bruno Pessoa",
+      "email": "bruno@ci.ufpb.br",
+      "role": "Responsável",
+      "profession": "Professor"
+    }
+  ]
+}

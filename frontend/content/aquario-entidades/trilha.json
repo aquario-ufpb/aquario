@@ -1,0 +1,10 @@
+{
+  "name": "TRILHA",
+  "description": "TRILHA é uma organização estudantil do Centro de Informática da UFPB que promove atividades acadêmicas, projetos e eventos para estudantes.",
+  "tipo": "LIGA_ACADEMICA",
+  "imagePath": "./assets/Trilha.png",
+  "contato_email": "",
+  "website": "https://trilhaufpb.com",
+  "instagram": "trilhaufpb",
+  "location": "Centro de Informática - UFPB"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "LIM",
+  "description": "Laboratório de Interação e Mídia. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/LIM.png",
+  "contato_email": "valdecir@ci.ufpb.br",
+  "location": "CI - 3o andar - CI-319",
+  "people": [
+    {
+      "name": "Valdecir Becker",
+      "email": "valdecir@ci.ufpb.br",
+      "role": "Responsável",
+      "profession": "Professor"
+    }
+  ]
+}

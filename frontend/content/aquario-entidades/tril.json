@@ -1,0 +1,34 @@
+{
+  "name": "TRIL",
+  "description": "Laboratório de Tecnologias e Inovação em Lógica. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/TRIL.png",
+  "contato_email": "tril@ci.ufpb.br",
+  "location": "CI - 3o andar - CI-315",
+  "people": [
+    {
+      "name": "Moises Dantas dos Santos",
+      "email": "",
+      "role": "Responsável",
+      "profession": "Professor"
+    },
+    {
+      "name": "Gustavo Charles Peixoto de Oliveira",
+      "email": "",
+      "role": "Responsável",
+      "profession": "Professor"
+    },
+    {
+      "name": "Rafael Marrocos Magalhães",
+      "email": "",
+      "role": "Responsável",
+      "profession": "Professor"
+    },
+    {
+      "name": "Tatiana Araújo Simões",
+      "email": "",
+      "role": "Responsável",
+      "profession": "Professora"
+    }
+  ]
+}

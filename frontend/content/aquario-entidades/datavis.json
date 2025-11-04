@@ -1,0 +1,16 @@
+{
+  "name": "DATAVIS",
+  "description": "Laboratório de Visualização de Dados. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/DATAVIS.png",
+  "contato_email": "ed_porto@uol.com.br",
+  "location": "CI - 3o andar - CI-313",
+  "people": [
+    {
+      "name": "Ed Porto Bezerra",
+      "email": "ed_porto@uol.com.br",
+      "role": "Responsável",
+      "profession": "Professor"
+    }
+  ]
+}

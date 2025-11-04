@@ -30,6 +30,7 @@ export default function NavBar() {
             <SearchBar1 type="search" placeholder="Pesquisar" />
             <LinkHover href="/sobre">SOBRE</LinkHover>
             <LinkHover href="/guias">GUIAS</LinkHover>
+            <LinkHover href="/entidades">ENTIDADES</LinkHover>
             {/* <ProfileButton /> */}
             <ModeToggle />
           </div>

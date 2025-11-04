@@ -1,0 +1,16 @@
+{
+  "name": "LAR",
+  "description": "Laboratório de Redes. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes. Cada laboratório possui um eixo temático específico, refletindo suas áreas de especialização e interesse.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/LAR.png",
+  "contato_email": "iguatemi@ci.ufpb.br",
+  "location": "CI - 3o andar - CI-317",
+  "people": [
+    {
+      "name": "Iguatemi Fonseca",
+      "email": "iguatemi@ci.ufpb.br",
+      "role": "Responsável",
+      "profession": "Professor"
+    }
+  ]
+}

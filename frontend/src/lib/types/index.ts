@@ -2,3 +2,4 @@
 export * from "./guia.types";
 export * from "./curso.types";
 export * from "./centro.types";
+export * from "./entidade.types";

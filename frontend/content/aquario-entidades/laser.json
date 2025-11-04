@@ -1,0 +1,22 @@
+{
+  "name": "LASER",
+  "description": "Laboratório de Engenharia de Sistemas e Robótica. Os laboratórios são ambientes dinâmicos e colaborativos onde a pesquisa acadêmica é conduzida por discentes sob a orientação especializada de docentes.",
+  "tipo": "LABORATORIO",
+  "imagePath": "./assets/LASER.png",
+  "contato_email": "laser@ci.ufpb.br",
+  "location": "Centro de Informática - UFPB",
+  "people": [
+    {
+      "name": "Alisson Brito",
+      "email": "",
+      "role": "Responsável",
+      "profession": "Professor"
+    },
+    {
+      "name": "Tiago Nascimento",
+      "email": "",
+      "role": "Responsável",
+      "profession": "Professor"
+    }
+  ]
+}

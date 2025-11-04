@@ -1,0 +1,9 @@
+{
+  "name": "CortechX",
+  "description": "CortechX é uma organização estudantil do Centro de Informática da UFPB que promove atividades relacionadas à tecnologia e inovação.",
+  "tipo": "LIGA_ACADEMICA",
+  "imagePath": "./assets/CortechX.png",
+  "contato_email": "",
+  "instagram": "cortechx.ufpb",
+  "location": "Centro de Informática - UFPB"
+}
