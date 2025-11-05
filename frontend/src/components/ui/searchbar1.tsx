@@ -170,10 +170,10 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
             aria-controls="search-suggestions"
             aria-autocomplete="list"
             className={cn(
-              "flex h-10 w-full rounded-full border pl-10 pr-10 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+              "flex h-10 w-full rounded-full border pl-10 pr-10 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
               transparent
-                ? "!bg-transparent border-white/30 dark:border-white/30 !ring-offset-transparent focus-visible:ring-1 focus-visible:ring-white/30 dark:focus-visible:ring-white/30 dark:text-zinc-300 dark:placeholder:text-zinc-300 backdrop-blur-0"
-                : "border-input bg-background ring-offset-background focus-visible:ring-1 focus-visible:ring-ring dark:border-zinc-300 dark:text-zinc-300 dark:placeholder:text-zinc-300",
+                ? "!bg-transparent border-white/30 dark:border-white/30 !ring-offset-transparent focus-visible:ring-white/30 dark:focus-visible:ring-white/30 dark:text-zinc-300 dark:placeholder:text-zinc-300 backdrop-blur-0"
+                : "border-input bg-background dark:border-zinc-300 dark:text-zinc-300 dark:placeholder:text-zinc-300",
               className
             )}
             style={transparent ? { backgroundColor: 'transparent' } : undefined}
