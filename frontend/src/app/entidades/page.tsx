@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, Github } from "lucide-react";
 import { trackEvent } from "@/analytics/posthog-client";
 import { TipoEntidade } from "@/lib/types/entidade.types";
 
@@ -188,9 +188,27 @@ export default function EntidadesPage() {
   return (
     <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl">
       <div className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-display font-bold mb-8 max-w-3xl">
-          Procure Laboratórios, ligas acadêmicas, grupos de pesquisa e outros
-        </h1>
+        <div className="flex items-start justify-between gap-4 mb-8">
+          <h1 className="text-4xl md:text-5xl font-display font-bold max-w-3xl">
+            Procure Laboratórios, ligas acadêmicas, grupos de pesquisa e outros
+          </h1>
+          <Button
+            asChild
+            variant="default"
+            size="sm"
+            className="hidden md:flex rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal flex-shrink-0"
+          >
+            <a
+              href="https://github.com/aquario-ufpb/aquario-entidades"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2"
+            >
+              <Github className="w-4 h-4" />
+              Contribuir no GitHub
+            </a>
+          </Button>
+        </div>
 
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
