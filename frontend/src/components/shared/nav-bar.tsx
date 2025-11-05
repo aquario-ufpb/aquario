@@ -65,6 +65,9 @@ export default function NavBar() {
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
             <LinkHover href="/guias">GUIAS</LinkHover>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
+            <LinkHover href="/entidades">ENTIDADES</LinkHover>
+            {/* <ProfileButton /> */}
+            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
             <ModeToggle />
           </div>
         </div>

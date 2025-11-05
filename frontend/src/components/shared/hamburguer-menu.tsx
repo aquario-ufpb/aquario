@@ -72,6 +72,14 @@ export default function HamburgerMenu() {
                   </Link>
                 </li>
                 <li>
+                  <Link
+                    href="/entidades"
+                    className="text-sm dark:text-dark-text hover:text-blue-500 group transition duration-300"
+                  >
+                    ENTIDADES
+                  </Link>
+                </li>
+                <li>
                   <ModeToggle mobile={true} />
                 </li>
               </ul>

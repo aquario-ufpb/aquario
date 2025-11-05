@@ -8,4 +8,7 @@ export const ENDPOINTS = {
   GUIAS: (cursoId: string) => `/guias?cursoId=${cursoId}`,
   SECOES: (guiaId: string) => `/guias/${guiaId}/secoes?guiaId=${guiaId}`,
   SUBSECOES: (secaoId: string) => `/guias/secoes/${secaoId}/subsecoes?secaoId=${secaoId}`,
+  // TODO: Uncomment when backend integration is implemented
+  // ENTIDADES: "/entidades",
+  // ENTIDADE_BY_SLUG: (slug: string) => `/entidades/slug/${slug}`,
 } as const;

@@ -1,3 +1,6 @@
 [submodule "frontend/content/aquario-guias"]
 	path = frontend/content/aquario-guias
 	url = https://github.com/aquario-ufpb/aquario-guias.git
+[submodule "frontend/content/aquario-entidades"]
+	path = frontend/content/aquario-entidades
+	url = https://github.com/aquario-ufpb/aquario-entidades.git

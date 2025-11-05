@@ -2,14 +2,14 @@ import { Guia, Secao, SubSecao } from "../types";
 import { GuiasDataProvider } from "./guias_providers/guias-provider.interface";
 import { BackendGuiasProvider } from "./guias_providers/backend-guias-provider";
 import { LocalFileGuiasProvider } from "./guias_providers/local-file-guias-provider";
-import { DATA_PROVIDER_CONFIG } from "../config/env";
+import { GUIDAS_DATA_PROVIDER_CONFIG } from "../config/env";
 
 // Provider factory
 function createProvider(): GuiasDataProvider {
-  switch (DATA_PROVIDER_CONFIG.PROVIDER) {
-    case DATA_PROVIDER_CONFIG.PROVIDERS.LOCAL:
+  switch (GUIDAS_DATA_PROVIDER_CONFIG.PROVIDER) {
+    case GUIDAS_DATA_PROVIDER_CONFIG.PROVIDERS.LOCAL:
       return new LocalFileGuiasProvider();
-    case DATA_PROVIDER_CONFIG.PROVIDERS.BACKEND:
+    case GUIDAS_DATA_PROVIDER_CONFIG.PROVIDERS.BACKEND:
     default:
       return new BackendGuiasProvider();
   }

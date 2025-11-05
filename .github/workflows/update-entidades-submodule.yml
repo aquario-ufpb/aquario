@@ -1,0 +1,68 @@
+name: Update Entidades Submodule
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_message:
+        description: "Custom commit message (optional)"
+        required: false
+        default: "chore: update aquario-entidades submodule"
+
+permissions:
+  contents: write
+
+jobs:
+  update-submodule:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update submodule
+        run: |
+          echo "🔄 Updating aquario-entidades submodule..."
+          cd frontend/content/aquario-entidades
+          git fetch origin
+          git checkout origin/main
+          cd ../../..
+          git add frontend/content/aquario-entidades
+
+          echo "✅ Submodule updated!"
+          echo ""
+          echo "Current submodule commit:"
+          cd frontend/content/aquario-entidades
+          git log -1 --oneline
+          cd ../../..
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet HEAD; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No changes detected - submodule is already up to date!"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "📝 Changes detected in submodule"
+          fi
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git add frontend/content/aquario-entidades
+          git commit -m "${{ github.event.inputs.commit_message }}"
+          git push
+          echo "✅ Changes committed and pushed to main!"
+
+      - name: No changes summary
+        if: steps.check_changes.outputs.changed == 'false'
+        run: |
+          echo "✅ Workflow completed - no updates needed"
