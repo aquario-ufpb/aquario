@@ -2,14 +2,14 @@ import { Entidade, TipoEntidade } from "../types";
 import { EntidadesDataProvider } from "./entidades_providers/entidades-provider.interface";
 import { BackendEntidadesProvider } from "./entidades_providers/backend-entidades-provider";
 import { LocalFileEntidadesProvider } from "./entidades_providers/local-file-entidades-provider";
-import { DATA_PROVIDER_CONFIG } from "../config/env";
+import { ENTIDADES_DATA_PROVIDER_CONFIG } from "../config/env";
 
 // Provider factory
 function createProvider(): EntidadesDataProvider {
-  switch (DATA_PROVIDER_CONFIG.PROVIDER) {
-    case DATA_PROVIDER_CONFIG.PROVIDERS.LOCAL:
+  switch (ENTIDADES_DATA_PROVIDER_CONFIG.PROVIDER) {
+    case ENTIDADES_DATA_PROVIDER_CONFIG.PROVIDERS.LOCAL:
       return new LocalFileEntidadesProvider();
-    case DATA_PROVIDER_CONFIG.PROVIDERS.BACKEND:
+    case ENTIDADES_DATA_PROVIDER_CONFIG.PROVIDERS.BACKEND:
     default:
       return new BackendEntidadesProvider();
   }
