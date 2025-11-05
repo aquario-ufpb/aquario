@@ -16,7 +16,24 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "Aquario",
-  description: "O seu melhor guia e comunidade para a UFPB",
+  description: "O seu melhor guia e comunidade para o Centro de Informática da UFPB",
+  icons: {
+    icon: "/logo.png", // Favicon (browser tab icon)
+    shortcut: "/logo.png", // Shortcut icon
+    apple: "/logo.png", // Apple touch icon
+  },
+  openGraph: {
+    title: "Aquario",
+    description: "O seu melhor guia e comunidade para o Centro de Informática da UFPB",
+    images: [
+      {
+        url: "/logo.png", // Logo for social media sharing
+        width: 1200,
+        height: 630,
+        alt: "Aquario Logo",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({

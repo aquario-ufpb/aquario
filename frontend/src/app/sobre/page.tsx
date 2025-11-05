@@ -161,19 +161,19 @@ export default function SobrePage() {
               <Button
                 asChild
                 size="lg"
-                className="rounded-lg font-normal hover:opacity-90 transition-opacity flex items-center gap-1"
+                className="rounded-lg font-normal hover:opacity-90 transition-opacity flex items-center gap-1 px-5"
                 style={{
                   backgroundColor: isDark ? "#1a3a5c" : "#ffffff",
                   color: isDark ? "#C8E6FA" : "#0e3a6c",
                 }}
               >
                 <Link
-                  href="https://github.com/ralfferreira/aquario"
+                  href="https://github.com/aquario-ufpb/aquario"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <Github className="w-6 h-6" />
-                  <span className="text-md">Contribua</span>
+                  <span className="text-2md">Contribua para o Aquário</span>
                 </Link>
               </Button>
             </div>
