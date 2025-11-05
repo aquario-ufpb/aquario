@@ -36,7 +36,7 @@ export default function SobrePage() {
           }}
         />
 
-        <div className="relative flex flex-col md:flex-row items-center h-full w-full max-w-7xl mx-auto pl-0 pr-8 md:pr-12 pt-24">
+        <div className="relative flex flex-col md:flex-row items-center h-full w-full max-w-7xl mx-auto px-4 md:px-8 md:pr-12 pt-24">
           {/* Fish Image - Left Side - Hidden on mobile */}
           <div className="hidden md:flex flex-1 relative w-full md:w-2/3 h-full mb-8 md:mb-0 items-center justify-start">
             <div className="relative w-full h-full -ml-8 md:-ml-16">
@@ -70,7 +70,7 @@ export default function SobrePage() {
           </div>
 
           {/* Text Content - Full width on mobile, right side on desktop */}
-          <div className="flex-1 flex flex-col items-center md:items-end justify-center space-y-4 md:pl-8 text-center md:text-right px-4 md:px-0">
+          <div className="flex-1 flex flex-col items-center md:items-end justify-center space-y-4 md:pl-8 text-center md:text-right w-full">
             <h1
               className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight"
               style={{ color: isDark ? "#D0EFFF" : "#285A96" }}
