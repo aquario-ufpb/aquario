@@ -126,7 +126,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
   return (
     <div className="mt-24">
       {/* Back Button */}
-      <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-8 pb-4">
+      <div className="container mx-auto px-6 md:px-8 lg:px-16 pt-8 pb-4">
         <Button variant="ghost" onClick={() => router.back()} className="flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" />
           Voltar
@@ -134,7 +134,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
       </div>
 
       {/* Hero Section */}
-      <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-4 pb-8">
+      <div className="container mx-auto px-6 md:px-8 lg:px-16 pt-4 pb-8">
         <Card className="border-border/50 overflow-hidden">
           <CardContent className="p-8 md:p-12">
             <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-8 lg:gap-12">
@@ -229,7 +229,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
 
       {/* Description Section */}
       {entidade.description && (
-        <div className="container mx-auto px-4 md:px-8 lg:px-16 pb-8">
+        <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-8">
           <Card className="border-border/50">
             <CardContent className="p-8 md:p-12">
               <h2 className="text-2xl md:text-3xl font-semibold mb-6">Descrição</h2>
@@ -243,7 +243,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
 
       {/* People Section */}
       {entidade.people.length > 0 && (
-        <div className="container mx-auto px-4 md:px-8 lg:px-16 pb-4">
+        <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-4">
           <h2 className="text-2xl md:text-3xl font-semibold mb-8">Pessoas</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {entidade.people.map((person, index) => (
@@ -277,14 +277,14 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
 
       {/* Divider */}
       {otherEntidades.length > 0 && (
-        <div className="container mx-auto px-4 md:px-8 lg:px-16 mt-10 mb-10">
+        <div className="container mx-auto px-6 md:px-8 lg:px-16 mt-10 mb-10">
           <div className="w-full h-[1px] bg-border opacity-50"></div>
         </div>
       )}
 
       {/* Other Entities of Same Type */}
       {otherEntidades.length > 0 && (
-        <div className="container mx-auto px-4 md:px-8 lg:px-16 pb-12">
+        <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-12">
           <h2 className="text-2xl md:text-3xl font-semibold mb-8">
             Outros {entidade.tipo.replace("_", " ").toLowerCase()}s
           </h2>

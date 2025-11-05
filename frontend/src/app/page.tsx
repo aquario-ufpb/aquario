@@ -145,9 +145,9 @@ export default function Home() {
               <br />
               no Centro de Informática da UFPB.
             </p>
-            <div className="flex justify-center pointer-events-auto gap-2">
+            <div className="flex flex-col md:flex-row justify-center items-center pointer-events-auto gap-2 md:gap-2">
               <HoverBorderGradient
-                containerClassName="rounded-full"
+                containerClassName="rounded-full w-full md:w-auto"
                 className="px-10 py-4 text-lg font-semibold"
               >
                 <Link href="/guias" className="block w-full text-center">
@@ -155,7 +155,7 @@ export default function Home() {
                 </Link>
               </HoverBorderGradient>
               <HoverBorderGradient
-                containerClassName="rounded-full"
+                containerClassName="rounded-full w-full md:w-auto"
                 className="px-10 py-4 text-lg font-semibold"
               >
                 <Link href="/entidades" className="block w-full text-center">
@@ -163,7 +163,7 @@ export default function Home() {
                 </Link>
               </HoverBorderGradient>
               <HoverBorderGradient
-                containerClassName="rounded-full"
+                containerClassName="rounded-full w-full md:w-auto"
                 className="px-10 py-4 text-lg font-semibold"
               >
                 <a
