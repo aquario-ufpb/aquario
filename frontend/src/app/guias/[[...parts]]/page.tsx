@@ -185,7 +185,7 @@ export default function GuiasPage() {
             </SheetContent>
           </Sheet>
         </div>
-        <div className="flex-1 flex flex-col h-full overflow-hidden px-8">
+        <div className="flex-1 flex flex-col h-full overflow-hidden lg:px-36 px-8">
           <MarkdownRenderer
             content={currentContent}
             breadcrumbs={breadcrumbs}

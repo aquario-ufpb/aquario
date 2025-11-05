@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import React, { useEffect, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Github } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,6 +13,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
 
 type BreadcrumbItemData = {
   label: string;
@@ -111,7 +112,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, breadcrumb
   return (
     <div className="h-full overflow-y-auto flex flex-col md:pt-8 pb-8">
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <Breadcrumb>
             <BreadcrumbList style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
               {breadcrumbs.map((item, index) => {
@@ -145,6 +146,22 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, breadcrumb
               })}
             </BreadcrumbList>
           </Breadcrumb>
+          <Button
+            asChild
+            variant="default"
+            size="sm"
+            className="rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
+          >
+            <a
+              href="https://github.com/aquario-ufpb/aquario-guias"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2"
+            >
+              <Github className="w-4 h-4" />
+              Contribuir no GitHub
+            </a>
+          </Button>
         </div>
       )}
       <div

@@ -90,7 +90,7 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ guias }) => {
   }, [pathname, guias, isSectionActive]);
 
   return (
-    <div className="h-full overflow-y-auto flex flex-col bg-gray-50/50 dark:bg-gray-900/50">
+    <div className="h-full overflow-y-auto flex flex-col bg-gray-50/50 dark:bg-black/10 rounded-md">
       <div className={`space-y-1 w-full p-4 flex-1 ${inter.className}`}>
         {guias.map(guia => (
           <div key={guia.slug} className="mb-4">
