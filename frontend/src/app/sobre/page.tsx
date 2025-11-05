@@ -93,9 +93,9 @@ export default function SobrePage() {
   ];
 
   return (
-    <main className="relative">
+    <main className="relative pt-0">
       {/* Hero Section - Full Width and Height */}
-      <div className="relative overflow-x-hidden overflow-y-hidden w-full h-[85vh] -mt-24">
+      <div className="relative overflow-x-hidden overflow-y-hidden w-full h-[85vh]">
         {/* Circular gradient background */}
         <div 
           className="absolute inset-0"

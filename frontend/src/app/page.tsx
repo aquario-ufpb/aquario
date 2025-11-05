@@ -59,7 +59,7 @@ export default function Home() {
       fifthColor={colors.fifthColor}
       pointerColor={colors.pointerColor}
     >
-      <main className="container mx-auto p-4 pt-0">
+      <main className="container mx-auto p-4 pt-12">
         {/* Hero Section */}
         <section className="text-center min-h-screen flex flex-col justify-center items-center">
           <div className="max-w-4xl mx-auto px-4">

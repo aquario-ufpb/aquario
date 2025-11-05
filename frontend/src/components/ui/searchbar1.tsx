@@ -5,10 +5,12 @@ import { cn } from "@/lib/utils";
 import { Search, X } from "lucide-react";
 import { Command, CommandList, CommandGroup, CommandItem } from "@/components/ui/command";
 
-export type InputProps = {} & React.InputHTMLAttributes<HTMLInputElement>;
+export type InputProps = {
+  transparent?: boolean;
+} & React.InputHTMLAttributes<HTMLInputElement>;
 
 const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, transparent = false, ...props }, ref) => {
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -155,10 +157,11 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
       window.addEventListener("keydown", onKey);
       return () => window.removeEventListener("keydown", onKey);
     }, [query]);
+
     return (
-      <div ref={wrapperRef} className="relative w-full">
+      <div ref={wrapperRef} className={cn("relative w-full", transparent && "!bg-transparent")}>
         <form onSubmit={handleSubmit} className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 dark:text-zinc-300" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 dark:text-zinc-300 z-10" />
           <input
             type="search"
             aria-label="Pesquisar"
@@ -167,10 +170,13 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
             aria-controls="search-suggestions"
             aria-autocomplete="list"
             className={cn(
-              "flex h-10 w-full rounded-full border border-input bg-background pl-10 pr-10 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-              "dark:border-zinc-300 dark:text-zinc-300 dark:placeholder:text-zinc-300",
+              "flex h-10 w-full rounded-full border pl-10 pr-10 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+              transparent
+                ? "!bg-transparent border-white/30 dark:border-white/30 !ring-offset-transparent focus-visible:ring-1 focus-visible:ring-white/30 dark:focus-visible:ring-white/30 dark:text-zinc-300 dark:placeholder:text-zinc-300 backdrop-blur-0"
+                : "border-input bg-background ring-offset-background focus-visible:ring-1 focus-visible:ring-ring dark:border-zinc-300 dark:text-zinc-300 dark:placeholder:text-zinc-300",
               className
             )}
+            style={transparent ? { backgroundColor: 'transparent' } : undefined}
             ref={node => {
               inputInnerRef.current = node;
               if (!ref) {
@@ -192,7 +198,7 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               aria-label="Limpar pesquisa"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10"
               onClick={() => {
                 setQuery("");
                 setOpen(false);

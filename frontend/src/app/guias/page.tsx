@@ -41,7 +41,7 @@ export default function GuiasPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col justify-start items-center px-4 pt-24 pb-4 overflow-hidden">
+    <div className="h-screen flex flex-col justify-start items-center px-4 pt-32 pb-4 overflow-hidden">
       <div className="text-center mb-8">
         <h1 className="text-5xl font-bold mb-4" style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }}>Guias Acadêmicos</h1>
         <p className="text-lg" style={{ color: isDark ? '#E5F6FF' : '#0e3a6c' }}>
