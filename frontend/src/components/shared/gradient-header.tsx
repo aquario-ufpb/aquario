@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { Monitor, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "../ui/button";
 
 // Interface defining the props for the ProfileComponent!
 type HeaderProps = {
@@ -21,12 +22,7 @@ type HeaderProps = {
   onCourseChange?: (course: string) => void;
 };
 
-function GradientHeaderComponent({
-  academicCenter,
-  courses,
-  currentCourse,
-  onCourseChange,
-}: HeaderProps) {
+function GradientHeaderComponent({ courses, currentCourse, onCourseChange }: HeaderProps) {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [selectedCourse, setSelectedCourse] = React.useState(currentCourse);
@@ -50,40 +46,31 @@ function GradientHeaderComponent({
           : "linear-gradient(to right, #DCF0FF 0%, #C8E6FA 100%)",
       }}
     >
-      <div
-        className="pl-[24px] text-lg flex font-sans"
-        style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-      >
-        <Monitor />
-        <p className="text-lg pl-4 pr-4 font-sans">{academicCenter}</p>
-        <div className="flex flex-col items-center justify-center">
-          <div
-            className="pl-4 h-[1px] w-5"
-            style={{ backgroundColor: isDark ? "#C8E6FA" : "#0e3a6c" }}
-          ></div>
-        </div>
-        <div className="pl-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="text-lg font-sans hover:underline">
-              <div className="flex">
-                {selectedCourse} <ChevronDown />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuLabel className="text-sm">Cursos</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {courses.map((course, index) => (
-                <DropdownMenuItem
-                  key={index}
-                  onClick={() => handleCourseSelect(course)}
-                  className="font-sans"
-                >
-                  {course}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+      <div className="pl-[24px] text-lg flex" style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="text-lg hover:text-a transition-colors">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-2 px-3 rounded-full hover:bg-blue-200/50"
+            >
+              <span className="text-lg">{selectedCourse}</span> <ChevronDown className="w-6 h-6" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel className="text-sm">Cursos</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {courses.map((course, index) => (
+              <DropdownMenuItem
+                key={index}
+                onClick={() => handleCourseSelect(course)}
+                className="font-sans"
+              >
+                {course}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
