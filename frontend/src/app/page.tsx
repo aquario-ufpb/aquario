@@ -5,17 +5,77 @@ import { BackgroundGradientAnimation } from "@/components/ui/background-gradient
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Github } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { entidadesService } from "@/lib/api/entidades";
+import { Entidade } from "@/lib/types";
 
 export default function Home() {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [entidades, setEntidades] = useState<Entidade[]>([]);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch all entidades for preview (excluding EMPRESA)
+  useEffect(() => {
+    const fetchEntidades = async () => {
+      try {
+        const data = await entidadesService.getAll();
+        // Filter out EMPRESA type entidades
+        const filteredData = data.filter(entidade => entidade.tipo !== "EMPRESA");
+        // Randomize the order using Fisher-Yates shuffle
+        const shuffled = [...filteredData];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        setEntidades(shuffled);
+      } catch (error) {
+        console.error("Error fetching entidades:", error);
+      }
+    };
+
+    if (mounted) {
+      fetchEntidades();
+    }
+  }, [mounted]);
+
+  // Auto-scroll functionality
+  useEffect(() => {
+    if (!scrollContainerRef.current || entidades.length === 0 || isScrolling) {
+      return;
+    }
+
+    const container = scrollContainerRef.current;
+    const scrollSpeed = 1.5; // pixels per frame - faster scrolling
+    let animationFrameId: number;
+
+    const autoScroll = () => {
+      if (!isScrolling) {
+        container.scrollLeft += scrollSpeed;
+        // Reset scroll position when we reach halfway (for infinite effect)
+        if (container.scrollLeft >= container.scrollWidth / 2) {
+          container.scrollLeft = 0;
+        }
+      }
+      animationFrameId = requestAnimationFrame(autoScroll);
+    };
+
+    animationFrameId = requestAnimationFrame(autoScroll);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [entidades.length, isScrolling]);
 
   const isDark = (resolvedTheme || theme) === "dark";
 
@@ -120,52 +180,185 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Project Status Section */}
-        <section className="text-center py-10">
-          <div className="max-w-3xl mx-auto">
-            <h2
-              className={`font-display text-3xl font-bold tracking-wide mb-6 drop-shadow-lg ${
-                isDark ? "text-white" : "text-aquario-primary"
-              }`}
-            >
-              Projeto em Desenvolvimento
-            </h2>
-            <p
-              className={`text-lg mb-8 drop-shadow-md ${
-                isDark ? "text-white/80" : "text-slate-700"
-              }`}
-            >
-              O Aquário é um projeto em constante evolução. Em breve, teremos mais páginas e
-              funcionalidades disponíveis.
-            </p>
-            <div
-              className={`backdrop-blur-md rounded-lg p-8 pointer-events-auto ${
-                isDark ? "bg-white/10 border border-white/20" : "bg-white/60 border border-blue-200"
-              }`}
-            >
-              <h3
-                className={`font-display text-2xl font-bold tracking-wide mb-4 ${
-                  isDark ? "text-white" : "text-aquario-primary"
-                }`}
-              >
-                Para Estudantes que Precisam de Ajuda
-              </h3>
-              <p className={`mb-6 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                Nossos guias são o melhor lugar para começar! Encontre orientações, dicas e recursos
-                que vão te ajudar em sua jornada acadêmica no Centro de Informática.
-              </p>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className={
-                  isDark
-                    ? "border-white text-white hover:bg-white/20"
-                    : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                }
-              >
-                <Link href="/guias">Explorar Guias</Link>
-              </Button>
+        {/* Three Sections */}
+        <section className="py-16">
+          <div className="max-w-4xl mx-auto">
+            <div className="space-y-6">
+              {/* Sobre Section */}
+              <Link href="/sobre" className="block">
+                <Card
+                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
+                    isDark
+                      ? "bg-white/10 border-white/20 hover:bg-white/15"
+                      : "bg-white/60 border-blue-200 hover:bg-white/80"
+                  }`}
+                >
+                  <CardContent className="p-6">
+                    <h3
+                      className={`font-display text-xl font-bold mb-3 ${
+                        isDark ? "text-white" : "text-aquario-primary"
+                      }`}
+                    >
+                      Sobre o Projeto
+                    </h3>
+                    <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
+                      Conheça mais sobre o Aquário, nossa missão, visão e como contribuir para este
+                      projeto em constante evolução.
+                    </p>
+                    <Button
+                      variant="outline"
+                      className={
+                        isDark
+                          ? "border-white text-white hover:bg-white/20"
+                          : "border-blue-900 text-blue-900 hover:bg-blue-50"
+                      }
+                    >
+                      Saiba Mais
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              {/* Guias Section */}
+              <Link href="/guias" className="block">
+                <Card
+                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
+                    isDark
+                      ? "bg-white/10 border-white/20 hover:bg-white/15"
+                      : "bg-white/60 border-blue-200 hover:bg-white/80"
+                  }`}
+                >
+                  <CardContent className="p-6">
+                    <h3
+                      className={`font-display text-xl font-bold mb-3 ${
+                        isDark ? "text-white" : "text-aquario-primary"
+                      }`}
+                    >
+                      Guias e Recursos
+                    </h3>
+                    <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
+                      Encontre orientações, dicas e recursos que vão te ajudar em sua jornada
+                      acadêmica no Centro de Informática.
+                    </p>
+                    <Button
+                      variant="outline"
+                      className={
+                        isDark
+                          ? "border-white text-white hover:bg-white/20"
+                          : "border-blue-900 text-blue-900 hover:bg-blue-50"
+                      }
+                    >
+                      Explorar Guias
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              {/* Entidades Section */}
+              <div className="block">
+                <Card
+                  className={`h-full hover:shadow-lg transition-shadow pointer-events-auto ${
+                    isDark
+                      ? "bg-white/10 border-white/20 hover:bg-white/15"
+                      : "bg-white/60 border-blue-200 hover:bg-white/80"
+                  }`}
+                >
+                  <CardContent className="p-6">
+                    <Link href="/entidades" className="block">
+                      <h3
+                        className={`font-display text-xl font-bold mb-3 ${
+                          isDark ? "text-white" : "text-aquario-primary"
+                        }`}
+                      >
+                        Entidades
+                      </h3>
+                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
+                        Procure laboratórios, ligas acadêmicas, grupos de pesquisa e outros do
+                        Centro de Informática.
+                      </p>
+                      <Button
+                        variant="outline"
+                        className={
+                          isDark
+                            ? "border-white text-white hover:bg-white/20 mb-4"
+                            : "border-blue-900 text-blue-900 hover:bg-blue-50 mb-4"
+                        }
+                      >
+                        Ver Todas
+                      </Button>
+                    </Link>
+
+                    {/* Entidades Infinite Scroll Preview */}
+                    {entidades.length > 0 && (
+                      <div
+                        ref={scrollContainerRef}
+                        className="mt-4 relative overflow-x-auto overflow-y-hidden scrollbar-hide"
+                        onWheel={() => {
+                          setIsScrolling(true);
+                          setTimeout(() => setIsScrolling(false), 2000);
+                        }}
+                        onMouseDown={() => setIsScrolling(true)}
+                        onMouseUp={() => setTimeout(() => setIsScrolling(false), 1000)}
+                        onTouchStart={() => setIsScrolling(true)}
+                        onTouchEnd={() => setTimeout(() => setIsScrolling(false), 1000)}
+                      >
+                        <style>
+                          {`
+                            .scrollbar-hide::-webkit-scrollbar {
+                              display: none;
+                            }
+                            .scrollbar-hide {
+                              -ms-overflow-style: none;
+                              scrollbar-width: none;
+                            }
+                          `}
+                        </style>
+                        <div className="flex gap-4" style={{ width: "fit-content" }}>
+                          {/* Duplicate entidades for seamless loop */}
+                          {[...entidades, ...entidades].map((entidade, index) => (
+                            <Link
+                              key={`${entidade.id}-${index}`}
+                              href={`/entidade/${entidade.slug}`}
+                              className={`flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0 pointer-events-auto border min-w-[200px] max-w-[250px] ${
+                                isDark ? "border-white/10" : "border-black/10"
+                              }`}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={entidade.imagePath || ""}
+                                alt={entidade.name}
+                                className="w-12 h-12 object-contain rounded flex-shrink-0"
+                                onError={e => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = "none";
+                                }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className={`text-sm font-medium truncate ${
+                                    isDark ? "text-white" : "text-slate-900"
+                                  }`}
+                                >
+                                  {entidade.name}
+                                </p>
+                                {entidade.subtitle && (
+                                  <p
+                                    className={`text-xs truncate ${
+                                      isDark ? "text-white/60" : "text-slate-600"
+                                    }`}
+                                  >
+                                    {entidade.subtitle}
+                                  </p>
+                                )}
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </section>
