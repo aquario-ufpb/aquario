@@ -175,13 +175,15 @@ export default function GuiasPage() {
                 <AlignJustify size={12} />
               </Button>
             </SheetTrigger>
-            <SheetContent side={"left"} className="p-0">
-              <SheetHeader className="px-6 pt-6">
+            <SheetContent side={"left"} className="p-0 flex flex-col overflow-hidden">
+              <SheetHeader className="px-6 pt-6 flex-shrink-0">
                 <SheetTitle className="pb-4" style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
                   O que procura?
                 </SheetTitle>
               </SheetHeader>
-              <GuideIndex guias={guiaTree} />
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <GuideIndex guias={guiaTree} />
+              </div>
             </SheetContent>
           </Sheet>
         </div>

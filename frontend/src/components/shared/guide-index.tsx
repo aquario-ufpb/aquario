@@ -91,9 +91,9 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ guias }) => {
 
   return (
     <div className="h-full overflow-y-auto flex flex-col bg-gray-50/50 dark:bg-black/10 rounded-md">
-      <div className={`space-y-1 w-full p-4 flex-1 ${inter.className}`}>
-        {guias.map(guia => (
-          <div key={guia.slug} className="mb-4">
+      <div className={`space-y-1 w-full p-4 pb-2 flex-1 ${inter.className}`}>
+        {guias.map((guia, guiaIndex) => (
+          <div key={guia.slug} className={guiaIndex === guias.length - 1 ? "" : "mb-4"}>
             <p
               className="text-xs font-semibold uppercase tracking-wider mb-2 px-2 pt-2"
               style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
