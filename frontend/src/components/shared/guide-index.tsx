@@ -27,13 +27,12 @@ type GuiaNode = {
 };
 
 type GuideIndexProps = {
-  cursoSlug: string;
   guias: GuiaNode[];
 };
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
+export const GuideIndex: React.FC<GuideIndexProps> = ({ guias }) => {
   const pathname = usePathname();
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -59,13 +58,13 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
 
   const isSectionActive = React.useCallback(
     (guiaSlug: string, secaoSlug: string, subSlug?: string) => {
-      const basePath = `/guias/${cursoSlug}/${guiaSlug}/${secaoSlug}`;
+      const basePath = `/guias/${guiaSlug}/${secaoSlug}`;
       if (subSlug) {
         return pathname === `${basePath}/${subSlug}`;
       }
       return pathname === basePath;
     },
-    [pathname, cursoSlug]
+    [pathname]
   );
 
   // Auto-expand sections that contain the active page
@@ -88,7 +87,7 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
       });
     });
     setExpandedSections(newExpanded);
-  }, [pathname, guias, cursoSlug, isSectionActive]);
+  }, [pathname, guias, isSectionActive]);
 
   return (
     <div className="h-full overflow-y-auto flex flex-col bg-gray-50/50 dark:bg-gray-900/50">
@@ -106,7 +105,7 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
                 const sectionKey = `${guia.slug}-${secao.slug}`;
                 const hasSubsections = secao.subsecoes && secao.subsecoes.length > 0;
                 const isExpanded = expandedSections.has(sectionKey);
-                const secaoUrl = `/guias/${cursoSlug}/${guia.slug}/${secao.slug}`;
+                const secaoUrl = `/guias/${guia.slug}/${secao.slug}`;
                 const isSecaoActive = isSectionActive(guia.slug, secao.slug);
 
                 return (

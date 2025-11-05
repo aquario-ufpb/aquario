@@ -3,28 +3,19 @@ import { API_URL, ENDPOINTS } from "../../config/constants";
 import { GuiasDataProvider } from "./guias-provider.interface";
 
 export class BackendGuiasProvider implements GuiasDataProvider {
-  async getByCurso(cursoSlug: string): Promise<Guia[]> {
-    // First, get all courses to find the course ID by slug
-    const cursos = await this.getCursos("CI"); // Assuming all courses are under CI center
-
-    const curso = cursos.find(c => c.id === cursoSlug);
-    if (!curso) {
-      throw new Error(`Course slug '${cursoSlug}' not found`);
-    }
-
-    // Use the real course ID for the API call
-    const response = await fetch(
-      `${API_URL}${ENDPOINTS.GUIAS((curso as { realId: string }).realId)}`
-    );
+  async getAll(): Promise<Guia[]> {
+    // Get all guias for Centro de Informática
+    // Since we're consolidating, we'll fetch all guias regardless of course
+    const response = await fetch(`${API_URL}/guias`);
     if (!response.ok) {
       throw new Error("Failed to fetch guias");
     }
     return response.json();
   }
 
-  async getSecoes(guiaSlug: string, _cursoSlug?: string): Promise<Secao[]> {
+  async getSecoes(guiaSlug: string): Promise<Secao[]> {
     // For backend, we need to find the guia by slug and get its ID
-    const guias = await this.getByCurso("ciencia-da-computacao"); // Get all guias to find the one with matching slug
+    const guias = await this.getAll();
     const guia = guias.find(g => g.slug === guiaSlug);
     if (!guia) {
       throw new Error(`Guia with slug '${guiaSlug}' not found`);
@@ -37,9 +28,9 @@ export class BackendGuiasProvider implements GuiasDataProvider {
     return response.json();
   }
 
-  async getSubSecoes(secaoSlug: string, _cursoSlug?: string): Promise<SubSecao[]> {
+  async getSubSecoes(secaoSlug: string): Promise<SubSecao[]> {
     // For backend, we need to find the secao by slug and get its ID
-    const guias = await this.getByCurso("ciencia-da-computacao"); // Get all guias
+    const guias = await this.getAll();
     let targetSecao = null;
 
     for (const guia of guias) {

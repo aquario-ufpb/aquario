@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import GradientHeaderComponent from "@/components/shared/gradient-header";
 import { GuideIndex } from "@/components/shared/guide-index";
 import MarkdownRenderer from "@/components/shared/markdown-renderer";
 import { Button } from "@/components/ui/button";
@@ -11,12 +10,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { AlignJustify } from "lucide-react";
 import { useGuiasPage } from "@/hooks";
 
-export default function GuiasCursoPage() {
-  const params = useParams<{ curso: string; parts?: string[] }>();
-  const router = useRouter();
+export default function GuiasPage() {
+  const params = useParams<{ parts?: string[] }>();
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const cursoSlug = params?.curso;
   const parts = params?.parts as string[] | undefined;
 
   useEffect(() => {
@@ -25,33 +22,11 @@ export default function GuiasCursoPage() {
 
   const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
 
-  const {
-    guiaTree,
-    curso: _curso,
-    isLoading,
-    error,
-    cursoSlugToNome,
-    secoesData,
-    subSecoesData,
-  } = useGuiasPage(cursoSlug || "");
-
-  const handleCourseChange = (courseName: string) => {
-    // Map course name back to slug
-    const courseSlugMap: Record<string, string> = {
-      "Ciência da Computação": "ciencia-da-computacao",
-      "Engenharia da Computação": "engenharia-da-computacao",
-      "Ciências de Dados e Inteligência Artificial": "ciencias-de-dados-e-inteligencia-artificial",
-    };
-    const newSlug = courseSlugMap[courseName];
-    if (newSlug) {
-      router.push(`/guias/${newSlug}`);
-    }
-  };
+  const { guiaTree, isLoading, error, secoesData, subSecoesData } = useGuiasPage();
 
   const currentContent = useMemo(() => {
     if (!parts || parts.length === 0) {
-      const cursoNome = cursoSlugToNome[cursoSlug as keyof typeof cursoSlugToNome] || "Curso";
-      let summary = `# Bem-vindo ao curso ${cursoNome}\n\nAqui estão todos os tópicos disponíveis para explorar:\n\n`;
+      let summary = `# Bem-vindo aos Guias do Centro de Informática\n\nAqui estão todos os tópicos disponíveis para explorar:\n\n`;
 
       if (guiaTree && guiaTree.length > 0) {
         guiaTree.forEach((guia, guiaIndex) => {
@@ -59,7 +34,7 @@ export default function GuiasCursoPage() {
 
           if (guia.secoes && guia.secoes.length > 0) {
             guia.secoes.forEach(secao => {
-              const secaoUrl = `/guias/${cursoSlug}/${guia.slug}/${secao.slug}`;
+              const secaoUrl = `/guias/${guia.slug}/${secao.slug}`;
               summary += `- [${secao.titulo}](${secaoUrl})`;
 
               if (secao.subsecoes && secao.subsecoes.length > 0) {
@@ -85,7 +60,7 @@ export default function GuiasCursoPage() {
       return summary;
     }
 
-    // URL structure: /guias/{curso}/{guia}/{secao}/{subsecao?}
+    // URL structure: /guias/{guia}/{secao}/{subsecao?}
     const [guiaSlug, secaoSlug, subSlug] = parts;
 
     if (!guiaSlug) {
@@ -120,17 +95,10 @@ export default function GuiasCursoPage() {
     }
 
     return "# Sub-seção não encontrada";
-  }, [parts, secoesData, subSecoesData, guiaTree, cursoSlug, cursoSlugToNome]);
+  }, [parts, secoesData, subSecoesData, guiaTree]);
 
   const breadcrumbs = useMemo(() => {
     const crumbs: Array<{ label: string; href?: string }> = [{ label: "Guias", href: "/guias" }];
-
-    if (!cursoSlug) {
-      return crumbs;
-    }
-
-    const cursoNome = cursoSlugToNome[cursoSlug as keyof typeof cursoSlugToNome] || cursoSlug;
-    crumbs.push({ label: cursoNome, href: `/guias/${cursoSlug}` });
 
     if (!parts || parts.length === 0) {
       crumbs.push({ label: "Índice" });
@@ -142,14 +110,14 @@ export default function GuiasCursoPage() {
     if (guiaSlug && guiaTree) {
       const guia = guiaTree.find(g => g.slug === guiaSlug);
       if (guia) {
-        crumbs.push({ label: guia.titulo, href: `/guias/${cursoSlug}` });
+        crumbs.push({ label: guia.titulo, href: `/guias` });
 
         if (secaoSlug) {
           const secao = guia.secoes?.find(s => s.slug === secaoSlug);
           if (secao) {
             crumbs.push({
               label: secao.titulo,
-              href: `/guias/${cursoSlug}/${guiaSlug}/${secaoSlug}`,
+              href: `/guias/${guiaSlug}/${secaoSlug}`,
             });
 
             if (subSlug) {
@@ -170,7 +138,7 @@ export default function GuiasCursoPage() {
     }
 
     return crumbs;
-  }, [cursoSlug, parts, cursoSlugToNome, guiaTree]);
+  }, [parts, guiaTree]);
 
   if (isLoading) {
     return (
@@ -189,20 +157,9 @@ export default function GuiasCursoPage() {
 
   return (
     <div className="fixed inset-x-0 top-[90px] bottom-0 flex flex-col overflow-hidden">
-      <GradientHeaderComponent
-        academicCenter="Centro de Informática"
-        courses={[
-          "Ciência da Computação",
-          "Engenharia da Computação",
-          "Ciências de Dados e Inteligência Artificial",
-        ]}
-        currentCourse={cursoSlugToNome[cursoSlug as keyof typeof cursoSlugToNome] || "Curso"}
-        onCourseChange={handleCourseChange}
-      />
-
       <div className="flex md:flex-row w-full flex-col flex-1 min-h-0 overflow-hidden">
         <div className="w-[300px] hidden md:flex flex-col h-full overflow-hidden">
-          <GuideIndex cursoSlug={cursoSlug} guias={guiaTree} />
+          <GuideIndex guias={guiaTree} />
         </div>
         <div className="md:hidden pl-4 pt-4 pb-4">
           <Sheet key={"left"}>
@@ -224,7 +181,7 @@ export default function GuiasCursoPage() {
                   O que procura?
                 </SheetTitle>
               </SheetHeader>
-              <GuideIndex cursoSlug={cursoSlug} guias={guiaTree} />
+              <GuideIndex guias={guiaTree} />
             </SheetContent>
           </Sheet>
         </div>
@@ -232,11 +189,7 @@ export default function GuiasCursoPage() {
           <MarkdownRenderer
             content={currentContent}
             breadcrumbs={breadcrumbs}
-            basePath={
-              parts && parts.length > 0
-                ? `/guias/${cursoSlug}/${parts.join("/")}`
-                : `/guias/${cursoSlug}`
-            }
+            basePath={parts && parts.length > 0 ? `/guias/${parts.join("/")}` : `/guias`}
           />
         </div>
       </div>

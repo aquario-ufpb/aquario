@@ -16,7 +16,16 @@ function normalizeToSlug(name: string): string {
 }
 
 /**
+ * Removes priority prefix from folder/file name (e.g., "1 - Name" -> "Name")
+ */
+function removePriorityPrefix(name: string): string {
+  const prefixMatch = name.match(/^(\d+)\s*-\s*(.+)$/);
+  return prefixMatch ? prefixMatch[2].trim() : name;
+}
+
+/**
  * Converts a slug back to a folder/filename by searching directory contents
+ * Handles priority prefixes (e.g., "1 - Componentes Curriculares")
  */
 function slugToActualName(slug: string, dirPath: string): string | null {
   if (!existsSync(dirPath)) {
@@ -34,7 +43,9 @@ function slugToActualName(slug: string, dirPath: string): string | null {
     const normalizedSlug = normalizeToSlug(slug);
 
     for (const entry of entries) {
-      const entrySlug = normalizeToSlug(entry);
+      // Remove priority prefix before comparing
+      const entryWithoutPrefix = removePriorityPrefix(entry);
+      const entrySlug = normalizeToSlug(entryWithoutPrefix);
 
       if (entrySlug === normalizedSlug || entry === slug) {
         return entry;
@@ -117,11 +128,12 @@ export async function GET(_request: unknown, { params }: { params: { path: strin
         contentDir = join(process.cwd(), "content", "aquario-entidades", "centro-de-informatica");
         searchPath = slugPath.slice(1); // Remove "entidades" prefix
       } else {
-        contentDir = join(process.cwd(), "content", "aquario-guias");
+        // Handle assets prefixed requests, but default to centro-de-informatica for guias
+        contentDir = join(process.cwd(), "content", "aquario-guias", "centro-de-informatica");
       }
     } else {
-      // Default to guias
-      contentDir = join(process.cwd(), "content", "aquario-guias");
+      // Default to guias - now under centro-de-informatica folder
+      contentDir = join(process.cwd(), "content", "aquario-guias", "centro-de-informatica");
     }
 
     // Security: Ensure we're working within the content directory

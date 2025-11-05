@@ -18,16 +18,16 @@ function createProvider(): GuiasDataProvider {
 const provider = createProvider();
 
 export const guiasService = {
-  getByCurso: async (cursoSlug: string): Promise<Guia[]> => {
-    return await provider.getByCurso(cursoSlug);
+  getAll: async (): Promise<Guia[]> => {
+    return await provider.getAll();
   },
 
-  getSecoes: async (guiaSlug: string, cursoSlug?: string): Promise<Secao[]> => {
-    return await provider.getSecoes(guiaSlug, cursoSlug);
+  getSecoes: async (guiaSlug: string): Promise<Secao[]> => {
+    return await provider.getSecoes(guiaSlug);
   },
 
-  getSubSecoes: async (secaoSlug: string, cursoSlug?: string): Promise<SubSecao[]> => {
-    return await provider.getSubSecoes(secaoSlug, cursoSlug);
+  getSubSecoes: async (secaoSlug: string): Promise<SubSecao[]> => {
+    return await provider.getSubSecoes(secaoSlug);
   },
 
   getCentros: async (): Promise<Array<{ id: string; nome: string; sigla: string }>> => {

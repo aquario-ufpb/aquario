@@ -5,38 +5,12 @@ import { guiasService } from "../lib/api";
 import { queryKeys } from "../lib/query-keys";
 import { GuiaTree, Secao, SubSecao } from "../lib/types";
 
-export const useGuiasPage = (cursoSlug: string) => {
-  // Map curso slug to name
-  const cursoSlugToNome = useMemo(
-    () => ({
-      "ciencia-da-computacao": "Ciência da Computação",
-      "engenharia-da-computacao": "Engenharia da Computação",
-      "ciencias-de-dados-e-inteligencia-artificial": "Ciências de Dados e Inteligência Artificial",
-    }),
-    []
-  );
-
-  // Hardcoded cursos - no backend dependency
-  const cursos = [
-    { id: "ciencia-da-computacao", nome: "Ciência da Computação", centroId: "ci" },
-    { id: "engenharia-da-computacao", nome: "Engenharia da Computação", centroId: "ci" },
-    {
-      id: "ciencias-de-dados-e-inteligencia-artificial",
-      nome: "Ciências de Dados e Inteligência Artificial",
-      centroId: "ci",
-    },
-  ];
-
-  // Find the specific curso
-  const curso = cursos.find(
-    c => c.nome === cursoSlugToNome[cursoSlug as keyof typeof cursoSlugToNome]
-  );
-
-  const { data: guias, isLoading: guiasLoading, error: guiasError } = useGuias(cursoSlug);
+export const useGuiasPage = () => {
+  const { data: guias, isLoading: guiasLoading, error: guiasError } = useGuias();
 
   // Fetch all sections for all guias using useQueries
   const secoesQueries = useQuery({
-    queryKey: queryKeys.guias.secoes(cursoSlug || "none"),
+    queryKey: queryKeys.guias.secoes("all"),
     queryFn: async () => {
       if (!guias) {
         return {};
@@ -44,7 +18,7 @@ export const useGuiasPage = (cursoSlug: string) => {
 
       const secoesMap: Record<string, Secao[]> = {};
       for (const guia of guias) {
-        const secoes = await guiasService.getSecoes(guia.slug, cursoSlug); // Pass course context
+        const secoes = await guiasService.getSecoes(guia.slug);
         secoesMap[guia.slug] = secoes;
       }
       return secoesMap;
@@ -54,7 +28,7 @@ export const useGuiasPage = (cursoSlug: string) => {
 
   // Fetch all subsections for all sections
   const subSecoesQueries = useQuery({
-    queryKey: queryKeys.guias.subSecoes(cursoSlug || "none"),
+    queryKey: queryKeys.guias.subSecoes("all"),
     queryFn: async () => {
       if (!secoesQueries.data) {
         return {};
@@ -64,7 +38,7 @@ export const useGuiasPage = (cursoSlug: string) => {
       for (const guiaSlug in secoesQueries.data) {
         const secoes = secoesQueries.data[guiaSlug];
         for (const secao of secoes) {
-          const subSecoes = await guiasService.getSubSecoes(secao.slug, cursoSlug); // Pass course context
+          const subSecoes = await guiasService.getSubSecoes(secao.slug);
           subSecoesMap[secao.slug] = subSecoes;
         }
       }
@@ -108,10 +82,8 @@ export const useGuiasPage = (cursoSlug: string) => {
 
   return {
     guiaTree,
-    curso,
     isLoading,
     error,
-    cursoSlugToNome,
     secoesData: secoesQueries.data,
     subSecoesData: subSecoesQueries.data,
   };

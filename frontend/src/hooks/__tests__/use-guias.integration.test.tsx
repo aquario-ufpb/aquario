@@ -41,12 +41,12 @@ describe("useGuias Hook", () => {
     vi.clearAllMocks();
   });
 
-  it("should fetch guias for a given curso", async () => {
+  it("should fetch all guias", async () => {
     mockGuiasService.guiasService = {
-      getByCurso: vi.fn().mockResolvedValue(mockGuias),
+      getAll: vi.fn().mockResolvedValue(mockGuias),
     };
 
-    const { result } = renderHookWithProviders(() => useGuias("ciencia-da-computacao"));
+    const { result } = renderHookWithProviders(() => useGuias());
 
     // Initially loading
     expect(result.current.isLoading).toBe(true);
@@ -59,31 +59,16 @@ describe("useGuias Hook", () => {
 
     expect(result.current.data).toEqual(mockGuias);
     expect(result.current.isSuccess).toBe(true);
-    expect(mockGuiasService.guiasService.getByCurso).toHaveBeenCalledWith("ciencia-da-computacao");
-  });
-
-  it("should not fetch when cursoSlug is empty", async () => {
-    mockGuiasService.guiasService = {
-      getByCurso: vi.fn(),
-    };
-
-    const { result } = renderHookWithProviders(() => useGuias(""));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(mockGuiasService.guiasService.getByCurso).not.toHaveBeenCalled();
-    expect(result.current.data).toBeUndefined();
+    expect(mockGuiasService.guiasService.getAll).toHaveBeenCalled();
   });
 
   it("should handle errors gracefully", async () => {
     const error = new Error("Failed to fetch guias");
     mockGuiasService.guiasService = {
-      getByCurso: vi.fn().mockRejectedValue(error),
+      getAll: vi.fn().mockRejectedValue(error),
     };
 
-    const { result } = renderHookWithProviders(() => useGuias("ciencia-da-computacao"));
+    const { result } = renderHookWithProviders(() => useGuias());
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
@@ -95,12 +80,10 @@ describe("useGuias Hook", () => {
 
   it("should cache results with React Query", async () => {
     mockGuiasService.guiasService = {
-      getByCurso: vi.fn().mockResolvedValue(mockGuias),
+      getAll: vi.fn().mockResolvedValue(mockGuias),
     };
 
-    const { result: result1, rerender } = renderHookWithProviders(() =>
-      useGuias("ciencia-da-computacao")
-    );
+    const { result: result1, rerender } = renderHookWithProviders(() => useGuias());
 
     await waitFor(() => {
       expect(result1.current.isSuccess).toBe(true);
@@ -114,7 +97,7 @@ describe("useGuias Hook", () => {
     expect(result1.current.data).toEqual(mockGuias);
 
     // Service should only be called once due to caching
-    expect(mockGuiasService.guiasService.getByCurso).toHaveBeenCalledTimes(1);
+    expect(mockGuiasService.guiasService.getAll).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -149,9 +132,7 @@ describe("useSecoes Hook", () => {
       getSecoes: vi.fn().mockResolvedValue(mockSecoes),
     };
 
-    const { result } = renderHookWithProviders(() =>
-      useSecoes("bem-vindo", "ciencia-da-computacao")
-    );
+    const { result } = renderHookWithProviders(() => useSecoes("bem-vindo"));
 
     expect(result.current.isLoading).toBe(true);
 
@@ -160,10 +141,7 @@ describe("useSecoes Hook", () => {
     });
 
     expect(result.current.data).toEqual(mockSecoes);
-    expect(mockGuiasService.guiasService.getSecoes).toHaveBeenCalledWith(
-      "bem-vindo",
-      "ciencia-da-computacao"
-    );
+    expect(mockGuiasService.guiasService.getSecoes).toHaveBeenCalledWith("bem-vindo");
   });
 
   it("should not fetch when guiaSlug is empty", async () => {
@@ -171,27 +149,13 @@ describe("useSecoes Hook", () => {
       getSecoes: vi.fn(),
     };
 
-    const { result } = renderHookWithProviders(() => useSecoes("", "ciencia-da-computacao"));
+    const { result } = renderHookWithProviders(() => useSecoes(""));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
 
     expect(mockGuiasService.guiasService.getSecoes).not.toHaveBeenCalled();
-  });
-
-  it("should handle cursoSlug as optional parameter", async () => {
-    mockGuiasService.guiasService = {
-      getSecoes: vi.fn().mockResolvedValue(mockSecoes),
-    };
-
-    const { result } = renderHookWithProviders(() => useSecoes("bem-vindo"));
-
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
-
-    expect(mockGuiasService.guiasService.getSecoes).toHaveBeenCalledWith("bem-vindo", undefined);
   });
 });
 
@@ -226,9 +190,7 @@ describe("useSubSecoes Hook", () => {
       getSubSecoes: vi.fn().mockResolvedValue(mockSubSecoes),
     };
 
-    const { result } = renderHookWithProviders(() =>
-      useSubSecoes("principais-cadeiras", "ciencia-da-computacao")
-    );
+    const { result } = renderHookWithProviders(() => useSubSecoes("principais-cadeiras"));
 
     expect(result.current.isLoading).toBe(true);
 
@@ -237,10 +199,7 @@ describe("useSubSecoes Hook", () => {
     });
 
     expect(result.current.data).toEqual(mockSubSecoes);
-    expect(mockGuiasService.guiasService.getSubSecoes).toHaveBeenCalledWith(
-      "principais-cadeiras",
-      "ciencia-da-computacao"
-    );
+    expect(mockGuiasService.guiasService.getSubSecoes).toHaveBeenCalledWith("principais-cadeiras");
   });
 
   it("should not fetch when secaoSlug is empty", async () => {
@@ -248,7 +207,7 @@ describe("useSubSecoes Hook", () => {
       getSubSecoes: vi.fn(),
     };
 
-    const { result } = renderHookWithProviders(() => useSubSecoes("", "ciencia-da-computacao"));
+    const { result } = renderHookWithProviders(() => useSubSecoes(""));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -263,9 +222,7 @@ describe("useSubSecoes Hook", () => {
       getSubSecoes: vi.fn().mockRejectedValue(error),
     };
 
-    const { result } = renderHookWithProviders(() =>
-      useSubSecoes("principais-cadeiras", "ciencia-da-computacao")
-    );
+    const { result } = renderHookWithProviders(() => useSubSecoes("principais-cadeiras"));
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true);

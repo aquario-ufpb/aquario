@@ -99,7 +99,7 @@ describe("useGuiasPage Hook", () => {
 
   it("should build complete guia tree with all data", async () => {
     // Mock service responses
-    mockGuiasService.guiasService.getByCurso.mockResolvedValue(mockGuias);
+    mockGuiasService.guiasService.getAll.mockResolvedValue(mockGuias);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockGuiasService.guiasService.getSecoes.mockImplementation((guiaSlug: string) => {
       return Promise.resolve(mockSecoes[guiaSlug as keyof typeof mockSecoes] || []);
@@ -109,7 +109,7 @@ describe("useGuiasPage Hook", () => {
       return Promise.resolve(mockSubSecoes[secaoSlug as keyof typeof mockSubSecoes] || []);
     });
 
-    const { result } = renderHookWithProviders(() => useGuiasPage("ciencia-da-computacao"));
+    const { result } = renderHookWithProviders(() => useGuiasPage());
 
     // Initially loading
     expect(result.current.isLoading).toBe(true);
@@ -146,19 +146,17 @@ describe("useGuiasPage Hook", () => {
   });
 
   it("should find correct curso from hardcoded list", async () => {
-    mockGuiasService.guiasService.getByCurso.mockResolvedValue([]);
+    mockGuiasService.guiasService.getAll.mockResolvedValue([]);
     mockGuiasService.guiasService.getSecoes.mockResolvedValue([]);
     mockGuiasService.guiasService.getSubSecoes.mockResolvedValue([]);
 
-    const { result } = renderHookWithProviders(() => useGuiasPage("ciencia-da-computacao"));
+    const { result } = renderHookWithProviders(() => useGuiasPage());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.curso).toBeDefined();
-    expect(result.current.curso?.nome).toBe("Ciência da Computação");
-    expect(result.current.curso?.id).toBe("ciencia-da-computacao");
+    // Course-specific properties removed, test removed
   });
 
   it("should handle loading states correctly", async () => {
@@ -169,11 +167,11 @@ describe("useGuiasPage Hook", () => {
       resolveGuias = resolve;
     });
 
-    mockGuiasService.guiasService.getByCurso.mockReturnValue(guiasPromise);
+    mockGuiasService.guiasService.getAll.mockReturnValue(guiasPromise);
     mockGuiasService.guiasService.getSecoes.mockResolvedValue([]);
     mockGuiasService.guiasService.getSubSecoes.mockResolvedValue([]);
 
-    const { result } = renderHookWithProviders(() => useGuiasPage("ciencia-da-computacao"));
+    const { result } = renderHookWithProviders(() => useGuiasPage());
 
     // Should be loading initially
     expect(result.current.isLoading).toBe(true);
@@ -189,9 +187,9 @@ describe("useGuiasPage Hook", () => {
 
   it("should handle errors gracefully", async () => {
     const error = new Error("Failed to fetch guias");
-    mockGuiasService.guiasService.getByCurso.mockRejectedValue(error);
+    mockGuiasService.guiasService.getAll.mockRejectedValue(error);
 
-    const { result } = renderHookWithProviders(() => useGuiasPage("ciencia-da-computacao"));
+    const { result } = renderHookWithProviders(() => useGuiasPage());
 
     await waitFor(() => {
       expect(result.current.error).toBeTruthy();
@@ -204,7 +202,7 @@ describe("useGuiasPage Hook", () => {
   });
 
   it("should provide secoesData and subSecoesData", async () => {
-    mockGuiasService.guiasService.getByCurso.mockResolvedValue(mockGuias);
+    mockGuiasService.guiasService.getAll.mockResolvedValue(mockGuias);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockGuiasService.guiasService.getSecoes.mockImplementation((guiaSlug: string) => {
       return Promise.resolve(mockSecoes[guiaSlug as keyof typeof mockSecoes] || []);
@@ -214,7 +212,7 @@ describe("useGuiasPage Hook", () => {
       return Promise.resolve(mockSubSecoes[secaoSlug as keyof typeof mockSubSecoes] || []);
     });
 
-    const { result } = renderHookWithProviders(() => useGuiasPage("ciencia-da-computacao"));
+    const { result } = renderHookWithProviders(() => useGuiasPage());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -230,35 +228,16 @@ describe("useGuiasPage Hook", () => {
   });
 
   it("should handle empty guias list", async () => {
-    mockGuiasService.guiasService.getByCurso.mockResolvedValue([]);
+    mockGuiasService.guiasService.getAll.mockResolvedValue([]);
     mockGuiasService.guiasService.getSecoes.mockResolvedValue([]);
     mockGuiasService.guiasService.getSubSecoes.mockResolvedValue([]);
 
-    const { result } = renderHookWithProviders(() => useGuiasPage("non-existent-curso"));
+    const { result } = renderHookWithProviders(() => useGuiasPage());
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
 
     expect(result.current.guiaTree).toEqual([]);
-    expect(result.current.curso).toBeUndefined();
-  });
-
-  it("should convert curso slugs to readable names", async () => {
-    mockGuiasService.guiasService.getByCurso.mockResolvedValue([]);
-    mockGuiasService.guiasService.getSecoes.mockResolvedValue([]);
-    mockGuiasService.guiasService.getSubSecoes.mockResolvedValue([]);
-
-    const { result } = renderHookWithProviders(() =>
-      useGuiasPage("ciencias-de-dados-e-inteligencia-artificial")
-    );
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.cursoSlugToNome["ciencias-de-dados-e-inteligencia-artificial"]).toBe(
-      "Ciências de Dados e Inteligência Artificial"
-    );
   });
 });
