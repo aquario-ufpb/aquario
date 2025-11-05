@@ -6,13 +6,19 @@ import { entidadesService } from "@/lib/api/entidades";
 import { Entidade, TipoEntidade } from "@/lib/types";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Instagram, Linkedin, MapPin, Globe } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Mail, Instagram, Linkedin, MapPin, Globe, ArrowLeft } from "lucide-react";
 import { trackEvent } from "@/analytics/posthog-client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function EntidadeDetailPage({ params }: { params: { slug: string } }) {
   const [entidade, setEntidade] = useState<Entidade | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [otherEntidades, setOtherEntidades] = useState<Entidade[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     if (params.slug) {
@@ -23,6 +29,13 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
             throw new Error("Entidade não encontrada");
           }
           setEntidade(data);
+
+          // Fetch other entities of the same type
+          const allEntidades = await entidadesService.getAll();
+          const filtered = allEntidades
+            .filter(e => e.tipo === data.tipo && e.slug !== data.slug)
+            .slice(0, 8); // Limit to 8 similar entities
+          setOtherEntidades(filtered);
         } catch (err: unknown) {
           if (err instanceof Error) {
             setError(err.message);
@@ -91,132 +104,238 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
       },
     });
   };
+  const getBadgeText = (tipo: string) => {
+    switch (tipo) {
+      case "LABORATORIO":
+        return "LAB";
+      case "GRUPO_ESTUDANTIL":
+        return "GRUPO";
+      case "LIGA_ESTUDANTIL":
+        return "LIGA";
+      case "CENTRO_ACADEMICO":
+        return "CA";
+      case "ATLETICA":
+        return "ATLETICA";
+      case "EMPRESA":
+        return "EMPRESA";
+      default:
+        return "OUTRO";
+    }
+  };
+
   return (
     <div className="mt-24">
-      {/* Main Content Section - Two Columns */}
-      <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-8 pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Left Column: Image and Details */}
-          <div className="flex flex-col gap-6">
-            {/* Image */}
-            <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden shadow-lg mx-auto lg:mx-0">
-              <Image
-                className="object-cover"
-                src={entidade.imagePath || "/placeholder.png"}
-                alt={`Foto de ${entidade.name}`}
-                fill
-              />
-            </div>
-
-            {/* Name and Badge */}
-            <div className="text-center lg:text-left">
-              <h1 className="text-3xl md:text-4xl font-bold mb-3">{entidade.name}</h1>
-              <Badge variant={getBadgeVariant()} className="w-fit">
-                {entidade.tipo.replace("_", " ")}
-              </Badge>
-            </div>
-
-            {/* People Count */}
-            <div className="flex gap-10 text-sm text-muted-foreground justify-center lg:justify-start">
-              <p>{entidade.people.length} Pessoa(s)</p>
-            </div>
-
-            {/* Location */}
-            {entidade.location && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center lg:justify-start">
-                <MapPin className="w-4 h-4" />
-                <span>{entidade.location}</span>
-              </div>
-            )}
-
-            {/* Contact Links */}
-            <div className="flex flex-wrap gap-4 pt-2 justify-center lg:justify-start">
-              {entidade.contato_email && (
-                <a
-                  href={`mailto:${entidade.contato_email}`}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Mail className="w-4 h-4" />
-                  <span>Email</span>
-                </a>
-              )}
-              {entidade.instagram && (
-                <a
-                  href={`https://instagram.com/${entidade.instagram}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={handleInstagramClick}
-                >
-                  <Instagram className="w-4 h-4" />
-                  <span>Instagram</span>
-                </a>
-              )}
-              {entidade.linkedin && (
-                <a
-                  href={`https://linkedin.com/company/${entidade.linkedin}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={handleLinkedinClick}
-                >
-                  <Linkedin className="w-4 h-4" />
-                  <span>LinkedIn</span>
-                </a>
-              )}
-              {entidade.website && (
-                <a
-                  href={entidade.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={handleWebsiteClick}
-                >
-                  <Globe className="w-4 h-4" />
-                  <span>Website</span>
-                </a>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column: Description */}
-          <div className="flex flex-col justify-start">
-            <h2 className="text-2xl font-semibold mb-4">Descrição</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              {entidade.description || "Nenhuma descrição fornecida."}
-            </p>
-          </div>
-        </div>
+      {/* Back Button */}
+      <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-8 pb-4">
+        <Button variant="ghost" onClick={() => router.back()} className="flex items-center gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </Button>
       </div>
 
-      {/* Divider */}
-      <div className="w-full h-[1px] bg-slate-400 opacity-40"></div>
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-4 pb-8">
+        <Card className="border-border/50 overflow-hidden">
+          <CardContent className="p-8 md:p-12">
+            <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-8 lg:gap-12">
+              {/* Image */}
+              <div className="flex justify-center lg:justify-start">
+                <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden border-2 border-border/50">
+                  <Image
+                    className="object-cover"
+                    src={entidade.imagePath || "/placeholder.png"}
+                    alt={`Logo de ${entidade.name}`}
+                    fill
+                  />
+                </div>
+              </div>
+
+              {/* Main Info */}
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl md:text-4xl font-display font-bold mb-3">
+                      {entidade.name}
+                    </h1>
+                    <Badge variant={getBadgeVariant()} className="mb-4">
+                      {entidade.tipo.replace("_", " ")}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                {entidade.location && (
+                  <div className="flex flex-wrap gap-6 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin className="w-4 h-4" />
+                      <span>{entidade.location}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Contact Links */}
+                <div className="flex flex-wrap gap-3 pt-2">
+                  {entidade.contato_email && (
+                    <a
+                      href={`mailto:${entidade.contato_email}`}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border/50 hover:bg-accent/20 transition-colors text-sm"
+                    >
+                      <Mail className="w-4 h-4" />
+                      <span>Email</span>
+                    </a>
+                  )}
+                  {entidade.instagram && (
+                    <a
+                      href={`https://instagram.com/${entidade.instagram}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border/50 hover:bg-accent/20 transition-colors text-sm"
+                      onClick={handleInstagramClick}
+                    >
+                      <Instagram className="w-4 h-4" />
+                      <span>Instagram</span>
+                    </a>
+                  )}
+                  {entidade.linkedin && (
+                    <a
+                      href={`https://linkedin.com/company/${entidade.linkedin}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border/50 hover:bg-accent/20 transition-colors text-sm"
+                      onClick={handleLinkedinClick}
+                    >
+                      <Linkedin className="w-4 h-4" />
+                      <span>LinkedIn</span>
+                    </a>
+                  )}
+                  {entidade.website && (
+                    <a
+                      href={entidade.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border/50 hover:bg-accent/20 transition-colors text-sm"
+                      onClick={handleWebsiteClick}
+                    >
+                      <Globe className="w-4 h-4" />
+                      <span>Website</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Description Section */}
+      {entidade.description && (
+        <div className="container mx-auto px-4 md:px-8 lg:px-16 pb-8">
+          <Card className="border-border/50">
+            <CardContent className="p-8 md:p-12">
+              <h2 className="text-2xl md:text-3xl font-semibold mb-6">Descrição</h2>
+              <p className="text-muted-foreground leading-relaxed text-lg">
+                {entidade.description}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* People Section */}
-      <div className="container mx-auto px-4 md:px-8 lg:px-16 py-8">
-        <h2 className="text-2xl font-semibold mb-6">Pessoas</h2>
-        {entidade.people.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {entidade.people.length > 0 && (
+        <div className="container mx-auto px-4 md:px-8 lg:px-16 pb-4">
+          <h2 className="text-2xl md:text-3xl font-semibold mb-8">Pessoas</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {entidade.people.map((person, index) => (
-              <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                <h3 className="font-semibold text-lg mb-1">{person.name}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{person.role}</p>
-                <p className="text-xs text-muted-foreground mb-2">{person.profession}</p>
-                {person.email && (
-                  <a
-                    href={`mailto:${person.email}`}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    {person.email}
-                  </a>
-                )}
-              </div>
+              <Card
+                key={index}
+                className="hover:bg-accent/20 transition-all duration-200 border-border/50"
+              >
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-lg mb-2">{person.name}</h3>
+                  {person.role && (
+                    <p className="text-sm font-medium text-foreground mb-1">{person.role}</p>
+                  )}
+                  {person.profession && (
+                    <p className="text-xs text-muted-foreground mb-3">{person.profession}</p>
+                  )}
+                  {person.email && (
+                    <a
+                      href={`mailto:${person.email}`}
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <Mail className="w-3 h-3" />
+                      {person.email}
+                    </a>
+                  )}
+                </CardContent>
+              </Card>
             ))}
           </div>
-        ) : (
-          <p className="text-center text-muted-foreground">Nenhuma pessoa cadastrada.</p>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Divider */}
+      {otherEntidades.length > 0 && (
+        <div className="container mx-auto px-4 md:px-8 lg:px-16 mt-10 mb-10">
+          <div className="w-full h-[1px] bg-border opacity-50"></div>
+        </div>
+      )}
+
+      {/* Other Entities of Same Type */}
+      {otherEntidades.length > 0 && (
+        <div className="container mx-auto px-4 md:px-8 lg:px-16 pb-12">
+          <h2 className="text-2xl md:text-3xl font-semibold mb-8">
+            Outros {entidade.tipo.replace("_", " ").toLowerCase()}s
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {otherEntidades.map(otherEntidade => (
+              <Link key={otherEntidade.id} href={`/entidade/${otherEntidade.slug}`}>
+                <Card className="hover:bg-accent/20 transition-all duration-200 cursor-pointer h-full border-border/50">
+                  <CardContent className="p-5">
+                    <div className="flex gap-4">
+                      {/* Image */}
+                      <div className="flex-shrink-0 flex items-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={otherEntidade.imagePath || ""}
+                          alt={otherEntidade.name}
+                          className="w-16 h-16 object-contain rounded-lg"
+                          onError={e => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                          }}
+                        />
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <h3 className="text-lg font-semibold truncate flex-1">
+                            {otherEntidade.name}
+                          </h3>
+                          <Badge
+                            variant="outline"
+                            className="text-xs px-2 py-0.5 text-muted-foreground border-muted-foreground/30 flex-shrink-0 font-normal"
+                          >
+                            {getBadgeText(otherEntidade.tipo)}
+                          </Badge>
+                        </div>
+
+                        {otherEntidade.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                            {otherEntidade.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
