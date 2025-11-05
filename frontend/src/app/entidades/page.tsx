@@ -34,10 +34,8 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
 
   const handleClick = () => {
     trackEvent("entidade_viewed", {
-      properties: {
-        entidade_name: entidade.name as string,
-        entidade_type: entidade.tipo as TipoEntidade,
-      },
+      entidade_name: entidade.name as string,
+      entidade_type: entidade.tipo as TipoEntidade,
     });
   };
 

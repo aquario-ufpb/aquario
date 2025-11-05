@@ -18,18 +18,14 @@ export type UIInteractionEvent = {
 export type EntidadesEvent =
   | {
       name: "entidade_viewed";
-      properties: {
-        entidade_name: string;
-        entidade_type: TipoEntidade;
-      };
+      entidade_name: string;
+      entidade_type: TipoEntidade;
     }
   | {
       name: "entidade_link_clicked";
-      properties: {
-        entidade_name: string;
-        entidade_type: TipoEntidade;
-        link_type: "instagram" | "linkedin" | "website";
-      };
+      entidade_name: string;
+      entidade_type: TipoEntidade;
+      link_type: "instagram" | "linkedin" | "website";
     };
 
 // Union of all PostHog events

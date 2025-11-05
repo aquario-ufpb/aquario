@@ -77,31 +77,25 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
 
   const handleInstagramClick = () => {
     trackEvent("entidade_link_clicked", {
-      properties: {
-        entidade_name: entidade.name as string,
-        entidade_type: entidade.tipo as TipoEntidade,
-        link_type: "instagram",
-      },
+      entidade_name: entidade.name as string,
+      entidade_type: entidade.tipo as TipoEntidade,
+      link_type: "instagram",
     });
   };
 
   const handleLinkedinClick = () => {
     trackEvent("entidade_link_clicked", {
-      properties: {
-        entidade_name: entidade.name as string,
-        entidade_type: entidade.tipo as TipoEntidade,
-        link_type: "linkedin",
-      },
+      entidade_name: entidade.name as string,
+      entidade_type: entidade.tipo as TipoEntidade,
+      link_type: "linkedin",
     });
   };
 
   const handleWebsiteClick = () => {
     trackEvent("entidade_link_clicked", {
-      properties: {
-        entidade_name: entidade.name as string,
-        entidade_type: entidade.tipo as TipoEntidade,
-        link_type: "website",
-      },
+      entidade_name: entidade.name as string,
+      entidade_type: entidade.tipo as TipoEntidade,
+      link_type: "website",
     });
   };
   const getBadgeText = (tipo: string) => {
