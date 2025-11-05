@@ -61,7 +61,7 @@ export default function Login() {
               />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-aquario-primary dark:text-white mb-2">
             Bem-vindo de volta
           </h1>
           <p className="text-gray-600 dark:text-gray-400">Faça login para acessar sua conta</p>

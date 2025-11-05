@@ -2,6 +2,8 @@
 
 import React, { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import GradientHeaderComponent from "@/components/shared/gradient-header";
 import { GuideIndex } from "@/components/shared/guide-index";
 import MarkdownRenderer from "@/components/shared/markdown-renderer";
@@ -13,8 +15,16 @@ import { useGuiasPage } from "@/hooks";
 export default function GuiasCursoPage() {
   const params = useParams<{ curso: string; parts?: string[] }>();
   const router = useRouter();
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const cursoSlug = params?.curso;
   const parts = params?.parts as string[] | undefined;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
 
   const {
     guiaTree,
@@ -164,14 +174,14 @@ export default function GuiasCursoPage() {
   }, [cursoSlug, parts, cursoSlugToNome, guiaTree]);
 
   if (isLoading) {
-    return <div className="p-8">Carregando…</div>;
+    return <div className="p-8" style={{ color: isDark ? '#E5F6FF' : '#0e3a6c' }}>Carregando…</div>;
   }
   if (error) {
-    return <div className="p-8 text-red-500">{error?.message || "Erro ao carregar guias"}</div>;
+    return <div className="p-8" style={{ color: isDark ? '#FFB3B5' : '#d32f2f' }}>{error?.message || "Erro ao carregar guias"}</div>;
   }
 
   return (
-    <div className="fixed inset-x-0 top-[60px] bottom-0 flex flex-col overflow-hidden">
+    <div className="fixed inset-x-0 top-[90px] bottom-0 flex flex-col overflow-hidden">
       <GradientHeaderComponent
         academicCenter="Centro de Informática"
         courses={[
@@ -190,13 +200,20 @@ export default function GuiasCursoPage() {
         <div className="md:hidden pl-4 pt-4 pb-4">
           <Sheet key={"left"}>
             <SheetTrigger asChild>
-              <Button variant="outline">
+              <Button 
+                variant="outline"
+                style={{ 
+                  backgroundColor: isDark ? '#1a3a5c' : '#ffffff',
+                  color: isDark ? '#C8E6FA' : '#0e3a6c',
+                  borderColor: isDark ? 'rgba(208, 239, 255, 0.3)' : 'rgba(14, 58, 108, 0.2)'
+                }}
+              >
                 <AlignJustify size={12} />
               </Button>
             </SheetTrigger>
             <SheetContent side={"left"} className="p-0">
               <SheetHeader className="px-6 pt-6">
-                <SheetTitle className="pb-4">O que procura?</SheetTitle>
+                <SheetTitle className="pb-4" style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }}>O que procura?</SheetTitle>
               </SheetHeader>
               <GuideIndex cursoSlug={cursoSlug} guias={guiaTree} />
             </SheetContent>

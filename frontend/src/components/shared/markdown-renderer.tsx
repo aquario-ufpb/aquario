@@ -1,6 +1,11 @@
+"use client";
+
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -89,6 +94,15 @@ const transformImagePaths = (content: string, basePath?: string): string => {
 };
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, breadcrumbs, basePath }) => {
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
+
   // Transform image paths before rendering
   const processedContent = React.useMemo(
     () => transformImagePaths(content, basePath),
@@ -96,27 +110,31 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, breadcrumb
   );
 
   return (
-    <div className="h-full overflow-y-auto flex flex-col md:pt-14 pb-8">
+    <div className="h-full overflow-y-auto flex flex-col md:pt-8 pb-8">
       {breadcrumbs && breadcrumbs.length > 0 && (
         <div className="mb-6">
           <Breadcrumb>
-            <BreadcrumbList>
+            <BreadcrumbList style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }}>
               {breadcrumbs.map((item, index) => {
                 const isLast = index === breadcrumbs.length - 1;
                 return (
                   <React.Fragment key={index}>
                     <BreadcrumbItem>
                       {isLast ? (
-                        <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                        <BreadcrumbPage style={{ color: isDark ? '#E5F6FF' : '#0e3a6c' }}>{item.label}</BreadcrumbPage>
                       ) : item.href ? (
-                        <BreadcrumbLink asChild>
-                          <Link href={item.href}>{item.label}</Link>
+                        <BreadcrumbLink asChild className="hover:opacity-80 transition-opacity">
+                          <Link href={item.href} style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }}>{item.label}</Link>
                         </BreadcrumbLink>
                       ) : (
-                        <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                        <BreadcrumbPage style={{ color: isDark ? '#E5F6FF' : '#0e3a6c' }}>{item.label}</BreadcrumbPage>
                       )}
                     </BreadcrumbItem>
-                    {!isLast && <BreadcrumbSeparator />}
+                    {!isLast && (
+                      <BreadcrumbSeparator>
+                        <ChevronRight style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }} />
+                      </BreadcrumbSeparator>
+                    )}
                   </React.Fragment>
                 );
               })}
@@ -124,9 +142,26 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, breadcrumb
           </Breadcrumb>
         </div>
       )}
-      <div className="prose-base dark:prose-invert w-full prose max-w-none">
+      <div 
+        className="prose-base dark:prose-invert w-full prose max-w-none"
+        style={{
+          color: isDark ? '#E5F6FF' : '#0e3a6c',
+        }}
+      >
         <ReactMarkdown
           components={{
+            a: ({ node, ...props }) => {
+              return (
+                <a
+                  {...props}
+                  style={{
+                    color: isDark ? '#D0EFFF' : '#0e3a6c',
+                    textDecoration: 'underline',
+                  }}
+                  className="hover:opacity-80 transition-opacity"
+                />
+              );
+            },
             // eslint-disable-next-line @next/next/no-img-element
             img: ({ node, ...props }) => {
               const src = props.src || "";

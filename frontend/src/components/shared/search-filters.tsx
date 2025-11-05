@@ -150,7 +150,7 @@ export default function SearchFilters({
             <div>
               <Button
                 onClick={handleClear}
-                className="rounded-full w-28 h-8 text-xs  border-[0.5px] bg-gray-200 text-gray-900 dark:border-white dark:bg-transparent dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 "
+                className="rounded-full w-28 h-8 text-xs  border-[0.5px] bg-gray-200 text-aquario-primary dark:border-white dark:bg-transparent dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-800 "
               >
                 Limpar
               </Button>

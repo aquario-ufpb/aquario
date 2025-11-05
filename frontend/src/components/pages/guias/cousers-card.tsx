@@ -18,8 +18,8 @@ const CourseCard: FC<CourseCardProps> = ({ iconName, children }) => {
 
   return (
     <Card
-      className="h-auto dark:text-dark-text dark:border-slate-600 hover:border-gray-900 hover:cursor-pointer 
-                     hover:text-gray-900 dark:hover:border-slate-200"
+      className="h-auto dark:text-dark-text dark:border-slate-600 hover:border-aquario-primary hover:cursor-pointer 
+                     hover:text-aquario-primary dark:hover:border-slate-200"
     >
       <CardHeader>
         <Icon className="w-6 h-6" />

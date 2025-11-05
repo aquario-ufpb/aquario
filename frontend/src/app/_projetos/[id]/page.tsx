@@ -60,14 +60,14 @@ export default function ProjetoPage({ params }: { params: { id: string } }) {
 
   if (error || !projeto) {
     return (
-      <div className="container mx-auto p-4 pt-24 text-center text-red-500">
+      <div className="container mx-auto p-4 -mt-24 text-center text-red-500">
         {error || "Projeto não encontrado."}
       </div>
     );
   }
 
   return (
-    <main className="container mx-auto max-w-6xl p-4 pt-24">
+    <main className="container mx-auto max-w-6xl p-4 -mt-24">
       <Button className="mb-8" onClick={() => router.back()}>
         Voltar
       </Button>
