@@ -48,7 +48,7 @@ jobs:
         run: |
           if git diff --quiet HEAD; then
             echo "changed=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ No changes detected - submodule is already up to date"
+            echo "ℹ️ No changes detected - submodule is already up to date!"
           else
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "📝 Changes detected in submodule"
