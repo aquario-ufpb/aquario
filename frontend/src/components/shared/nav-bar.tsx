@@ -22,9 +22,9 @@ export default function NavBar() {
   return (
     <>
       <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
-        <div className="grid grid-cols-3 items-center h-[60px] px-6 gap-4 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg w-full max-w-4xl">
-          {/* Left side - Search */}
-          <div className="flex items-center justify-start">
+        <div className="grid grid-cols-2 lg:grid-cols-3 items-center h-[60px] px-6 gap-4 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg w-full max-w-4xl">
+          {/* Left side - Search (hidden on mobile) */}
+          <div className="hidden lg:flex items-center justify-start">
             <div className="relative w-48">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 dark:text-zinc-300 z-10 pointer-events-none" />
               <input
@@ -39,8 +39,8 @@ export default function NavBar() {
             </div>
           </div>
 
-          {/* Center - Logo */}
-          <div className="flex items-center justify-center select-none">
+          {/* Logo - Left on mobile, Center on desktop */}
+          <div className="flex items-center justify-start md:justify-center select-none">
             <Link
               href="/"
               className="flex items-center gap-2 cursor-pointer select-none"
