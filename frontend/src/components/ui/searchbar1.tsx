@@ -157,7 +157,6 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
       window.addEventListener("keydown", onKey);
       return () => window.removeEventListener("keydown", onKey);
     }, [query]);
-
     return (
       <div ref={wrapperRef} className={cn("relative w-full", transparent && "!bg-transparent")}>
         <form onSubmit={handleSubmit} className="relative">
