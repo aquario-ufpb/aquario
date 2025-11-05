@@ -6,6 +6,7 @@ import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { Github } from "lucide-react";
 
 export default function Home() {
   const { theme, resolvedTheme } = useTheme();
@@ -84,14 +85,36 @@ export default function Home() {
               <br />
               no Centro de Informática da UFPB.
             </p>
-            <div className="flex justify-center pointer-events-auto">
+            <div className="flex justify-center pointer-events-auto gap-2">
               <HoverBorderGradient
                 containerClassName="rounded-full"
                 className="px-10 py-4 text-lg font-semibold"
               >
                 <Link href="/guias" className="block w-full text-center">
-                  Começar com os Guias
+                  Comece com os Guias
                 </Link>
+              </HoverBorderGradient>
+              <HoverBorderGradient
+                containerClassName="rounded-full"
+                className="px-10 py-4 text-lg font-semibold"
+              >
+                <Link href="/entidades" className="block w-full text-center">
+                  Veja as Entidades
+                </Link>
+              </HoverBorderGradient>
+              <HoverBorderGradient
+                containerClassName="rounded-full"
+                className="px-10 py-4 text-lg font-semibold"
+              >
+                <a
+                  href="https://github.com/aquario-ufpb/aquario"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full"
+                >
+                  <Github className="w-6 h-6" />
+                  Contribua
+                </a>
               </HoverBorderGradient>
             </div>
           </div>
