@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { Github, X, CheckCircle2, AlertCircle, Mail, Users, Search, Zap } from "lucide-react";
+import { Github, CheckCircle2, AlertCircle, Mail, Users, Search, Zap } from "lucide-react";
 import WaterRippleEffect from "@/components/ui/water-ripple-effect";
 
 export default function SobrePage() {
@@ -114,10 +114,8 @@ export default function SobrePage() {
       {/* Rest of the content */}
       <div className="space-y-0">
         {/* Problem Statement */}
-        <section
-          className={`w-full p-8 md:p-16 ${isDark ? "bg-gradient-to-b from-white/5 to-transparent" : "bg-gradient-to-b from-slate-50 to-white"}`}
-        >
-          <div className="container mx-auto max-w-7xl">
+        <section className={`w-full p-12 md:p-20 ${isDark ? "bg-white/5" : "bg-white"}`}>
+          <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-16">
               <h2
                 className="text-4xl md:text-5xl font-display font-bold mb-4"
@@ -125,138 +123,80 @@ export default function SobrePage() {
               >
                 O Problema que Resolvemos
               </h2>
-              <p
-                className="text-lg md:text-xl max-w-2xl mx-auto opacity-80"
-                style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-              >
-                Transformando desafios em oportunidades para a comunidade acadêmica
-              </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 md:gap-12 lg:gap-16">
+            <div className="grid md:grid-cols-2 gap-12 md:gap-16">
               {/* Before Card */}
-              <div className="group relative">
-                <div
-                  className={`relative h-full p-8 md:p-10 rounded-2xl border-2 transition-all duration-300 ${
-                    isDark
-                      ? "border-blue-600/30 bg-gradient-to-br from-slate-900/40 to-blue-950/20 hover:border-blue-600/50"
-                      : "border-blue-300 bg-gradient-to-br from-slate-100/50 to-blue-50/30 hover:border-blue-400"
+              <div>
+                <h3
+                  className={`text-xl font-semibold mb-8 ${
+                    isDark ? "text-white/60" : "text-slate-500"
                   }`}
                 >
-                  {/* Badge */}
-                  <div className="flex items-center justify-center mb-8">
-                    <div
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full ${
-                        isDark ? "bg-blue-600/20" : "bg-blue-100"
-                      }`}
-                    >
-                      <X className={`w-5 h-5 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
-                      <h3
-                        className={`text-xl font-bold ${isDark ? "text-blue-300" : "text-blue-700"}`}
+                  Antes do Aquário
+                </h3>
+                <ul className="space-y-5">
+                  {[
+                    { icon: AlertCircle, text: "Falta de informação centralizada" },
+                    { icon: Search, text: "Excesso de locais para buscar informações" },
+                    {
+                      icon: Users,
+                      text: "Dificuldade de comunicação entre alunos, professores e laboratórios",
+                    },
+                    { icon: Mail, text: "Vagas perdidas em e-mails" },
+                    { icon: Zap, text: "Projetos sem visibilidade" },
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-start gap-4">
+                      <item.icon
+                        className={`w-5 h-5 mt-1 flex-shrink-0 ${
+                          isDark ? "text-blue-400" : "text-blue-600"
+                        }`}
+                      />
+                      <span
+                        className={`text-lg leading-relaxed ${
+                          isDark ? "text-white/90" : "text-slate-700"
+                        }`}
                       >
-                        Antes do Aquário
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* Problems List */}
-                  <div className="space-y-4">
-                    {[
-                      { icon: AlertCircle, text: "Falta de informação centralizada" },
-                      { icon: Search, text: "Excesso de locais para buscar informações" },
-                      {
-                        icon: Users,
-                        text: "Dificuldade de comunicação entre alunos, professores e laboratórios",
-                      },
-                      { icon: Mail, text: "Vagas perdidas em e-mails" },
-                      { icon: Zap, text: "Projetos sem visibilidade" },
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-4 p-3 rounded-lg transition-all duration-200 hover:bg-white/5"
-                      >
-                        <div
-                          className={`flex-shrink-0 mt-0.5 p-2 rounded-lg ${
-                            isDark ? "bg-blue-600/20" : "bg-blue-100"
-                          }`}
-                        >
-                          <item.icon
-                            className={`w-5 h-5 ${isDark ? "text-blue-400" : "text-blue-600"}`}
-                          />
-                        </div>
-                        <p
-                          className={`text-base md:text-lg leading-relaxed flex-1 ${
-                            isDark ? "text-white/90" : "text-slate-700"
-                          }`}
-                        >
-                          {item.text}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                        {item.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               {/* After Card */}
-              <div className="group relative">
-                <div
-                  className={`relative h-full p-8 md:p-10 rounded-2xl border-2 transition-all duration-300 ${
-                    isDark
-                      ? "border-cyan-400/30 bg-gradient-to-br from-cyan-950/20 to-sky-900/20 hover:border-cyan-400/50"
-                      : "border-cyan-200 bg-gradient-to-br from-cyan-50/50 to-sky-50/50 hover:border-cyan-300"
+              <div>
+                <h3
+                  className={`text-xl font-semibold mb-8 ${
+                    isDark ? "text-white/60" : "text-slate-500"
                   }`}
                 >
-                  {/* Badge */}
-                  <div className="flex items-center justify-center mb-8">
-                    <div
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full ${
-                        isDark ? "bg-cyan-400/20" : "bg-cyan-100"
-                      }`}
-                    >
-                      <CheckCircle2
-                        className={`w-5 h-5 ${isDark ? "text-cyan-400" : "text-cyan-600"}`}
+                  Com o Aquário
+                </h3>
+                <ul className="space-y-5">
+                  {[
+                    { icon: Zap, text: "Informações centralizadas em um só lugar" },
+                    { icon: Users, text: "Comunicação eficiente e organizada" },
+                    { icon: Search, text: "Facilidade de acesso a oportunidades" },
+                    { icon: Mail, text: "Melhor organização de vagas e projetos" },
+                    { icon: CheckCircle2, text: "Comunidade conectada e colaborativa" },
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-start gap-4">
+                      <item.icon
+                        className={`w-5 h-5 mt-1 flex-shrink-0 ${
+                          isDark ? "text-cyan-400" : "text-cyan-600"
+                        }`}
                       />
-                      <h3
-                        className={`text-xl font-bold ${isDark ? "text-cyan-300" : "text-cyan-700"}`}
+                      <span
+                        className={`text-lg leading-relaxed ${
+                          isDark ? "text-white/90" : "text-slate-700"
+                        }`}
                       >
-                        Com o Aquário
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* Solutions List */}
-                  <div className="space-y-4">
-                    {[
-                      { icon: Zap, text: "Informações centralizadas em um só lugar" },
-                      { icon: Users, text: "Comunicação eficiente e organizada" },
-                      { icon: Search, text: "Facilidade de acesso a oportunidades" },
-                      { icon: Mail, text: "Melhor organização de vagas e projetos" },
-                      { icon: CheckCircle2, text: "Comunidade conectada e colaborativa" },
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-4 p-3 rounded-lg transition-all duration-200 hover:bg-white/5"
-                      >
-                        <div
-                          className={`flex-shrink-0 mt-0.5 p-2 rounded-lg ${
-                            isDark ? "bg-cyan-400/20" : "bg-cyan-100"
-                          }`}
-                        >
-                          <item.icon
-                            className={`w-5 h-5 ${isDark ? "text-cyan-400" : "text-cyan-600"}`}
-                          />
-                        </div>
-                        <p
-                          className={`text-base md:text-lg leading-relaxed flex-1 ${
-                            isDark ? "text-white/90" : "text-slate-700"
-                          }`}
-                        >
-                          {item.text}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                        {item.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
