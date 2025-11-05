@@ -97,7 +97,7 @@ export default function TadeaPage() {
   };
 
   return (
-    <main className="container mx-auto p-4 pt-24">
+    <main className="container mx-auto p-4 -mt-24">
       <Banner
         title="Achados e Perdidos (TADEA)"
         description="Itens encontrados no Centro de Informática são guardados na sala da TADEA. Verifique aqui se seu item foi encontrado."

@@ -11,8 +11,8 @@ function InfoCardsComponent({ icon: Icon, children }: coursesProps) {
 
   return (
     <Card
-      className="h-[200px] dark:text-dark-text dark:border-white hover:border-gray-900 hover:cursor-pointer 
-                     transform hover:scale-105 transition-all duration-300 hover:text-gray-900"
+      className="h-[200px] dark:text-dark-text dark:border-white hover:border-aquario-primary hover:cursor-pointer 
+                     transform hover:scale-105 transition-all duration-300 hover:text-aquario-primary"
     >
       <CardHeader>
         <Icon className="w-6 h-6" />

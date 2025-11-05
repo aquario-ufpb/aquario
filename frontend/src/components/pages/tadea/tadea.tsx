@@ -80,7 +80,7 @@ const LostAndFoundCard = ({
             "relative p-4 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 group grid grid-cols-3 gap-4 max-w-2xl mx-auto my-4 w-full h-64 dark:text-dark-text dark:border-white",
             status === "DEVOLVIDO"
               ? "bg-gray-100 opacity-60 cursor-not-allowed dark:bg-gray-800"
-              : "hover:border-gray-900 hover:cursor-pointer hover:text-gray-900"
+              : "hover:border-aquario-primary hover:cursor-pointer hover:text-aquario-primary"
           )}
         >
           {isAdmin && (

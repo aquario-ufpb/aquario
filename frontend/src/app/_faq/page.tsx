@@ -14,10 +14,10 @@ export default function Guias() {
       </div>
 
       <section className="w-full max-w-4xl mt-8 px-4 text-left">
-        <h3 className="text-lg font-medium mb-8 text-gray-800 dark:text-gray-200">
+        <h3 className="text-lg font-medium mb-8 text-aquario-primary dark:text-gray-200">
           Selecione o curso
         </h3>
-        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold mb-4 text-aquario-primary dark:text-gray-100">
           Centro de informática
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4">

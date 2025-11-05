@@ -84,7 +84,7 @@ export default function Projetos() {
   return (
     <main className="px-[10%]">
       <div className="space-y-6 flex flex-col">
-        <div className="pt-28">
+        <div className="pt-4">
           <Banner
             title="Explore os projetos do Centro de Informática"
             description="Nosso mural de projetos permite visualizar projetos de qualquer pessoa ou laboratório."

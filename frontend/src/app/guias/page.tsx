@@ -2,10 +2,20 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function GuiasPage() {
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
   const router = useRouter();
 
   const courses = [
@@ -31,26 +41,42 @@ export default function GuiasPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="h-screen flex flex-col justify-start items-center px-4 pt-32 pb-4 overflow-hidden">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Guias Acadêmicos</h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300">
+        <h1 className="text-5xl font-bold mb-4" style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
+          Guias Acadêmicos
+        </h1>
+        <p className="text-lg" style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
           Selecione seu curso para acessar os guias disponíveis
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full flex-shrink-0">
         {courses.map(course => (
-          <Card key={course.slug} className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card
+            key={course.slug}
+            className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
+          >
             <CardHeader>
-              <CardTitle className="text-xl">{course.name}</CardTitle>
-              <CardDescription>{course.description}</CardDescription>
+              <CardTitle className="text-xl" style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
+                {course.name}
+              </CardTitle>
+              <CardDescription style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
+                {course.description}
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-auto">
               <Button
                 onClick={() => handleCourseSelect(course.slug)}
                 className="w-full"
                 variant="default"
+                style={{
+                  backgroundColor: isDark ? "#1a3a5c" : "rgba(208, 239, 255, 0.5)",
+                  color: isDark ? "#C8E6FA" : "#0e3a6c",
+                  border: isDark
+                    ? "1px solid rgba(208, 239, 255, 0.3)"
+                    : "1px solid rgba(208, 239, 255, 0.6)",
+                }}
               >
                 Acessar Guias
               </Button>
