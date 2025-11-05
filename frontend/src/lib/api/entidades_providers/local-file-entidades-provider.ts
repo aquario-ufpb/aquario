@@ -34,7 +34,11 @@ declare const require: {
   };
 };
 
-const contentContext = require.context("../../../../content/aquario-entidades", false, /\.json$/);
+const contentContext = require.context(
+  "../../../../content/aquario-entidades/centro-de-informatica",
+  false,
+  /\.json$/
+);
 
 export class LocalFileEntidadesProvider implements EntidadesDataProvider {
   private entidadesData: Record<string, EntidadeJson> = {};

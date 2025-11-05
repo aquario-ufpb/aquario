@@ -105,10 +105,16 @@ export async function GET(_request: unknown, { params }: { params: { path: strin
       // Handle entidades images: /api/content-images/entidades/assets/ARIA.png
       // or /api/content-images/assets/entidades/ARIA.png
       if (slugPath[0] === "assets" && slugPath[1] === "entidades") {
-        contentDir = join(process.cwd(), "content", "aquario-entidades", "assets");
+        contentDir = join(
+          process.cwd(),
+          "content",
+          "aquario-entidades",
+          "centro-de-informatica",
+          "assets"
+        );
         searchPath = slugPath.slice(2); // Remove "assets/entidades" prefix
       } else if (slugPath[0] === "entidades") {
-        contentDir = join(process.cwd(), "content", "aquario-entidades");
+        contentDir = join(process.cwd(), "content", "aquario-entidades", "centro-de-informatica");
         searchPath = slugPath.slice(1); // Remove "entidades" prefix
       } else {
         contentDir = join(process.cwd(), "content", "aquario-guias");
