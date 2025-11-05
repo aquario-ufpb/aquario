@@ -40,27 +40,36 @@ export default function NavBar() {
           </div>
 
           {/* Center - Logo */}
-          <div className="flex items-center justify-center">
-            <Link href="/" className="flex items-center gap-2">
+          <div className="flex items-center justify-center select-none">
+            <Link
+              href="/"
+              className="flex items-center gap-2 cursor-pointer select-none"
+              tabIndex={-1}
+              draggable={false}
+            >
               <Image
-                className="h-6 w-auto dark:hidden"
+                className="h-6 w-auto dark:hidden select-none pointer-events-none"
                 src="/logo2.png"
                 width={60}
                 height={50}
                 alt="Aquario's logo"
+                draggable={false}
+                style={{ userSelect: "none" }}
               />
               <Image
-                className="h-6 w-auto hidden dark:block"
+                className="h-6 w-auto hidden dark:block select-none pointer-events-none"
                 src="/logo3.png"
                 width={60}
                 height={50}
                 alt="Aquario's logo"
+                draggable={false}
+                style={{ userSelect: "none" }}
               />
             </Link>
           </div>
 
           {/* Right side - Links */}
-          <div className="flex items-center justify-end gap-4">
+          <div className="flex items-center justify-end gap-2">
             <LinkHover href="/sobre">SOBRE</LinkHover>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
             <LinkHover href="/guias">GUIAS</LinkHover>
