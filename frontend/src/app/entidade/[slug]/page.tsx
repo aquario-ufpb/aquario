@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { entidadesService } from "@/lib/api/entidades";
-import { Entidade } from "@/lib/types";
+import { Entidade, TipoEntidade } from "@/lib/types";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Instagram, Linkedin, MapPin, Globe } from "lucide-react";
+import { trackEvent } from "@/analytics/posthog-client";
 
 export default function EntidadeDetailPage({ params }: { params: { slug: string } }) {
   const [entidade, setEntidade] = useState<Entidade | null>(null);
@@ -61,6 +62,35 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
     }
   };
 
+  const handleInstagramClick = () => {
+    trackEvent("entidade_link_clicked", {
+      properties: {
+        entidade_name: entidade.name as string,
+        entidade_type: entidade.tipo as TipoEntidade,
+        link_type: "instagram",
+      },
+    });
+  };
+
+  const handleLinkedinClick = () => {
+    trackEvent("entidade_link_clicked", {
+      properties: {
+        entidade_name: entidade.name as string,
+        entidade_type: entidade.tipo as TipoEntidade,
+        link_type: "linkedin",
+      },
+    });
+  };
+
+  const handleWebsiteClick = () => {
+    trackEvent("entidade_link_clicked", {
+      properties: {
+        entidade_name: entidade.name as string,
+        entidade_type: entidade.tipo as TipoEntidade,
+        link_type: "website",
+      },
+    });
+  };
   return (
     <div className="mt-0">
       {/* Main Content Section - Two Columns */}
@@ -116,6 +146,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={handleInstagramClick}
                 >
                   <Instagram className="w-4 h-4" />
                   <span>Instagram</span>
@@ -127,6 +158,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={handleLinkedinClick}
                 >
                   <Linkedin className="w-4 h-4" />
                   <span>LinkedIn</span>
@@ -138,6 +170,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={handleWebsiteClick}
                 >
                   <Globe className="w-4 h-4" />
                   <span>Website</span>

@@ -7,6 +7,8 @@ import { Entidade } from "@/lib/types";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { trackEvent } from "@/analytics/posthog-client";
+import { TipoEntidade } from "@/lib/types/entidade.types";
 
 function EntidadeCard({ entidade }: { entidade: Entidade }) {
   const getBadgeText = () => {
@@ -47,8 +49,17 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
     }
   };
 
+  const handleClick = () => {
+    trackEvent("entidade_viewed", {
+      properties: {
+        entidade_name: entidade.name as string,
+        entidade_type: entidade.tipo as TipoEntidade,
+      },
+    });
+  };
+
   return (
-    <Link href={`/entidade/${entidade.slug}`}>
+    <Link href={`/entidade/${entidade.slug}`} onClick={handleClick}>
       <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
         <CardContent className="p-4">
           <div className="flex gap-4">

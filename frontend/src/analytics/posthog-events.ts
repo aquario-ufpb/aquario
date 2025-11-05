@@ -8,10 +8,29 @@
  * and TypeScript will enforce the correct usage everywhere.
  */
 
+import { TipoEntidade } from "@/lib/types/entidade.types";
+
 // UI Interaction events
 export type UIInteractionEvent = {
   name: "github_button_clicked";
 };
 
+export type EntidadesEvent =
+  | {
+      name: "entidade_viewed";
+      properties: {
+        entidade_name: string;
+        entidade_type: TipoEntidade;
+      };
+    }
+  | {
+      name: "entidade_link_clicked";
+      properties: {
+        entidade_name: string;
+        entidade_type: TipoEntidade;
+        link_type: "instagram" | "linkedin" | "website";
+      };
+    };
+
 // Union of all PostHog events
-export type PostHogEvent = UIInteractionEvent;
+export type PostHogEvent = UIInteractionEvent | EntidadesEvent;
