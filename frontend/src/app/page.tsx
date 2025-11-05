@@ -120,18 +120,18 @@ export default function Home() {
       fifthColor={colors.fifthColor}
       pointerColor={colors.pointerColor}
     >
-      <main className="container mx-auto p-4 pt-8">
+      <main className="container mx-auto p-4 pt-8 overflow-x-hidden">
         {/* Hero Section */}
         <section className="text-center min-h-screen flex flex-col justify-center items-center">
-          <div className="max-w-4xl mx-auto px-4">
+          <div className="max-w-4xl mx-auto px-4 w-full">
             <div
-              className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6 whitespace-nowrap ${
+              className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6 ${
                 isDark ? "text-white" : "text-aquario-primary"
               }`}
             >
               <TextGenerateEffect
                 words="Bem-vindo ao Aquário"
-                className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight whitespace-nowrap`}
+                className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight md:whitespace-nowrap`}
                 filter={true}
                 duration={0.8}
               />
