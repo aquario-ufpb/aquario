@@ -133,7 +133,9 @@ export default function Registro() {
             className="w-full max-w-md space-y-6 flex flex-col items-center"
           >
             <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Crie sua conta</h1>
+              <h1 className="text-4xl font-bold text-aquario-primary dark:text-white">
+                Crie sua conta
+              </h1>
               <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                 Preencha os campos para se registrar
               </p>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 
 import NavWrapper from "@/components/shared/nav-wrapper";
@@ -9,7 +9,10 @@ import { SearchProvider } from "@/contexts/search-context";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
 
-const inter = Inter({ subsets: ["latin"] });
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+});
 
 export const metadata: Metadata = {
   title: "Aquario",
@@ -23,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-br">
-      <body className={inter.className}>
+      <body className={`${outfit.variable} font-sans bg-white dark:bg-transparent`}>
         <PostHogProvider>
           <ReactQueryProvider>
             <AuthProvider>
@@ -34,9 +37,9 @@ export default function RootLayout({
                 disableTransitionOnChange
               >
                 <SearchProvider>
-                  <div className="flex flex-1 flex-col">
+                  <div className="flex flex-1 flex-col bg-white dark:bg-transparent">
                     <NavWrapper />
-                    <main className="pt-[60px] md:pt-0">{children}</main>
+                    <div className="pt-0">{children}</div>
                   </div>
                 </SearchProvider>
               </ThemeProvider>

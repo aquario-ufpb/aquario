@@ -66,7 +66,7 @@ export default function VagasPage() {
   return (
     <main className="px-[10%]">
       <div className="space-y-6 flex flex-col">
-        <div className="pt-28">
+        <div className="pt-4">
           <Banner
             title="Explore vagas de emprego, estágio e de projetos voluntários no CI e afora"
             description="Nosso mural de vagas permite que qualquer pessoa ou laboratório busque alunos interessados em vagas em projetos ou estágios."

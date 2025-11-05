@@ -3,6 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Inter } from "next/font/google";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,7 +35,15 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
   const pathname = usePathname();
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [expandedSections, setExpandedSections] = React.useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
 
   const toggleSection = (sectionKey: string) => {
     setExpandedSections(prev => {
@@ -85,7 +95,10 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
       <div className={`space-y-1 w-full p-4 flex-1 ${inter.className}`}>
         {guias.map(guia => (
           <div key={guia.slug} className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-2 px-2">
+            <p
+              className="text-xs font-semibold uppercase tracking-wider mb-2 px-2"
+              style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+            >
               {guia.titulo}
             </p>
             <div className="space-y-0.5">
@@ -106,9 +119,15 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
                           aria-label={isExpanded ? "Collapse" : "Expand"}
                         >
                           {isExpanded ? (
-                            <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+                            <ChevronDown
+                              className="h-3.5 w-3.5"
+                              style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+                            />
                           ) : (
-                            <ChevronRight className="h-3.5 w-3.5 text-gray-500" />
+                            <ChevronRight
+                              className="h-3.5 w-3.5"
+                              style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+                            />
                           )}
                         </button>
                       )}
@@ -118,9 +137,22 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
                         className={cn(
                           "flex-1 py-2 px-3 rounded-md text-sm transition-colors",
                           isSecaoActive
-                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                            ? isDark
+                              ? "bg-blue-900/30 font-medium"
+                              : "bg-blue-100 font-medium"
+                            : isDark
+                              ? "hover:bg-gray-800"
+                              : "hover:bg-gray-100"
                         )}
+                        style={{
+                          color: isSecaoActive
+                            ? isDark
+                              ? "#D0EFFF"
+                              : "#0e3a6c"
+                            : isDark
+                              ? "#E5F6FF"
+                              : "#0e3a6c",
+                        }}
                       >
                         {secao.titulo}
                       </Link>
@@ -137,9 +169,22 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
                               className={cn(
                                 "block py-1.5 px-3 rounded-md text-sm transition-colors",
                                 isSubActive
-                                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium"
-                                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                  ? isDark
+                                    ? "bg-blue-900/30 font-medium"
+                                    : "bg-blue-100 font-medium"
+                                  : isDark
+                                    ? "hover:bg-gray-800"
+                                    : "hover:bg-gray-100"
                               )}
+                              style={{
+                                color: isSubActive
+                                  ? isDark
+                                    ? "#D0EFFF"
+                                    : "#0e3a6c"
+                                  : isDark
+                                    ? "#C8E6FA"
+                                    : "#0e3a6c",
+                              }}
                             >
                               {sub.titulo}
                             </Link>

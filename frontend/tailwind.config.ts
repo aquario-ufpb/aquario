@@ -16,6 +16,10 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-outfit)", "system-ui", "-apple-system", "sans-serif"],
+        display: ["var(--font-outfit)", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -52,6 +56,7 @@ const config = {
         },
         "light-text": "hsl(240 5.9% 10%)",
         "dark-text": "hsl(0 0% 98%)",
+        "aquario-primary": "hsl(var(--aquario-primary))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -67,10 +72,55 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        first: {
+          "0%": {
+            transform: "rotate(0deg)",
+          },
+          "100%": {
+            transform: "rotate(360deg)",
+          },
+        },
+        second: {
+          "0%": {
+            transform: "rotate(0deg)",
+          },
+          "100%": {
+            transform: "rotate(360deg)",
+          },
+        },
+        third: {
+          "0%": {
+            transform: "rotate(0deg)",
+          },
+          "100%": {
+            transform: "rotate(360deg)",
+          },
+        },
+        fourth: {
+          "0%": {
+            transform: "rotate(0deg)",
+          },
+          "100%": {
+            transform: "rotate(360deg)",
+          },
+        },
+        fifth: {
+          "0%": {
+            transform: "rotate(0deg)",
+          },
+          "100%": {
+            transform: "rotate(360deg)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        first: "first 30s linear infinite",
+        second: "second 40s linear infinite",
+        third: "third 50s linear infinite",
+        fourth: "fourth 60s linear infinite",
+        fifth: "fifth 70s linear infinite",
       },
     },
   },

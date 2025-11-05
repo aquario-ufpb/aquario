@@ -7,15 +7,31 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 
 export function ModeToggle({ mobile = false }: { mobile?: boolean }) {
-  const { setTheme, theme } = useTheme();
+  const { setTheme, theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
 
-  if (!theme) {
-    setTheme("light");
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && (resolvedTheme || theme) === "dark";
+
+  if (!mounted) {
+    return (
+      <Button
+        variant="outline"
+        size="icon"
+        className="p-0 m-0 h-[2.1rem] w-[2.1rem] min-w-[2.1rem] min-h-[2.1rem]"
+        disabled
+      >
+        <span className="sr-only">Carregando tema</span>
+      </Button>
+    );
   }
 
   // If mobile, return button without icon, just text
   if (mobile) {
-    if (theme === "dark") {
+    if (isDark) {
       return (
         <div
           onClick={() => setTheme("light")}
@@ -33,7 +49,7 @@ export function ModeToggle({ mobile = false }: { mobile?: boolean }) {
           onClick={() => setTheme("dark")}
           className="p-0 m-0 gap-1 h-[2.1rem] min-h-[2.1rem] flex flex-row justify-center items-center group transition duration-300 cursor-pointer"
         >
-          <Sun className="text-black group-hover:text-blue-500 transition duration-300 h-[1.2rem] w-[1.2rem] min-w-[1.2rem] min-h-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Sun className="text-aquario-primary group-hover:text-blue-500 transition duration-300 h-[1.2rem] w-[1.2rem] min-w-[1.2rem] min-h-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <span className="text-sm dark:text-dark-text group-hover:text-blue-500 transition duration-300">
             TEMA
           </span>
@@ -42,7 +58,7 @@ export function ModeToggle({ mobile = false }: { mobile?: boolean }) {
     }
   }
 
-  if (theme === "dark") {
+  if (isDark) {
     return (
       <Button
         variant="outline"

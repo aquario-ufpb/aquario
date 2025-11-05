@@ -17,13 +17,15 @@ export default function HamburgerMenu() {
       <nav className="fixed w-full text-light-text flex justify-between flex-col h-[60px] bg-white dark:bg-black z-50">
         <div className="container mx-auto flex items-center justify-between h-full">
           <div className="flex space-x-4 gap-5 justify-center items-center">
-            <Image
-              className="w-20"
-              src="/Image Card.png"
-              width={75}
-              height={75}
-              alt="Aquario's logo"
-            />
+            <Link href="/">
+              <Image
+                className="w-20"
+                src="/logo2.png"
+                width={75}
+                height={75}
+                alt="Aquario's logo"
+              />
+            </Link>
           </div>
 
           <div className="relative">

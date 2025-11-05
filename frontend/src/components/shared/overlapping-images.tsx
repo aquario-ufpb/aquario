@@ -27,7 +27,7 @@ const OverlappingImages: React.FC<OverlappingImagesProps> = ({ users }) => {
 
       {users.length > 3 && (
         <div
-          className="w-9 flex items-center justify-center text-black dark:text-white pl-9 pr-3"
+          className="w-9 flex items-center justify-center text-aquario-primary dark:text-white pl-9 pr-3"
           style={{ zIndex: 0 }}
         >
           +{users.length - 3}
