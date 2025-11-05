@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
 import LinkHover from "@/components/shared/link-hover";
@@ -11,12 +10,11 @@ import Link from "next/link";
 
 export default function NavBar() {
   const [query, setQuery] = useState("");
-  const router = useRouter();
 
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && query.trim() !== "") {
-      router.push(`/pesquisar?q=${query}`);
-    }
+  const handleSearch = (_e: React.KeyboardEvent<HTMLInputElement>) => {
+    // if (e.key === "Enter" && query.trim() !== "") {
+    //   router.push(`/pesquisar?q=${query}`);
+    // }
   };
 
   return (
