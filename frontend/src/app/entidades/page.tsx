@@ -7,6 +7,8 @@ import { Entidade } from "@/lib/types";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import { trackEvent } from "@/analytics/posthog-client";
 import { TipoEntidade } from "@/lib/types/entidade.types";
 
@@ -30,25 +32,6 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
     }
   };
 
-  const getBadgeVariant = () => {
-    switch (entidade.tipo) {
-      case "LABORATORIO":
-        return "default";
-      case "GRUPO_ESTUDANTIL":
-        return "secondary";
-      case "LIGA_ESTUDANTIL":
-        return "outline";
-      case "CENTRO_ACADEMICO":
-        return "secondary";
-      case "ATLETICA":
-        return "outline";
-      case "EMPRESA":
-        return "default";
-      default:
-        return "destructive";
-    }
-  };
-
   const handleClick = () => {
     trackEvent("entidade_viewed", {
       properties: {
@@ -60,8 +43,8 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
 
   return (
     <Link href={`/entidade/${entidade.slug}`} onClick={handleClick}>
-      <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-        <CardContent className="p-4">
+      <Card className="hover:bg-accent/20 transition-all duration-200 cursor-pointer h-full border-border/90">
+        <CardContent className="p-5">
           <div className="flex gap-4">
             {/* Image on the left */}
             <div className="flex-shrink-0 flex items-center">
@@ -69,7 +52,7 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
               <img
                 src={entidade.imagePath || ""}
                 alt={entidade.name}
-                className="w-20 h-20 object-contain rounded"
+                className="w-16 h-16 object-contain rounded-lg"
                 onError={e => {
                   const target = e.target as HTMLImageElement;
                   target.style.display = "none";
@@ -80,16 +63,21 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
             {/* Content on the right */}
             <div className="flex-1 min-w-0">
               {/* Name with badge */}
-              <div className="flex items-start gap-2 mb-2">
+              <div className="flex items-start justify-between gap-3 mb-2">
                 <h3 className="text-lg font-semibold truncate flex-1">{entidade.name}</h3>
-                <Badge variant={getBadgeVariant()} className="flex-shrink-0">
+                <Badge
+                  variant="outline"
+                  className="text-xs px-2 py-0.5 text-muted-foreground border-muted-foreground/30 flex-shrink-0 font-normal"
+                >
                   {getBadgeText()}
                 </Badge>
               </div>
 
               {/* Description */}
               {entidade.description && (
-                <p className="text-sm text-muted-foreground line-clamp-3">{entidade.description}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                  {entidade.description}
+                </p>
               )}
             </div>
           </div>
@@ -102,6 +90,8 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
 export default function EntidadesPage() {
   const [entidades, setEntidades] = useState<Entidade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEntidades = async () => {
@@ -117,6 +107,45 @@ export default function EntidadesPage() {
 
     fetchEntidades();
   }, []);
+
+  // Filter function
+  const filterEntidades = (entidades: Entidade[]) => {
+    let filtered = entidades;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        entidade =>
+          entidade.name.toLowerCase().includes(query) ||
+          entidade.description?.toLowerCase().includes(query) ||
+          entidade.subtitle?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply type filter
+    if (activeFilter) {
+      switch (activeFilter) {
+        case "laboratorios":
+          filtered = filtered.filter(e => e.tipo === "LABORATORIO");
+          break;
+        case "grupos":
+          filtered = filtered.filter(e => e.tipo === "GRUPO_ESTUDANTIL");
+          break;
+        case "ligas":
+          filtered = filtered.filter(e => e.tipo === "LIGA_ESTUDANTIL");
+          break;
+        case "academicos":
+          filtered = filtered.filter(e => e.tipo === "CENTRO_ACADEMICO" || e.tipo === "ATLETICA");
+          break;
+        case "empresas":
+          filtered = filtered.filter(e => e.tipo === "EMPRESA");
+          break;
+      }
+    }
+
+    return filtered;
+  };
 
   // Group entidades by tipo per requested sections
   // Sort by order (lower numbers first), then alphabetically by name
@@ -137,35 +166,110 @@ export default function EntidadesPage() {
     return a.name.localeCompare(b.name);
   };
 
-  const laboratorios = entidades.filter(e => e.tipo === "LABORATORIO").sort(sortEntidades);
+  const filteredEntidades = filterEntidades(entidades);
 
-  const gruposELigas = entidades
+  const laboratorios = filteredEntidades.filter(e => e.tipo === "LABORATORIO").sort(sortEntidades);
+
+  const gruposELigas = filteredEntidades
     .filter(
       e => e.tipo === "GRUPO_ESTUDANTIL" || e.tipo === "LIGA_ESTUDANTIL" || e.tipo === "OUTRO"
     )
     .sort(sortEntidades);
 
-  const centrosEAtleticas = entidades
+  const centrosEAtleticas = filteredEntidades
     .filter(e => e.tipo === "CENTRO_ACADEMICO" || e.tipo === "ATLETICA")
     .sort(sortEntidades);
 
-  const empresasParceiras = entidades.filter(e => e.tipo === "EMPRESA").sort(sortEntidades);
+  const empresasParceiras = filteredEntidades.filter(e => e.tipo === "EMPRESA").sort(sortEntidades);
+
+  const showAllSections = !activeFilter && !searchQuery.trim();
+  const showWhenSearching = searchQuery.trim() && !activeFilter; // Show all sections when searching without filter
 
   return (
-    <div className="container mx-auto p-4 mt-24">
-      <h1 className="text-3xl font-bold mb-8 max-w-[50%]">
-        Procure Laboratórios, ligas acadêmicas, grupos de pesquisa e outros
-      </h1>
+    <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl">
+      <div className="mb-12">
+        <h1 className="text-4xl md:text-5xl font-display font-bold mb-8 max-w-3xl">
+          Procure Laboratórios, ligas acadêmicas, grupos de pesquisa e outros
+        </h1>
+
+        {/* Search and Filters */}
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+          {/* Search Bar */}
+          <div className="relative flex-1 w-full md:max-w-md rounded-full border border-gray-300 dark:border-gray-600 bg-transparent dark:bg-transparent">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5 dark:text-zinc-300 z-10 pointer-events-none" />
+            <input
+              type="search"
+              placeholder="Pesquisar entidades..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full h-10 rounded-full pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground dark:placeholder:text-zinc-300 dark:text-zinc-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 dark:focus-visible:ring-white/30 disabled:cursor-not-allowed disabled:opacity-50 bg-transparent dark:bg-transparent backdrop-blur-0"
+              style={{ backgroundColor: "transparent" }}
+            />
+          </div>
+
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={activeFilter === null ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveFilter(null)}
+              className="rounded-full"
+            >
+              Todos
+            </Button>
+            <Button
+              variant={activeFilter === "laboratorios" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveFilter("laboratorios")}
+              className="rounded-full"
+            >
+              Laboratórios
+            </Button>
+            <Button
+              variant={activeFilter === "grupos" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveFilter("grupos")}
+              className="rounded-full"
+            >
+              Grupos
+            </Button>
+            <Button
+              variant={activeFilter === "ligas" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveFilter("ligas")}
+              className="rounded-full"
+            >
+              Ligas
+            </Button>
+            <Button
+              variant={activeFilter === "academicos" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveFilter("academicos")}
+              className="rounded-full"
+            >
+              Acadêmicos
+            </Button>
+            <Button
+              variant={activeFilter === "empresas" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveFilter("empresas")}
+              className="rounded-full"
+            >
+              Empresas
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {isLoading ? (
-        <div className="space-y-6">
-          <div className="space-y-4">
+        <div className="space-y-10">
+          <div className="space-y-6">
             <h2 className="text-2xl font-semibold">Laboratórios</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, index) => (
-                <Card key={index} className="p-4">
+                <Card key={index} className="p-5">
                   <div className="flex gap-4">
-                    <Skeleton className="w-20 h-20 rounded flex-shrink-0" />
+                    <Skeleton className="w-16 h-16 rounded-lg flex-shrink-0" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-6 w-3/4" />
                       <Skeleton className="h-4 w-full" />
@@ -178,58 +282,72 @@ export default function EntidadesPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-12">
           {/* Laboratórios */}
-          {laboratorios.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold">Laboratórios</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {laboratorios.map(entidade => (
-                  <EntidadeCard key={entidade.id} entidade={entidade} />
-                ))}
+          {(showAllSections || showWhenSearching || activeFilter === "laboratorios") &&
+            laboratorios.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="text-2xl md:text-3xl font-semibold">Laboratórios</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {laboratorios.map(entidade => (
+                    <EntidadeCard key={entidade.id} entidade={entidade} />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Grupos e Ligas (inclui Outros) */}
-          {gruposELigas.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold">Grupos e Ligas</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {gruposELigas.map(entidade => (
-                  <EntidadeCard key={entidade.id} entidade={entidade} />
-                ))}
+          {(showAllSections ||
+            showWhenSearching ||
+            activeFilter === "grupos" ||
+            activeFilter === "ligas") &&
+            gruposELigas.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="text-2xl md:text-3xl font-semibold">Grupos e Ligas</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {gruposELigas.map(entidade => (
+                    <EntidadeCard key={entidade.id} entidade={entidade} />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Centros Acadêmicos e Atléticas */}
-          {centrosEAtleticas.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold">Centros Acadêmicos e Atléticas</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {centrosEAtleticas.map(entidade => (
-                  <EntidadeCard key={entidade.id} entidade={entidade} />
-                ))}
+          {(showAllSections || showWhenSearching || activeFilter === "academicos") &&
+            centrosEAtleticas.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="text-2xl md:text-3xl font-semibold">
+                  Centros Acadêmicos e Atléticas
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {centrosEAtleticas.map(entidade => (
+                    <EntidadeCard key={entidade.id} entidade={entidade} />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Empresas Parceiras */}
-          {empresasParceiras.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold">Empresas Parceiras</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {empresasParceiras.map(entidade => (
-                  <EntidadeCard key={entidade.id} entidade={entidade} />
-                ))}
+          {(showAllSections || showWhenSearching || activeFilter === "empresas") &&
+            empresasParceiras.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="text-2xl md:text-3xl font-semibold">Empresas Parceiras</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {empresasParceiras.map(entidade => (
+                    <EntidadeCard key={entidade.id} entidade={entidade} />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {entidades.length === 0 && (
-            <p className="text-center text-muted-foreground">Nenhuma entidade encontrada.</p>
-          )}
+          {laboratorios.length === 0 &&
+            gruposELigas.length === 0 &&
+            centrosEAtleticas.length === 0 &&
+            empresasParceiras.length === 0 && (
+              <p className="text-center text-muted-foreground py-12">
+                Nenhuma entidade encontrada com os filtros selecionados.
+              </p>
+            )}
         </div>
       )}
     </div>
