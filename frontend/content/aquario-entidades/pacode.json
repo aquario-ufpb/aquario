@@ -1,9 +1,0 @@
-{
-  "name": "PaCode",
-  "description": "Grupo de Estudos para Programação Competitiva da Universidade Federal da Paraíba.",
-  "tipo": "GRUPO_ESTUDANTIL",
-  "imagePath": "./assets/Pacode.png",
-  "contato_email": "",
-  "instagram": "https://www.instagram.com/pacodeufpb/",
-  "location": "Centro de Informática - UFPB"
-}
