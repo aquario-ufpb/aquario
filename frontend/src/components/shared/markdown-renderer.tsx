@@ -114,25 +114,31 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, breadcrumb
       {breadcrumbs && breadcrumbs.length > 0 && (
         <div className="mb-6">
           <Breadcrumb>
-            <BreadcrumbList style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }}>
+            <BreadcrumbList style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
               {breadcrumbs.map((item, index) => {
                 const isLast = index === breadcrumbs.length - 1;
                 return (
                   <React.Fragment key={index}>
                     <BreadcrumbItem>
                       {isLast ? (
-                        <BreadcrumbPage style={{ color: isDark ? '#E5F6FF' : '#0e3a6c' }}>{item.label}</BreadcrumbPage>
+                        <BreadcrumbPage style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
+                          {item.label}
+                        </BreadcrumbPage>
                       ) : item.href ? (
                         <BreadcrumbLink asChild className="hover:opacity-80 transition-opacity">
-                          <Link href={item.href} style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }}>{item.label}</Link>
+                          <Link href={item.href} style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
+                            {item.label}
+                          </Link>
                         </BreadcrumbLink>
                       ) : (
-                        <BreadcrumbPage style={{ color: isDark ? '#E5F6FF' : '#0e3a6c' }}>{item.label}</BreadcrumbPage>
+                        <BreadcrumbPage style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
+                          {item.label}
+                        </BreadcrumbPage>
                       )}
                     </BreadcrumbItem>
                     {!isLast && (
                       <BreadcrumbSeparator>
-                        <ChevronRight style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }} />
+                        <ChevronRight style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }} />
                       </BreadcrumbSeparator>
                     )}
                   </React.Fragment>
@@ -142,10 +148,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, breadcrumb
           </Breadcrumb>
         </div>
       )}
-      <div 
+      <div
         className="prose-base dark:prose-invert w-full prose max-w-none"
         style={{
-          color: isDark ? '#E5F6FF' : '#0e3a6c',
+          color: isDark ? "#E5F6FF" : "#0e3a6c",
         }}
       >
         <ReactMarkdown
@@ -155,8 +161,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, breadcrumb
                 <a
                   {...props}
                   style={{
-                    color: isDark ? '#D0EFFF' : '#0e3a6c',
-                    textDecoration: 'underline',
+                    color: isDark ? "#D0EFFF" : "#0e3a6c",
+                    textDecoration: "underline",
                   }}
                   className="hover:opacity-80 transition-opacity"
                 />

@@ -43,19 +43,25 @@ function GradientHeaderComponent({
     onCourseChange?.(course);
   };
   return (
-    <div 
+    <div
       className="flex justify-start items-center w-full h-20 flex-shrink-0 mb-2"
       style={{
-        background: isDark 
-          ? 'linear-gradient(to right, #1a3a5c 0%, #0f2338 100%)'
-          : 'linear-gradient(to right, #DCF0FF 0%, #C8E6FA 100%)'
+        background: isDark
+          ? "linear-gradient(to right, #1a3a5c 0%, #0f2338 100%)"
+          : "linear-gradient(to right, #DCF0FF 0%, #C8E6FA 100%)",
       }}
     >
-      <div className="pl-[24px] text-lg flex font-sans" style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }}>
+      <div
+        className="pl-[24px] text-lg flex font-sans"
+        style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+      >
         <Monitor />
         <p className="text-lg pl-4 pr-4 font-sans">{academicCenter}</p>
         <div className="flex flex-col items-center justify-center">
-          <div className="pl-4 h-[1px] w-5" style={{ backgroundColor: isDark ? '#C8E6FA' : '#0e3a6c' }}></div>
+          <div
+            className="pl-4 h-[1px] w-5"
+            style={{ backgroundColor: isDark ? "#C8E6FA" : "#0e3a6c" }}
+          ></div>
         </div>
         <div className="pl-4">
           <DropdownMenu>

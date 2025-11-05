@@ -175,7 +175,7 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
                 : "border-input bg-background ring-offset-background focus-visible:ring-1 focus-visible:ring-ring dark:border-zinc-300 dark:text-zinc-300 dark:placeholder:text-zinc-300",
               className
             )}
-            style={transparent ? { backgroundColor: 'transparent' } : undefined}
+            style={transparent ? { backgroundColor: "transparent" } : undefined}
             ref={node => {
               inputInnerRef.current = node;
               if (!ref) {

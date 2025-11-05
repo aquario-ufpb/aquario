@@ -17,8 +17,8 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ['var(--font-outfit)', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        sans: ["var(--font-outfit)", "system-ui", "-apple-system", "sans-serif"],
+        display: ["var(--font-outfit)", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

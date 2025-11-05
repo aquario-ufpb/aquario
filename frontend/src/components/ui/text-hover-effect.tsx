@@ -38,19 +38,19 @@ export const TextHoverEffect = ({
 
   // Cores do projeto Aquario - Dark mode
   const darkGradient = [
-    { offset: "0%", stopColor: "#458FB5" },   // Air Force blue
-    { offset: "25%", stopColor: "#4871B3" },  // True Blue
-    { offset: "50%", stopColor: "#80B1E2" },  // Ruddy Blue
-    { offset: "75%", stopColor: "#CFF0FF" },  // Columbia blue
+    { offset: "0%", stopColor: "#458FB5" }, // Air Force blue
+    { offset: "25%", stopColor: "#4871B3" }, // True Blue
+    { offset: "50%", stopColor: "#80B1E2" }, // Ruddy Blue
+    { offset: "75%", stopColor: "#CFF0FF" }, // Columbia blue
     { offset: "100%", stopColor: "#458FB5" }, // Air Force blue
   ];
 
   // Cores do projeto Aquario - Light mode
   const lightGradient = [
-    { offset: "0%", stopColor: "#0C4A6E" },   // Indigo dye
-    { offset: "25%", stopColor: "#458FB5" },  // Air Force blue
-    { offset: "50%", stopColor: "#4871B3" },  // True Blue
-    { offset: "75%", stopColor: "#80B1E2" },  // Ruddy Blue
+    { offset: "0%", stopColor: "#0C4A6E" }, // Indigo dye
+    { offset: "25%", stopColor: "#458FB5" }, // Air Force blue
+    { offset: "50%", stopColor: "#4871B3" }, // True Blue
+    { offset: "75%", stopColor: "#80B1E2" }, // Ruddy Blue
     { offset: "100%", stopColor: "#0C4A6E" }, // Indigo dye
   ];
 
@@ -72,20 +72,15 @@ export const TextHoverEffect = ({
       xmlns="http://www.w3.org/2000/svg"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onMouseMove={(e) => setCursor({ x: e.clientX, y: e.clientY })}
+      onMouseMove={e => setCursor({ x: e.clientX, y: e.clientY })}
       className="select-none"
     >
       <defs>
-        <linearGradient
-          id="textGradient"
-          gradientUnits="userSpaceOnUse"
-          cx="50%"
-          cy="50%"
-          r="25%"
-        >
-          {hovered && gradientColors.map((color, index) => (
-            <stop key={index} offset={color.offset} stopColor={color.stopColor} />
-          ))}
+        <linearGradient id="textGradient" gradientUnits="userSpaceOnUse" cx="50%" cy="50%" r="25%">
+          {hovered &&
+            gradientColors.map((color, index) => (
+              <stop key={index} offset={color.offset} stopColor={color.stopColor} />
+            ))}
         </linearGradient>
 
         <motion.radialGradient
@@ -100,13 +95,7 @@ export const TextHoverEffect = ({
           <stop offset="100%" stopColor="black" />
         </motion.radialGradient>
         <mask id="textMask">
-          <rect
-            x="0"
-            y="0"
-            width="100%"
-            height="100%"
-            fill="url(#revealMask)"
-          />
+          <rect x="0" y="0" width="100%" height="100%" fill="url(#revealMask)" />
         </mask>
       </defs>
       <text
@@ -154,4 +143,3 @@ export const TextHoverEffect = ({
     </svg>
   );
 };
-

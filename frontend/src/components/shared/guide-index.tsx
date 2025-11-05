@@ -95,7 +95,10 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
       <div className={`space-y-1 w-full p-4 flex-1 ${inter.className}`}>
         {guias.map(guia => (
           <div key={guia.slug} className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2 px-2" style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }}>
+            <p
+              className="text-xs font-semibold uppercase tracking-wider mb-2 px-2"
+              style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+            >
               {guia.titulo}
             </p>
             <div className="space-y-0.5">
@@ -116,9 +119,15 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
                           aria-label={isExpanded ? "Collapse" : "Expand"}
                         >
                           {isExpanded ? (
-                            <ChevronDown className="h-3.5 w-3.5" style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }} />
+                            <ChevronDown
+                              className="h-3.5 w-3.5"
+                              style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+                            />
                           ) : (
-                            <ChevronRight className="h-3.5 w-3.5" style={{ color: isDark ? '#C8E6FA' : '#0e3a6c' }} />
+                            <ChevronRight
+                              className="h-3.5 w-3.5"
+                              style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+                            />
                           )}
                         </button>
                       )}
@@ -128,17 +137,21 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
                         className={cn(
                           "flex-1 py-2 px-3 rounded-md text-sm transition-colors",
                           isSecaoActive
-                            ? isDark 
+                            ? isDark
                               ? "bg-blue-900/30 font-medium"
                               : "bg-blue-100 font-medium"
                             : isDark
-                            ? "hover:bg-gray-800"
-                            : "hover:bg-gray-100"
+                              ? "hover:bg-gray-800"
+                              : "hover:bg-gray-100"
                         )}
                         style={{
                           color: isSecaoActive
-                            ? (isDark ? '#D0EFFF' : '#0e3a6c')
-                            : (isDark ? '#E5F6FF' : '#0e3a6c')
+                            ? isDark
+                              ? "#D0EFFF"
+                              : "#0e3a6c"
+                            : isDark
+                              ? "#E5F6FF"
+                              : "#0e3a6c",
                         }}
                       >
                         {secao.titulo}
@@ -160,13 +173,17 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ cursoSlug, guias }) => {
                                     ? "bg-blue-900/30 font-medium"
                                     : "bg-blue-100 font-medium"
                                   : isDark
-                                  ? "hover:bg-gray-800"
-                                  : "hover:bg-gray-100"
+                                    ? "hover:bg-gray-800"
+                                    : "hover:bg-gray-100"
                               )}
                               style={{
                                 color: isSubActive
-                                  ? (isDark ? '#D0EFFF' : '#0e3a6c')
-                                  : (isDark ? '#C8E6FA' : '#0e3a6c')
+                                  ? isDark
+                                    ? "#D0EFFF"
+                                    : "#0e3a6c"
+                                  : isDark
+                                    ? "#C8E6FA"
+                                    : "#0e3a6c",
                               }}
                             >
                               {sub.titulo}

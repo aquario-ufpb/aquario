@@ -49,14 +49,18 @@ export function HoverBorderGradient({
     ? {
         TOP: "radial-gradient(20.7% 50% at 50% 0%, hsl(212, 70%, 60%) 0%, rgba(96, 159, 192, 0) 100%)",
         LEFT: "radial-gradient(16.6% 43.1% at 0% 50%, hsl(212, 70%, 60%) 0%, rgba(96, 159, 192, 0) 100%)",
-        BOTTOM: "radial-gradient(20.7% 50% at 50% 100%, hsl(212, 70%, 60%) 0%, rgba(96, 159, 192, 0) 100%)",
-        RIGHT: "radial-gradient(16.2% 41.2% at 100% 50%, hsl(212, 70%, 60%) 0%, rgba(96, 159, 192, 0) 100%)",
+        BOTTOM:
+          "radial-gradient(20.7% 50% at 50% 100%, hsl(212, 70%, 60%) 0%, rgba(96, 159, 192, 0) 100%)",
+        RIGHT:
+          "radial-gradient(16.2% 41.2% at 100% 50%, hsl(212, 70%, 60%) 0%, rgba(96, 159, 192, 0) 100%)",
       }
     : {
         TOP: "radial-gradient(20.7% 50% at 50% 0%, hsl(212, 77%, 24%) 0%, rgba(12, 69, 103, 0) 100%)",
         LEFT: "radial-gradient(16.6% 43.1% at 0% 50%, hsl(212, 77%, 24%) 0%, rgba(12, 69, 103, 0) 100%)",
-        BOTTOM: "radial-gradient(20.7% 50% at 50% 100%, hsl(212, 77%, 24%) 0%, rgba(12, 69, 103, 0) 100%)",
-        RIGHT: "radial-gradient(16.2% 41.2% at 100% 50%, hsl(212, 77%, 24%) 0%, rgba(12, 69, 103, 0) 100%)",
+        BOTTOM:
+          "radial-gradient(20.7% 50% at 50% 100%, hsl(212, 77%, 24%) 0%, rgba(12, 69, 103, 0) 100%)",
+        RIGHT:
+          "radial-gradient(16.2% 41.2% at 100% 50%, hsl(212, 77%, 24%) 0%, rgba(12, 69, 103, 0) 100%)",
       };
 
   // Highlight color adaptado para o projeto Aquário
@@ -67,7 +71,7 @@ export function HoverBorderGradient({
   useEffect(() => {
     if (!hovered) {
       const interval = setInterval(() => {
-        setDirection((prevState) => rotateDirection(prevState));
+        setDirection(prevState => rotateDirection(prevState));
       }, duration * 1000);
       return () => clearInterval(interval);
     }
@@ -92,18 +96,14 @@ export function HoverBorderGradient({
       <div
         className={cn(
           "w-auto z-10 px-4 py-2 rounded-[inherit]",
-          isDark
-            ? "bg-black/80 text-white"
-            : "bg-white text-aquario-primary",
+          isDark ? "bg-black/80 text-white" : "bg-white text-aquario-primary",
           className
         )}
       >
         {children}
       </div>
       <motion.div
-        className={cn(
-          "flex-none inset-0 overflow-hidden absolute z-0 rounded-[inherit]"
-        )}
+        className={cn("flex-none inset-0 overflow-hidden absolute z-0 rounded-[inherit]")}
         style={{
           filter: "blur(2px)",
           position: "absolute",

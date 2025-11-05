@@ -63,9 +63,11 @@ export default function Home() {
         {/* Hero Section */}
         <section className="text-center min-h-screen flex flex-col justify-center items-center">
           <div className="max-w-4xl mx-auto px-4">
-            <div className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6 whitespace-nowrap ${
-              isDark ? "text-white" : "text-aquario-primary"
-            }`}>
+            <div
+              className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6 whitespace-nowrap ${
+                isDark ? "text-white" : "text-aquario-primary"
+              }`}
+            >
               <TextGenerateEffect
                 words="Bem-vindo ao Aquário"
                 className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight whitespace-nowrap`}
@@ -73,10 +75,13 @@ export default function Home() {
                 duration={0.8}
               />
             </div>
-            <p className={`text-lg md:text-xl lg:text-2xl max-w-2xl mx-auto mb-12 leading-relaxed ${
-              isDark ? "text-white/90" : "text-slate-700"
-            }`}>
-              Seu hub de oportunidades, projetos e conexões<br />
+            <p
+              className={`text-lg md:text-xl lg:text-2xl max-w-2xl mx-auto mb-12 leading-relaxed ${
+                isDark ? "text-white/90" : "text-slate-700"
+              }`}
+            >
+              Seu hub de oportunidades, projetos e conexões
+              <br />
               no Centro de Informática da UFPB.
             </p>
             <div className="flex justify-center pointer-events-auto">
@@ -95,38 +100,47 @@ export default function Home() {
         {/* Project Status Section */}
         <section className="text-center py-10">
           <div className="max-w-3xl mx-auto">
-            <h2 className={`font-display text-3xl font-bold tracking-wide mb-6 drop-shadow-lg ${
-              isDark ? "text-white" : "text-aquario-primary"
-            }`}>
+            <h2
+              className={`font-display text-3xl font-bold tracking-wide mb-6 drop-shadow-lg ${
+                isDark ? "text-white" : "text-aquario-primary"
+              }`}
+            >
               Projeto em Desenvolvimento
             </h2>
-            <p className={`text-lg mb-8 drop-shadow-md ${
-              isDark ? "text-white/80" : "text-slate-700"
-            }`}>
+            <p
+              className={`text-lg mb-8 drop-shadow-md ${
+                isDark ? "text-white/80" : "text-slate-700"
+              }`}
+            >
               O Aquário é um projeto em constante evolução. Em breve, teremos mais páginas e
               funcionalidades disponíveis.
             </p>
-            <div className={`backdrop-blur-md rounded-lg p-8 pointer-events-auto ${
-              isDark 
-                ? "bg-white/10 border border-white/20" 
-                : "bg-white/60 border border-blue-200"
-            }`}>
-              <h3 className={`font-display text-2xl font-bold tracking-wide mb-4 ${
-                isDark ? "text-white" : "text-aquario-primary"
-              }`}>
+            <div
+              className={`backdrop-blur-md rounded-lg p-8 pointer-events-auto ${
+                isDark ? "bg-white/10 border border-white/20" : "bg-white/60 border border-blue-200"
+              }`}
+            >
+              <h3
+                className={`font-display text-2xl font-bold tracking-wide mb-4 ${
+                  isDark ? "text-white" : "text-aquario-primary"
+                }`}
+              >
                 Para Estudantes que Precisam de Ajuda
               </h3>
-              <p className={`mb-6 ${
-                isDark ? "text-white/80" : "text-slate-700"
-              }`}>
+              <p className={`mb-6 ${isDark ? "text-white/80" : "text-slate-700"}`}>
                 Nossos guias são o melhor lugar para começar! Encontre orientações, dicas e recursos
                 que vão te ajudar em sua jornada acadêmica no Centro de Informática.
               </p>
-              <Button asChild size="lg" variant="outline" className={
-                isDark 
-                  ? "border-white text-white hover:bg-white/20" 
-                  : "border-blue-900 text-blue-900 hover:bg-blue-50"
-              }>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className={
+                  isDark
+                    ? "border-white text-white hover:bg-white/20"
+                    : "border-blue-900 text-blue-900 hover:bg-blue-50"
+                }
+              >
                 <Link href="/guias">Explorar Guias</Link>
               </Button>
             </div>

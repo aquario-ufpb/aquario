@@ -9,7 +9,7 @@ import { SearchProvider } from "@/contexts/search-context";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
 
-const outfit = Outfit({ 
+const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
 });
@@ -39,9 +39,7 @@ export default function RootLayout({
                 <SearchProvider>
                   <div className="flex flex-1 flex-col bg-white dark:bg-transparent">
                     <NavWrapper />
-                    <div className="pt-0">
-                    {children}
-                    </div>
+                    <div className="pt-0">{children}</div>
                   </div>
                 </SearchProvider>
               </ThemeProvider>

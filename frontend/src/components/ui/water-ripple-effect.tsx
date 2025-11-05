@@ -1,25 +1,25 @@
-"use client"
+"use client";
 
-import { useRef, useEffect } from "react"
-import * as THREE from "three"
+import { useRef, useEffect } from "react";
+import * as THREE from "three";
 
 interface WaterRippleEffectProps {
-  imageSrc: string
-  width?: number
-  height?: number
-  waveIntensity?: number
-  rippleIntensity?: number
-  animationSpeed?: number
-  hoverRippleMultiplier?: number
-  transitionSpeed?: number
-  className?: string
-  containerClassName?: string
-  scale?: number
-  waveFrequency?: number
-  rippleFrequency?: number
-  distortionAmount?: number
-  onHover?: () => void
-  onLeave?: () => void
+  imageSrc: string;
+  width?: number;
+  height?: number;
+  waveIntensity?: number;
+  rippleIntensity?: number;
+  animationSpeed?: number;
+  hoverRippleMultiplier?: number;
+  transitionSpeed?: number;
+  className?: string;
+  containerClassName?: string;
+  scale?: number;
+  waveFrequency?: number;
+  rippleFrequency?: number;
+  distortionAmount?: number;
+  onHover?: () => void;
+  onLeave?: () => void;
 }
 
 export default function WaterRippleEffect({
@@ -41,39 +41,39 @@ export default function WaterRippleEffect({
   onLeave,
   ...props
 }: WaterRippleEffectProps & React.HTMLAttributes<HTMLDivElement>) {
-  const mountRef = useRef<HTMLDivElement>(null)
-  const sceneRef = useRef<THREE.Scene | null>(null)
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
-  const materialRef = useRef<THREE.ShaderMaterial | null>(null)
-  const mouseRef = useRef({ x: 0.5, y: 0.5 })
-  const timeRef = useRef(0)
-  const isHoveredRef = useRef(false)
+  const mountRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
+  const mouseRef = useRef({ x: 0.5, y: 0.5 });
+  const timeRef = useRef(0);
+  const isHoveredRef = useRef(false);
 
   useEffect(() => {
-    const mountElement = mountRef.current
-    if (!mountElement) return
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true, 
+    const mountElement = mountRef.current;
+    if (!mountElement) return;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
       alpha: true,
       powerPreference: "high-performance",
-      precision: "highp"
-    })
+      precision: "highp",
+    });
 
-    renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)) 
-    renderer.setClearColor(0x000000, 0)
-    mountElement.appendChild(renderer.domElement)
-    const textureLoader = new THREE.TextureLoader()
-    const texture = textureLoader.load(imageSrc, (loadedTexture) => {
-      loadedTexture.magFilter = THREE.LinearFilter
-      loadedTexture.minFilter = THREE.LinearMipmapLinearFilter
-      loadedTexture.wrapS = THREE.ClampToEdgeWrapping
-      loadedTexture.wrapT = THREE.ClampToEdgeWrapping
-      loadedTexture.generateMipmaps = true
-      loadedTexture.needsUpdate = true
-    })
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+    mountElement.appendChild(renderer.domElement);
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load(imageSrc, loadedTexture => {
+      loadedTexture.magFilter = THREE.LinearFilter;
+      loadedTexture.minFilter = THREE.LinearMipmapLinearFilter;
+      loadedTexture.wrapS = THREE.ClampToEdgeWrapping;
+      loadedTexture.wrapT = THREE.ClampToEdgeWrapping;
+      loadedTexture.generateMipmaps = true;
+      loadedTexture.needsUpdate = true;
+    });
 
     const vertexShader = `
       varying vec2 vUv;
@@ -84,7 +84,7 @@ export default function WaterRippleEffect({
         vPosition = position.xy;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
-    `
+    `;
 
     const fragmentShader = `
       uniform sampler2D texture1;
@@ -166,7 +166,7 @@ export default function WaterRippleEffect({
         
         gl_FragColor = color;
       }
-    `
+    `;
     const material = new THREE.ShaderMaterial({
       uniforms: {
         texture1: { value: texture },
@@ -178,81 +178,93 @@ export default function WaterRippleEffect({
         animationSpeed: { value: animationSpeed },
         waveFrequency: { value: waveFrequency },
         rippleFrequency: { value: rippleFrequency },
-        distortionAmount: { value: distortionAmount }
+        distortionAmount: { value: distortionAmount },
       },
       vertexShader,
       fragmentShader,
       transparent: true,
-    })
+    });
 
-    const aspectRatio = width / height
-    const geometry = new THREE.PlaneGeometry(4 * aspectRatio, 4, 64, 64) 
-    const mesh = new THREE.Mesh(geometry, material)
-    scene.add(mesh)
+    const aspectRatio = width / height;
+    const geometry = new THREE.PlaneGeometry(4 * aspectRatio, 4, 64, 64);
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
 
-    camera.position.z = 3
-    sceneRef.current = scene
-    rendererRef.current = renderer
-    materialRef.current = material
+    camera.position.z = 3;
+    sceneRef.current = scene;
+    rendererRef.current = renderer;
+    materialRef.current = material;
 
     // Event handlers
     const handleMouseMove = (event: MouseEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect()
-      const x = (event.clientX - rect.left) / rect.width
-      const y = 1 - (event.clientY - rect.top) / rect.height
-      mouseRef.current = { x, y }
-    }
+      const rect = renderer.domElement.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width;
+      const y = 1 - (event.clientY - rect.top) / rect.height;
+      mouseRef.current = { x, y };
+    };
 
     const handleMouseEnter = () => {
-      isHoveredRef.current = true
-      onHover?.()
-    }
-    
-    const handleMouseLeave = () => {
-      isHoveredRef.current = false
-      onLeave?.()
-    }
+      isHoveredRef.current = true;
+      onHover?.();
+    };
 
-    renderer.domElement.addEventListener("mousemove", handleMouseMove)
-    renderer.domElement.addEventListener("mouseenter", handleMouseEnter)
-    renderer.domElement.addEventListener("mouseleave", handleMouseLeave)
+    const handleMouseLeave = () => {
+      isHoveredRef.current = false;
+      onLeave?.();
+    };
+
+    renderer.domElement.addEventListener("mousemove", handleMouseMove);
+    renderer.domElement.addEventListener("mouseenter", handleMouseEnter);
+    renderer.domElement.addEventListener("mouseleave", handleMouseLeave);
 
     const animate = () => {
-      timeRef.current += 0.016
+      timeRef.current += 0.016;
 
       if (materialRef.current) {
-        materialRef.current.uniforms.time.value = timeRef.current
-        materialRef.current.uniforms.mouse.value.set(mouseRef.current.x, mouseRef.current.y)
-        const targetIntensity = isHoveredRef.current ? hoverRippleMultiplier : 0.3
-        const currentIntensity = materialRef.current.uniforms.hoverIntensity.value
-        materialRef.current.uniforms.hoverIntensity.value += (targetIntensity - currentIntensity) * transitionSpeed
+        materialRef.current.uniforms.time.value = timeRef.current;
+        materialRef.current.uniforms.mouse.value.set(mouseRef.current.x, mouseRef.current.y);
+        const targetIntensity = isHoveredRef.current ? hoverRippleMultiplier : 0.3;
+        const currentIntensity = materialRef.current.uniforms.hoverIntensity.value;
+        materialRef.current.uniforms.hoverIntensity.value +=
+          (targetIntensity - currentIntensity) * transitionSpeed;
       }
 
       if (rendererRef.current && sceneRef.current) {
-        rendererRef.current.render(sceneRef.current, camera)
+        rendererRef.current.render(sceneRef.current, camera);
       }
-      requestAnimationFrame(animate)
-    }
-    animate()
+      requestAnimationFrame(animate);
+    };
+    animate();
 
     // Cleanup
     return () => {
-      renderer.domElement.removeEventListener("mousemove", handleMouseMove)
-      renderer.domElement.removeEventListener("mouseenter", handleMouseEnter)
-      renderer.domElement.removeEventListener("mouseleave", handleMouseLeave)
+      renderer.domElement.removeEventListener("mousemove", handleMouseMove);
+      renderer.domElement.removeEventListener("mouseenter", handleMouseEnter);
+      renderer.domElement.removeEventListener("mouseleave", handleMouseLeave);
 
       if (mountElement && renderer.domElement && mountElement.contains(renderer.domElement)) {
-        mountElement.removeChild(renderer.domElement)
+        mountElement.removeChild(renderer.domElement);
       }
-      renderer.dispose()
-      geometry.dispose()
-      material.dispose()
-      texture.dispose()
-    }
+      renderer.dispose();
+      geometry.dispose();
+      material.dispose();
+      texture.dispose();
+    };
   }, [
-    imageSrc, width, height, waveIntensity, rippleIntensity, animationSpeed, hoverRippleMultiplier, transitionSpeed,
-    waveFrequency, rippleFrequency, distortionAmount, onHover, onLeave
-  ])
+    imageSrc,
+    width,
+    height,
+    waveIntensity,
+    rippleIntensity,
+    animationSpeed,
+    hoverRippleMultiplier,
+    transitionSpeed,
+    waveFrequency,
+    rippleFrequency,
+    distortionAmount,
+    onHover,
+    onLeave,
+  ]);
 
   return (
     <div className={`w-full flex justify-center items-center ${containerClassName}`}>
@@ -264,5 +276,5 @@ export default function WaterRippleEffect({
         />
       </div>
     </div>
-  )
+  );
 }

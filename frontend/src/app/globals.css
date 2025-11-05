@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Newake';
-  src: url('/fonts/NewakeFont-Demo.otf') format('opentype');
+  font-family: "Newake";
+  src: url("/fonts/NewakeFont-Demo.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -44,7 +44,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    
+
     /* Aquário brand colors */
     --aquario-primary: 212 77% 24%;
   }
