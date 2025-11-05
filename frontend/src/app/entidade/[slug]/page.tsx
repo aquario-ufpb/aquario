@@ -92,7 +92,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
     });
   };
   return (
-    <div className="mt-0">
+    <div className="mt-24">
       {/* Main Content Section - Two Columns */}
       <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-8 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">

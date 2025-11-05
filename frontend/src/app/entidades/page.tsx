@@ -152,7 +152,7 @@ export default function EntidadesPage() {
   const empresasParceiras = entidades.filter(e => e.tipo === "EMPRESA").sort(sortEntidades);
 
   return (
-    <div className="container mx-auto p-4 pt-12">
+    <div className="container mx-auto p-4 mt-24">
       <h1 className="text-3xl font-bold mb-8 max-w-[50%]">
         Procure Laboratórios, ligas acadêmicas, grupos de pesquisa e outros
       </h1>
