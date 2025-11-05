@@ -123,9 +123,10 @@ export class LocalFileGuiasProvider implements GuiasDataProvider {
     });
 
     // Collect all section names (from both .md files and folders)
+    // IMPORTANT: Only collect sections from the specific guia, not from other guias
     const allSectionNames = new Set<string>();
 
-    // Add sections from direct .md files
+    // Add sections from direct .md files (already filtered by guia)
     directMdFiles.forEach(filePath => {
       const parts = filePath.split("/").filter(p => p && p !== ".");
       const filename = parts[parts.length - 1];
@@ -133,7 +134,7 @@ export class LocalFileGuiasProvider implements GuiasDataProvider {
       allSectionNames.add(filenameWithoutExt);
     });
 
-    // Add sections from folders with sub-content
+    // Add sections from folders with sub-content (already filtered by guia)
     foldersWithSubContent.forEach(folderName => {
       allSectionNames.add(folderName);
     });
@@ -148,8 +149,8 @@ export class LocalFileGuiasProvider implements GuiasDataProvider {
       const slug = this.filenameToSlug(sectionName);
       const titulo = this.filenameToTitle(sectionName); // Remove priority prefix from title
 
-      // Check if there's a direct .md file for this section
-      // Match by comparing both the full name and the name without prefix
+      // Verify this section actually belongs to this guia by checking if we have files/folders for it
+      // Check if there's a direct .md file for this section in THIS guia
       const directMdFile = directMdFiles.find(filePath => {
         const parts = filePath.split("/").filter(p => p && p !== ".");
         const filename = parts[parts.length - 1].replace(/\.md$/, "");
@@ -157,25 +158,55 @@ export class LocalFileGuiasProvider implements GuiasDataProvider {
         return filename === sectionName || this.filenameToSlug(filename) === slug;
       });
 
+      // Check if this section folder exists in THIS guia
+      const hasFolderInThisGuia = Array.from(foldersWithSubContent).some(
+        folderName => folderName === sectionName || this.filenameToSlug(folderName) === slug
+      );
+
+      // Skip if this section doesn't belong to this guia
+      if (!directMdFile && !hasFolderInThisGuia) {
+        return;
+      }
+
       // Get main content from .md file (if it exists)
       let conteudo = directMdFile ? this.contentFiles[directMdFile] : null;
 
       // Check if there are sub-contents
       // Need to match by both exact name and slug (for priority prefix handling)
+      // IMPORTANT: Only match files under the specific guia folder, not from other guias
       const subFiles = Object.keys(this.contentFiles).filter(key => {
         const keyParts = key.split("/").filter(p => p && p !== ".");
-        const subfolderIndex = keyParts.indexOf(sectionName);
-        // Also check if any part matches by slug (for priority prefix handling)
-        const matchingIndex = keyParts.findIndex(
-          part => this.filenameToSlug(part) === this.filenameToSlug(sectionName)
-        );
-        const folderIndex = subfolderIndex !== -1 ? subfolderIndex : matchingIndex;
 
+        // Check if from centro-de-informatica
+        if (!keyParts.includes("centro-de-informatica")) {
+          return false;
+        }
+
+        // First, find the guia folder in the path
+        const guiaFolderIndex = keyParts.findIndex(p => this.filenameToSlug(p) === guiaSlug);
+        if (guiaFolderIndex === -1) {
+          return false;
+        }
+
+        // Then find the section folder - must come AFTER the guia folder
+        // Only check parts that come after the guia folder
+        const partsAfterGuia = keyParts.slice(guiaFolderIndex + 1);
+        if (partsAfterGuia.length < 2) {
+          return false; // Need at least [sectionFolder, file.md]
+        }
+
+        const sectionFolderName = partsAfterGuia[0];
+        // Match by exact name or slug (for priority prefix handling)
+        const matchesSection =
+          sectionFolderName === sectionName ||
+          this.filenameToSlug(sectionFolderName) === this.filenameToSlug(sectionName);
+
+        // The section folder must be directly under the guia folder
+        // Path structure: [..., centro-de-informatica, guiaFolder, sectionFolder, file.md]
         return (
-          folderIndex !== -1 &&
-          folderIndex + 1 === keyParts.length - 1 &&
-          key.endsWith(".md") &&
-          keyParts.includes("centro-de-informatica")
+          matchesSection &&
+          partsAfterGuia.length === 2 && // Exactly [sectionFolder, file.md]
+          key.endsWith(".md")
         );
       });
 

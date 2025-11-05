@@ -95,12 +95,12 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ guias }) => {
         {guias.map(guia => (
           <div key={guia.slug} className="mb-4">
             <p
-              className="text-xs font-semibold uppercase tracking-wider mb-2 px-2"
+              className="text-xs font-semibold uppercase tracking-wider mb-2 px-2 pt-2"
               style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
             >
               {guia.titulo}
             </p>
-            <div className="space-y-0.5">
+            <div className="space-y-0 gap-0">
               {guia.secoes.map(secao => {
                 const sectionKey = `${guia.slug}-${secao.slug}`;
                 const hasSubsections = secao.subsecoes && secao.subsecoes.length > 0;
