@@ -3,7 +3,7 @@
 import { useRef, useEffect } from "react";
 import * as THREE from "three";
 
-interface WaterRippleEffectProps {
+type WaterRippleEffectProps = {
   imageSrc: string;
   width?: number;
   height?: number;
@@ -20,7 +20,7 @@ interface WaterRippleEffectProps {
   distortionAmount?: number;
   onHover?: () => void;
   onLeave?: () => void;
-}
+};
 
 export default function WaterRippleEffect({
   imageSrc,
@@ -39,7 +39,6 @@ export default function WaterRippleEffect({
   distortionAmount = 0.008,
   onHover,
   onLeave,
-  ...props
 }: WaterRippleEffectProps & React.HTMLAttributes<HTMLDivElement>) {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -51,7 +50,9 @@ export default function WaterRippleEffect({
 
   useEffect(() => {
     const mountElement = mountRef.current;
-    if (!mountElement) return;
+    if (!mountElement) {
+      return;
+    }
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({

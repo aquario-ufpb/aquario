@@ -22,21 +22,17 @@ export const LampContainer = ({
 
   // Cores do projeto Aquario - Dark mode
   const darkGradientColor = "#458FB5"; // Air Force blue
-  const darkBgColor = "bg-[#030712]"; // Dark background
   const darkConicColor = "from-[#80B1E2]"; // Ruddy Blue
 
   // Cores do projeto Aquario - Light mode
   const lightGradientColor = "#0C4A6E"; // Indigo dye
-  const lightBgColor = "bg-white"; // Light background
   const lightConicColor = "from-[#4871B3]"; // True Blue
 
   const gradientColor = isDark ? darkGradientColor : lightGradientColor;
-  const bgColor = isDark ? darkBgColor : lightBgColor;
   const conicColor = isDark ? darkConicColor : lightConicColor;
 
   // Default to dark mode on first render to prevent hydration mismatch
   const gradientColorFinal = mounted ? gradientColor : darkGradientColor;
-  const bgColorFinal = mounted ? bgColor : darkBgColor;
   const conicColorFinal = mounted ? conicColor : darkConicColor;
 
   return (

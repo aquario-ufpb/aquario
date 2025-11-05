@@ -1,10 +1,9 @@
 "use client";
 
-import React from "react";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import {
   Breadcrumb,

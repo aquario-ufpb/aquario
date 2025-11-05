@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 import GradientHeaderComponent from "@/components/shared/gradient-header";
 import { GuideIndex } from "@/components/shared/guide-index";
 import MarkdownRenderer from "@/components/shared/markdown-renderer";

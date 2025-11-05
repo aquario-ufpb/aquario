@@ -80,6 +80,7 @@
     "@types/node": "^24.8.1",
     "@types/react": "18.3.5",
     "@types/react-dom": "^18",
+    "@types/three": "^0.181.0",
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "@vitejs/plugin-react": "^5.0.4",
