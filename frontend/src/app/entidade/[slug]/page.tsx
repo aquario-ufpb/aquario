@@ -180,7 +180,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
                   )}
                   {entidade.instagram && (
                     <a
-                      href={`https://instagram.com/${entidade.instagram}`}
+                      href={`${entidade.instagram}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border/50 hover:bg-accent/20 transition-colors text-sm"
@@ -192,7 +192,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
                   )}
                   {entidade.linkedin && (
                     <a
-                      href={`https://linkedin.com/company/${entidade.linkedin}`}
+                      href={`${entidade.linkedin}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border/50 hover:bg-accent/20 transition-colors text-sm"
