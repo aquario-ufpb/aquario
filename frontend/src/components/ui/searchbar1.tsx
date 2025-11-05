@@ -47,13 +47,8 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
       if (/\b(ciencia\s*da\s*computacao|cc|programacao|algoritmos)\b/.test(normalizedQuery)) {
         items.push({ label: "Guias: Ciência da Computação", href: "/guias/ciencia-da-computacao" });
       }
-      if (
-        /\b(engenharia\s*da\s*computacao|ec|eletronica|hardware|embarcados)\b/.test(normalizedQuery)
-      ) {
-        items.push({
-          label: "Guias: Engenharia da Computação",
-          href: "/guias/engenharia-da-computacao",
-        });
+      if (/\b(engenharia\s*da\s*computacao|ec|eletronica|hardware|embarcados)\b/.test(normalizedQuery)) {
+        items.push({ label: "Guias: Engenharia da Computação", href: "/guias/engenharia-da-computacao" });
       }
       return items;
     };
@@ -61,19 +56,14 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
     const navMatches = normalizedQuery
       ? quickNav.filter(t => {
           const normLabel = normalize(t.label);
-          if (normLabel === normalizedQuery) {
-            return true;
-          }
-          if (t.synonyms.some(s => normalize(s) === normalizedQuery)) {
-            return true;
-          }
+          if (normLabel === normalizedQuery) return true;
+          if (t.synonyms.some(s => normalize(s) === normalizedQuery)) return true;
           if (
             normalizedQuery.length >= 3 &&
             (normLabel.startsWith(normalizedQuery) ||
               t.synonyms.some(s => normalize(s).startsWith(normalizedQuery)))
-          ) {
+          )
             return true;
-          }
           return false;
         })
       : [];
@@ -129,13 +119,9 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       const value = query.trim();
-      if (!value) {
-        return;
-      }
+      if (!value) return;
       const normalized = normalize(value);
-      const exactNav = quickNav.find(
-        t => normalize(t.label) === normalized || t.synonyms.includes(normalized)
-      );
+      const exactNav = quickNav.find(t => normalize(t.label) === normalized || t.synonyms.includes(normalized));
       if (exactNav) {
         router.push(exactNav.href);
         setOpen(false);
@@ -179,14 +165,9 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
             style={transparent ? { backgroundColor: 'transparent' } : undefined}
             ref={node => {
               inputInnerRef.current = node;
-              if (!ref) {
-                return;
-              }
-              if (typeof ref === "function") {
-                ref(node);
-              } else {
-                (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
-              }
+              if (!ref) return;
+              if (typeof ref === "function") ref(node);
+              else (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
             }}
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -245,9 +226,7 @@ const SearchBar1 = React.forwardRef<HTMLInputElement, InputProps>(
                   </CommandGroup>
                 )}
                 {!hasAnySuggestions && query.trim() && (
-                  <div className="px-3 py-2 text-sm text-muted-foreground">
-                    Nenhum resultado para &quot;{query}&quot;
-                  </div>
+                  <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum resultado para "{query}"</div>
                 )}
                 {history.length > 0 && (
                   <CommandGroup heading="Recentes">

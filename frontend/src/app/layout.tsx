@@ -39,9 +39,9 @@ export default function RootLayout({
                 <SearchProvider>
                   <div className="flex flex-1 flex-col bg-white dark:bg-transparent">
                     <NavWrapper />
-                    <div className="pt-24">
+                    <main className="pt-[60px] md:pt-0">
                       {children}
-                    </div>
+                    </main>
                   </div>
                 </SearchProvider>
               </ThemeProvider>
