@@ -34,18 +34,19 @@ declare const require: {
   };
 };
 
-const contentContext = require.context(
-  "../../../../content/aquario-entidades/centro-de-informatica",
-  false,
-  /\.json$/
-);
+const contentContext = require.context("../../../../content/aquario-entidades", true, /\.json$/);
 
 export class LocalFileEntidadesProvider implements EntidadesDataProvider {
   private entidadesData: Record<string, EntidadeJson> = {};
 
   constructor() {
-    // Load all JSON files at initialization
+    // Load all JSON files at initialization, filtering for centro-de-informatica only
     contentContext.keys().forEach((key: string) => {
+      // Only process files from centro-de-informatica folder
+      if (!key.includes("/centro-de-informatica/")) {
+        return;
+      }
+
       const content = contentContext(key) as EntidadeJson | { default: EntidadeJson };
       const jsonData: EntidadeJson =
         "default" in content && content.default ? content.default : (content as EntidadeJson);
