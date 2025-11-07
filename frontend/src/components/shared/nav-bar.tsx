@@ -47,7 +47,7 @@ export default function NavBar() {
             >
               <Image
                 className="h-6 w-auto dark:hidden select-none pointer-events-none"
-                src="/logo2.png"
+                src="/logo2.svg"
                 width={60}
                 height={50}
                 alt="Aquario's logo"
@@ -56,7 +56,7 @@ export default function NavBar() {
               />
               <Image
                 className="h-6 w-auto hidden dark:block select-none pointer-events-none"
-                src="/logo3.png"
+                src="/logo3.svg"
                 width={60}
                 height={50}
                 alt="Aquario's logo"
