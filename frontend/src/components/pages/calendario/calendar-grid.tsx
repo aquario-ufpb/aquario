@@ -1,9 +1,10 @@
 import { useMemo, useState, useRef } from "react";
-import { Calendar, AlertTriangle, Download } from "lucide-react";
+import { Calendar, AlertTriangle, Download, CalendarPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DAYS, DAY_NUMBERS, CALENDAR_TIME_SLOTS, DAY_NAMES } from "@/lib/calendario/constants";
 import { exportCalendarAsImage } from "@/lib/calendario/export";
+import { generateICSFile, downloadICSFile } from "@/lib/calendario/ics";
 import CalendarLegend from "./calendar-legend";
 import CalendarCell from "./calendar-cell";
 import ClassDetailsDialog from "./class-details-dialog";
@@ -36,6 +37,7 @@ export default function CalendarGrid({
     timeSlot: string;
   } | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isGeneratingICS, setIsGeneratingICS] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Pre-process all days to identify merged slots
@@ -79,6 +81,24 @@ export default function CalendarGrid({
       alert(error instanceof Error ? error.message : "Erro ao exportar o calendário");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleAddToCalendar = async () => {
+    if (selectedClasses.length === 0) {
+      alert("Nenhuma disciplina selecionada para adicionar ao calendário");
+      return;
+    }
+
+    setIsGeneratingICS(true);
+    try {
+      const blob = await generateICSFile(selectedClasses);
+      downloadICSFile(blob, "calendario-disciplinas.ics");
+    } catch (error) {
+      console.error("Error generating ICS file:", error);
+      alert(error instanceof Error ? error.message : "Erro ao gerar arquivo de calendário");
+    } finally {
+      setIsGeneratingICS(false);
     }
   };
 
@@ -223,8 +243,8 @@ export default function CalendarGrid({
         )}
       </Card>
 
-      {/* Export button below the calendar */}
-      <div className="flex justify-center mt-4">
+      {/* Action buttons below the calendar */}
+      <div className="flex justify-center gap-3 mt-4">
         <Button
           onClick={handleExport}
           disabled={isExporting}
@@ -238,6 +258,20 @@ export default function CalendarGrid({
         >
           <Download className="w-4 h-4" />
           {isExporting ? "Exportando..." : "Exportar Calendário"}
+        </Button>
+        <Button
+          onClick={handleAddToCalendar}
+          disabled={isGeneratingICS || selectedClasses.length === 0}
+          variant="outline"
+          size="default"
+          className="flex items-center gap-2"
+          style={{
+            borderColor: isDark ? "rgba(255,255,255,0.2)" : "#e2e8f0",
+            color: isDark ? "#C8E6FA" : "#0e3a6c",
+          }}
+        >
+          <CalendarPlus className="w-4 h-4" />
+          {isGeneratingICS ? "Gerando..." : "Adicionar ao Calendário"}
         </Button>
       </div>
     </>
