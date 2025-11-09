@@ -2,3 +2,4 @@
 export * from "./guias";
 export * from "./cursos";
 export * from "./centros";
+export * from "./paas";
