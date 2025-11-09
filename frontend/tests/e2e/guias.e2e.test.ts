@@ -8,53 +8,81 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Guias - User Navigation Flow", () => {
   test.beforeEach(async ({ page }) => {
-    // Start from the guias page
-    await page.goto("/guias/ciencia-da-computacao");
+    // Start from the guias root page
+    await page.goto("/guias");
   });
 
-  test("should display guide list for a course", async ({ page }) => {
+  test("should display guide list on root page", async ({ page }) => {
     // Check page title - "Aquario" (without accent)
     await expect(page).toHaveTitle(/Aquario/);
 
-    // Should show the header with course name
-    const header = page.locator("text=Centro de Informática");
-    await expect(header).toBeVisible({ timeout: 10000 });
+    // Wait for content to load
+    await page.waitForLoadState("networkidle");
 
-    // Should show content area (either sidebar or welcome message)
+    // Should show welcome message
     const body = page.locator("body");
     const bodyText = await body.textContent();
-    // Check for either the old "Selecione" message or the new "Bem-vindo" welcome message
-    expect(bodyText).toMatch(/Selecione|Bem-vindo|Bem vindo/i);
+    // Check for "Bem-vindo" welcome message
+    expect(bodyText).toMatch(/Bem-vindo|Bem vindo/i);
+
+    // Should have navigation sidebar or mobile menu
+    const navigation = page.locator('nav, [role="navigation"], button');
+    await expect(navigation.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test("should navigate through guide hierarchy: Course → Guia → Seção → Subseção", async ({
-    page,
-  }) => {
+  test("should navigate through guide hierarchy: Guia → Seção → Subseção", async ({ page }) => {
     // Wait for initial page load
     await page.waitForLoadState("networkidle");
 
-    // Step 1: We're on the course page (ciencia-da-computacao)
-    await expect(page).toHaveURL(/ciencia-da-computacao/);
+    // Step 1: We're on the root guias page
+    await expect(page).toHaveURL(/\/guias$/);
 
-    // Step 2: Click on a guia (look for any clickable navigation element)
-    const navigationLinks = page.locator("a, button").filter({ hasText: /bem.vindo|cadeiras/i });
-    const firstGuia = navigationLinks.first();
+    // Step 2: Find and click on a section link
+    // First, let's find all links with /guias/ in the href to see what's available
+    const allLinks = page.locator("a[href*='/guias/']");
+    const linkCount = await allLinks.count();
+    console.log(`Found ${linkCount} links with /guias/ in href`);
 
-    if ((await firstGuia.count()) > 0) {
-      await firstGuia.click();
-      await page.waitForLoadState("networkidle");
+    // Try to find a link that goes to a section (has 2+ path segments)
+    let clicked = false;
+    for (let i = 0; i < Math.min(linkCount, 10); i++) {
+      const link = allLinks.nth(i);
+      const href = await link.getAttribute("href");
+      const text = await link.textContent();
+      console.log(`Link ${i}: href="${href}", text="${text}"`);
 
-      // Should navigate to a guia page
-      await expect(page.url()).toContain("ciencia-da-computacao");
+      // Look for links that have at least guia and section (2 path segments after /guias/)
+      if (href && href.match(/\/guias\/[^/]+\/[^/]+/)) {
+        await link.waitFor({ state: "visible" });
+        console.log(`Clicking link: ${href}`);
+
+        // Wait for navigation
+        await Promise.all([
+          page.waitForURL(/\/guias\/[^/]+\/[^/]+/, { timeout: 10000 }),
+          link.click(),
+        ]);
+
+        await page.waitForLoadState("networkidle");
+        clicked = true;
+        break;
+      }
+    }
+
+    if (clicked) {
+      // Should navigate to a section page (e.g., /guias/bem-vindo/introducao or /guias/grupos/atetica)
+      await expect(page.url()).toMatch(/\/guias\/[^/]+\/[^/]+/);
+    } else {
+      // If no section links found, just verify we can find any /guias/ links
+      expect(linkCount).toBeGreaterThan(0);
     }
   });
 
   test("should render markdown content correctly", async ({ page }) => {
-    // Navigate to a content page (adjust URL based on your actual structure)
-    await page.goto("/guias/ciencia-da-computacao");
+    // Navigate to the root guias page
+    await page.goto("/guias");
     await page.waitForLoadState("networkidle");
 
-    // Check if any content is rendered (should show "Selecione uma seção" message)
+    // Check if any content is rendered (should show welcome message or content)
     const body = page.locator("body");
     const text = await body.textContent();
     expect(text).toBeTruthy();
@@ -62,9 +90,9 @@ test.describe("Guias - User Navigation Flow", () => {
   });
 
   test("should handle deep linking to specific subsection", async ({ page }) => {
-    // Try to navigate directly to a deep URL
+    // Try to navigate directly to a deep URL (e.g., /guias/bem-vindo/sobre-o-curso)
     // This tests that the app can handle direct navigation
-    await page.goto("/guias/ciencia-da-computacao");
+    await page.goto("/guias");
 
     // Should load without errors
     await expect(page).not.toHaveTitle(/404|Not Found/);
@@ -74,18 +102,18 @@ test.describe("Guias - User Navigation Flow", () => {
     await expect(body).not.toBeEmpty();
   });
 
-  test("should display course selector or navigation", async ({ page }) => {
+  test("should display navigation sidebar or mobile menu", async ({ page }) => {
     await page.waitForLoadState("networkidle");
 
-    // Should have some navigation (nav bar, sidebar, or links)
-    const navigation = page.locator('nav, [role="navigation"], header');
+    // Should have navigation (sidebar on desktop, menu button on mobile)
+    const navigation = page.locator('nav, [role="navigation"], button, aside');
     await expect(navigation.first()).toBeVisible({ timeout: 10000 });
   });
 });
 
 test.describe("Guias - Content Display", () => {
   test("should display readable text content", async ({ page }) => {
-    await page.goto("/guias/ciencia-da-computacao");
+    await page.goto("/guias");
     await page.waitForLoadState("networkidle");
 
     // Check that there's actual text content (not just loading spinners)
@@ -100,12 +128,8 @@ test.describe("Guias - Responsive Design", () => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE
 
-    await page.goto("/guias/ciencia-da-computacao");
+    await page.goto("/guias");
     await page.waitForLoadState("networkidle");
-
-    // Check that key content is visible (header with course name)
-    const header = page.locator("text=Centro de Informática");
-    await expect(header).toBeVisible({ timeout: 10000 });
 
     // Check that page has content (text content should be present)
     const pageContent = page.locator("body");
@@ -124,12 +148,8 @@ test.describe("Guias - Responsive Design", () => {
     // Set tablet viewport
     await page.setViewportSize({ width: 768, height: 1024 }); // iPad
 
-    await page.goto("/guias/ciencia-da-computacao");
+    await page.goto("/guias");
     await page.waitForLoadState("networkidle");
-
-    // Check that key content is visible
-    const header = page.locator("text=Centro de Informática");
-    await expect(header).toBeVisible({ timeout: 10000 });
 
     // Check that page has content
     const pageContent = page.locator("body");
@@ -139,10 +159,10 @@ test.describe("Guias - Responsive Design", () => {
 });
 
 test.describe("Guias - Edge Cases", () => {
-  test("should handle non-existent course gracefully", async ({ page }) => {
-    await page.goto("/guias/curso-que-nao-existe");
+  test("should handle non-existent guia gracefully", async ({ page }) => {
+    await page.goto("/guias/guia-que-nao-existe");
 
-    // Should not crash - either show 404 or redirect
+    // Should not crash - either show 404 or error message
     await page.waitForLoadState("networkidle");
 
     // Page should load something (not blank)
@@ -151,14 +171,10 @@ test.describe("Guias - Edge Cases", () => {
   });
 
   test("should load without FOUC (Flash of Unstyled Content)", async ({ page }) => {
-    await page.goto("/guias/ciencia-da-computacao");
+    await page.goto("/guias");
 
     // Wait a moment for styles to load
     await page.waitForTimeout(100);
-
-    // Check that content has some styling applied - check for the header gradient or any visible content
-    const header = page.locator("text=Centro de Informática");
-    await expect(header).toBeVisible({ timeout: 5000 });
 
     // Check that the page has rendered content with proper styling
     // Look for any visible text content that indicates the page has loaded properly

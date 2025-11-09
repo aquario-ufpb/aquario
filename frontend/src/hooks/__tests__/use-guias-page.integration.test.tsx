@@ -91,7 +91,7 @@ describe("useGuiasPage Hook", () => {
 
     // Setup complete mock responses
     mockGuiasService.guiasService = {
-      getByCurso: vi.fn(),
+      getAll: vi.fn(),
       getSecoes: vi.fn(),
       getSubSecoes: vi.fn(),
     };

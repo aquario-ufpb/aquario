@@ -7,8 +7,8 @@
 jest.mock("../local-file-guias-provider");
 
 const mockContentFiles = {
-  // Ciência da Computação - Bem Vindo
-  "./ciencia-da-computacao/bem-vindo/Sobre o Curso.md": `# Sobre o Curso
+  // Centro de Informática - Bem Vindo
+  "./centro-de-informatica/bem-vindo/Sobre o Curso.md": `# Sobre o Curso
   
 Este é o curso de Ciência da Computação.
 
@@ -16,16 +16,16 @@ Este é o curso de Ciência da Computação.
 
 Formar profissionais na área de computação.`,
 
-  "./ciencia-da-computacao/bem-vindo/Grade Curricular.md": `# Grade Curricular
+  "./centro-de-informatica/bem-vindo/Grade Curricular.md": `# Grade Curricular
 
 Veja abaixo a grade do curso.`,
 
-  // Ciência da Computação - Cadeiras (with sub-contents)
-  "./ciencia-da-computacao/cadeiras/Principais Cadeiras.md": `# Principais Cadeiras
+  // Centro de Informática - Cadeiras (with sub-contents)
+  "./centro-de-informatica/cadeiras/Principais Cadeiras.md": `# Principais Cadeiras
 
 As principais disciplinas do curso.`,
 
-  "./ciencia-da-computacao/cadeiras/Principais Cadeiras/Cálculo I.md": `# Cálculo I
+  "./centro-de-informatica/cadeiras/Principais Cadeiras/Cálculo I.md": `# Cálculo I
 
 Disciplina de cálculo diferencial e integral.
 
@@ -35,46 +35,18 @@ Disciplina de cálculo diferencial e integral.
 - Derivadas
 - Integrais`,
 
-  "./ciencia-da-computacao/cadeiras/Principais Cadeiras/Programação I.md": `# Programação I
+  "./centro-de-informatica/cadeiras/Principais Cadeiras/Programação I.md": `# Programação I
 
 Introdução à programação.`,
 
-  "./ciencia-da-computacao/cadeiras/Principais Cadeiras/Estrutura de Dados.md": `# Estrutura de Dados
+  "./centro-de-informatica/cadeiras/Principais Cadeiras/Estrutura de Dados.md": `# Estrutura de Dados
 
 Estudo de estruturas de dados.`,
 
-  // Ciência da Computação - Laboratórios
-  "./ciencia-da-computacao/laboratorios/LAICO.md": `# LAICO
+  // Centro de Informática - Laboratórios
+  "./centro-de-informatica/laboratorios/LAICO.md": `# LAICO
 
 Laboratório de Aplicações de Informática Avançada.`,
-
-  // Engenharia da Computação - Bem Vindo
-  "./engenharia-da-computacao/bem-vindo/Sobre o Curso.md": `# Engenharia da Computação
-
-Curso de engenharia focado em hardware e software.`,
-
-  // Engenharia da Computação - Cadeiras (with sub-contents)
-  "./engenharia-da-computacao/cadeiras/Principais Cadeiras.md": `# Principais Cadeiras
-
-Disciplinas fundamentais da engenharia.`,
-
-  "./engenharia-da-computacao/cadeiras/Principais Cadeiras/Circuitos Digitais.md": `# Circuitos Digitais
-
-Estudo de circuitos lógicos.`,
-
-  // Ciências de Dados e IA - Bem Vindo
-  "./ciencias-de-dados-e-inteligencia-artificial/bem-vindo/Sobre o Curso.md": `# Ciências de Dados e IA
-
-Curso focado em análise de dados e inteligência artificial.`,
-
-  // Ciências de Dados e IA - Cadeiras (with sub-contents)
-  "./ciencias-de-dados-e-inteligencia-artificial/cadeiras/Principais Cadeiras.md": `# Principais Cadeiras
-
-As disciplinas essenciais do curso.`,
-
-  "./ciencias-de-dados-e-inteligencia-artificial/cadeiras/Principais Cadeiras/Machine Learning.md": `# Machine Learning
-
-Introdução ao aprendizado de máquina.`,
 };
 
 import { LocalFileGuiasProvider } from "../local-file-guias-provider";
@@ -97,9 +69,9 @@ describe("LocalFileGuiasProvider", () => {
     (provider as any).contentFiles = mockContentFiles;
   });
 
-  describe("getByCurso", () => {
-    it("should return guias for ciencia-da-computacao", async () => {
-      const guias = await provider.getByCurso("ciencia-da-computacao");
+  describe("getAll", () => {
+    it("should return all guias from centro-de-informatica", async () => {
+      const guias = await provider.getAll();
 
       expect(guias.length).toBeGreaterThan(0);
       guias.forEach(assertValidGuia);
@@ -117,39 +89,16 @@ describe("LocalFileGuiasProvider", () => {
       expect(cadeiras?.titulo).toBe("Cadeiras");
     });
 
-    it("should return guias for engenharia-da-computacao", async () => {
-      const guias = await provider.getByCurso("engenharia-da-computacao");
-
-      expect(guias.length).toBeGreaterThan(0);
-      guias.forEach(assertValidGuia);
-
-      const bemVindo = findGuiaBySlug(guias, "bem-vindo");
-      expect(bemVindo).toBeDefined();
-    });
-
-    it("should return guias for ciencias-de-dados-e-inteligencia-artificial", async () => {
-      const guias = await provider.getByCurso("ciencias-de-dados-e-inteligencia-artificial");
-
-      expect(guias.length).toBeGreaterThan(0);
-      guias.forEach(assertValidGuia);
-    });
-
-    it("should return empty array for non-existent course", async () => {
-      const guias = await provider.getByCurso("curso-inexistente");
-
-      expect(guias).toEqual([]);
-    });
-
     it("should include cursoId in guias", async () => {
-      const guias = await provider.getByCurso("ciencia-da-computacao");
+      const guias = await provider.getAll();
 
       guias.forEach(guia => {
-        expect(guia.cursoId).toBe("ciencia-da-computacao");
+        expect(guia.cursoId).toBe("centro-de-informatica");
       });
     });
 
     it("should generate correct IDs with guia- prefix", async () => {
-      const guias = await provider.getByCurso("ciencia-da-computacao");
+      const guias = await provider.getAll();
 
       guias.forEach(guia => {
         expect(guia.id).toMatch(/^guia-/);
@@ -160,7 +109,7 @@ describe("LocalFileGuiasProvider", () => {
 
   describe("getSecoes", () => {
     it("should return sections for bem-vindo guia", async () => {
-      const secoes = await provider.getSecoes("bem-vindo", "ciencia-da-computacao");
+      const secoes = await provider.getSecoes("bem-vindo");
 
       expect(secoes.length).toBeGreaterThan(0);
       secoes.forEach(assertValidSecao);
@@ -176,7 +125,7 @@ describe("LocalFileGuiasProvider", () => {
     });
 
     it("should append sub-content links to sections with subsections", async () => {
-      const secoes = await provider.getSecoes("cadeiras", "ciencia-da-computacao");
+      const secoes = await provider.getSecoes("cadeiras");
 
       expect(secoes.length).toBeGreaterThan(0);
 
@@ -191,13 +140,11 @@ describe("LocalFileGuiasProvider", () => {
       expect(principaisCadeiras?.conteudo).toContain("Estrutura de Dados");
 
       // Should have absolute URLs
-      expect(principaisCadeiras?.conteudo).toContain(
-        "/guias/ciencia-da-computacao/cadeiras/principais-cadeiras/"
-      );
+      expect(principaisCadeiras?.conteudo).toContain("/guias/cadeiras/principais-cadeiras/");
     });
 
     it("should set correct ordem (order) for sections", async () => {
-      const secoes = await provider.getSecoes("bem-vindo", "ciencia-da-computacao");
+      const secoes = await provider.getSecoes("bem-vindo");
 
       secoes.forEach((secao, index) => {
         expect(secao.ordem).toBe(index + 1);
@@ -205,15 +152,15 @@ describe("LocalFileGuiasProvider", () => {
     });
 
     it("should return empty array for non-existent guia", async () => {
-      const secoes = await provider.getSecoes("guia-inexistente", "ciencia-da-computacao");
+      const secoes = await provider.getSecoes("guia-inexistente");
 
       expect(secoes).toEqual([]);
     });
 
-    it("should filter by course when cursoSlug is provided", async () => {
-      const secoes = await provider.getSecoes("bem-vindo", "ciencia-da-computacao");
+    it("should filter sections by guia", async () => {
+      const secoes = await provider.getSecoes("bem-vindo");
 
-      // Should not include sections from other courses
+      // Should only include sections from this guia
       secoes.forEach(secao => {
         expect(secao.guiaId).toBe("guia-bem-vindo");
       });
@@ -222,7 +169,7 @@ describe("LocalFileGuiasProvider", () => {
 
   describe("getSubSecoes", () => {
     it("should return subsections for principais-cadeiras", async () => {
-      const subsecoes = await provider.getSubSecoes("principais-cadeiras", "ciencia-da-computacao");
+      const subsecoes = await provider.getSubSecoes("principais-cadeiras");
 
       expect(subsecoes.length).toBeGreaterThan(0);
       subsecoes.forEach(assertValidSubSecao);
@@ -241,7 +188,7 @@ describe("LocalFileGuiasProvider", () => {
     });
 
     it("should set correct ordem for subsections", async () => {
-      const subsecoes = await provider.getSubSecoes("principais-cadeiras", "ciencia-da-computacao");
+      const subsecoes = await provider.getSubSecoes("principais-cadeiras");
 
       subsecoes.forEach((subsecao, index) => {
         expect(subsecao.ordem).toBe(index + 1);
@@ -249,7 +196,7 @@ describe("LocalFileGuiasProvider", () => {
     });
 
     it("should generate correct IDs with subsecao- prefix", async () => {
-      const subsecoes = await provider.getSubSecoes("principais-cadeiras", "ciencia-da-computacao");
+      const subsecoes = await provider.getSubSecoes("principais-cadeiras");
 
       subsecoes.forEach(subsecao => {
         expect(subsecao.id).toMatch(/^subsecao-/);
@@ -258,13 +205,13 @@ describe("LocalFileGuiasProvider", () => {
     });
 
     it("should return empty array for non-existent section", async () => {
-      const subsecoes = await provider.getSubSecoes("secao-inexistente", "ciencia-da-computacao");
+      const subsecoes = await provider.getSubSecoes("secao-inexistente");
 
       expect(subsecoes).toEqual([]);
     });
 
     it("should have content for all subsections", async () => {
-      const subsecoes = await provider.getSubSecoes("principais-cadeiras", "ciencia-da-computacao");
+      const subsecoes = await provider.getSubSecoes("principais-cadeiras");
 
       subsecoes.forEach(subsecao => {
         expect(subsecao.conteudo).toBeTruthy();
@@ -275,20 +222,20 @@ describe("LocalFileGuiasProvider", () => {
 
   describe("filenameToTitle and filenameToSlug (via public methods)", () => {
     it("should preserve nice filename titles and generate proper slugs", async () => {
-      const guias = await provider.getByCurso("ciencia-da-computacao");
+      const guias = await provider.getAll();
 
       // Folder names (slugs) should be converted to Title Case
       const bemVindo = findGuiaBySlug(guias, "bem-vindo");
       expect(bemVindo?.titulo).toBe("Bem Vindo");
 
       // File names with nice formatting should be preserved
-      const secoes = await provider.getSecoes("bem-vindo", "ciencia-da-computacao");
+      const secoes = await provider.getSecoes("bem-vindo");
       const sobreOCurso = findSecaoBySlug(secoes, "sobre-o-curso");
       expect(sobreOCurso?.titulo).toBe("Sobre o Curso"); // From "Sobre o Curso.md"
     });
 
     it("should normalize accents and special characters in slugs", async () => {
-      const subsecoes = await provider.getSubSecoes("principais-cadeiras", "ciencia-da-computacao");
+      const subsecoes = await provider.getSubSecoes("principais-cadeiras");
 
       // "Cálculo I.md" should have slug "calculo-i"
       const calculoI = subsecoes.find(s => s.slug === "calculo-i");
@@ -303,11 +250,9 @@ describe("LocalFileGuiasProvider", () => {
 
       expect(cursos.length).toBeGreaterThan(0);
 
-      // Should have all three courses
+      // Should have centro-de-informatica as the course
       const cursoSlugs = cursos.map(c => c.id);
-      expect(cursoSlugs).toContain("ciencia-da-computacao");
-      expect(cursoSlugs).toContain("engenharia-da-computacao");
-      expect(cursoSlugs).toContain("ciencias-de-dados-e-inteligencia-artificial");
+      expect(cursoSlugs).toContain("centro-de-informatica");
     });
 
     it("should set correct course properties", async () => {
@@ -326,8 +271,8 @@ describe("LocalFileGuiasProvider", () => {
     it("should convert slugs to readable names", async () => {
       const cursos = await provider.getCursos("CI");
 
-      const cienciaComp = cursos.find(c => c.id === "ciencia-da-computacao");
-      expect(cienciaComp?.nome).toBe("Ciencia Da Computacao");
+      const centroInfo = cursos.find(c => c.id === "centro-de-informatica");
+      expect(centroInfo?.nome).toBe("Centro De Informatica");
     });
   });
 
@@ -346,12 +291,12 @@ describe("LocalFileGuiasProvider", () => {
 
   describe("Edge Cases", () => {
     it("should handle paths with leading ./ correctly", async () => {
-      const guias = await provider.getByCurso("ciencia-da-computacao");
+      const guias = await provider.getAll();
       expect(guias.length).toBeGreaterThan(0);
     });
 
     it("should only process .md files", async () => {
-      const secoes = await provider.getSecoes("bem-vindo", "ciencia-da-computacao");
+      const secoes = await provider.getSecoes("bem-vindo");
 
       // Should only get sections from .md files
       secoes.forEach(secao => {
@@ -363,7 +308,7 @@ describe("LocalFileGuiasProvider", () => {
     });
 
     it("should handle filenames with spaces and special characters", async () => {
-      const secoes = await provider.getSecoes("bem-vindo", "ciencia-da-computacao");
+      const secoes = await provider.getSecoes("bem-vindo");
 
       // "Sobre o Curso.md" should be parsed correctly
       const sobreOCurso = findSecaoBySlug(secoes, "sobre-o-curso");
