@@ -47,7 +47,7 @@ export default function CalendarCell({
     >
       {hasConflict && (
         <div
-          className="absolute top-0 right-0 p-1 rounded-bl"
+          className="absolute top-0 right-0 p-1 rounded-bl z-10"
           style={{
             backgroundColor: isDark ? "rgba(239, 68, 68, 0.2)" : "rgba(239, 68, 68, 0.1)",
           }}
@@ -56,16 +56,27 @@ export default function CalendarCell({
           <AlertTriangle className="w-3 h-3" style={{ color: isDark ? "#ef4444" : "#dc2626" }} />
         </div>
       )}
-      {classes.map(classItem => (
+      {classes.map((classItem, index) => (
         <div
           key={classItem.id}
-          className={`p-2 mb-1 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity ${
+          className={`p-2 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity ${
             hasConflict ? "ring-1 ring-red-400/50" : ""
-          } ${rowSpan > 1 ? "h-full flex flex-col justify-center" : ""}`}
+          } ${rowSpan > 1 ? "h-full flex flex-col justify-center" : ""} ${
+            index < classes.length - 1 ? "mb-1" : ""
+          }`}
           style={{
             backgroundColor: classColors.get(classItem.id) || "#3b82f6",
             color: "#fff",
-            minHeight: rowSpan > 1 ? "100%" : "auto",
+            ...(rowSpan > 1
+              ? {
+                  position: "absolute",
+                  top: "4px",
+                  left: "4px",
+                  right: "4px",
+                  bottom: "4px",
+                  margin: 0,
+                }
+              : {}),
           }}
           title={`${classItem.nome.trim()} - ${classItem.codigo} - ${classItem.room.bloco} ${classItem.room.nome}${hasConflict ? " (Conflito de horário)" : rowSpan > 1 ? ` (${rowSpan} períodos)` : ""}`}
           onClick={e => {
