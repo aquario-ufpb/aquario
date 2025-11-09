@@ -11,4 +11,7 @@ export const queryKeys = {
   centros: {
     all: ["centros"] as const,
   },
+  paas: {
+    center: (centerId: string) => ["paas", "center", centerId] as const,
+  },
 } as const;
