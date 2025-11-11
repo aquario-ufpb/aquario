@@ -33,7 +33,7 @@ export default function GoogleCalendarDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={`max-w-3xl max-h-[90vh] overflow-y-auto ${
-          isDark ? "bg-white/5 border-white/20" : "bg-white border-slate-200"
+          isDark ? "bg-slate-900 border-white/20" : "bg-white border-slate-200"
         }`}
       >
         <DialogHeader>
@@ -55,7 +55,7 @@ export default function GoogleCalendarDialog({
             <div
               key={index}
               className={`p-4 rounded-lg border ${
-                isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"
+                isDark ? "bg-slate-800/50 border-white/10" : "bg-slate-50 border-slate-200"
               }`}
             >
               <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
