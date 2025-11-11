@@ -118,6 +118,17 @@ export default function CalendarioPage() {
       // Only restore classes that still exist in the fetched data
       const validClassIds = savedClassIds.filter(id => allClasses.some(c => c.id === id));
 
+      // Clean up localStorage if there were invalid IDs
+      if (validClassIds.length !== savedClassIds.length) {
+        if (validClassIds.length > 0) {
+          // Update storage with only valid IDs
+          setStorage("calendario_selected_classes", validClassIds);
+        } else {
+          // Remove from storage if no valid classes remain
+          removeStorage("calendario_selected_classes");
+        }
+      }
+
       if (validClassIds.length > 0) {
         setSelectedClassIds(new Set(validClassIds));
       }
