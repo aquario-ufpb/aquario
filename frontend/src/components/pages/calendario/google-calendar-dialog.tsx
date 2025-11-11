@@ -1,0 +1,134 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, Calendar, Copy, Check } from "lucide-react";
+import { useState } from "react";
+import type { GoogleCalendarEvent } from "@/lib/calendario/google-calendar";
+
+type GoogleCalendarDialogProps = {
+  events: GoogleCalendarEvent[];
+  isOpen: boolean;
+  onClose: () => void;
+  isDark: boolean;
+};
+
+export default function GoogleCalendarDialog({
+  events,
+  isOpen,
+  onClose,
+  isDark,
+}: GoogleCalendarDialogProps) {
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  const handleCopyLink = (url: string, index: number) => {
+    navigator.clipboard.writeText(url);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const handleOpenLink = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent
+        className={`max-w-3xl max-h-[90vh] overflow-y-auto ${
+          isDark ? "bg-white/5 border-white/20" : "bg-white border-slate-200"
+        }`}
+      >
+        <DialogHeader>
+          <DialogTitle
+            className="flex items-center gap-2"
+            style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+          >
+            <Calendar className="w-5 h-5" />
+            Adicionar ao Google Calendar
+          </DialogTitle>
+          <p className="text-sm pt-2" style={{ color: isDark ? "#E5F6FF/80" : "#0e3a6c/80" }}>
+            Clique em cada link para adicionar o evento ao seu Google Calendar. Cada evento será
+            adicionado individualmente com recorrência semanal configurada automaticamente.
+          </p>
+        </DialogHeader>
+
+        <div className="space-y-3 mt-4">
+          {events.map((event, index) => (
+            <div
+              key={index}
+              className={`p-4 rounded-lg border ${
+                isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                <div className="flex-1 min-w-0 w-full sm:w-auto">
+                  <h3
+                    className="text-base font-semibold mb-2 break-words"
+                    style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+                  >
+                    {event.title}
+                  </h3>
+                  <div className="space-y-1 text-sm">
+                    <p style={{ color: isDark ? "#E5F6FF/80" : "#0e3a6c/80" }}>
+                      <strong>Horário:</strong> {event.timeRange}
+                    </p>
+                    <p style={{ color: isDark ? "#E5F6FF/80" : "#0e3a6c/80" }}>
+                      <strong>Local:</strong> {event.location}
+                    </p>
+                    <p style={{ color: isDark ? "#E5F6FF/80" : "#0e3a6c/80" }}>
+                      <strong>Código:</strong> {event.classItem.codigo} - Turma:{" "}
+                      {event.classItem.turma}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
+                  <Button
+                    onClick={() => handleCopyLink(event.url, index)}
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-1 flex-1 sm:flex-initial"
+                    style={{
+                      borderColor: isDark ? "rgba(255,255,255,0.2)" : "#e2e8f0",
+                      color: isDark ? "#C8E6FA" : "#0e3a6c",
+                    }}
+                  >
+                    {copiedIndex === index ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        Copiado
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        Copiar
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => handleOpenLink(event.url)}
+                    size="sm"
+                    className="flex items-center gap-1 flex-1 sm:flex-initial"
+                    style={{
+                      backgroundColor: isDark ? "#1a3a5c" : "#0e3a6c",
+                      color: isDark ? "#C8E6FA" : "#fff",
+                    }}
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    Abrir
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {events.length === 0 && (
+          <div
+            className="text-center py-8 text-sm"
+            style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
+          >
+            Nenhum evento para adicionar.
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { DAYS, DAY_NUMBERS, CALENDAR_TIME_SLOTS, DAY_NAMES } from "@/lib/calendario/constants";
 import { exportCalendarAsImage } from "@/lib/calendario/export";
 import { generateICSFile, downloadICSFile } from "@/lib/calendario/ics";
+import { generateGoogleCalendarLinks } from "@/lib/calendario/google-calendar";
 import CalendarLegend from "./calendar-legend";
 import CalendarCell from "./calendar-cell";
 import ClassDetailsDialog from "./class-details-dialog";
+import GoogleCalendarDialog from "./google-calendar-dialog";
 import { processDaySlots } from "./calendar-utils";
 import type { ClassWithRoom } from "./types";
 
@@ -38,6 +40,10 @@ export default function CalendarGrid({
   } | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isGeneratingICS, setIsGeneratingICS] = useState(false);
+  const [googleCalendarDialogOpen, setGoogleCalendarDialogOpen] = useState(false);
+  const [googleCalendarEvents, setGoogleCalendarEvents] = useState<
+    ReturnType<typeof generateGoogleCalendarLinks>
+  >([]);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Pre-process all days to identify merged slots
@@ -100,6 +106,17 @@ export default function CalendarGrid({
     } finally {
       setIsGeneratingICS(false);
     }
+  };
+
+  const handleOpenGoogleCalendar = () => {
+    if (selectedClasses.length === 0) {
+      alert("Nenhuma disciplina selecionada para adicionar ao calendário");
+      return;
+    }
+
+    const events = generateGoogleCalendarLinks(selectedClasses);
+    setGoogleCalendarEvents(events);
+    setGoogleCalendarDialogOpen(true);
   };
 
   return (
@@ -244,7 +261,7 @@ export default function CalendarGrid({
       </Card>
 
       {/* Action buttons below the calendar */}
-      <div className="flex justify-center gap-3 mt-4">
+      <div className="flex justify-center gap-3 mt-4 flex-wrap">
         <Button
           onClick={handleExport}
           disabled={isExporting}
@@ -257,7 +274,7 @@ export default function CalendarGrid({
           }}
         >
           <Download className="w-4 h-4" />
-          {isExporting ? "Exportando..." : "Exportar Calendário"}
+          {isExporting ? "Exportando..." : "Exportar Imagem"}
         </Button>
         <Button
           onClick={handleAddToCalendar}
@@ -271,9 +288,30 @@ export default function CalendarGrid({
           }}
         >
           <CalendarPlus className="w-4 h-4" />
-          {isGeneratingICS ? "Gerando..." : "Adicionar ao Calendário"}
+          {isGeneratingICS ? "Gerando..." : "Exportar Calendário (ICS)"}
+        </Button>
+        <Button
+          onClick={handleOpenGoogleCalendar}
+          disabled={selectedClasses.length === 0}
+          variant="outline"
+          size="default"
+          className="flex items-center gap-2"
+          style={{
+            borderColor: isDark ? "rgba(255,255,255,0.2)" : "#e2e8f0",
+            color: isDark ? "#C8E6FA" : "#0e3a6c",
+          }}
+        >
+          <Calendar className="w-4 h-4" />
+          Adicionar ao Google Calendar
         </Button>
       </div>
+
+      <GoogleCalendarDialog
+        events={googleCalendarEvents}
+        isOpen={googleCalendarDialogOpen}
+        onClose={() => setGoogleCalendarDialogOpen(false)}
+        isDark={isDark}
+      />
     </>
   );
 }

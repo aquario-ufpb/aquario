@@ -86,3 +86,57 @@ export const formatHorario = (horario: string): string => {
 
   return `${days} - ${periodName} (${slotsStr})`;
 };
+
+/**
+ * Group consecutive slots for the same class on the same day
+ * Used for merging consecutive time slots into single events
+ */
+export const groupConsecutiveSlots = (
+  slots: CalendarSlot[]
+): Array<{
+  startSlot: CalendarSlot;
+  endSlot: CalendarSlot;
+  day: number;
+}> => {
+  // Group slots by day
+  const slotsByDay = new Map<number, CalendarSlot[]>();
+  slots.forEach(slot => {
+    if (!slotsByDay.has(slot.day)) {
+      slotsByDay.set(slot.day, []);
+    }
+    const daySlots = slotsByDay.get(slot.day);
+    if (daySlots) {
+      daySlots.push(slot);
+    }
+  });
+
+  const mergedGroups: Array<{
+    startSlot: CalendarSlot;
+    endSlot: CalendarSlot;
+    day: number;
+  }> = [];
+
+  slotsByDay.forEach((daySlots, day) => {
+    // Sort slots by timeSlot index
+    daySlots.sort((a, b) => a.timeSlot - b.timeSlot);
+
+    // Group consecutive slots
+    let i = 0;
+    while (i < daySlots.length) {
+      const startSlot = daySlots[i];
+      let endSlot = startSlot;
+      let j = i + 1;
+
+      // Find consecutive slots
+      while (j < daySlots.length && daySlots[j].timeSlot === endSlot.timeSlot + 1) {
+        endSlot = daySlots[j];
+        j++;
+      }
+
+      mergedGroups.push({ startSlot, endSlot, day });
+      i = j;
+    }
+  });
+
+  return mergedGroups;
+};

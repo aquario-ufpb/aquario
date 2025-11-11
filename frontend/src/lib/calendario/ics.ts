@@ -1,5 +1,6 @@
 import { createEvents, EventAttributes } from "ics";
-import { parseHorarioToSlots } from "./utils";
+import { parseHorarioToSlots, groupConsecutiveSlots } from "./utils";
+import { SEMESTER_END_DATE } from "./constants";
 import type { ClassWithRoom } from "@/components/pages/calendario/types";
 
 /**
@@ -41,59 +42,6 @@ const parseTime = (timeStr: string): { hour: number; minute: number } => {
 };
 
 /**
- * Group consecutive slots for the same class on the same day
- */
-const groupConsecutiveSlots = (
-  slots: ReturnType<typeof parseHorarioToSlots>
-): Array<{
-  startSlot: ReturnType<typeof parseHorarioToSlots>[0];
-  endSlot: ReturnType<typeof parseHorarioToSlots>[0];
-  day: number;
-}> => {
-  // Group slots by day
-  const slotsByDay = new Map<number, ReturnType<typeof parseHorarioToSlots>>();
-  slots.forEach(slot => {
-    if (!slotsByDay.has(slot.day)) {
-      slotsByDay.set(slot.day, []);
-    }
-    const daySlots = slotsByDay.get(slot.day);
-    if (daySlots) {
-      daySlots.push(slot);
-    }
-  });
-
-  const mergedGroups: Array<{
-    startSlot: ReturnType<typeof parseHorarioToSlots>[0];
-    endSlot: ReturnType<typeof parseHorarioToSlots>[0];
-    day: number;
-  }> = [];
-
-  slotsByDay.forEach((daySlots, day) => {
-    // Sort slots by timeSlot index
-    daySlots.sort((a, b) => a.timeSlot - b.timeSlot);
-
-    // Group consecutive slots
-    let i = 0;
-    while (i < daySlots.length) {
-      const startSlot = daySlots[i];
-      let endSlot = startSlot;
-      let j = i + 1;
-
-      // Find consecutive slots
-      while (j < daySlots.length && daySlots[j].timeSlot === endSlot.timeSlot + 1) {
-        endSlot = daySlots[j];
-        j++;
-      }
-
-      mergedGroups.push({ startSlot, endSlot, day });
-      i = j;
-    }
-  });
-
-  return mergedGroups;
-};
-
-/**
  * Generate ICS file from selected classes
  * Creates recurring weekly events for the semester
  * Merges consecutive time slots for the same class into single events
@@ -105,10 +53,15 @@ export function generateICSFile(
 ): Promise<Blob> {
   const events: EventAttributes[] = [];
 
-  // Default to current semester (roughly 4 months from now)
-  const endDate = semesterEndDate || new Date();
-  const finalEndDate = new Date(endDate);
-  finalEndDate.setMonth(finalEndDate.getMonth() + 4);
+  // Use semester end date from constants, or provided date, or fallback to 4 months from now
+  const finalEndDate =
+    semesterEndDate ||
+    SEMESTER_END_DATE ||
+    (() => {
+      const fallback = new Date();
+      fallback.setMonth(fallback.getMonth() + 4);
+      return fallback;
+    })();
 
   classes.forEach(classItem => {
     const slots = parseHorarioToSlots(classItem.horario);

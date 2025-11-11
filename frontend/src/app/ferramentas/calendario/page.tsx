@@ -169,7 +169,10 @@ export default function CalendarioPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-8" style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
+      <div
+        className="container mx-auto p-8 mt-20"
+        style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}
+      >
         <div className="text-center">
           <p className="text-lg">Carregando dados do calendário...</p>
         </div>
@@ -179,7 +182,10 @@ export default function CalendarioPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto p-8" style={{ color: isDark ? "#FFB3B5" : "#d32f2f" }}>
+      <div
+        className="container mx-auto p-8 mt-20"
+        style={{ color: isDark ? "#FFB3B5" : "#d32f2f" }}
+      >
         <div className="text-center">
           <p className="text-lg">Erro ao carregar dados: {error?.message || "Erro desconhecido"}</p>
         </div>
@@ -189,7 +195,10 @@ export default function CalendarioPage() {
 
   if (!data) {
     return (
-      <div className="container mx-auto p-8" style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
+      <div
+        className="container mx-auto p-8 mt-20"
+        style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}
+      >
         <div className="text-center">
           <p className="text-lg">Nenhum dado disponível</p>
         </div>

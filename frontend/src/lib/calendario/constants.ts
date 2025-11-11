@@ -104,3 +104,12 @@ export const CLASS_COLORS = [
   "#06b6d4", // cyan
   "#84cc16", // lime
 ] as const;
+
+/**
+ * Semester dates - Update these for each new semester
+ * Format: Year, Month (0-indexed), Day
+ */
+export const SEMESTER_END_DATE = new Date(2026, 3, 10); // April 10, 2026
+
+// For second semester, uncomment and update:
+// export const SEMESTER_END_DATE = new Date(2025, 11, 31); // December 31, 2025
