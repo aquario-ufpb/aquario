@@ -5,6 +5,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { usePaasCalendar } from "@/hooks";
 import { DAY_NUMBERS, CALENDAR_TIME_SLOTS, CLASS_COLORS } from "@/lib/calendario/constants";
 import { parseHorarioToSlots } from "@/lib/calendario/utils";
+import { getStorage, setStorage, removeStorage } from "@/lib/storage";
 import type { PaasRoom } from "@/lib/types";
 import CalendarioHeader from "@/components/pages/calendario/header";
 import SearchSection from "@/components/pages/calendario/search-section";
@@ -19,6 +20,7 @@ export default function CalendarioPage() {
   const [selectedClassIds, setSelectedClassIds] = useState<Set<number>>(new Set());
   const [showCalendar, setShowCalendar] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const hasRestoredRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -51,43 +53,95 @@ export default function CalendarioPage() {
 
   // Filter classes based on search query
   const filteredClasses = useMemo(() => {
+    let classes: ClassWithRoom[];
+
     if (!searchQuery.trim()) {
-      return allClasses;
-    }
-
-    const query = searchQuery
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-
-    return allClasses.filter(classItem => {
-      const codigo = classItem.codigo.toLowerCase();
-      const nome = classItem.nome
+      classes = allClasses;
+    } else {
+      const query = searchQuery
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
-      const docente =
-        classItem.docente
-          ?.toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "") || "";
-      const location = `${classItem.room.bloco} ${classItem.room.nome}`.toLowerCase();
-      const horario = classItem.horario.toLowerCase();
 
-      return (
-        codigo.includes(query) ||
-        nome.includes(query) ||
-        docente.includes(query) ||
-        location.includes(query) ||
-        horario.includes(query)
-      );
+      classes = allClasses.filter(classItem => {
+        const codigo = classItem.codigo.toLowerCase();
+        const nome = classItem.nome
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        const docente =
+          classItem.docente
+            ?.toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") || "";
+        const location = `${classItem.room.bloco} ${classItem.room.nome}`.toLowerCase();
+        const horario = classItem.horario.toLowerCase();
+
+        return (
+          codigo.includes(query) ||
+          nome.includes(query) ||
+          docente.includes(query) ||
+          location.includes(query) ||
+          horario.includes(query)
+        );
+      });
+    }
+
+    // Sort: selected classes first, then unselected
+    return classes.sort((a, b) => {
+      const aSelected = selectedClassIds.has(a.id);
+      const bSelected = selectedClassIds.has(b.id);
+
+      if (aSelected && !bSelected) {
+        return -1;
+      }
+      if (!aSelected && bSelected) {
+        return 1;
+      }
+      return 0; // Keep original order for same selection status
     });
-  }, [allClasses, searchQuery]);
+  }, [allClasses, searchQuery, selectedClassIds]);
 
   // Get selected classes
   const selectedClasses = useMemo(() => {
     return allClasses.filter(c => selectedClassIds.has(c.id));
   }, [allClasses, selectedClassIds]);
+
+  // Load saved classes from localStorage when data is available (only once)
+  useEffect(() => {
+    if (allClasses.length === 0 || isLoading || hasRestoredRef.current) {
+      return;
+    }
+
+    const savedClassIds = getStorage("calendario_selected_classes");
+    if (savedClassIds && Array.isArray(savedClassIds)) {
+      // Only restore classes that still exist in the fetched data
+      const validClassIds = savedClassIds.filter(id => allClasses.some(c => c.id === id));
+
+      if (validClassIds.length > 0) {
+        setSelectedClassIds(new Set(validClassIds));
+      }
+    }
+
+    hasRestoredRef.current = true;
+  }, [allClasses, isLoading]);
+
+  // Save to localStorage whenever selection changes
+  useEffect(() => {
+    // Skip saving if we haven't restored yet (prevents saving empty state on initial load)
+    if (!hasRestoredRef.current) {
+      return;
+    }
+
+    if (selectedClassIds.size === 0) {
+      // Remove from localStorage when selection is cleared
+      removeStorage("calendario_selected_classes");
+      return;
+    }
+
+    const classIdsArray = Array.from(selectedClassIds);
+    setStorage("calendario_selected_classes", classIdsArray);
+  }, [selectedClassIds]);
 
   const toggleClassSelection = (classId: number) => {
     const newSet = new Set(selectedClassIds);
@@ -102,6 +156,8 @@ export default function CalendarioPage() {
   const clearSelection = () => {
     setSelectedClassIds(new Set());
     setShowCalendar(false);
+    // Clear from localStorage
+    removeStorage("calendario_selected_classes");
   };
 
   const handleShowCalendar = () => {
