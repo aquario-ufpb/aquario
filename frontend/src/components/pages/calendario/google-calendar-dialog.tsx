@@ -33,7 +33,7 @@ export default function GoogleCalendarDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={`max-w-3xl max-h-[90vh] overflow-y-auto ${
-          isDark ? "bg-slate-900 border-white/20" : "bg-white border-slate-200"
+          isDark ? "bg-gray-900 border-white/20" : "bg-white border-gray-200"
         }`}
       >
         <DialogHeader>
@@ -48,6 +48,18 @@ export default function GoogleCalendarDialog({
             Clique em cada link para adicionar o evento ao seu Google Calendar. Cada evento será
             adicionado individualmente com recorrência semanal configurada automaticamente.
           </p>
+          <div
+            className="text-xs mt-2 p-2 rounded md:hidden"
+            style={{
+              backgroundColor: isDark ? "rgba(251, 191, 36, 0.1)" : "rgba(251, 191, 36, 0.1)",
+              color: isDark ? "#fbbf24" : "#92400e",
+              border: `1px solid ${isDark ? "rgba(251, 191, 36, 0.3)" : "rgba(251, 191, 36, 0.3)"}`,
+            }}
+          >
+            <strong>Nota:</strong> Em dispositivos móveis, a recorrência pode não ser aplicada
+            automaticamente. Se isso acontecer, após adicionar o evento, edite-o e configure a
+            recorrência manualmente como &quot;Semanal&quot; nos dias indicados.
+          </div>
         </DialogHeader>
 
         <div className="space-y-3 mt-4">

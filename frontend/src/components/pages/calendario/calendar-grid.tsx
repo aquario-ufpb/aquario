@@ -73,15 +73,15 @@ export default function CalendarGrid({
   };
 
   const handleExport = async () => {
-    if (!contentRef.current) {
-      return;
-    }
-
     setIsExporting(true);
     try {
-      // Use the contentRef which points directly to the CardContent
-      const bgColor = isDark ? "#0f2338" : "#ffffff";
-      await exportCalendarAsImage(contentRef.current, "calendario-alocacao.png", bgColor);
+      await exportCalendarAsImage({
+        selectedClasses,
+        classColors,
+        conflicts,
+        isDark,
+        filename: "calendario-alocacao.png",
+      });
     } catch (error) {
       console.error("Error exporting calendar:", error);
       alert(error instanceof Error ? error.message : "Erro ao exportar o calendário");

@@ -27,7 +27,7 @@ export default function ClassDetailsDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={`max-w-2xl max-h-[90vh] overflow-y-auto ${
-          isDark ? "bg-white/5 border-white/20" : "bg-white border-slate-200"
+          isDark ? "bg-gray-900 border-white/20" : "bg-white border-gray-200"
         }`}
       >
         <DialogHeader>
