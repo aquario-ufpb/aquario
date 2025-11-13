@@ -8,9 +8,8 @@ import { Search, Plus, Github } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { Vaga } from "@/components/pages/vagas/vacancy-card";
-import VacancyCard from "@/components/pages/vagas/vacancy-card";
 import { Badge } from "@/components/ui/badge";
-import { trackEvent } from "@/analytics/posthog-client";
+//import { trackEvent } from "@/analytics/posthog-client";
 
 function VagaCard({ vaga }: { vaga: Vaga }) {
   const getBadgeText = () => {
@@ -319,7 +318,7 @@ export default function VagasPage() {
                 <h2 className="text-2xl md:text-3xl font-semibold">Estágios</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {estagios.map(vaga => (
-                    <VacancyCard key={vaga.id} vaga={vaga} />
+                    <VagaCard key={vaga.id} vaga={vaga} />
                   ))}
                 </div>
               </div>
@@ -332,7 +331,7 @@ export default function VagasPage() {
                 <h2 className="text-2xl md:text-3xl font-semibold">Voluntário</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {voluntarios.map(vaga => (
-                    <VacancyCard key={vaga.id} vaga={vaga} />
+                    <VagaCard key={vaga.id} vaga={vaga} />
                   ))}
                 </div>
               </div>
@@ -345,7 +344,7 @@ export default function VagasPage() {
                 <h2 className="text-2xl md:text-3xl font-semibold">Trainee</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {trainees.map(vaga => (
-                    <VacancyCard key={vaga.id} vaga={vaga} />
+                    <VagaCard key={vaga.id} vaga={vaga} />
                   ))}
                 </div>
               </div>
@@ -358,7 +357,7 @@ export default function VagasPage() {
                 <h2 className="text-2xl md:text-3xl font-semibold">Pesquisa</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pesquisas.map(vaga => (
-                    <VacancyCard key={vaga.id} vaga={vaga} />
+                    <VagaCard key={vaga.id} vaga={vaga} />
                   ))}
                 </div>
               </div>
@@ -370,7 +369,7 @@ export default function VagasPage() {
               <h2 className="text-2xl md:text-3xl font-semibold">CLT</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {clts.map(vaga => (
-                  <VacancyCard key={vaga.id} vaga={vaga} />
+                  <VagaCard key={vaga.id} vaga={vaga} />
                 ))}
               </div>
             </div>
@@ -382,7 +381,7 @@ export default function VagasPage() {
               <h2 className="text-2xl md:text-3xl font-semibold">PJ</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {pjs.map(vaga => (
-                  <VacancyCard key={vaga.id} vaga={vaga} />
+                  <VagaCard key={vaga.id} vaga={vaga} />
                 ))}
               </div>
             </div>
