@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Github } from "lucide-react";
+import { Plus, Github } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { Vaga } from "@/components/pages/vagas/vacancy-card";
 import { Badge } from "@/components/ui/badge";
 //import { trackEvent } from "@/analytics/posthog-client";
+import { FilterBar } from "@/components/shared/filter-bar";
+import { SearchBar } from "@/components/shared/search-bar";
 
 function VagaCard({ vaga }: { vaga: Vaga }) {
   const getBadgeText = () => {
@@ -217,77 +219,26 @@ export default function VagasPage() {
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           {/* Search Bar */}
-          <div className="relative flex-1 w-full md:max-w-md rounded-full border border-gray-300 dark:border-gray-600 bg-transparent dark:bg-transparent">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5 dark:text-zinc-300 z-10 pointer-events-none" />
-            <input
-              type="search"
-              placeholder="Pesquisar vagas..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full h-10 rounded-full pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground dark:placeholder:text-zinc-300 dark:text-zinc-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 dark:focus-visible:ring-white/30 disabled:cursor-not-allowed disabled:opacity-50 bg-transparent dark:bg-transparent"
-              style={{ backgroundColor: "transparent" }}
-            />
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Pesquisar vagas..."
+          />
 
           {/* Filter Buttons */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={activeFilter === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter(null)}
-              className="rounded-full"
-            >
-              Todas
-            </Button>
-            <Button
-              variant={activeFilter === "clt" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("clt")}
-              className="rounded-full"
-            >
-              CLT
-            </Button>
-            <Button
-              variant={activeFilter === "voluntario" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("voluntario")}
-              className="rounded-full"
-            >
-              Voluntário
-            </Button>
-            <Button
-              variant={activeFilter === "pesquisa" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("pesquisa")}
-              className="rounded-full"
-            >
-              Pesquisa
-            </Button>
-            <Button
-              variant={activeFilter === "estagio" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("estagio")}
-              className="rounded-full"
-            >
-              Estágio
-            </Button>
-            <Button
-              variant={activeFilter === "trainee" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("trainee")}
-              className="rounded-full"
-            >
-              Trainee
-            </Button>
-            <Button
-              variant={activeFilter === "pj" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("pj")}
-              className="rounded-full"
-            >
-              PJ
-            </Button>
-          </div>
+          <FilterBar
+            filters={[
+              { id: null, label: "Todos" },
+              { id: "clt", label: "CLT" },
+              { id: "voluntario", label: "Voluntário" },
+              { id: "pesquisa", label: "Pesquisa" },
+              { id: "estagio", label: "Estágio" },
+              { id: "trainee", label: "Trainee" },
+              { id: "pj", label: "PJ" },
+            ]}
+            active={activeFilter}
+            onChange={setActiveFilter}
+          />
         </div>
       </div>
 
