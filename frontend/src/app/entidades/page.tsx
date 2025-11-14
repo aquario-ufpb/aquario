@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Github } from "lucide-react";
+import { Github } from "lucide-react";
 import { trackEvent } from "@/analytics/posthog-client";
 import { TipoEntidade } from "@/lib/types/entidade.types";
 import { FilterBar } from "@/components/shared/filter-bar";
