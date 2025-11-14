@@ -13,7 +13,7 @@ test.describe("Guias - User Navigation Flow", () => {
   });
 
   test("should display guide list on root page", async ({ page }) => {
-    // Check page title - "Aquario" (without accent)
+    // Check page title - "Aquario"
     await expect(page).toHaveTitle(/Aquario/);
 
     // Wait for content to load
