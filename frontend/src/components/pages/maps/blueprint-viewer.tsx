@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import WcIcon from "@mui/icons-material/Wc";
+import { Monitor, Search, BookOpen } from "lucide-react";
 import type { Floor, Room, RoomShape } from "@/lib/maps/types";
 
 type BlueprintViewerProps = {
@@ -194,8 +195,14 @@ function getTextDimensions(room: Room): {
   textWidth: number;
   textHeight: number;
 } {
+  // Calculate bounding box of all shapes (for multi-shape rooms)
+  const minY = Math.min(...room.shapes.map(shape => shape.position.y));
+  const maxY = Math.max(...room.shapes.map(shape => shape.position.y + shape.size.height));
+
+  const boundingHeight = maxY - minY;
+
+  // Use minimum width of individual shapes for text width (to ensure it fits in narrow parts)
   const minWidth = Math.min(...room.shapes.map(shape => shape.size.width));
-  const minHeight = Math.min(...room.shapes.map(shape => shape.size.height));
   const textToDisplay = room.title || room.name;
 
   // Estimate character width (roughly 0.6 * fontSize for most fonts)
@@ -210,9 +217,17 @@ function getTextDimensions(room: Room): {
     Math.min(baseFontSize, (maxChars / textLength) * baseFontSize * 0.9)
   );
 
-  // Calculate text container dimensions (leave some padding)
+  // Calculate text container dimensions
+  // Use bounding box height for better sizing in multi-shape rooms
   const textWidth = Math.max(minWidth * 0.9, 40);
-  const textHeight = room.title ? minHeight * 0.7 : minHeight * 0.5;
+  // Account for icon height if there's an icon, plus text lines
+  const hasIcon =
+    room.metadata?.type === "lab (aula)" ||
+    room.metadata?.type === "lab (pesquisa)" ||
+    room.metadata?.type === "classroom";
+  const iconHeight = hasIcon ? fontSize * 1.2 + 4 : 0; // icon size + margin
+  const textLinesHeight = room.title ? fontSize + fontSize * 0.7 + 6 : fontSize + 4; // title + subtitle + margins or name + margin
+  const textHeight = Math.max(boundingHeight * 0.6, iconHeight + textLinesHeight);
 
   return { fontSize, textWidth, textHeight };
 }
@@ -350,12 +365,24 @@ function renderRoomLabel(
   }
 
   const textColor = isDark ? "#C8E6FA" : "#0e3a6c";
+
+  // Determine which icon to show based on room type
+  let RoomIcon: typeof Monitor | typeof Search | typeof BookOpen | null = null;
+  if (room.metadata?.type === "lab (aula)") {
+    RoomIcon = Monitor;
+  } else if (room.metadata?.type === "lab (pesquisa)") {
+    RoomIcon = Search;
+  } else if (room.metadata?.type === "classroom") {
+    RoomIcon = BookOpen;
+  }
+
   const textStyle = {
     width: "100%",
     height: "100%",
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: "column" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     textAlign: "center" as const,
     color: textColor,
     lineHeight: "1.2",
@@ -373,22 +400,13 @@ function renderRoomLabel(
         height={textHeight}
         className="pointer-events-none"
       >
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            textAlign: "center",
-            color: textColor,
-            lineHeight: "1.2",
-            wordWrap: "break-word",
-            overflowWrap: "break-word",
-            overflow: "hidden",
-          }}
-        >
+        <div style={textStyle}>
+          {/* Display icon if applicable */}
+          {RoomIcon && (
+            <div style={{ marginBottom: "4px", display: "flex", justifyContent: "center" }}>
+              <RoomIcon size={Math.round(fontSize * 1.2)} color={textColor} strokeWidth={2} />
+            </div>
+          )}
           {/* Display title */}
           <div
             style={{
@@ -414,7 +432,7 @@ function renderRoomLabel(
     );
   }
 
-  // Display name only
+  // Display name only (with icon if applicable)
   return (
     <foreignObject
       x={centerX - textWidth / 2}
@@ -423,14 +441,22 @@ function renderRoomLabel(
       height={textHeight}
       className="pointer-events-none"
     >
-      <div
-        style={{
-          ...textStyle,
-          fontSize: `${fontSize}px`,
-          fontWeight: 600,
-        }}
-      >
-        {room.name}
+      <div style={textStyle}>
+        {/* Display icon if applicable */}
+        {RoomIcon && (
+          <div style={{ marginBottom: "4px", display: "flex", justifyContent: "center" }}>
+            <RoomIcon size={Math.round(fontSize * 1.2)} color={textColor} strokeWidth={2} />
+          </div>
+        )}
+        {/* Display name */}
+        <div
+          style={{
+            fontSize: `${fontSize}px`,
+            fontWeight: 600,
+          }}
+        >
+          {room.name}
+        </div>
       </div>
     </foreignObject>
   );
