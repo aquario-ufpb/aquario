@@ -51,40 +51,72 @@ function FloorMesh({
     }
   });
 
-  // Colors based on floor type
-  const floorColor = isDark ? "#e5e7eb" : "#f3f4f6";
-  const windowColor = isDark ? "#1e293b" : "#334155";
-  const highlightColor = isDark ? "#3b82f6" : "#2563eb";
+  // Colors matching the real building
+  const floorColor = isDark ? "#e8e8e8" : "#f5f5f5"; // Light gray/white
+  const windowColor = isDark ? "#2a2a2a" : "#1a1a1a"; // Dark windows
+  const highlightColor = isDark ? "#60a5fa" : "#3b82f6";
 
   return (
     <group ref={meshRef}>
-      {/* Main floor structure */}
+      {/* Main floor structure - White/light gray body */}
       <mesh
         position={[0, floorHeight / 2, 0]}
         onClick={onFloorClick}
         onPointerOver={onHoverStart}
         onPointerOut={onHoverEnd}
+        castShadow
+        receiveShadow
       >
         <boxGeometry args={[buildingWidth, floorHeight, buildingDepth]} />
         <meshStandardMaterial
           color={isHovered ? highlightColor : floorColor}
-          transparent
-          opacity={isHovered ? 0.9 : 0.85}
+          metalness={0.1}
+          roughness={0.7}
           emissive={isHovered ? highlightColor : "#000000"}
-          emissiveIntensity={isHovered ? 0.3 : 0}
+          emissiveIntensity={isHovered ? 0.2 : 0}
         />
       </mesh>
 
-      {/* Windows - horizontal stripe */}
-      <mesh position={[0, floorHeight / 2, -buildingDepth / 2 + 1]}>
-        <boxGeometry args={[buildingWidth - 10, floorHeight * 0.6, 2]} />
-        <meshStandardMaterial color={windowColor} transparent opacity={0.7} />
+      {/* Horizontal window band - Dark stripe (back side) */}
+      <mesh position={[0, floorHeight / 2, -buildingDepth / 2 - 1.5]} castShadow>
+        <boxGeometry args={[buildingWidth - 4, floorHeight * 0.55, 2]} />
+        <meshStandardMaterial
+          color={windowColor}
+          metalness={0.8}
+          roughness={0.2}
+          envMapIntensity={1}
+          polygonOffset={true}
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-1}
+        />
       </mesh>
 
-      {/* Windows - front */}
-      <mesh position={[0, floorHeight / 2, buildingDepth / 2 - 1]}>
-        <boxGeometry args={[buildingWidth - 20, floorHeight * 0.5, 2]} />
-        <meshStandardMaterial color={windowColor} transparent opacity={0.6} />
+      {/* Window reflections - back side */}
+      <mesh position={[0, floorHeight / 2, -buildingDepth / 2 - 2.5]}>
+        <boxGeometry args={[buildingWidth - 6, floorHeight * 0.5, 0.3]} />
+        <meshStandardMaterial
+          color="#4a5568"
+          transparent
+          opacity={0.5}
+          metalness={0.9}
+          roughness={0.1}
+          polygonOffset={true}
+          polygonOffsetFactor={-2}
+          polygonOffsetUnits={-2}
+        />
+      </mesh>
+
+      {/* Front side - smaller windows */}
+      <mesh position={[0, floorHeight / 2, buildingDepth / 2 + 1.5]} castShadow>
+        <boxGeometry args={[buildingWidth - 30, floorHeight * 0.4, 2]} />
+        <meshStandardMaterial
+          color={windowColor}
+          metalness={0.7}
+          roughness={0.3}
+          polygonOffset={true}
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-1}
+        />
       </mesh>
 
       {/* Floor label */}
@@ -140,22 +172,62 @@ function BuildingScene({
 
   return (
     <>
-      {/* Lighting */}
-      <ambientLight intensity={isDark ? 0.5 : 0.7} />
-      <directionalLight position={[200, 300, 200]} intensity={isDark ? 0.8 : 1} castShadow />
-      <directionalLight position={[-200, 300, -200]} intensity={isDark ? 0.5 : 0.7} />
-      <pointLight position={[0, 200, 200]} intensity={isDark ? 0.4 : 0.6} />
+      {/* Sky background color */}
+      <color attach="background" args={[isDark ? "#0a0a0a" : "#87ceeb"]} />
+      <fog attach="fog" args={[isDark ? "#0a0a0a" : "#b8d9f5", 100, 800]} />
 
-      {/* Ground */}
+      {/* Lighting - Bright daytime */}
+      <ambientLight intensity={isDark ? 0.5 : 0.8} />
+      <directionalLight
+        position={[200, 300, 200]}
+        intensity={isDark ? 1 : 1.5}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-far={1000}
+        shadow-camera-left={-300}
+        shadow-camera-right={300}
+        shadow-camera-top={300}
+        shadow-camera-bottom={-300}
+      />
+      <directionalLight position={[-150, 200, -150]} intensity={isDark ? 0.5 : 0.8} />
+      <pointLight position={[0, 200, 100]} intensity={isDark ? 0.3 : 0.5} color="#ffffff" />
+      <hemisphereLight
+        color={isDark ? "#87ceeb" : "#b8d9f5"}
+        groundColor={isDark ? "#4a5568" : "#c8dfc9"}
+        intensity={isDark ? 0.4 : 0.7}
+      />
+
+      {/* Ground - Grass and pavement */}
       <mesh position={[0, -5, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[500, 500]} />
-        <meshStandardMaterial color={isDark ? "#0f172a" : "#cbd5e1"} />
+        <meshStandardMaterial color={isDark ? "#1a3a2e" : "#8bc34a"} roughness={0.8} />
       </mesh>
 
-      {/* Base/Foundation */}
-      <mesh position={[0, -2, 0]}>
-        <boxGeometry args={[buildingWidth + 10, 4, buildingDepth + 10]} />
-        <meshStandardMaterial color={isDark ? "#1e293b" : "#94a3b8"} />
+      {/* Pavement around building */}
+      <mesh position={[0, -4.5, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[buildingWidth + 40, buildingDepth + 40]} />
+        <meshStandardMaterial color={isDark ? "#4a5568" : "#b8c1cc"} roughness={0.6} />
+      </mesh>
+
+      {/* Base/Foundation - More defined */}
+      <mesh position={[0, -2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[buildingWidth + 8, 4, buildingDepth + 8]} />
+        <meshStandardMaterial
+          color={isDark ? "#374151" : "#6b7280"}
+          roughness={0.8}
+          metalness={0.1}
+        />
+      </mesh>
+
+      {/* Ground floor entrance area */}
+      <mesh position={[0, 8, buildingDepth / 2 - 2]} castShadow>
+        <boxGeometry args={[40, 16, 4]} />
+        <meshStandardMaterial
+          color={isDark ? "#2d3748" : "#4a5568"}
+          roughness={0.6}
+          metalness={0.2}
+        />
       </mesh>
 
       {/* Floors */}
@@ -173,17 +245,67 @@ function BuildingScene({
         />
       ))}
 
-      {/* Elevator shaft / Tower on the side */}
-      <mesh position={[buildingWidth / 2 + 15, (building.floors.length * floorHeight) / 2, 0]}>
-        <boxGeometry args={[20, building.floors.length * floorHeight + 10, 20]} />
-        <meshStandardMaterial color={isDark ? "#334155" : "#64748b"} />
+      {/* Vertical tower on the right side - Dark shaft */}
+      <mesh
+        position={[buildingWidth / 2 + 15, (building.floors.length * floorHeight) / 2, 0]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[25, building.floors.length * floorHeight + 15, 25]} />
+        <meshStandardMaterial
+          color={isDark ? "#1a1a1a" : "#2d3748"}
+          metalness={0.3}
+          roughness={0.8}
+        />
       </mesh>
 
-      {/* Antenna on top */}
-      <mesh position={[buildingWidth / 2 + 15, building.floors.length * floorHeight + 10, 0]}>
-        <cylinderGeometry args={[0.5, 0.5, 20, 8]} />
-        <meshStandardMaterial color={isDark ? "#94a3b8" : "#475569"} />
-      </mesh>
+      {/* Tower windows/vents */}
+      {Array.from({ length: building.floors.length }).map((_, i) => (
+        <mesh
+          key={`tower-detail-${i}`}
+          position={[buildingWidth / 2 + 15, i * floorHeight + floorHeight / 2, 13]}
+        >
+          <boxGeometry args={[18, floorHeight * 0.3, 1]} />
+          <meshStandardMaterial
+            color="#4a5568"
+            metalness={0.7}
+            roughness={0.3}
+            polygonOffset={true}
+            polygonOffsetFactor={-1}
+            polygonOffsetUnits={-1}
+          />
+        </mesh>
+      ))}
+
+      {/* Antenna structure on top */}
+      <group position={[buildingWidth / 2 + 15, building.floors.length * floorHeight + 10, 0]}>
+        {/* Main antenna pole */}
+        <mesh castShadow>
+          <cylinderGeometry args={[0.8, 0.8, 25, 8]} />
+          <meshStandardMaterial
+            color={isDark ? "#9ca3af" : "#6b7280"}
+            metalness={0.8}
+            roughness={0.2}
+          />
+        </mesh>
+        {/* Antenna details */}
+        <mesh position={[0, 8, 0]}>
+          <cylinderGeometry args={[2, 0.5, 4, 8]} />
+          <meshStandardMaterial
+            color={isDark ? "#9ca3af" : "#6b7280"}
+            metalness={0.9}
+            roughness={0.1}
+          />
+        </mesh>
+        <mesh position={[0, -5, 0]}>
+          <cylinderGeometry args={[0.5, 1.5, 3, 8]} />
+          <meshStandardMaterial
+            color={isDark ? "#9ca3af" : "#6b7280"}
+            metalness={0.9}
+            roughness={0.1}
+          />
+        </mesh>
+      </group>
 
       {/* Building name */}
       <Text
@@ -278,9 +400,18 @@ export default function BuildingViewer3D({ building, onRoomClick, isDark }: Buil
         <div className="w-full" style={{ height: "600px" }}>
           <Canvas
             shadows
-            camera={{ fov: 50, position: [200, 150, 300] }}
+            camera={{
+              fov: 50,
+              position: [200, 150, 300],
+              near: 1,
+              far: 2000,
+            }}
+            gl={{
+              antialias: true,
+              alpha: true,
+              logarithmicDepthBuffer: true,
+            }}
             style={{
-              background: isDark ? "#0a0a0a" : "#f9fafb",
               borderRadius: "8px",
             }}
           >
