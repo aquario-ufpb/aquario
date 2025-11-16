@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   update-submodule:
@@ -29,26 +28,20 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Update submodule
-        id: update_submodule
         run: |
           echo "🔄 Updating aquario-guias submodule..."
           cd frontend/content/aquario-guias
           git fetch origin
           git checkout origin/main
-          SUBMODULE_COMMIT=$(git rev-parse HEAD)
-          SUBMODULE_COMMIT_SHORT=$(git rev-parse --short HEAD)
-          SUBMODULE_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
           cd ../../..
           git add frontend/content/aquario-guias
-
-          echo "submodule_commit=$SUBMODULE_COMMIT" >> $GITHUB_OUTPUT
-          echo "submodule_commit_short=$SUBMODULE_COMMIT_SHORT" >> $GITHUB_OUTPUT
-          echo "submodule_commit_msg=$SUBMODULE_COMMIT_MSG" >> $GITHUB_OUTPUT
 
           echo "✅ Submodule updated!"
           echo ""
           echo "Current submodule commit:"
-          echo "$SUBMODULE_COMMIT_SHORT - $SUBMODULE_COMMIT_MSG"
+          cd frontend/content/aquario-guias
+          git log -1 --oneline
+          cd ../../..
 
       - name: Check for changes
         id: check_changes
@@ -61,43 +54,13 @@ jobs:
             echo "📝 Changes detected in submodule"
           fi
 
-      - name: Create branch and commit changes
+      - name: Commit and push changes
         if: steps.check_changes.outputs.changed == 'true'
         run: |
-          BRANCH_NAME="chore/update-guias-submodule-${{ github.run_id }}"
-          git checkout -b "$BRANCH_NAME"
           git add frontend/content/aquario-guias
           git commit -m "${{ github.event.inputs.commit_message }}"
-          git push -u origin "$BRANCH_NAME"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-          echo "✅ Changes committed and pushed to branch: $BRANCH_NAME"
-        id: commit_changes
-
-      - name: Create Pull Request
-        if: steps.check_changes.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_BODY=$(cat <<EOF
-          🤖 Automated submodule update
-
-          This PR updates the \`aquario-guias\` submodule to the latest commit from \`origin/main\`.
-
-          **Submodule commit:**
-          - **Hash:** \`${{ steps.update_submodule.outputs.submodule_commit_short }}\`
-          - **Message:** ${{ steps.update_submodule.outputs.submodule_commit_msg }}
-
-          Please review and merge if everything looks good.
-          EOF
-          )
-
-          gh pr create \
-            --title "${{ github.event.inputs.commit_message }}" \
-            --body "$PR_BODY" \
-            --base main \
-            --head "${{ steps.commit_changes.outputs.branch_name }}"
-
-          echo "✅ Pull request created successfully!"
+          git push
+          echo "✅ Changes committed and pushed to main!"
 
       - name: No changes summary
         if: steps.check_changes.outputs.changed == 'false'
