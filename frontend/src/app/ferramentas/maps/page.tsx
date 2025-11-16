@@ -4,7 +4,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Building2, Layers } from "lucide-react";
-import BlueprintViewer from "@/components/pages/maps/blueprint-viewer";
+import BlueprintViewer3D from "@/components/pages/maps/blueprint-viewer-3d";
 import RoomDetailsDialog from "@/components/pages/maps/room-details-dialog";
 import { mapsData } from "@/lib/maps";
 import type { Room } from "@/lib/maps/types";
@@ -136,7 +136,7 @@ export default function MapsPage() {
                   const selectedFloorId = selectedFloors[building.id];
                   const selectedFloor = building.floors.find(f => f.id === selectedFloorId);
                   return selectedFloor ? (
-                    <BlueprintViewer
+                    <BlueprintViewer3D
                       floor={selectedFloor}
                       onRoomClick={handleRoomClick}
                       isDark={isDark}

@@ -68,7 +68,9 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "textarea-caret": "^3.1.0",
-    "three": "^0.181.0"
+    "three": "^0.181.0",
+    "@react-three/fiber": "^8.15.0",
+    "@react-three/drei": "^9.105.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
