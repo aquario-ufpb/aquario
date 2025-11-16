@@ -18,7 +18,7 @@ export const floor: Floor = {
       ],
       metadata: {
         number: "106",
-        type: "classroom",
+        type: "lab (aula)",
         description: "Sala de aula CI 106",
       },
     },
@@ -45,16 +45,18 @@ export const floor: Floor = {
     {
       id: "ci-109",
       name: "CI 109",
+      title: "LIM",
       shapes: [{ position: { x: 225, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "109",
-        type: "classroom",
+        type: "lab (pesquisa)",
         description: "Sala de aula CI 109",
       },
     },
     {
       id: "ci-110",
       name: "CI 110",
+      title: "Assessoria Tecnologia",
       shapes: [{ position: { x: 280, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "110",
@@ -65,6 +67,7 @@ export const floor: Floor = {
     {
       id: "ci-111",
       name: "CI 111",
+      title: "Coordenação Pós-graduação",
       shapes: [{ position: { x: 335, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "111",
@@ -85,6 +88,7 @@ export const floor: Floor = {
     {
       id: "ci-112",
       name: "CI 112",
+      title: "Departamentos",
       shapes: [{ position: { x: 390, y: 70 }, size: { width: 110, height: 65 } }],
       metadata: {
         number: "112",
@@ -115,7 +119,7 @@ export const floor: Floor = {
       ],
       metadata: {
         number: "105",
-        type: "classroom",
+        type: "lab (aula)",
         description: "Sala de aula CI 105",
       },
     },

@@ -65,9 +65,9 @@ export default function MapsPage() {
       {/* Buildings List */}
       <div className="space-y-16">
         {mapsData.map(building => (
-          <div key={building.id} className="space-y-6">
+          <div key={building.id} className="space-y-6 md:px-8 lg:px-64 sm:px-0">
             {/* Building Header */}
-            <div className="space-y-2">
+            <div className="space-y-2 flex flex-col items-center">
               <div
                 className="flex items-center gap-2 text-2xl md:text-3xl font-semibold"
                 style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
@@ -83,11 +83,6 @@ export default function MapsPage() {
                   </span>
                 )}
               </div>
-              {building.address && (
-                <p className="text-sm opacity-60" style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
-                  {building.address}
-                </p>
-              )}
             </div>
 
             {/* Floor Buttons */}

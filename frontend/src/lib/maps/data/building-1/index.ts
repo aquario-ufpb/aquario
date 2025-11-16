@@ -5,6 +5,5 @@ export const building1: Building = {
   id: "centro-de-informatica",
   name: "CI",
   code: "CI",
-  address: "Campus Universitário",
   floors: [floor],
 };

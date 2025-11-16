@@ -147,6 +147,295 @@ function getNonSharedSegments(
   return gaps;
 }
 
+// Calculate room colors based on state
+function getRoomColors(
+  isCorridor: boolean,
+  isHovered: boolean,
+  isDark: boolean
+): { fillColor: string; strokeColor: string } {
+  const fillColor = isCorridor
+    ? isDark
+      ? "rgba(59, 130, 246, 0.15)"
+      : "rgba(59, 130, 246, 0.13)"
+    : isHovered
+      ? isDark
+        ? "rgba(59, 130, 246, 0.6)"
+        : "rgba(59, 130, 246, 0.4)"
+      : isDark
+        ? "rgba(59, 130, 246, 0.2)"
+        : "rgba(59, 130, 246, 0.15)";
+
+  const strokeColor = isHovered
+    ? isDark
+      ? "rgb(59, 130, 246)"
+      : "rgb(37, 99, 235)"
+    : isDark
+      ? "rgba(59, 130, 246, 0.5)"
+      : "rgba(59, 130, 246, 0.3)";
+
+  return { fillColor, strokeColor };
+}
+
+// Calculate room center point (average of all shapes)
+function getRoomCenter(room: Room): { centerX: number; centerY: number } {
+  const centerX =
+    room.shapes.reduce((sum, shape) => sum + shape.position.x + shape.size.width / 2, 0) /
+    room.shapes.length;
+  const centerY =
+    room.shapes.reduce((sum, shape) => sum + shape.position.y + shape.size.height / 2, 0) /
+    room.shapes.length;
+
+  return { centerX, centerY };
+}
+
+// Calculate text sizing and dimensions
+function getTextDimensions(room: Room): {
+  fontSize: number;
+  textWidth: number;
+  textHeight: number;
+} {
+  const minWidth = Math.min(...room.shapes.map(shape => shape.size.width));
+  const minHeight = Math.min(...room.shapes.map(shape => shape.size.height));
+  const textToDisplay = room.title || room.name;
+
+  // Estimate character width (roughly 0.6 * fontSize for most fonts)
+  const baseFontSize = 12;
+  const charWidth = baseFontSize * 0.6;
+  const maxChars = Math.floor(minWidth / charWidth);
+  const textLength = textToDisplay.length;
+
+  // Scale down if text is too long, but don't go below 8px
+  const fontSize = Math.max(
+    8,
+    Math.min(baseFontSize, (maxChars / textLength) * baseFontSize * 0.9)
+  );
+
+  // Calculate text container dimensions (leave some padding)
+  const textWidth = Math.max(minWidth * 0.9, 40);
+  const textHeight = room.title ? minHeight * 0.7 : minHeight * 0.5;
+
+  return { fontSize, textWidth, textHeight };
+}
+
+// Calculate blueprint scale based on viewport
+function getBlueprintScale(
+  blueprint: { width: number; height: number },
+  windowWidth: number
+): { scale: number; scaledWidth: number; scaledHeight: number } {
+  const isDesktop = windowWidth >= 1024;
+  const isTablet = windowWidth >= 768 && windowWidth < 1024;
+
+  const maxWidth = isDesktop ? 1400 : isTablet ? 1400 : 1000;
+  const maxHeight = isDesktop ? 600 : isTablet ? 1000 : 700;
+
+  const scaleX = maxWidth / blueprint.width;
+  const scaleY = maxHeight / blueprint.height;
+  const scale = Math.min(scaleX, scaleY);
+
+  const scaledWidth = blueprint.width * scale;
+  const scaledHeight = blueprint.height * scale;
+
+  return { scale, scaledWidth, scaledHeight };
+}
+
+// Render room edges (non-shared segments only)
+function renderRoomEdges(
+  shape: RoomShape,
+  shapeIndex: number,
+  allShapes: RoomShape[],
+  strokeColor: string,
+  strokeWidth: number
+): React.ReactNode {
+  const { position: p, size: s } = shape;
+  const right = p.x + s.width;
+  const bottom = p.y + s.height;
+
+  // Get shared segments for each edge
+  const topShared = getSharedSegments(shape, "top", allShapes);
+  const bottomShared = getSharedSegments(shape, "bottom", allShapes);
+  const leftShared = getSharedSegments(shape, "left", allShapes);
+  const rightShared = getSharedSegments(shape, "right", allShapes);
+
+  // Calculate non-shared segments (gaps)
+  const topGaps = getNonSharedSegments(p.x, right, topShared);
+  const bottomGaps = getNonSharedSegments(p.x, right, bottomShared);
+  const leftGaps = getNonSharedSegments(p.y, bottom, leftShared);
+  const rightGaps = getNonSharedSegments(p.y, bottom, rightShared);
+
+  return (
+    <g key={`edges-${shapeIndex}`}>
+      {/* Top edge - render only non-shared segments */}
+      {topGaps.map((gap, gapIndex) => (
+        <line
+          key={`top-${gapIndex}`}
+          x1={gap.start}
+          y1={p.y}
+          x2={gap.end}
+          y2={p.y}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          className="pointer-events-none"
+        />
+      ))}
+      {/* Bottom edge - render only non-shared segments */}
+      {bottomGaps.map((gap, gapIndex) => (
+        <line
+          key={`bottom-${gapIndex}`}
+          x1={gap.start}
+          y1={bottom}
+          x2={gap.end}
+          y2={bottom}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          className="pointer-events-none"
+        />
+      ))}
+      {/* Left edge - render only non-shared segments */}
+      {leftGaps.map((gap, gapIndex) => (
+        <line
+          key={`left-${gapIndex}`}
+          x1={p.x}
+          y1={gap.start}
+          x2={p.x}
+          y2={gap.end}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          className="pointer-events-none"
+        />
+      ))}
+      {/* Right edge - render only non-shared segments */}
+      {rightGaps.map((gap, gapIndex) => (
+        <line
+          key={`right-${gapIndex}`}
+          x1={right}
+          y1={gap.start}
+          x2={right}
+          y2={gap.end}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          className="pointer-events-none"
+        />
+      ))}
+    </g>
+  );
+}
+
+// Render room label (text or icon)
+function renderRoomLabel(
+  room: Room,
+  centerX: number,
+  centerY: number,
+  fontSize: number,
+  textWidth: number,
+  textHeight: number,
+  isDark: boolean
+): React.ReactNode {
+  if (room.metadata?.type === "bathroom") {
+    return (
+      <foreignObject
+        x={centerX - 8}
+        y={centerY - 14}
+        width="24"
+        height="24"
+        className="pointer-events-none"
+      >
+        <WcIcon
+          sx={{
+            fontSize: 16,
+            color: isDark ? "#C8E6FA" : "#0e3a6c",
+          }}
+        />
+      </foreignObject>
+    );
+  }
+
+  const textColor = isDark ? "#C8E6FA" : "#0e3a6c";
+  const textStyle = {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    textAlign: "center" as const,
+    color: textColor,
+    lineHeight: "1.2",
+    wordWrap: "break-word" as const,
+    overflowWrap: "break-word" as const,
+    overflow: "hidden" as const,
+  };
+
+  if (room.title) {
+    return (
+      <foreignObject
+        x={centerX - textWidth / 2}
+        y={centerY - textHeight / 2}
+        width={textWidth}
+        height={textHeight}
+        className="pointer-events-none"
+      >
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+            color: textColor,
+            lineHeight: "1.2",
+            wordWrap: "break-word",
+            overflowWrap: "break-word",
+            overflow: "hidden",
+          }}
+        >
+          {/* Display title */}
+          <div
+            style={{
+              fontSize: `${fontSize}px`,
+              fontWeight: 600,
+              marginBottom: "2px",
+            }}
+          >
+            {room.title}
+          </div>
+          {/* Display name as subtitle */}
+          <div
+            style={{
+              fontSize: `${fontSize * 0.7}px`,
+              fontWeight: 400,
+              marginTop: "2px",
+            }}
+          >
+            {room.name}
+          </div>
+        </div>
+      </foreignObject>
+    );
+  }
+
+  // Display name only
+  return (
+    <foreignObject
+      x={centerX - textWidth / 2}
+      y={centerY - textHeight / 2}
+      width={textWidth}
+      height={textHeight}
+      className="pointer-events-none"
+    >
+      <div
+        style={{
+          ...textStyle,
+          fontSize: `${fontSize}px`,
+          fontWeight: 600,
+        }}
+      >
+        {room.name}
+      </div>
+    </foreignObject>
+  );
+}
+
 export default function BlueprintViewer({ floor, onRoomClick, isDark }: BlueprintViewerProps) {
   const [hoveredRoomId, setHoveredRoomId] = useState<string | null>(null);
   const [windowWidth, setWindowWidth] = useState<number>(0);
@@ -172,26 +461,11 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
     };
   }, []);
 
-  // Calculate scale to fit viewport while maintaining aspect ratio
-  // Much larger on desktop (>= 1024px), medium on tablet, smaller on mobile
-  const isDesktop = windowWidth >= 1024;
-  const isTablet = windowWidth >= 768 && windowWidth < 1024;
-
-  // Allow scaling up significantly on desktop, but not too much
-  const maxWidth = isDesktop ? 1400 : isTablet ? 1400 : 1000;
-  const maxHeight = isDesktop ? 600 : isTablet ? 1000 : 700;
-
-  const scaleX = maxWidth / blueprint.width;
-  const scaleY = maxHeight / blueprint.height;
-  // Allow scaling up - remove the 1 cap to make maps bigger
-  const scale = Math.min(scaleX, scaleY);
-
-  const scaledWidth = blueprint.width * scale;
-  const scaledHeight = blueprint.height * scale;
+  const { scaledWidth, scaledHeight } = getBlueprintScale(blueprint, windowWidth);
 
   return (
     <div className="w-full overflow-auto">
-      <div className="flex justify-center items-center p-4" style={{ minHeight: "100%" }}>
+      <div className="flex justify-center items-center" style={{ minHeight: "100%" }}>
         <svg
           width={scaledWidth}
           height={scaledHeight}
@@ -218,34 +492,9 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
           {rooms.map(room => {
             const isCorridor = room.metadata?.type === "corridor";
             const isHovered = hoveredRoomId === room.id;
-            const fillColor = isCorridor
-              ? isDark
-                ? "rgba(59, 130, 246, 0.15)"
-                : "rgba(59, 130, 246, 0.13)"
-              : isHovered
-                ? isDark
-                  ? "rgba(59, 130, 246, 0.6)"
-                  : "rgba(59, 130, 246, 0.4)"
-                : isDark
-                  ? "rgba(59, 130, 246, 0.2)"
-                  : "rgba(59, 130, 246, 0.15)";
-            const strokeColor = isHovered
-              ? isDark
-                ? "rgb(59, 130, 246)"
-                : "rgb(37, 99, 235)"
-              : isDark
-                ? "rgba(59, 130, 246, 0.5)"
-                : "rgba(59, 130, 246, 0.3)";
-
-            // Calculate center for label (average of all shapes)
-            const centerX =
-              room.shapes.reduce((sum, shape) => sum + shape.position.x + shape.size.width / 2, 0) /
-              room.shapes.length;
-            const centerY =
-              room.shapes.reduce(
-                (sum, shape) => sum + shape.position.y + shape.size.height / 2,
-                0
-              ) / room.shapes.length;
+            const { fillColor, strokeColor } = getRoomColors(isCorridor, isHovered, isDark);
+            const { centerX, centerY } = getRoomCenter(room);
+            const { fontSize, textWidth, textHeight } = getTextDimensions(room);
 
             return (
               <g key={room.id}>
@@ -267,143 +516,12 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
                 ))}
                 {/* Render only non-shared edge segments as strokes - skip for corridors */}
                 {!isCorridor &&
-                  room.shapes.map((shape, shapeIndex) => {
-                    const { position: p, size: s } = shape;
-                    const right = p.x + s.width;
-                    const bottom = p.y + s.height;
-                    const strokeWidth = isHovered ? 2 : 1;
-
-                    // Get shared segments for each edge
-                    const topShared = getSharedSegments(shape, "top", room.shapes);
-                    const bottomShared = getSharedSegments(shape, "bottom", room.shapes);
-                    const leftShared = getSharedSegments(shape, "left", room.shapes);
-                    const rightShared = getSharedSegments(shape, "right", room.shapes);
-
-                    // Calculate non-shared segments (gaps)
-                    const topGaps = getNonSharedSegments(p.x, right, topShared);
-                    const bottomGaps = getNonSharedSegments(p.x, right, bottomShared);
-                    const leftGaps = getNonSharedSegments(p.y, bottom, leftShared);
-                    const rightGaps = getNonSharedSegments(p.y, bottom, rightShared);
-
-                    return (
-                      <g key={`edges-${shapeIndex}`}>
-                        {/* Top edge - render only non-shared segments */}
-                        {topGaps.map((gap, gapIndex) => (
-                          <line
-                            key={`top-${gapIndex}`}
-                            x1={gap.start}
-                            y1={p.y}
-                            x2={gap.end}
-                            y2={p.y}
-                            stroke={strokeColor}
-                            strokeWidth={strokeWidth}
-                            className="pointer-events-none"
-                          />
-                        ))}
-                        {/* Bottom edge - render only non-shared segments */}
-                        {bottomGaps.map((gap, gapIndex) => (
-                          <line
-                            key={`bottom-${gapIndex}`}
-                            x1={gap.start}
-                            y1={bottom}
-                            x2={gap.end}
-                            y2={bottom}
-                            stroke={strokeColor}
-                            strokeWidth={strokeWidth}
-                            className="pointer-events-none"
-                          />
-                        ))}
-                        {/* Left edge - render only non-shared segments */}
-                        {leftGaps.map((gap, gapIndex) => (
-                          <line
-                            key={`left-${gapIndex}`}
-                            x1={p.x}
-                            y1={gap.start}
-                            x2={p.x}
-                            y2={gap.end}
-                            stroke={strokeColor}
-                            strokeWidth={strokeWidth}
-                            className="pointer-events-none"
-                          />
-                        ))}
-                        {/* Right edge - render only non-shared segments */}
-                        {rightGaps.map((gap, gapIndex) => (
-                          <line
-                            key={`right-${gapIndex}`}
-                            x1={right}
-                            y1={gap.start}
-                            x2={right}
-                            y2={gap.end}
-                            stroke={strokeColor}
-                            strokeWidth={strokeWidth}
-                            className="pointer-events-none"
-                          />
-                        ))}
-                      </g>
-                    );
-                  })}
+                  room.shapes.map((shape, shapeIndex) =>
+                    renderRoomEdges(shape, shapeIndex, room.shapes, strokeColor, isHovered ? 2 : 1)
+                  )}
                 {/* Room label (centered on all shapes) - skip for corridors */}
-                {room.metadata?.type !== "corridor" && (
-                  <>
-                    {room.metadata?.type === "bathroom" ? (
-                      /* Display bathroom icon */
-                      <foreignObject
-                        x={centerX - 8}
-                        y={centerY - 14}
-                        width="24"
-                        height="24"
-                        className="pointer-events-none"
-                      >
-                        <WcIcon
-                          sx={{
-                            fontSize: 16,
-                            color: isDark ? "#C8E6FA" : "#0e3a6c",
-                          }}
-                        />
-                      </foreignObject>
-                    ) : room.title ? (
-                      <>
-                        {/* Display title as main text */}
-                        <text
-                          x={centerX}
-                          y={centerY - 6}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          className="pointer-events-none select-none text-xs font-medium"
-                          fill={isDark ? "#C8E6FA" : "#0e3a6c"}
-                          fontSize="12"
-                        >
-                          {room.title}
-                        </text>
-                        {/* Display name below title, smaller */}
-                        <text
-                          x={centerX}
-                          y={centerY + 10}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          className="pointer-events-none select-none"
-                          fill={isDark ? "#C8E6FA" : "#0e3a6c"}
-                          fontSize="10"
-                          opacity={0.8}
-                        >
-                          {room.name}
-                        </text>
-                      </>
-                    ) : (
-                      <text
-                        x={centerX}
-                        y={centerY}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        className="pointer-events-none select-none text-xs font-medium"
-                        fill={isDark ? "#C8E6FA" : "#0e3a6c"}
-                        fontSize="12"
-                      >
-                        {room.name}
-                      </text>
-                    )}
-                  </>
-                )}
+                {!isCorridor &&
+                  renderRoomLabel(room, centerX, centerY, fontSize, textWidth, textHeight, isDark)}
               </g>
             );
           })}

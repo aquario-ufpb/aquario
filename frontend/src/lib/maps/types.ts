@@ -21,13 +21,25 @@ export type RoomSize = {
   height: number;
 };
 
+export type RoomType =
+  | "classroom"
+  | "lab (aula)"
+  | "library"
+  | "lab (pesquisa)"
+  | "office"
+  | "bathroom"
+  | "corridor"
+  | "stairs"
+  | "shared-space"
+  | "other";
+
 export type RoomMetadata = {
   /** Room number or identifier */
   number?: string;
   /** Room capacity (if applicable) */
   capacity?: number;
   /** Room type (e.g., "classroom", "lab", "office", "bathroom") */
-  type?: string;
+  type?: RoomType;
   /** Additional description */
   description?: string;
 };
@@ -81,8 +93,6 @@ export type Building = {
   name: string;
   /** Building code or abbreviation */
   code?: string;
-  /** Address or location description */
-  address?: string;
   /** Floors in this building */
   floors: Floor[];
 };
