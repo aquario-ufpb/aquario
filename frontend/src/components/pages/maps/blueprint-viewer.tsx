@@ -191,7 +191,7 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
 
   return (
     <div className="w-full overflow-auto">
-      <div className="flex justify-center">
+      <div className="flex justify-center items-center p-4" style={{ minHeight: "100%" }}>
         <svg
           width={scaledWidth}
           height={scaledHeight}
@@ -199,7 +199,7 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
           className="border rounded"
           style={{
             backgroundColor: isDark ? "#1a1a1a" : "#f5f5f5",
-            borderColor: isDark ? "rgba(255,255,255,0.1)" : "#e2e8f0",
+            borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "#e2e8f0",
           }}
         >
           {/* Background image if available */}

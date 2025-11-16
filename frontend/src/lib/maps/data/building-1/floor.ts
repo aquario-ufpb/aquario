@@ -5,8 +5,8 @@ export const floor: Floor = {
   name: "1º Andar",
   level: 1,
   blueprint: {
-    width: 510,
-    height: 360,
+    width: 500,
+    height: 355,
   },
   rooms: [
     {
@@ -75,7 +75,7 @@ export const floor: Floor = {
     {
       id: "assesoria",
       name: "Assesoria",
-      shapes: [{ position: { x: 390, y: 0 }, size: { width: 100, height: 70 } }],
+      shapes: [{ position: { x: 390, y: 0 }, size: { width: 110, height: 70 } }],
       metadata: {
         number: "ASS",
         type: "office",
@@ -85,7 +85,7 @@ export const floor: Floor = {
     {
       id: "ci-112",
       name: "CI 112",
-      shapes: [{ position: { x: 390, y: 70 }, size: { width: 100, height: 65 } }],
+      shapes: [{ position: { x: 390, y: 70 }, size: { width: 110, height: 65 } }],
       metadata: {
         number: "112",
         type: "classroom",
@@ -97,7 +97,7 @@ export const floor: Floor = {
       name: "Corredor",
       shapes: [
         { position: { x: 55, y: 115 }, size: { width: 290, height: 20 } },
-        { position: { x: 55, y: 220 }, size: { width: 440, height: 20 } },
+        { position: { x: 55, y: 220 }, size: { width: 445, height: 20 } },
         { position: { x: 345, y: 115 }, size: { width: 45, height: 105 } },
       ],
       metadata: {
@@ -142,7 +142,7 @@ export const floor: Floor = {
     {
       id: "ci-102",
       name: "CI 102",
-      shapes: [{ position: { x: 275, y: 240 }, size: { width: 110, height: 115 } }],
+      shapes: [{ position: { x: 275, y: 240 }, size: { width: 115, height: 115 } }],
       metadata: {
         number: "102",
         type: "classroom",
@@ -152,7 +152,7 @@ export const floor: Floor = {
     {
       id: "ci-101",
       name: "CI 101",
-      shapes: [{ position: { x: 385, y: 240 }, size: { width: 110, height: 115 } }],
+      shapes: [{ position: { x: 390, y: 240 }, size: { width: 110, height: 115 } }],
       metadata: {
         number: "101",
         type: "classroom",
