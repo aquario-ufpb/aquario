@@ -32,13 +32,13 @@ export default function Home() {
         const data = await entidadesService.getAll();
         // Filter out EMPRESA type entidades
         const filteredData = data.filter(entidade => entidade.tipo !== "EMPRESA");
-        // Ordenar alfabeticamente pelo nome
-        filteredData.sort((a, b) => {
-          const nameA = a.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-          const nameB = b.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-          return nameA.localeCompare(nameB);
-        });
-        setEntidades(filteredData);
+        // Randomize the order using Fisher-Yates shuffle
+        const shuffled = [...filteredData];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        setEntidades(shuffled);
       } catch (error) {
         console.error("Error fetching entidades:", error);
       }
@@ -341,7 +341,7 @@ export default function Home() {
                       >
                         Entidades
                       </h3>
-                      <p className={`text-sm mb-4 ${isDark ? "text-white/90" : "text-slate-700"}`}>
+                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
                         Procure laboratórios, ligas acadêmicas, grupos de pesquisa e outros do
                         Centro de Informática.
                       </p>
@@ -373,14 +373,14 @@ export default function Home() {
                       >
                         <style>
                           {`
-                              .scrollbar-hide::-webkit-scrollbar {
-                                display: none;
-                              }
-                              .scrollbar-hide {
-                                -ms-overflow-style: none;
-                                scrollbar-width: none;
-                              }
-                            `}
+                            .scrollbar-hide::-webkit-scrollbar {
+                              display: none;
+                            }
+                            .scrollbar-hide {
+                              -ms-overflow-style: none;
+                              scrollbar-width: none;
+                            }
+                          `}
                         </style>
                         <div className="flex gap-4" style={{ width: "fit-content" }}>
                           {/* Duplicate entidades for seamless loop */}
