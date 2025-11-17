@@ -148,37 +148,41 @@ export default function Home() {
               no Centro de Informática da UFPB.
             </p>
             <div className="flex flex-col md:flex-row justify-center items-center pointer-events-auto gap-2 md:gap-2">
-              <HoverBorderGradient
-                containerClassName="rounded-full w-full md:w-auto"
-                className="px-10 py-4 text-lg font-semibold"
-              >
-                <Link href="/calendario" className="flex items-center justify-center gap-2 w-full">
-                  <Calendar className="w-5 h-5" />
-                  Monte seu Calendário
-                </Link>
-              </HoverBorderGradient>
-              <HoverBorderGradient
-                containerClassName="rounded-full w-full md:w-auto"
-                className="px-10 py-4 text-lg font-semibold"
-              >
-                <Link href="/entidades" className="block w-full text-center">
-                  Veja as Entidades
-                </Link>
-              </HoverBorderGradient>
-              <HoverBorderGradient
-                containerClassName="rounded-full w-full md:w-auto"
-                className="px-10 py-4 text-lg font-semibold"
-              >
-                <a
-                  href="https://github.com/aquario-ufpb/aquario"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full"
+              <Link href="/calendario" className="w-full md:w-auto">
+                <HoverBorderGradient
+                  containerClassName="rounded-full w-full md:w-auto"
+                  className="px-10 py-4 text-lg font-semibold"
                 >
-                  <Github className="w-6 h-6" />
-                  Contribua
-                </a>
-              </HoverBorderGradient>
+                  <div className="flex items-center justify-center gap-2 w-full">
+                    <Calendar className="w-5 h-5" />
+                    Monte seu Calendário
+                  </div>
+                </HoverBorderGradient>
+              </Link>
+              <Link href="/entidades" className="w-full md:w-auto">
+                <HoverBorderGradient
+                  containerClassName="rounded-full w-full md:w-auto"
+                  className="px-10 py-4 text-lg font-semibold"
+                >
+                  <div className="block w-full text-center">Veja as Entidades</div>
+                </HoverBorderGradient>
+              </Link>
+              <a
+                href="https://github.com/aquario-ufpb/aquario"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full md:w-auto"
+              >
+                <HoverBorderGradient
+                  containerClassName="rounded-full w-full md:w-auto"
+                  className="px-10 py-4 text-lg font-semibold"
+                >
+                  <div className="flex items-center justify-center gap-2 w-full">
+                    <Github className="w-6 h-6" />
+                    Contribua
+                  </div>
+                </HoverBorderGradient>
+              </a>
             </div>
           </div>
         </section>

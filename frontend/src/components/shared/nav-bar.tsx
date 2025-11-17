@@ -19,7 +19,7 @@ export default function NavBar() {
 
   return (
     <>
-      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full flex justify-center">
         <div className="grid grid-cols-2 lg:grid-cols-3 items-center h-[60px] px-6 gap-4 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg w-full max-w-4xl">
           {/* Left side - Search (hidden on mobile) */}
           <div className="hidden lg:flex items-center justify-start">
@@ -69,6 +69,8 @@ export default function NavBar() {
           {/* Right side - Links */}
           <div className="flex items-center justify-end gap-2">
             <LinkHover href="/sobre">SOBRE</LinkHover>
+            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
+            <LinkHover href="/calendario">CALENDÁRIO</LinkHover>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
             <LinkHover href="/guias">GUIAS</LinkHover>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
