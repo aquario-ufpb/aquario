@@ -5,7 +5,7 @@ import TypeBadge from "@/components/shared/badges";
 type User = {
   name: string;
   image: string;
-  type: "laboratorio" | "pessoa" | "oficial" | "grupo" | "externo";
+  type: "laboratorios" | "pessoa" | "ufpb" | "grupos" | "externo";
 };
 
 type PostCardTitle = {
