@@ -19,7 +19,7 @@ export default function NavBar() {
 
   return (
     <>
-      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full flex justify-center">
+      <nav className="fixed top-4 z-50 w-full flex justify-center">
         <div className="grid grid-cols-2 lg:grid-cols-3 items-center h-[60px] px-6 gap-4 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg w-full max-w-4xl">
           {/* Left side - Search (hidden on mobile) */}
           <div className="hidden lg:flex items-center justify-start">
