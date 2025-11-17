@@ -30,6 +30,17 @@ export default function CalendarioHeader({ data, isDark }: CalendarioHeaderProps
           {data.description && (
             <p style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>{data.description}</p>
           )}
+          <p>
+            Créditos ao{" "}
+            <a
+              href="https://sa.ci.ufpb.br/salas/ci"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: "underline", color: isDark ? "#A1E5FF" : "#2286c3" }}
+            >
+              SACII
+            </a>
+          </p>
         </div>
       </div>
     </div>
