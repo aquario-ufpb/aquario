@@ -33,7 +33,9 @@ const CheckboxGroup = ({ data, onChange }: CheckboxProps) => {
         const selected: string[] = [];
         Object.values(newState).forEach(cat =>
           Object.entries(cat).forEach(([el, checked]) => {
-            if (checked) selected.push(el.toLowerCase());
+            if (checked) {
+              selected.push(el.toLowerCase());
+            }
           })
         );
         onChange(selected);

@@ -66,7 +66,6 @@ export default function VacancyCard({ vaga }: VacancyCardProps) {
           </div>
         </div>
       </div>
-        
     </Card>
   );
 }

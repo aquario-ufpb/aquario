@@ -68,7 +68,9 @@ export default function VagasPage() {
       entidade.includes(q);
 
     // Checkbox filters
-    if (selectedCheckboxes.length === 0) return matchesSearch;
+    if (selectedCheckboxes.length === 0) {
+      return matchesSearch;
+    }
 
     const matchesCheckbox = selectedCheckboxes.some(selected => {
       return selected === entidade || selected === tipo || areas.includes(selected);
