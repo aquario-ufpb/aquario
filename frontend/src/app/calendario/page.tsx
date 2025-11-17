@@ -89,8 +89,14 @@ export default function CalendarioPage() {
 
     // Ordenar alfabeticamente pelo nome da classe
     classes.sort((a, b) => {
-      const nameA = a.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const nameB = b.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const nameA = a.nome
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      const nameB = b.nome
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
       return nameA.localeCompare(nameB);
     });
 
