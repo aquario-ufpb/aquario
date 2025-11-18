@@ -4,10 +4,10 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Building2, Layers } from "lucide-react";
-import BlueprintViewer from "@/components/pages/maps/blueprint-viewer";
-import RoomDetailsDialog from "@/components/pages/maps/room-details-dialog";
-import { mapsData } from "@/lib/maps";
-import type { Room } from "@/lib/maps/types";
+import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
+import RoomDetailsDialog from "@/components/pages/mapas/room-details-dialog";
+import { mapsData } from "@/lib/mapas";
+import type { Room } from "@/lib/mapas/types";
 
 export default function MapsPage() {
   const { theme, resolvedTheme } = useTheme();

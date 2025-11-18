@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Users, Info, Ruler } from "lucide-react";
-import type { Room } from "@/lib/maps/types";
+import type { Room } from "@/lib/mapas/types";
 
 type RoomDetailsDialogProps = {
   room: Room | null;

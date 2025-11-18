@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import WcIcon from "@mui/icons-material/Wc";
 import { Monitor, Search, BookOpen } from "lucide-react";
-import type { Floor, Room, RoomShape } from "@/lib/maps/types";
+import type { Floor, Room, RoomShape } from "@/lib/mapas/types";
 
 type BlueprintViewerProps = {
   floor: Floor;

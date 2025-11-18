@@ -5,7 +5,7 @@
 
 import { render, screen } from "@testing-library/react";
 import BlueprintViewer from "../blueprint-viewer";
-import type { Floor, RoomShape } from "@/lib/maps/types";
+import type { Floor, RoomShape } from "@/lib/mapas/types";
 
 // Helper to create a test floor
 const createTestFloor = (rooms: Floor["rooms"]): Floor => ({
@@ -48,7 +48,9 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
       const floor = createTestFloor([lShapedRoom]);
       const mockOnRoomClick = jest.fn();
 
-      const { container } = render(<BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />);
+      const { container } = render(
+        <BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />
+      );
 
       // Get all line elements (edges)
       const lines = container.querySelectorAll("line");
@@ -82,7 +84,9 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
       const floor = createTestFloor([lShapedRoom]);
       const mockOnRoomClick = jest.fn();
 
-      const { container } = render(<BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />);
+      const { container } = render(
+        <BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />
+      );
 
       const lines = container.querySelectorAll("line");
       const bottomEdges = Array.from(lines).filter(line => {
@@ -111,7 +115,9 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
       const floor = createTestFloor([simpleRoom]);
       const mockOnRoomClick = jest.fn();
 
-      const { container } = render(<BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />);
+      const { container } = render(
+        <BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />
+      );
 
       const lines = container.querySelectorAll("line");
 
@@ -163,7 +169,9 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
       const floor = createTestFloor([stackedRoom]);
       const mockOnRoomClick = jest.fn();
 
-      const { container } = render(<BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />);
+      const { container } = render(
+        <BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />
+      );
 
       const lines = container.querySelectorAll("line");
 
@@ -198,7 +206,9 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
       const floor = createTestFloor([sideBySideRoom]);
       const mockOnRoomClick = jest.fn();
 
-      const { container } = render(<BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />);
+      const { container } = render(
+        <BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />
+      );
 
       const lines = container.querySelectorAll("line");
 
@@ -239,7 +249,9 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
       const floor = createTestFloor([partialSharedRoom]);
       const mockOnRoomClick = jest.fn();
 
-      const { container } = render(<BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />);
+      const { container } = render(
+        <BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />
+      );
 
       const lines = container.querySelectorAll("line");
       const bottomEdges = Array.from(lines).filter(line => {
@@ -280,11 +292,15 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
   describe("Component rendering", () => {
     it("should render the blueprint with correct dimensions", () => {
       const floor = createTestFloor([
-        createRoom("room-1", "Room 1", [{ position: { x: 10, y: 10 }, size: { width: 100, height: 80 } }]),
+        createRoom("room-1", "Room 1", [
+          { position: { x: 10, y: 10 }, size: { width: 100, height: 80 } },
+        ]),
       ]);
 
       const mockOnRoomClick = jest.fn();
-      const { container } = render(<BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />);
+      const { container } = render(
+        <BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />
+      );
 
       const svg = container.querySelector("svg");
       expect(svg).toBeDefined();
@@ -293,11 +309,15 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
     });
 
     it("should call onRoomClick when a room is clicked", () => {
-      const room = createRoom("room-1", "Room 1", [{ position: { x: 10, y: 10 }, size: { width: 100, height: 80 } }]);
+      const room = createRoom("room-1", "Room 1", [
+        { position: { x: 10, y: 10 }, size: { width: 100, height: 80 } },
+      ]);
       const floor = createTestFloor([room]);
 
       const mockOnRoomClick = jest.fn();
-      const { container } = render(<BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />);
+      const { container } = render(
+        <BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />
+      );
 
       // Find the room rectangle and click it
       const rects = container.querySelectorAll("rect");
@@ -315,13 +335,20 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
     });
 
     it("should not make corridors clickable", () => {
-      const corridor = createRoom("corridor", "Corridor", [{ position: { x: 0, y: 0 }, size: { width: 100, height: 20 } }], {
-        type: "corridor",
-      });
+      const corridor = createRoom(
+        "corridor",
+        "Corridor",
+        [{ position: { x: 0, y: 0 }, size: { width: 100, height: 20 } }],
+        {
+          type: "corridor",
+        }
+      );
 
       const floor = createTestFloor([corridor]);
       const mockOnRoomClick = jest.fn();
-      const { container } = render(<BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />);
+      const { container } = render(
+        <BlueprintViewer floor={floor} onRoomClick={mockOnRoomClick} isDark={false} />
+      );
 
       const rects = container.querySelectorAll("rect");
       const corridorRect = Array.from(rects).find(rect => {
@@ -342,4 +369,3 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
     });
   });
 });
-
