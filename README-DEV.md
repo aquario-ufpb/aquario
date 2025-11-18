@@ -128,12 +128,15 @@ aquario/
 git clone <repository-url>
 cd aquario
 
-# 2. Setup do Backend
+# 2. Inicializar e atualizar submodules
+./scripts/setup-submodules.sh
+
+# 3. Setup do Backend
 cd backend
 npm install
 npm run setup  # Docker + DB + Migrations + Seed + Dev Server
 
-# 3. Setup do Frontend (em outro terminal)
+# 4. Setup do Frontend (em outro terminal)
 cd frontend
 npm install
 npm run dev
@@ -236,6 +239,22 @@ cd frontend
 npm run check-all
 ```
 
+### 4. **Atualizar Submodules**
+
+O projeto utiliza submodules Git para gerenciar conteúdo (guias e entidades). Para inicializar ou atualizar todos os submodules:
+
+```bash
+# Inicializa submodules (primeira vez) ou atualiza para a versão mais recente
+./scripts/setup-submodules.sh
+```
+
+Este script:
+
+- ✅ Detecta automaticamente todos os submodules configurados
+- ✅ Inicializa submodules não inicializados (útil após `git clone`)
+- ✅ Atualiza submodules existentes para a versão mais recente
+- ✅ Funciona para todos os submodules do projeto
+
 ## 📝 Padrões de Commit
 
 ### Convenção
@@ -335,6 +354,7 @@ Para todo Pull Request, temos um template que será automaticamente aplicado. Pe
 
 ```bash
 # Setup completo
+./scripts/setup-submodules.sh  # Inicializar/atualizar submodules
 cd backend && npm run setup
 cd frontend && npm run dev
 
