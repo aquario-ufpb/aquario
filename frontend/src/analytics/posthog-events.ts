@@ -28,5 +28,16 @@ export type EntidadesEvent =
       link_type: "instagram" | "linkedin" | "website";
     };
 
+export type CalendarEvent =
+  | {
+      name: "calendar_export_image_click";
+    }
+  | {
+      name: "calendar_export_calendar_click";
+    }
+  | {
+      name: "calendar_add_google_calendar_click";
+    };
+
 // Union of all PostHog events
-export type PostHogEvent = UIInteractionEvent | EntidadesEvent;
+export type PostHogEvent = UIInteractionEvent | EntidadesEvent | CalendarEvent;
