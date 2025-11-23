@@ -13,7 +13,7 @@ export const floor: Floor = {
     {
       id: "ci-306",
       name: "CI 306",
-      shapes: [{ position: { x: 0, y: 0 }, size: { width: 55, height: 115 } }],
+      shapes: [{ position: { x: 0, y: 0 }, size: { width: 55, height: 135 } }],
       metadata: {
         number: "306",
         type: "classroom",
@@ -140,7 +140,7 @@ export const floor: Floor = {
     {
       id: "ci-305",
       name: "CI 305",
-      shapes: [{ position: { x: 0, y: 240 }, size: { width: 55, height: 115 } }],
+      shapes: [{ position: { x: 0, y: 220 }, size: { width: 55, height: 135 } }],
       metadata: {
         number: "305",
         type: "classroom",
