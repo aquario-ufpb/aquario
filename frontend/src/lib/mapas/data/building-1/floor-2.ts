@@ -12,12 +12,13 @@ export const floor: Floor = {
     // Top section: 9 rooms with equal width
     {
       id: "ci-219",
-      name: "CI 201",
+      name: "CI 219",
       shapes: [{ position: { x: 0, y: 0 }, size: { width: 55, height: 135 } }],
       metadata: {
-        number: "201",
+        number: "219",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Ruy", "Mardson", "Henrique"],
       },
     },
     {
@@ -28,6 +29,7 @@ export const floor: Floor = {
         number: "220",
         type: "office",
         description: "Sala de Professor",
+        professors: ["GLedson Elias", "Gustavo Motta", "Natasha Queiroz"],
       },
     },
     {
@@ -38,6 +40,7 @@ export const floor: Floor = {
         number: "221",
         type: "office",
         description: "Sala de Professor",
+        professors: ["José Antonio", "Vitor", "Alan"],
       },
     },
     {
@@ -48,6 +51,7 @@ export const floor: Floor = {
         number: "222",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Roberto Quirino", "Moisés Dantas", "Aparecida de Souza"],
       },
     },
     {
@@ -58,6 +62,7 @@ export const floor: Floor = {
         number: "223",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Lucídio Cabral", "Bruno Pessoa", "Gilberto Farias"],
       },
     },
     {
@@ -68,6 +73,7 @@ export const floor: Floor = {
         number: "224",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Derzu Omaia", "Leonardo Vidal", "Hugo Leonardo"],
       },
     },
     {
@@ -78,6 +84,7 @@ export const floor: Floor = {
         number: "225",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Bidu", "Leandro", "Valdecir"],
       },
     },
     {
@@ -88,6 +95,7 @@ export const floor: Floor = {
         number: "226",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Danielle Rousy", "Fernando Matos", "Marcelo Yuri"],
       },
     },
     {
@@ -97,7 +105,8 @@ export const floor: Floor = {
       metadata: {
         number: "227",
         type: "office",
-        description: "Sala de Professor",
+        description: "Sala de Professor. Também pertence ao MCC (Meninas na Ciência da Computação)",
+        professors: ["MCC", "Josilene Aires", "Giorgia Mattos"],
       },
     },
     // Corridor (copied from floor-1)
@@ -147,6 +156,7 @@ export const floor: Floor = {
         number: "209",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Raimundo"],
       },
     },
     {
@@ -167,6 +177,7 @@ export const floor: Floor = {
         number: "208",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Gustavo Peixoto", "Tatiana Araújo"],
       },
     },
     {
@@ -177,6 +188,7 @@ export const floor: Floor = {
         number: "211",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Yuska", "Lincoln"],
       },
     },
     {
@@ -187,6 +199,7 @@ export const floor: Floor = {
         number: "207",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Jairo", "Sérgio"],
       },
     },
     {
@@ -197,6 +210,7 @@ export const floor: Floor = {
         number: "212",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Rostand", "Raoni"],
       },
     },
     {
@@ -207,6 +221,7 @@ export const floor: Floor = {
         number: "206",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Clauirton", "Coutinho"],
       },
     },
     {
@@ -217,6 +232,7 @@ export const floor: Floor = {
         number: "213",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Ed Porto", "Liliane"],
       },
     },
     {
@@ -227,6 +243,7 @@ export const floor: Floor = {
         number: "205",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Teobaldo"],
       },
     },
     {
@@ -237,6 +254,7 @@ export const floor: Floor = {
         number: "214",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Bruno Bruck"],
       },
     },
     {
@@ -247,6 +265,7 @@ export const floor: Floor = {
         number: "204",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Andrei"],
       },
     },
     {
@@ -257,6 +276,7 @@ export const floor: Floor = {
         number: "215",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Elizabet Spohr", "Álvaro Medeiros"],
       },
     },
     {
@@ -267,6 +287,7 @@ export const floor: Floor = {
         number: "203",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Boness", "Ana Paula"],
       },
     },
     {
@@ -277,6 +298,7 @@ export const floor: Floor = {
         number: "216",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Miguel Aroztegui"],
       },
     },
     {
@@ -287,6 +309,7 @@ export const floor: Floor = {
         number: "202",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Daniela", "Thaís"],
       },
     },
     {
@@ -297,6 +320,7 @@ export const floor: Floor = {
         number: "217",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Iguatemi", "Anand"],
       },
     },
     {
@@ -307,6 +331,7 @@ export const floor: Floor = {
         number: "201",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Camila", "Luciano"],
       },
     },
     {
@@ -317,6 +342,7 @@ export const floor: Floor = {
         number: "218",
         type: "office",
         description: "Sala de Professor",
+        professors: ["Kely", "Felipe"],
       },
     },
   ],

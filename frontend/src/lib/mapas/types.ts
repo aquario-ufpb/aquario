@@ -42,6 +42,8 @@ export type RoomMetadata = {
   type?: RoomType;
   /** Additional description */
   description?: string;
+  /** List of professors/teachers assigned to this room */
+  professors?: string[];
 };
 
 export type RoomShape = {

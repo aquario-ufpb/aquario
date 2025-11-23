@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Users, Info, Ruler } from "lucide-react";
 import type { Room } from "@/lib/mapas/types";
+import { formatProfessorsForDetails } from "@/lib/mapas/utils";
 
 type RoomDetailsDialogProps = {
   room: Room | null;
@@ -134,6 +135,26 @@ export default function RoomDetailsDialog({
             </div>
 
             <div className="space-y-3">
+              {metadata?.professors && metadata.professors.length > 0 && (
+                <div className="flex items-start gap-2">
+                  <Users
+                    className="w-4 h-4 mt-1 flex-shrink-0"
+                    style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+                  />
+                  <div>
+                    <p
+                      className="text-xs mb-1"
+                      style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
+                    >
+                      Professores
+                    </p>
+                    <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
+                      {formatProfessorsForDetails(metadata.professors)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {metadata?.description && (
                 <div className="flex items-start gap-2">
                   <Info

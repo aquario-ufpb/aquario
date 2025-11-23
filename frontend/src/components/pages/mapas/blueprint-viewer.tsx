@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import WcIcon from "@mui/icons-material/Wc";
 import { Monitor, Search, BookOpen } from "lucide-react";
 import type { Floor, Room, RoomShape } from "@/lib/mapas/types";
+import { formatProfessorsForDisplay } from "@/lib/mapas/utils";
 
 type BlueprintViewerProps = {
   floor: Floor;
@@ -203,7 +204,11 @@ function getTextDimensions(room: Room): {
 
   // Use minimum width of individual shapes for text width (to ensure it fits in narrow parts)
   const minWidth = Math.min(...room.shapes.map(shape => shape.size.width));
-  const textToDisplay = room.title || room.name;
+  // Use professors (first names) if available, otherwise use title or name
+  const textToDisplay =
+    room.metadata?.professors && room.metadata.professors.length > 0
+      ? formatProfessorsForDisplay(room.metadata.professors)
+      : room.title || room.name;
 
   // Estimate character width (roughly 0.6 * fontSize for most fonts)
   const baseFontSize = 12;
@@ -391,7 +396,14 @@ function renderRoomLabel(
     overflow: "hidden" as const,
   };
 
-  if (room.title) {
+  // Determine what to display: professors (first names) or title/name
+  const hasProfessors = room.metadata?.professors && room.metadata.professors.length > 0;
+  const displayText = hasProfessors
+    ? formatProfessorsForDisplay(room.metadata.professors)
+    : room.title || room.name;
+  const subtitleText = hasProfessors ? room.name : room.title ? room.name : undefined;
+
+  if (room.title || hasProfessors) {
     return (
       <foreignObject
         x={centerX - textWidth / 2}
@@ -407,7 +419,7 @@ function renderRoomLabel(
               <RoomIcon size={Math.round(fontSize * 1.2)} color={textColor} strokeWidth={2} />
             </div>
           )}
-          {/* Display title */}
+          {/* Display title (professors first names or room title) */}
           <div
             style={{
               fontSize: `${fontSize}px`,
@@ -415,18 +427,20 @@ function renderRoomLabel(
               marginBottom: "2px",
             }}
           >
-            {room.title}
+            {displayText}
           </div>
-          {/* Display name as subtitle */}
-          <div
-            style={{
-              fontSize: `${fontSize * 0.7}px`,
-              fontWeight: 400,
-              marginTop: "2px",
-            }}
-          >
-            {room.name}
-          </div>
+          {/* Display name as subtitle if there's a title or professors */}
+          {subtitleText && (
+            <div
+              style={{
+                fontSize: `${fontSize * 0.7}px`,
+                fontWeight: 400,
+                marginTop: "2px",
+              }}
+            >
+              {subtitleText}
+            </div>
+          )}
         </div>
       </foreignObject>
     );
@@ -448,14 +462,14 @@ function renderRoomLabel(
             <RoomIcon size={Math.round(fontSize * 1.2)} color={textColor} strokeWidth={2} />
           </div>
         )}
-        {/* Display name */}
+        {/* Display name (or professors first names) */}
         <div
           style={{
             fontSize: `${fontSize}px`,
             fontWeight: 600,
           }}
         >
-          {room.name}
+          {displayText}
         </div>
       </div>
     </foreignObject>
