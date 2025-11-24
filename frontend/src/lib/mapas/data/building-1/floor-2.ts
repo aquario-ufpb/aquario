@@ -16,7 +16,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 0, y: 0 }, size: { width: 55, height: 135 } }],
       metadata: {
         number: "219",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Ruy", "Mardson", "Henrique"],
       },
@@ -27,9 +27,9 @@ export const floor: Floor = {
       shapes: [{ position: { x: 55, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "220",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
-        professors: ["GLedson Elias", "Gustavo Motta", "Natasha Queiroz"],
+        professors: ["Gledson Elias", "Gustavo Motta", "Natasha Queiroz"],
       },
     },
     {
@@ -38,7 +38,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 110, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "221",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["José Antonio", "Vitor", "Alan"],
       },
@@ -49,7 +49,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 165, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "222",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Roberto Quirino", "Moisés Dantas", "Aparecida de Souza"],
       },
@@ -60,7 +60,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 220, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "223",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Lucídio Cabral", "Bruno Pessoa", "Gilberto Farias"],
       },
@@ -71,7 +71,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 275, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "224",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Derzu Omaia", "Leonardo Vidal", "Hugo Leonardo"],
       },
@@ -82,7 +82,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 330, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "225",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Bidu", "Leandro", "Valdecir"],
       },
@@ -93,7 +93,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 385, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "226",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Danielle Rousy", "Fernando Matos", "Marcelo Yuri"],
       },
@@ -104,7 +104,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 440, y: 0 }, size: { width: 60, height: 115 } }],
       metadata: {
         number: "227",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor. Também pertence ao MCC (Meninas na Ciência da Computação)",
         professors: ["MCC", "Josilene Aires", "Giorgia Mattos"],
       },
@@ -154,7 +154,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 0, y: 220 }, size: { width: 55, height: 70 } }],
       metadata: {
         number: "209",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Raimundo"],
       },
@@ -165,7 +165,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 0, y: 290 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "210",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
       },
     },
@@ -175,7 +175,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 55, y: 240 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "208",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Gustavo Peixoto", "Tatiana Araújo"],
       },
@@ -186,7 +186,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 55, y: 290 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "211",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Yuska", "Lincoln"],
       },
@@ -197,7 +197,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 110, y: 240 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "207",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Jairo", "Sérgio"],
       },
@@ -208,7 +208,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 110, y: 290 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "212",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Rostand", "Raoni"],
       },
@@ -219,7 +219,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 165, y: 240 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "206",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Clauirton", "Coutinho"],
       },
@@ -230,7 +230,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 165, y: 290 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "213",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Ed Porto", "Liliane"],
       },
@@ -241,7 +241,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 220, y: 240 }, size: { width: 35, height: 50 } }],
       metadata: {
         number: "205",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Teobaldo"],
       },
@@ -252,7 +252,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 220, y: 290 }, size: { width: 35, height: 50 } }],
       metadata: {
         number: "214",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Bruno Bruck"],
       },
@@ -263,7 +263,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 275, y: 240 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "204",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Andrei"],
       },
@@ -274,7 +274,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 275, y: 290 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "215",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Elizabet Spohr", "Álvaro Medeiros"],
       },
@@ -285,7 +285,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 330, y: 240 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "203",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Boness", "Ana Paula"],
       },
@@ -296,7 +296,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 330, y: 290 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "216",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Miguel Aroztegui"],
       },
@@ -307,7 +307,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 385, y: 240 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "202",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Daniela", "Thaís"],
       },
@@ -318,7 +318,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 385, y: 290 }, size: { width: 55, height: 50 } }],
       metadata: {
         number: "217",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Iguatemi", "Anand"],
       },
@@ -329,7 +329,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 440, y: 240 }, size: { width: 60, height: 50 } }],
       metadata: {
         number: "201",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Camila", "Luciano"],
       },
@@ -340,7 +340,7 @@ export const floor: Floor = {
       shapes: [{ position: { x: 440, y: 290 }, size: { width: 60, height: 50 } }],
       metadata: {
         number: "218",
-        type: "office",
+        type: "professor-office",
         description: "Sala de Professor",
         professors: ["Kely", "Felipe"],
       },

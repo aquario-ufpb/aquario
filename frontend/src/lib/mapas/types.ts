@@ -7,6 +7,14 @@
  * - Precise: Rooms have exact position and size for accurate blueprint rendering
  */
 
+/**
+ * Entidade slug - references an entidade from aquario-entidades
+ * This allows linking labs to their corresponding entidade pages
+ * The slug matches the filename in content/aquario-entidades/centro-de-informatica/
+ * (e.g., "lasid", "tril", "lmi")
+ */
+export type EntidadeSlug = string;
+
 export type RoomPosition = {
   /** X coordinate in pixels (relative to blueprint) */
   x: number;
@@ -26,25 +34,69 @@ export type RoomType =
   | "lab (aula)"
   | "library"
   | "lab (pesquisa)"
-  | "office"
+  | "faculty-office"
+  | "professor-office"
+  | "office" // Legacy type, use faculty-office or professor-office instead
   | "bathroom"
   | "corridor"
   | "stairs"
   | "shared-space"
   | "other";
 
-export type RoomMetadata = {
+// Base metadata that all rooms share
+type BaseRoomMetadata = {
   /** Room number or identifier */
   number?: string;
-  /** Room capacity (if applicable) */
-  capacity?: number;
-  /** Room type (e.g., "classroom", "lab", "office", "bathroom") */
-  type?: RoomType;
   /** Additional description */
   description?: string;
+};
+
+// Specific metadata types for different room types
+export type ClassroomMetadata = BaseRoomMetadata & {
+  type: "classroom";
+  /** Room capacity */
+  capacity?: number;
+};
+
+export type LabAulaMetadata = BaseRoomMetadata & {
+  type: "lab (aula)";
+  /** Room capacity */
+  capacity?: number;
+};
+
+export type LabPesquisaMetadata = BaseRoomMetadata & {
+  type: "lab (pesquisa)";
+  /** Room capacity */
+  capacity?: number;
+  /** List of research labs in this room - references entidade slugs from aquario-entidades */
+  labs?: EntidadeSlug[];
+};
+
+export type FacultyOfficeMetadata = BaseRoomMetadata & {
+  type: "faculty-office";
+};
+
+export type ProfessorOfficeMetadata = BaseRoomMetadata & {
+  type: "professor-office";
   /** List of professors/teachers assigned to this room */
   professors?: string[];
 };
+
+// Other room types (bathroom, corridor, etc.) use the base metadata
+export type OtherRoomMetadata = BaseRoomMetadata & {
+  type: "library" | "bathroom" | "corridor" | "stairs" | "shared-space" | "other" | "office";
+  /** Room capacity (if applicable) */
+  capacity?: number;
+};
+
+// Union of all metadata types
+export type RoomMetadata =
+  | ClassroomMetadata
+  | LabAulaMetadata
+  | LabPesquisaMetadata
+  | FacultyOfficeMetadata
+  | ProfessorOfficeMetadata
+  | OtherRoomMetadata;
 
 export type RoomShape = {
   /** Position of this shape segment */

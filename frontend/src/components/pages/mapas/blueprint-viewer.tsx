@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from "react";
 import WcIcon from "@mui/icons-material/Wc";
 import { Monitor, Search, BookOpen } from "lucide-react";
-import type { Floor, Room, RoomShape } from "@/lib/mapas/types";
-import { formatProfessorsForDisplay } from "@/lib/mapas/utils";
+import type { Floor, Room, RoomShape, EntidadeSlug } from "@/lib/mapas/types";
+import { formatProfessorsForDisplay, formatLabsForDisplay } from "@/lib/mapas/utils";
+import { entidadesService } from "@/lib/api/entidades";
+import type { Entidade } from "@/lib/types/entidade.types";
 
 type BlueprintViewerProps = {
   floor: Floor;
@@ -191,8 +193,12 @@ function getRoomCenter(room: Room): { centerX: number; centerY: number } {
 }
 
 // Calculate text sizing and dimensions
-function getTextDimensions(room: Room): {
+function getTextDimensions(
+  room: Room,
+  entidadesMap?: Map<EntidadeSlug, Entidade>
+): {
   fontSize: number;
+  subtitleFontSize: number;
   textWidth: number;
   textHeight: number;
 } {
@@ -204,14 +210,27 @@ function getTextDimensions(room: Room): {
 
   // Use minimum width of individual shapes for text width (to ensure it fits in narrow parts)
   const minWidth = Math.min(...room.shapes.map(shape => shape.size.width));
-  // Use professors (first names) if available, otherwise use title or name
+  // Use labs if available (for lab pesquisa), then professors (first names), otherwise use title or name
+  const hasLabs =
+    room.metadata?.type === "lab (pesquisa)" &&
+    "labs" in room.metadata &&
+    room.metadata.labs &&
+    room.metadata.labs.length > 0;
+  const professorsArray =
+    room.metadata && "professors" in room.metadata
+      ? (room.metadata as { professors?: string[] }).professors
+      : undefined;
+  const hasProfessorsCheck = professorsArray && professorsArray.length > 0;
   const textToDisplay =
-    room.metadata?.professors && room.metadata.professors.length > 0
-      ? formatProfessorsForDisplay(room.metadata.professors)
-      : room.title || room.name;
+    hasLabs && room.metadata && "labs" in room.metadata && room.metadata.labs
+      ? formatLabsForDisplay(room.metadata.labs, entidadesMap)
+      : hasProfessorsCheck && room.metadata && "professors" in room.metadata
+        ? formatProfessorsForDisplay((room.metadata as { professors: string[] }).professors)
+        : room.title || room.name;
 
   // Estimate character width (roughly 0.6 * fontSize for most fonts)
   const baseFontSize = 12;
+  const subtitleFontSize = 8.4; // 70% of 12px - fixed size for subtitle
   const charWidth = baseFontSize * 0.6;
   const maxChars = Math.floor(minWidth / charWidth);
   const textLength = textToDisplay.length;
@@ -230,11 +249,21 @@ function getTextDimensions(room: Room): {
     room.metadata?.type === "lab (aula)" ||
     room.metadata?.type === "lab (pesquisa)" ||
     room.metadata?.type === "classroom";
-  const iconHeight = hasIcon ? fontSize * 1.2 + 4 : 0; // icon size + margin
-  const textLinesHeight = room.title ? fontSize + fontSize * 0.7 + 6 : fontSize + 4; // title + subtitle + margins or name + margin
+  // Check if we'll show logos (for labs) or icon
+  const willShowLogos = hasLabs && entidadesMap;
+  const iconHeight = willShowLogos
+    ? Math.min(fontSize * 1.5, 32) + 4 // logo height + margin
+    : hasIcon
+      ? fontSize * 1.2 + 4 // icon size + margin
+      : 0;
+  // Determine if we'll show subtitle (room name when there are labs/professors or title)
+  const willShowSubtitle = hasLabs || hasProfessorsCheck || room.title;
+  const textLinesHeight = willShowSubtitle
+    ? fontSize + subtitleFontSize + 6 // title + subtitle (fixed 8.4px) + margins
+    : fontSize + 4; // name only + margin
   const textHeight = Math.max(boundingHeight * 0.6, iconHeight + textLinesHeight);
 
-  return { fontSize, textWidth, textHeight };
+  return { fontSize, subtitleFontSize, textWidth, textHeight };
 }
 
 // Calculate blueprint scale based on viewport
@@ -346,9 +375,11 @@ function renderRoomLabel(
   centerX: number,
   centerY: number,
   fontSize: number,
+  subtitleFontSize: number,
   textWidth: number,
   textHeight: number,
-  isDark: boolean
+  isDark: boolean,
+  entidadesMap?: Map<EntidadeSlug, Entidade>
 ): React.ReactNode {
   if (room.metadata?.type === "bathroom") {
     return (
@@ -396,14 +427,35 @@ function renderRoomLabel(
     overflow: "hidden" as const,
   };
 
-  // Determine what to display: professors (first names) or title/name
-  const hasProfessors = room.metadata?.professors && room.metadata.professors.length > 0;
-  const displayText = hasProfessors
-    ? formatProfessorsForDisplay(room.metadata.professors)
-    : room.title || room.name;
-  const subtitleText = hasProfessors ? room.name : room.title ? room.name : undefined;
+  // Determine what to display: labs, professors (first names), or title/name
+  const hasLabs =
+    room.metadata?.type === "lab (pesquisa)" &&
+    "labs" in room.metadata &&
+    room.metadata.labs &&
+    room.metadata.labs.length > 0;
+  // Get entidades for labs if available
+  const labEntidades =
+    hasLabs && room.metadata && "labs" in room.metadata && room.metadata.labs && entidadesMap
+      ? room.metadata.labs
+          .map(slug => entidadesMap.get(slug))
+          .filter((entidade): entidade is Entidade => entidade !== undefined)
+      : [];
 
-  if (room.title || hasProfessors) {
+  const professorsArray =
+    room.metadata && "professors" in room.metadata
+      ? (room.metadata as { professors?: string[] }).professors
+      : undefined;
+  const hasProfessorsCheck = professorsArray && professorsArray.length > 0;
+  const displayText =
+    hasLabs && room.metadata && "labs" in room.metadata && room.metadata.labs
+      ? formatLabsForDisplay(room.metadata.labs, entidadesMap)
+      : hasProfessorsCheck && room.metadata && "professors" in room.metadata
+        ? formatProfessorsForDisplay((room.metadata as { professors: string[] }).professors)
+        : room.title || room.name;
+  const subtitleText =
+    hasLabs || hasProfessorsCheck ? room.name : room.title ? room.name : undefined;
+
+  if (room.title || hasProfessorsCheck || hasLabs) {
     return (
       <foreignObject
         x={centerX - textWidth / 2}
@@ -413,8 +465,40 @@ function renderRoomLabel(
         className="pointer-events-none"
       >
         <div style={textStyle}>
-          {/* Display icon if applicable */}
-          {RoomIcon && (
+          {/* Display entidade logos for labs */}
+          {hasLabs && labEntidades.length > 0 && (
+            <div
+              style={{
+                marginBottom: "4px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "4px",
+                flexWrap: "wrap",
+              }}
+            >
+              {labEntidades.map(entidade => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={entidade.slug}
+                  src={entidade.imagePath}
+                  alt={entidade.name}
+                  style={{
+                    width: `${Math.min(fontSize * 1.5, 32)}px`,
+                    height: `${Math.min(fontSize * 1.5, 32)}px`,
+                    objectFit: "contain",
+                    borderRadius: "50%",
+                  }}
+                  onError={e => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          {/* Display icon if applicable (only if no lab logos) */}
+          {RoomIcon && !hasLabs && (
             <div style={{ marginBottom: "4px", display: "flex", justifyContent: "center" }}>
               <RoomIcon size={Math.round(fontSize * 1.2)} color={textColor} strokeWidth={2} />
             </div>
@@ -433,7 +517,7 @@ function renderRoomLabel(
           {subtitleText && (
             <div
               style={{
-                fontSize: `${fontSize * 0.7}px`,
+                fontSize: `${subtitleFontSize}px`,
                 fontWeight: 400,
                 marginTop: "2px",
               }}
@@ -456,8 +540,39 @@ function renderRoomLabel(
       className="pointer-events-none"
     >
       <div style={textStyle}>
-        {/* Display icon if applicable */}
-        {RoomIcon && (
+        {/* Display entidade logos for labs */}
+        {hasLabs && labEntidades.length > 0 && (
+          <div
+            style={{
+              marginBottom: "4px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "4px",
+              flexWrap: "wrap",
+            }}
+          >
+            {labEntidades.map(entidade => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={entidade.slug}
+                src={entidade.imagePath}
+                alt={entidade.name}
+                style={{
+                  width: `${Math.min(fontSize * 1.5, 32)}px`,
+                  height: `${Math.min(fontSize * 1.5, 32)}px`,
+                  objectFit: "contain",
+                }}
+                onError={e => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                }}
+              />
+            ))}
+          </div>
+        )}
+        {/* Display icon if applicable (only if no lab logos) */}
+        {RoomIcon && !hasLabs && (
           <div style={{ marginBottom: "4px", display: "flex", justifyContent: "center" }}>
             <RoomIcon size={Math.round(fontSize * 1.2)} color={textColor} strokeWidth={2} />
           </div>
@@ -479,8 +594,44 @@ function renderRoomLabel(
 export default function BlueprintViewer({ floor, onRoomClick, isDark }: BlueprintViewerProps) {
   const [hoveredRoomId, setHoveredRoomId] = useState<string | null>(null);
   const [windowWidth, setWindowWidth] = useState<number>(0);
+  const [entidadesMap, setEntidadesMap] = useState<Map<EntidadeSlug, Entidade>>(new Map());
 
   const { blueprint, rooms } = floor;
+
+  // Load entidades for all labs in the floor
+  useEffect(() => {
+    const loadEntidades = async () => {
+      const slugs = new Set<EntidadeSlug>();
+
+      // Collect all lab slugs from rooms
+      rooms.forEach(room => {
+        if (
+          room.metadata?.type === "lab (pesquisa)" &&
+          "labs" in room.metadata &&
+          room.metadata.labs
+        ) {
+          room.metadata.labs.forEach(slug => slugs.add(slug));
+        }
+      });
+
+      // Fetch all entidades
+      const entidades = await Promise.all(
+        Array.from(slugs).map(slug => entidadesService.getBySlug(slug))
+      );
+
+      // Create map
+      const map = new Map<EntidadeSlug, Entidade>();
+      entidades.forEach(entidade => {
+        if (entidade) {
+          map.set(entidade.slug, entidade);
+        }
+      });
+
+      setEntidadesMap(map);
+    };
+
+    loadEntidades();
+  }, [rooms]);
 
   // Track window width for responsive sizing
   useEffect(() => {
@@ -534,7 +685,10 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
             const isHovered = hoveredRoomId === room.id;
             const { fillColor, strokeColor } = getRoomColors(isCorridor, isHovered, isDark);
             const { centerX, centerY } = getRoomCenter(room);
-            const { fontSize, textWidth, textHeight } = getTextDimensions(room);
+            const { fontSize, subtitleFontSize, textWidth, textHeight } = getTextDimensions(
+              room,
+              entidadesMap
+            );
 
             return (
               <g key={room.id}>
@@ -561,7 +715,17 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
                   )}
                 {/* Room label (centered on all shapes) - skip for corridors */}
                 {!isCorridor &&
-                  renderRoomLabel(room, centerX, centerY, fontSize, textWidth, textHeight, isDark)}
+                  renderRoomLabel(
+                    room,
+                    centerX,
+                    centerY,
+                    fontSize,
+                    subtitleFontSize,
+                    textWidth,
+                    textHeight,
+                    isDark,
+                    entidadesMap
+                  )}
               </g>
             );
           })}

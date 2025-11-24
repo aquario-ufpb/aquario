@@ -45,11 +45,10 @@ export const floor: Floor = {
     {
       id: "ci-109",
       name: "CI 109",
-      title: "LIM",
       shapes: [{ position: { x: 225, y: 0 }, size: { width: 55, height: 115 } }],
       metadata: {
         number: "109",
-        type: "lab (pesquisa)",
+        type: "classroom",
         description: "Sala de aula CI 109",
       },
     },
