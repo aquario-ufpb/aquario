@@ -4,3 +4,6 @@
 [submodule "frontend/content/aquario-entidades"]
 	path = frontend/content/aquario-entidades
 	url = https://github.com/aquario-ufpb/aquario-entidades.git
+[submodule "frontend/content/aquario-mapas"]
+	path = frontend/content/aquario-mapas
+	url = https://github.com/aquario-ufpb/aquario-mapas.git
