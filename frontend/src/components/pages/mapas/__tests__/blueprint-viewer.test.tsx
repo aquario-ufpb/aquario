@@ -3,6 +3,15 @@
  * Tests edge-sharing logic for multi-shape rooms (e.g., L-shaped rooms)
  */
 
+// Mock the entidades provider to avoid require.context issues
+jest.mock("@/lib/api/entidades_providers/local-file-entidades-provider", () => {
+  return {
+    LocalFileEntidadesProvider: jest.requireActual(
+      "@/lib/api/entidades_providers/__mocks__/local-file-entidades-provider"
+    ).LocalFileEntidadesProvider,
+  };
+});
+
 import { render } from "@testing-library/react";
 import BlueprintViewer from "../blueprint-viewer";
 import type { Floor, RoomShape } from "@/lib/mapas/types";
