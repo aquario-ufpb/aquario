@@ -3,7 +3,7 @@
  * Tests edge-sharing logic for multi-shape rooms (e.g., L-shaped rooms)
  */
 
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import BlueprintViewer from "../blueprint-viewer";
 import type { Floor, RoomShape } from "@/lib/mapas/types";
 
