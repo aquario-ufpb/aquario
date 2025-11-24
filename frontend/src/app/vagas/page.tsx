@@ -1,10 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import Checkbox from "@/components/pages/vagas/checkbox-filter";
 import VacancyCard, { TipoVaga, Vaga } from "@/components/pages/vagas/vacancy-card";
 import { SearchBar1 } from "@/components/ui/searchbar1";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 // import { trackEvent } from "@/analytics/posthog-client";
 import { Button } from "@/components/ui/button";
 import { Github, Plus } from "lucide-react";
@@ -19,9 +26,9 @@ function VagasCard({ vaga }: { vaga: Vaga }) {
     };*/
 
   return (
-    <Link href={"/vagas/${vaga.id}"} /*onClick={handleClick}*/ className="block">
+    <div className="cursor-pointer">
       <VacancyCard vaga={vaga} />
-    </Link>
+    </div>
   );
 }
 
@@ -29,6 +36,7 @@ export default function VagasPage() {
   const [vagas, setVagas] = useState<Vaga[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
+  const [vagaSelecionada, setVagaSelecionada] = useState<Vaga | null>(null);
   const { user } = useAuth();
 
   const canPostJob = !!(
@@ -89,6 +97,10 @@ export default function VagasPage() {
     setSelectedCheckboxes(selected.map(s => s.toLowerCase()));
   };
 
+  const handleCardClick = (vaga: Vaga) => {
+    setVagaSelecionada(vaga);
+  };
+
   // Static fallback slots
   useEffect(() => {
     if (vagas.length === 0) {
@@ -98,6 +110,7 @@ export default function VagasPage() {
           titulo: "UX/UI Designer",
           descricao: "",
           tipoVaga: TipoVaga.VOLUNTARIO,
+          inscricaoAte: new Date("2025-12-31").toISOString(),
           criadoEm: new Date().toISOString(),
           entidade: "laboratorios",
           publicador: { nome: "TRIL", urlFotoPerfil: "/ian.jpeg" },
@@ -108,6 +121,7 @@ export default function VagasPage() {
           titulo: "Software Engineer Internship",
           descricao: "",
           tipoVaga: TipoVaga.ESTAGIO,
+          inscricaoAte: new Date("2025-12-31").toISOString(),
           criadoEm: new Date().toISOString(),
           entidade: "externo",
           publicador: { nome: "Google", urlFotoPerfil: "/ian.jpeg" },
@@ -118,6 +132,7 @@ export default function VagasPage() {
           titulo: "Trainee",
           descricao: "",
           tipoVaga: TipoVaga.TRAINEE,
+          inscricaoAte: new Date("2025-12-31").toISOString(),
           criadoEm: new Date().toISOString(),
           entidade: "ligas",
           publicador: { nome: "TAIL", urlFotoPerfil: "/ian.jpeg" },
@@ -181,10 +196,10 @@ export default function VagasPage() {
               size="sm"
               className="hidden md:flex rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal flex-shrink-0"
             >
-              <Link href="/vagas/novo" className="flex items-center gap-2">
+              <a href="/vagas/novo" className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Divulgar vaga
-              </Link>
+              </a>
             </Button>
           )}
         </div>
@@ -234,13 +249,50 @@ export default function VagasPage() {
 
             <div className="space-y-4">
               {vagasFiltradas.length > 0 ? (
-                vagasFiltradas.map(vaga => <VagasCard key={vaga.id} vaga={vaga} />)
+                vagasFiltradas.map(vaga => (
+                  <div key={vaga.id} onClick={() => handleCardClick(vaga)}>
+                    <VagasCard vaga={vaga} />
+                  </div>
+                ))
               ) : (
                 <p className="text-center text-muted-foreground py-12">
                   Nenhuma vaga encontrada com os filtros selecionados.
                 </p>
               )}
             </div>
+
+            {vagaSelecionada && (
+              <Dialog open={!!vagaSelecionada} onOpenChange={() => setVagaSelecionada(null)}>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>{vagaSelecionada.titulo}</DialogTitle>
+                    <DialogDescription>
+                      Publicado por {vagaSelecionada.publicador.nome}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <p>
+                      <strong>Tipo de Vaga:</strong> {vagaSelecionada.tipoVaga}
+                    </p>
+                    <p>
+                      <strong>Entidade:</strong> {vagaSelecionada.entidade}
+                    </p>
+                    <p>
+                      <strong>Áreas:</strong> {vagaSelecionada.areas?.join(", ")}
+                    </p>
+                    <p className="mt-4">{vagaSelecionada.descricao}</p>
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={() => setVagaSelecionada(null)} variant="outline">
+                      Fechar
+                    </Button>
+                    <Button asChild>
+                      <a href={`/vagas/${vagaSelecionada.id}`}>Ver mais e se inscrever</a>
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       </div>
