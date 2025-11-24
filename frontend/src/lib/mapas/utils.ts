@@ -2,9 +2,12 @@
  * Utility functions for the Maps feature
  */
 
+import type { EntidadeSlug, LabResearch, ProfessorOffice } from "./types";
+import type { Entidade } from "../types";
+
 /**
  * Extract first name from a full name
- * Handles cases like "José Antonio" -> "José", "Gledson Elias" -> "Gledson"
+ * Handles cases like "José Antonio" -> "José", "GLedson Elias" -> "GLedson"
  */
 function getFirstName(fullName: string): string {
   return fullName.split(" ")[0];
@@ -57,18 +60,18 @@ export function formatProfessorsForDetails(professors: string[]): string {
  * @param entidadesMap - Optional map of Entidade objects to get names from
  */
 export function formatLabsForDisplay(
-  labs: string[],
-  entidadesMap?: Map<string, { name: string }>
+  labs: EntidadeSlug[],
+  entidadesMap?: Map<EntidadeSlug, Entidade>
 ): string {
   if (labs.length === 0) {
     return "";
   }
 
   // If entidadesMap is provided, use entidade names; otherwise use slugs
-  const getLabName = (slug: string): string => {
+  const getLabName = (slug: EntidadeSlug): string => {
     if (entidadesMap) {
       const entidade = entidadesMap.get(slug);
-      return entidade?.name?.split(" ")[0] || slug.toUpperCase().split(" ")[0];
+      return entidade?.name || slug.toUpperCase();
     }
     return slug.toUpperCase();
   };
@@ -85,4 +88,18 @@ export function formatLabsForDisplay(
   const allButLast = labNames.slice(0, -1);
   const last = labNames[labNames.length - 1];
   return `${allButLast.join(", ")} e ${last}`;
+}
+
+/**
+ * Type guard to check if a room is a LabResearch
+ */
+export function isLabResearch(room: { type: string }): room is LabResearch {
+  return room.type === "lab-research";
+}
+
+/**
+ * Type guard to check if a room is a ProfessorOffice
+ */
+export function isProfessorOffice(room: { type: string }): room is ProfessorOffice {
+  return room.type === "professor-office";
 }

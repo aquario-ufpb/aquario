@@ -14,7 +14,7 @@ jest.mock("@/lib/api/entidades_providers/local-file-entidades-provider", () => {
 
 import { render } from "@testing-library/react";
 import BlueprintViewer from "../blueprint-viewer";
-import type { Floor, RoomShape } from "@/lib/mapas/types";
+import type { Floor, RoomShape, Room } from "@/lib/mapas/types";
 
 // Helper to create a test floor
 const createTestFloor = (rooms: Floor["rooms"]): Floor => ({
@@ -31,15 +31,24 @@ const createTestFloor = (rooms: Floor["rooms"]): Floor => ({
 // Helper to create a simple room
 const createRoom = (
   id: string,
-  name: string,
+  location: string,
   shapes: RoomShape[],
-  metadata?: Floor["rooms"][0]["metadata"]
-): Floor["rooms"][0] => ({
-  id,
-  name,
-  shapes,
-  metadata,
-});
+  type: Room["type"] = "classroom"
+): Room => {
+  const baseRoom = {
+    id,
+    location,
+    shapes,
+    type,
+  };
+
+  // Add type-specific properties
+  if (type === "corridor") {
+    return { ...baseRoom, type: "corridor" };
+  }
+
+  return { ...baseRoom, type: "classroom" };
+};
 
 describe("BlueprintViewer - Edge Sharing Logic", () => {
   describe("L-shaped room (CI 106 example)", () => {
@@ -348,9 +357,7 @@ describe("BlueprintViewer - Edge Sharing Logic", () => {
         "corridor",
         "Corridor",
         [{ position: { x: 0, y: 0 }, size: { width: 100, height: 20 } }],
-        {
-          type: "corridor",
-        }
+        "corridor"
       );
 
       const floor = createTestFloor([corridor]);

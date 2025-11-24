@@ -1,11 +1,9 @@
 /**
- * Maps data for the Maps feature
+ * Maps types and utilities
  *
- * Data is organized in the data/ folder by building and floor.
- * In the future, this could be replaced with data from:
- * - A database (via API)
- * - A CMS
- * - A configuration file
+ * Note: Data is now loaded via the useMapas hook and mapasService.
+ * This file only exports types and utilities.
  */
 
-export { mapsData } from "./data";
+// Re-export types for convenience
+export type * from "./types";

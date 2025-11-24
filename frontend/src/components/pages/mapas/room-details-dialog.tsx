@@ -1,38 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Users, Info, Ruler } from "lucide-react";
 import Link from "next/link";
-import type { Room, RoomMetadata } from "@/lib/mapas/types";
-import { formatProfessorsForDetails } from "@/lib/mapas/utils";
+import type { Room } from "@/lib/mapas/types";
+import { formatProfessorsForDetails, isLabResearch, isProfessorOffice } from "@/lib/mapas/utils";
 import { entidadesService } from "@/lib/api/entidades";
 import type { Entidade } from "@/lib/types/entidade.types";
-
-// Type guards
-function hasCapacity(metadata: RoomMetadata): metadata is RoomMetadata & { capacity: number } {
-  return "capacity" in metadata && metadata.capacity !== undefined;
-}
-
-function hasProfessors(
-  metadata: RoomMetadata
-): metadata is RoomMetadata & { professors: string[] } {
-  return (
-    "professors" in metadata && metadata.professors !== undefined && metadata.professors.length > 0
-  );
-}
-
-function hasLabs(metadata: RoomMetadata): metadata is RoomMetadata & { labs: string[] } {
-  return "labs" in metadata && metadata.labs !== undefined && metadata.labs.length > 0;
-}
 
 type RoomDetailsDialogProps = {
   room: Room | null;
@@ -52,7 +29,7 @@ export default function RoomDetailsDialog({
 
   useEffect(() => {
     const loadLabEntidades = async () => {
-      if (!room || !room.metadata || !hasLabs(room.metadata)) {
+      if (!room || !isLabResearch(room) || !room.labs || room.labs.length === 0) {
         setLabEntidades([]);
         setIsLoadingLabs(false);
         return;
@@ -60,7 +37,7 @@ export default function RoomDetailsDialog({
 
       setIsLoadingLabs(true);
       try {
-        const labs = room.metadata.labs;
+        const labs = room.labs;
         const entidades = await Promise.all(labs.map(slug => entidadesService.getBySlug(slug)));
 
         setLabEntidades(entidades.filter((e): e is Entidade => e !== null));
@@ -85,7 +62,17 @@ export default function RoomDetailsDialog({
     return null;
   }
 
-  const { name, metadata } = room;
+  const hasCapacity = (room: Room): room is Room & { capacity: number } => {
+    return (
+      (room.type === "classroom" && "capacity" in room && room.capacity !== undefined) ||
+      (room.type === "lab-class" && "capacity" in room && room.capacity !== undefined) ||
+      (room.type === "lab-research" && "capacity" in room && room.capacity !== undefined) ||
+      (room.type === "library" && "capacity" in room && room.capacity !== undefined) ||
+      (room.type === "shared-space" && "capacity" in room && room.capacity !== undefined)
+    );
+  };
+
+  const capacity = hasCapacity(room) ? room.capacity : undefined;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -100,13 +87,8 @@ export default function RoomDetailsDialog({
             style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
           >
             <MapPin className="w-5 h-5" />
-            {name}
+            {room.location}
           </DialogTitle>
-          {metadata?.number && (
-            <DialogDescription style={{ color: isDark ? "#E5F6FF/80" : "#0e3a6c/80" }}>
-              Número: {metadata.number}
-            </DialogDescription>
-          )}
         </DialogHeader>
 
         <div
@@ -123,34 +105,32 @@ export default function RoomDetailsDialog({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
-              {metadata?.type && (
-                <div className="flex items-start gap-2">
-                  <MapPin
-                    className="w-4 h-4 mt-1 flex-shrink-0"
-                    style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
-                  />
-                  <div>
-                    <p
-                      className="text-xs mb-1"
-                      style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
-                    >
-                      Tipo
-                    </p>
-                    <Badge
-                      variant="outline"
-                      className={
-                        isDark
-                          ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                          : "bg-blue-100 text-blue-800 border-blue-200"
-                      }
-                    >
-                      {metadata.type}
-                    </Badge>
-                  </div>
+              <div className="flex items-start gap-2">
+                <MapPin
+                  className="w-4 h-4 mt-1 flex-shrink-0"
+                  style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+                />
+                <div>
+                  <p
+                    className="text-xs mb-1"
+                    style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
+                  >
+                    Tipo
+                  </p>
+                  <Badge
+                    variant="outline"
+                    className={
+                      isDark
+                        ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                        : "bg-blue-100 text-blue-800 border-blue-200"
+                    }
+                  >
+                    {room.type}
+                  </Badge>
                 </div>
-              )}
+              </div>
 
-              {metadata && hasCapacity(metadata) && (
+              {capacity !== undefined && (
                 <div className="flex items-start gap-2">
                   <Users
                     className="w-4 h-4 mt-1 flex-shrink-0"
@@ -163,9 +143,7 @@ export default function RoomDetailsDialog({
                     >
                       Capacidade
                     </p>
-                    <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
-                      {metadata.capacity} pessoas
-                    </p>
+                    <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{capacity} pessoas</p>
                   </div>
                 </div>
               )}
@@ -190,7 +168,7 @@ export default function RoomDetailsDialog({
             </div>
 
             <div className="space-y-3">
-              {metadata && hasLabs(metadata) && (
+              {isLabResearch(room) && room.labs && room.labs.length > 0 && (
                 <div>
                   <p
                     className="text-xs mb-3"
@@ -279,7 +257,7 @@ export default function RoomDetailsDialog({
                 </div>
               )}
 
-              {metadata && hasProfessors(metadata) && (
+              {isProfessorOffice(room) && room.professors && room.professors.length > 0 && (
                 <div className="flex items-start gap-2">
                   <Users
                     className="w-4 h-4 mt-1 flex-shrink-0"
@@ -293,13 +271,13 @@ export default function RoomDetailsDialog({
                       Professores
                     </p>
                     <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
-                      {formatProfessorsForDetails(metadata.professors)}
+                      {formatProfessorsForDetails(room.professors)}
                     </p>
                   </div>
                 </div>
               )}
 
-              {metadata?.description && (
+              {room.description && (
                 <div className="flex items-start gap-2">
                   <Info
                     className="w-4 h-4 mt-1 flex-shrink-0"
@@ -312,7 +290,7 @@ export default function RoomDetailsDialog({
                     >
                       Descrição
                     </p>
-                    <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{metadata.description}</p>
+                    <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{room.description}</p>
                   </div>
                 </div>
               )}

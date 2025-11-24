@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Building2, Layers } from "lucide-react";
 import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
 import RoomDetailsDialog from "@/components/pages/mapas/room-details-dialog";
-import { mapsData } from "@/lib/mapas";
+import { useMapas } from "@/hooks/use-mapas";
 import type { Room } from "@/lib/mapas/types";
 
 export default function MapsPage() {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { data: mapsData, isLoading, error } = useMapas();
   // Track selected floor per building: buildingId -> floorId
   const [selectedFloors, setSelectedFloors] = useState<Record<string, string>>({});
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -20,14 +21,16 @@ export default function MapsPage() {
   useEffect(() => {
     setMounted(true);
     // Auto-select first floor of each building on mount
-    const initialSelections: Record<string, string> = {};
-    mapsData.forEach(building => {
-      if (building.floors.length > 0) {
-        initialSelections[building.id] = building.floors[0].id;
-      }
-    });
-    setSelectedFloors(initialSelections);
-  }, []);
+    if (mapsData) {
+      const initialSelections: Record<string, string> = {};
+      mapsData.forEach(building => {
+        if (building.floors.length > 0) {
+          initialSelections[building.id] = building.floors[0].id;
+        }
+      });
+      setSelectedFloors(initialSelections);
+    }
+  }, [mapsData]);
 
   const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
 
@@ -45,6 +48,38 @@ export default function MapsPage() {
 
   if (!mounted) {
     return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="w-full px-4 md:px-8 lg:px-12 mt-24 pb-20">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-lg">Carregando mapas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full px-4 md:px-8 lg:px-12 mt-24 pb-20">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-lg text-red-500">
+            Erro ao carregar mapas. Tente novamente mais tarde.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!mapsData || mapsData.length === 0) {
+    return (
+      <div className="w-full px-4 md:px-8 lg:px-12 mt-24 pb-20">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-lg">Nenhum mapa disponível.</p>
+        </div>
+      </div>
+    );
   }
 
   return (

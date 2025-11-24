@@ -4,7 +4,12 @@ import React, { useState, useEffect } from "react";
 import WcIcon from "@mui/icons-material/Wc";
 import { Monitor, Search, BookOpen } from "lucide-react";
 import type { Floor, Room, RoomShape, EntidadeSlug } from "@/lib/mapas/types";
-import { formatProfessorsForDisplay, formatLabsForDisplay } from "@/lib/mapas/utils";
+import {
+  formatProfessorsForDisplay,
+  formatLabsForDisplay,
+  isLabResearch,
+  isProfessorOffice,
+} from "@/lib/mapas/utils";
 import { entidadesService } from "@/lib/api/entidades";
 import type { Entidade } from "@/lib/types/entidade.types";
 
@@ -210,23 +215,16 @@ function getTextDimensions(
 
   // Use minimum width of individual shapes for text width (to ensure it fits in narrow parts)
   const minWidth = Math.min(...room.shapes.map(shape => shape.size.width));
-  // Use labs if available (for lab pesquisa), then professors (first names), otherwise use title or name
-  const hasLabs =
-    room.metadata?.type === "lab (pesquisa)" &&
-    "labs" in room.metadata &&
-    room.metadata.labs &&
-    room.metadata.labs.length > 0;
-  const professorsArray =
-    room.metadata && "professors" in room.metadata
-      ? (room.metadata as { professors?: string[] }).professors
-      : undefined;
-  const hasProfessorsCheck = professorsArray && professorsArray.length > 0;
+  // Use labs if available (for lab research), then professors (first names), otherwise use location
+  const hasLabs = isLabResearch(room) && room.labs && room.labs.length > 0;
+  const hasProfessorsCheck =
+    isProfessorOffice(room) && room.professors && room.professors.length > 0;
   const textToDisplay =
-    hasLabs && room.metadata && "labs" in room.metadata && room.metadata.labs
-      ? formatLabsForDisplay(room.metadata.labs, entidadesMap)
-      : hasProfessorsCheck && room.metadata && "professors" in room.metadata
-        ? formatProfessorsForDisplay((room.metadata as { professors: string[] }).professors)
-        : room.title || room.name;
+    hasLabs && isLabResearch(room) && room.labs
+      ? formatLabsForDisplay(room.labs, entidadesMap)
+      : hasProfessorsCheck && isProfessorOffice(room) && room.professors
+        ? formatProfessorsForDisplay(room.professors)
+        : room.location;
 
   // Estimate character width (roughly 0.6 * fontSize for most fonts)
   const baseFontSize = 12;
@@ -246,9 +244,7 @@ function getTextDimensions(
   const textWidth = Math.max(minWidth * 0.9, 40);
   // Account for icon height if there's an icon, plus text lines
   const hasIcon =
-    room.metadata?.type === "lab (aula)" ||
-    room.metadata?.type === "lab (pesquisa)" ||
-    room.metadata?.type === "classroom";
+    room.type === "lab-class" || room.type === "lab-research" || room.type === "classroom";
   // Check if we'll show logos (for labs) or icon
   const willShowLogos = hasLabs && entidadesMap;
   const iconHeight = willShowLogos
@@ -256,8 +252,8 @@ function getTextDimensions(
     : hasIcon
       ? fontSize * 1.2 + 4 // icon size + margin
       : 0;
-  // Determine if we'll show subtitle (room name when there are labs/professors or title)
-  const willShowSubtitle = hasLabs || hasProfessorsCheck || room.title;
+  // Determine if we'll show subtitle (room location when there are labs/professors)
+  const willShowSubtitle = hasLabs || hasProfessorsCheck;
   const textLinesHeight = willShowSubtitle
     ? fontSize + subtitleFontSize + 6 // title + subtitle (fixed 8.4px) + margins
     : fontSize + 4; // name only + margin
@@ -381,7 +377,7 @@ function renderRoomLabel(
   isDark: boolean,
   entidadesMap?: Map<EntidadeSlug, Entidade>
 ): React.ReactNode {
-  if (room.metadata?.type === "bathroom") {
+  if (room.type === "bathroom") {
     return (
       <foreignObject
         x={centerX - 8}
@@ -404,11 +400,11 @@ function renderRoomLabel(
 
   // Determine which icon to show based on room type
   let RoomIcon: typeof Monitor | typeof Search | typeof BookOpen | null = null;
-  if (room.metadata?.type === "lab (aula)") {
+  if (room.type === "lab-class") {
     RoomIcon = Monitor;
-  } else if (room.metadata?.type === "lab (pesquisa)") {
+  } else if (room.type === "lab-research") {
     RoomIcon = Search;
-  } else if (room.metadata?.type === "classroom") {
+  } else if (room.type === "classroom") {
     RoomIcon = BookOpen;
   }
 
@@ -427,35 +423,27 @@ function renderRoomLabel(
     overflow: "hidden" as const,
   };
 
-  // Determine what to display: labs, professors (first names), or title/name
-  const hasLabs =
-    room.metadata?.type === "lab (pesquisa)" &&
-    "labs" in room.metadata &&
-    room.metadata.labs &&
-    room.metadata.labs.length > 0;
+  // Determine what to display: labs, professors (first names), or location
+  const hasLabs = isLabResearch(room) && room.labs && room.labs.length > 0;
   // Get entidades for labs if available
   const labEntidades =
-    hasLabs && room.metadata && "labs" in room.metadata && room.metadata.labs && entidadesMap
-      ? room.metadata.labs
+    hasLabs && isLabResearch(room) && room.labs && entidadesMap
+      ? room.labs
           .map(slug => entidadesMap.get(slug))
           .filter((entidade): entidade is Entidade => entidade !== undefined)
       : [];
 
-  const professorsArray =
-    room.metadata && "professors" in room.metadata
-      ? (room.metadata as { professors?: string[] }).professors
-      : undefined;
-  const hasProfessorsCheck = professorsArray && professorsArray.length > 0;
+  const hasProfessorsCheck =
+    isProfessorOffice(room) && room.professors && room.professors.length > 0;
   const displayText =
-    hasLabs && room.metadata && "labs" in room.metadata && room.metadata.labs
-      ? formatLabsForDisplay(room.metadata.labs, entidadesMap)
-      : hasProfessorsCheck && room.metadata && "professors" in room.metadata
-        ? formatProfessorsForDisplay((room.metadata as { professors: string[] }).professors)
-        : room.title || room.name;
-  const subtitleText =
-    hasLabs || hasProfessorsCheck ? room.name : room.title ? room.name : undefined;
+    hasLabs && isLabResearch(room) && room.labs
+      ? formatLabsForDisplay(room.labs, entidadesMap)
+      : hasProfessorsCheck && isProfessorOffice(room) && room.professors
+        ? formatProfessorsForDisplay(room.professors)
+        : room.location;
+  const subtitleText = hasLabs || hasProfessorsCheck ? room.location : undefined;
 
-  if (room.title || hasProfessorsCheck || hasLabs) {
+  if (hasProfessorsCheck || hasLabs) {
     return (
       <foreignObject
         x={centerX - textWidth / 2}
@@ -584,7 +572,7 @@ function renderRoomLabel(
             fontWeight: 600,
           }}
         >
-          {displayText}
+          {displayText || room.location}
         </div>
       </div>
     </foreignObject>
@@ -605,12 +593,8 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
 
       // Collect all lab slugs from rooms
       rooms.forEach(room => {
-        if (
-          room.metadata?.type === "lab (pesquisa)" &&
-          "labs" in room.metadata &&
-          room.metadata.labs
-        ) {
-          room.metadata.labs.forEach(slug => slugs.add(slug));
+        if (isLabResearch(room) && room.labs) {
+          room.labs.forEach(slug => slugs.add(slug));
         }
       });
 
@@ -681,7 +665,7 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
 
           {/* Render rooms */}
           {rooms.map(room => {
-            const isCorridor = room.metadata?.type === "corridor";
+            const isCorridor = room.type === "corridor";
             const isHovered = hoveredRoomId === room.id;
             const { fillColor, strokeColor } = getRoomColors(isCorridor, isHovered, isDark);
             const { centerX, centerY } = getRoomCenter(room);
