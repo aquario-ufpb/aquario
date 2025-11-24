@@ -51,7 +51,7 @@ export default function CalendarioPage() {
     return classes;
   }, [data]);
 
-  // Filter classes based on search query
+  // Filter classes based on search query and order alphabetically by name
   const filteredClasses = useMemo(() => {
     let classes: ClassWithRoom[];
 
@@ -86,6 +86,19 @@ export default function CalendarioPage() {
         );
       });
     }
+
+    // Ordenar alfabeticamente pelo nome da classe
+    classes.sort((a, b) => {
+      const nameA = a.nome
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      const nameB = b.nome
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      return nameA.localeCompare(nameB);
+    });
 
     // Sort: selected classes first, then unselected
     return classes.sort((a, b) => {

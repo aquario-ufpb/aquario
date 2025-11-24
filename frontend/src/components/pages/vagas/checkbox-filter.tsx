@@ -9,23 +9,38 @@ type CheckboxProps = {
     titulo: string;
     elementos: string[];
   }[];
+  onChange?: (selected: string[]) => void; // Callback to the parent
 };
 
-const CheckboxGroup = ({ data }: CheckboxProps) => {
+const CheckboxGroup = ({ data, onChange }: CheckboxProps) => {
   const [selectedValues, setSelectedValues] = useState<{
     [key: string]: { [key: string]: boolean };
   }>({});
 
   const handleChange = (category: string, element: string) => {
     setSelectedValues(prev => {
-      const categoryValues = prev[category] || {}; // Inicializa se não existir
+      const categoryValues = prev[category] || {};
       const newState = {
         ...prev,
         [category]: {
           ...categoryValues,
-          [element]: !categoryValues[element], // Inverte o valor do checkbox
+          [element]: !categoryValues[element],
         },
       };
+
+      // Updates the parent with the selected elements.
+      if (onChange) {
+        const selected: string[] = [];
+        Object.values(newState).forEach(cat =>
+          Object.entries(cat).forEach(([el, checked]) => {
+            if (checked) {
+              selected.push(el.toLowerCase());
+            }
+          })
+        );
+        onChange(selected);
+      }
+
       return newState;
     });
   };
@@ -41,13 +56,13 @@ const CheckboxGroup = ({ data }: CheckboxProps) => {
               {group.elementos.map((element, idx) => (
                 <label
                   key={idx}
-                  className="inline-flex items-center space-x-2 pb-1 hover:underline"
+                  className="inline-flex items-center space-x-2 pb-1 hover:underline cursor-pointer"
                 >
                   <Checkbox
-                    checked={selectedValues[group.titulo]?.[element] || false} // Garante que o valor exista
-                    onClick={() => handleChange(group.titulo, element)} // Muda o estado ao clicar
+                    checked={selectedValues[group.titulo]?.[element] || false}
+                    onClick={() => handleChange(group.titulo, element)}
                   />
-                  <span className="text-sm hover:underline cursor-pointer">{element}</span>
+                  <span className="text-sm">{element}</span>
                 </label>
               ))}
             </div>

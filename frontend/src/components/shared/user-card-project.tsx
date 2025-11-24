@@ -6,7 +6,7 @@ import Image from "next/image";
 type User = {
   name: string;
   image: string;
-  type: "laboratorio" | "pessoa" | "oficial" | "grupo" | "externo";
+  type: "laboratorios" | "pessoa" | "ufpb" | "grupos" | "externo";
 };
 
 type Project = {
@@ -19,7 +19,7 @@ type UserCardProjectsProps = {
   name: string;
   profilePicture: string;
   description: string;
-  type: "laboratorio" | "pessoa" | "oficial" | "grupo" | "externo";
+  type: "laboratorios" | "pessoa" | "ufpb" | "grupos" | "externo";
   site: string;
   projects: Project[];
 };

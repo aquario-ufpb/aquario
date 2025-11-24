@@ -8,9 +8,11 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Github } from "lucide-react";
+import { Github } from "lucide-react";
 import { trackEvent } from "@/analytics/posthog-client";
 import { TipoEntidade } from "@/lib/types/entidade.types";
+import { FilterBar } from "@/components/shared/filter-bar";
+import { SearchBar } from "@/components/shared/search-bar";
 
 function EntidadeCard({ entidade }: { entidade: Entidade }) {
   const getBadgeText = () => {
@@ -210,70 +212,25 @@ export default function EntidadesPage() {
 
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-          {/* Search Bar */}
-          <div className="relative flex-1 w-full md:max-w-md rounded-full border border-gray-300 dark:border-gray-600 bg-transparent dark:bg-transparent">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5 dark:text-zinc-300 z-10 pointer-events-none" />
-            <input
-              type="search"
-              placeholder="Pesquisar entidades..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full h-10 rounded-full pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground dark:placeholder:text-zinc-300 dark:text-zinc-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 dark:focus-visible:ring-white/30 disabled:cursor-not-allowed disabled:opacity-50 bg-transparent dark:bg-transparent backdrop-blur-0"
-              style={{ backgroundColor: "transparent" }}
-            />
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Pesquisar entidades..."
+          />
 
           {/* Filter Buttons */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={activeFilter === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter(null)}
-              className="rounded-full"
-            >
-              Todos
-            </Button>
-            <Button
-              variant={activeFilter === "laboratorios" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("laboratorios")}
-              className="rounded-full"
-            >
-              Laboratórios
-            </Button>
-            <Button
-              variant={activeFilter === "grupos" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("grupos")}
-              className="rounded-full"
-            >
-              Grupos
-            </Button>
-            <Button
-              variant={activeFilter === "ligas" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("ligas")}
-              className="rounded-full"
-            >
-              Ligas
-            </Button>
-            <Button
-              variant={activeFilter === "academicos" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("academicos")}
-              className="rounded-full"
-            >
-              Acadêmicos
-            </Button>
-            <Button
-              variant={activeFilter === "empresas" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter("empresas")}
-              className="rounded-full"
-            >
-              Empresas
-            </Button>
-          </div>
+          <FilterBar
+            filters={[
+              { id: null, label: "Todos" },
+              { id: "laboratorios", label: "Laboratórios" },
+              { id: "grupos", label: "Grupos" },
+              { id: "ligas", label: "Ligas" },
+              { id: "academicos", label: "Acadêmicos" },
+              { id: "empresas", label: "Empresas" },
+            ]}
+            active={activeFilter}
+            onChange={setActiveFilter}
+          />
         </div>
       </div>
 

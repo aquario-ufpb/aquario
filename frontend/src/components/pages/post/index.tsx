@@ -10,7 +10,7 @@ type PostComponentProps = {
   user: {
     image: string;
     name: string;
-    type: "laboratorio" | "pessoa" | "oficial" | "grupo" | "externo";
+    type: "laboratorios" | "pessoa" | "ufpb" | "grupos" | "externo";
   };
   timePublished: number;
 };

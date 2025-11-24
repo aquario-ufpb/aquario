@@ -1,13 +1,15 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { useTheme } from "next-themes";
 import { useEffect, useState, useRef } from "react";
-import { Github } from "lucide-react";
+import { Github, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { entidadesService } from "@/lib/api/entidades";
 import { Entidade } from "@/lib/types";
 
@@ -146,36 +148,41 @@ export default function Home() {
               no Centro de Informática da UFPB.
             </p>
             <div className="flex flex-col md:flex-row justify-center items-center pointer-events-auto gap-2 md:gap-2">
-              <HoverBorderGradient
-                containerClassName="rounded-full w-full md:w-auto"
-                className="px-10 py-4 text-lg font-semibold"
-              >
-                <Link href="/guias" className="block w-full text-center">
-                  Comece com os Guias
-                </Link>
-              </HoverBorderGradient>
-              <HoverBorderGradient
-                containerClassName="rounded-full w-full md:w-auto"
-                className="px-10 py-4 text-lg font-semibold"
-              >
-                <Link href="/entidades" className="block w-full text-center">
-                  Veja as Entidades
-                </Link>
-              </HoverBorderGradient>
-              <HoverBorderGradient
-                containerClassName="rounded-full w-full md:w-auto"
-                className="px-10 py-4 text-lg font-semibold"
-              >
-                <a
-                  href="https://github.com/aquario-ufpb/aquario"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full"
+              <Link href="/calendario" className="w-full md:w-auto">
+                <HoverBorderGradient
+                  containerClassName="rounded-full w-full md:w-auto"
+                  className="px-10 py-4 text-lg font-semibold"
                 >
-                  <Github className="w-6 h-6" />
-                  Contribua
-                </a>
-              </HoverBorderGradient>
+                  <div className="flex items-center justify-center gap-2 w-full">
+                    <Calendar className="w-5 h-5" />
+                    Monte seu Calendário
+                  </div>
+                </HoverBorderGradient>
+              </Link>
+              <Link href="/entidades" className="w-full md:w-auto">
+                <HoverBorderGradient
+                  containerClassName="rounded-full w-full md:w-auto"
+                  className="px-10 py-4 text-lg font-semibold"
+                >
+                  <div className="block w-full text-center">Veja as Entidades</div>
+                </HoverBorderGradient>
+              </Link>
+              <a
+                href="https://github.com/aquario-ufpb/aquario"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full md:w-auto"
+              >
+                <HoverBorderGradient
+                  containerClassName="rounded-full w-full md:w-auto"
+                  className="px-10 py-4 text-lg font-semibold"
+                >
+                  <div className="flex items-center justify-center gap-2 w-full">
+                    <Github className="w-6 h-6" />
+                    Contribua
+                  </div>
+                </HoverBorderGradient>
+              </a>
             </div>
           </div>
         </section>
@@ -184,6 +191,103 @@ export default function Home() {
         <section className="py-16">
           <div className="max-w-4xl mx-auto">
             <div className="space-y-6">
+              {/* Calendario and Guias Section - Side by Side */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Calendario Section */}
+                <Link href="/calendario" className="block">
+                  <Card
+                    className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
+                      isDark
+                        ? "bg-white/10 border-white/20 hover:bg-white/15"
+                        : "bg-white/60 border-blue-200 hover:bg-white/80"
+                    }`}
+                  >
+                    <CardContent className="p-6 flex items-center gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-3">
+                          <h3
+                            className={`font-display text-xl font-bold ${
+                              isDark ? "text-white" : "text-aquario-primary"
+                            }`}
+                          >
+                            Calendário
+                          </h3>
+                          <Badge
+                            className={
+                              isDark
+                                ? "bg-green-500/20 text-green-400 border-green-500/30"
+                                : "bg-green-500/10 text-green-600 border-green-500/30"
+                            }
+                          >
+                            Novo
+                          </Badge>
+                        </div>
+                        <p
+                          className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
+                        >
+                          Crie e visualize seu calendário personalizado com as disciplinas
+                          selecionadas.
+                        </p>
+                        <Button
+                          variant="outline"
+                          className={
+                            isDark
+                              ? "border-white text-white hover:bg-white/20"
+                              : "border-blue-900 text-blue-900 hover:bg-blue-50"
+                          }
+                        >
+                          Acessar Calendário
+                        </Button>
+                      </div>
+                      <div className="flex-shrink-0 hidden sm:block">
+                        <Image
+                          src={isDark ? "/calendario/dark.png" : "/calendario/light.png"}
+                          alt="Calendário"
+                          width={220}
+                          height={120}
+                          className="object-contain rounded-lg shadow-md"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+
+                {/* Guias Section */}
+                <Link href="/guias" className="block">
+                  <Card
+                    className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
+                      isDark
+                        ? "bg-white/10 border-white/20 hover:bg-white/15"
+                        : "bg-white/60 border-blue-200 hover:bg-white/80"
+                    }`}
+                  >
+                    <CardContent className="p-6">
+                      <h3
+                        className={`font-display text-xl font-bold mb-3 ${
+                          isDark ? "text-white" : "text-aquario-primary"
+                        }`}
+                      >
+                        Guias e Recursos
+                      </h3>
+                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
+                        Encontre orientações, dicas e recursos que vão te ajudar em sua jornada
+                        acadêmica no Centro de Informática.
+                      </p>
+                      <Button
+                        variant="outline"
+                        className={
+                          isDark
+                            ? "border-white text-white hover:bg-white/20"
+                            : "border-blue-900 text-blue-900 hover:bg-blue-50"
+                        }
+                      >
+                        Explorar Guias
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </div>
+
               {/* Sobre Section */}
               <Link href="/sobre" className="block">
                 <Card
@@ -214,41 +318,6 @@ export default function Home() {
                       }
                     >
                       Saiba Mais
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              {/* Guias Section */}
-              <Link href="/guias" className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
-                >
-                  <CardContent className="p-6">
-                    <h3
-                      className={`font-display text-xl font-bold mb-3 ${
-                        isDark ? "text-white" : "text-aquario-primary"
-                      }`}
-                    >
-                      Guias e Recursos
-                    </h3>
-                    <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                      Encontre orientações, dicas e recursos que vão te ajudar em sua jornada
-                      acadêmica no Centro de Informática.
-                    </p>
-                    <Button
-                      variant="outline"
-                      className={
-                        isDark
-                          ? "border-white text-white hover:bg-white/20"
-                          : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                      }
-                    >
-                      Explorar Guias
                     </Button>
                   </CardContent>
                 </Card>

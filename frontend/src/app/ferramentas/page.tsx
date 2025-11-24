@@ -22,7 +22,7 @@ export default function FerramentasPage() {
       title: "Calendário de Alocação",
       description:
         "Crie e visualize seu calendário personalizado com as disciplinas selecionadas. Busque por código, nome, professor ou localização e veja sua grade horária de forma visual e organizada.",
-      href: "/ferramentas/calendario",
+      href: "/calendario",
       icon: Calendar,
     },
     {

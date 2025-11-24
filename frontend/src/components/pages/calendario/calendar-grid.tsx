@@ -6,6 +6,7 @@ import { DAYS, DAY_NUMBERS, CALENDAR_TIME_SLOTS, DAY_NAMES } from "@/lib/calenda
 import { exportCalendarAsImage } from "@/lib/calendario/export";
 import { generateICSFile, downloadICSFile } from "@/lib/calendario/ics";
 import { generateGoogleCalendarLinks } from "@/lib/calendario/google-calendar";
+import { trackEvent } from "@/analytics/posthog-client";
 import CalendarLegend from "./calendar-legend";
 import CalendarCell from "./calendar-cell";
 import ClassDetailsDialog from "./class-details-dialog";
@@ -73,6 +74,7 @@ export default function CalendarGrid({
   };
 
   const handleExport = async () => {
+    trackEvent("calendar_export_image_click");
     setIsExporting(true);
     try {
       await exportCalendarAsImage({
@@ -96,6 +98,7 @@ export default function CalendarGrid({
       return;
     }
 
+    trackEvent("calendar_export_calendar_click");
     setIsGeneratingICS(true);
     try {
       const blob = await generateICSFile(selectedClasses);
@@ -114,6 +117,7 @@ export default function CalendarGrid({
       return;
     }
 
+    trackEvent("calendar_add_google_calendar_click");
     const events = generateGoogleCalendarLinks(selectedClasses);
     setGoogleCalendarEvents(events);
     setGoogleCalendarDialogOpen(true);
