@@ -29,6 +29,7 @@ export type Vaga = {
   areas: string[];
   publicador: Publicador;
   criadoEm: string;
+  inscricaoAte?: string;
   entidade: EntidadeVaga;
 };
 
@@ -38,6 +39,11 @@ type VacancyCardProps = {
 
 export default function VacancyCard({ vaga }: VacancyCardProps) {
   const { titulo, tipoVaga, publicador, entidade } = vaga;
+  const formatadorData = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
   return (
     <Card className="flex flex-row items-center p-4 w-full gap-4 border border-gray-200 rounded-lg shadow-sm cursor-pointer transition-all hover:border-gray-400 group dark:border-gray-400 dark:hover:border-gray-200">
@@ -54,6 +60,11 @@ export default function VacancyCard({ vaga }: VacancyCardProps) {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Publicado por: {publicador.nome}
             </p>
+            {vaga.inscricaoAte && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                inscrições até: {formatadorData.format(new Date(vaga.inscricaoAte))}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col items-center space-y-1">

@@ -59,6 +59,12 @@ export default function VagasPage() {
     const entidade = vaga.entidade.toLowerCase();
     const tipo = vaga.tipoVaga.toLowerCase();
     const areas = vaga.areas?.map(a => a.toLowerCase()) ?? [];
+    const inscricaoAte = vaga.inscricaoAte ? new Date(vaga.inscricaoAte) : null;
+
+    const now = new Date();
+    if (inscricaoAte && inscricaoAte < now) {
+      return false; // Exclude expired job postings
+    }
 
     // Text filters
     const matchesSearch =
@@ -123,9 +129,21 @@ export default function VagasPage() {
           descricao: "",
           tipoVaga: TipoVaga.VOLUNTARIO,
           criadoEm: new Date().toISOString(),
+          inscricaoAte: new Date("2025-12-31").toISOString(),
           entidade: "ufpb",
           publicador: { nome: "UFPB", urlFotoPerfil: "/ian.jpeg" },
           areas: ["Otimização e Algoritmos", "Pesquisa"],
+        },
+        {
+          id: "5",
+          titulo: "Vaga Expirada",
+          descricao: "Esta é uma vaga de exemplo que já expirou.",
+          tipoVaga: TipoVaga.ESTAGIO,
+          criadoEm: new Date("2024-01-01").toISOString(),
+          inscricaoAte: new Date("2024-01-31").toISOString(),
+          entidade: "externo",
+          publicador: { nome: "Empresa Antiga", urlFotoPerfil: "/ian.jpeg" },
+          areas: ["BackEnd"],
         },
       ];
       setVagas(vagasPadrao);
