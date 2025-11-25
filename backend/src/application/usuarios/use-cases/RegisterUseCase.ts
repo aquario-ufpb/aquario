@@ -18,7 +18,9 @@ interface RegisterUseCaseRequest {
   periodo?: number;
 }
 
-type RegisterUseCaseResponse = void;
+interface RegisterUseCaseResponse {
+  usuario: Usuario;
+}
 
 export class RegisterUseCase {
   private readonly log = logger.child('use-case:register');
@@ -96,5 +98,7 @@ export class RegisterUseCase {
     await this.usuariosRepository.create(usuario);
 
     this.log.info('Usuário registrado com sucesso', { usuarioId: usuario.id, email: normalizedEmail });
+    
+    return { usuario };
   }
 }

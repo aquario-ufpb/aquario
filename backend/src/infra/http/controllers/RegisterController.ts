@@ -46,7 +46,7 @@ export class RegisterController {
         cursosRepository
       );
 
-      await registerUseCase.execute({
+      const { usuario } = await registerUseCase.execute({
         nome,
         email,
         senha,
@@ -60,7 +60,49 @@ export class RegisterController {
 
       registerLogger.info('Usuário registrado com sucesso', { email });
 
-      return response.status(201).send();
+      // Generate tokens for auto-login
+      const token = jwt.sign(
+        {
+          papel: usuario.props.papel,
+          permissoes: usuario.props.permissoes,
+          papelPlataforma: usuario.props.papelPlataforma,
+        },
+        env.JWT_SECRET,
+        {
+          subject: usuario.id,
+          expiresIn: '1d',
+        }
+      );
+
+      const refreshToken = jwt.sign(
+        {
+          papel: usuario.props.papel,
+        },
+        env.JWT_SECRET,
+        {
+          subject: usuario.id,
+          expiresIn: '7d',
+        }
+      );
+
+      // Return user without password
+      const userResponse = {
+        id: usuario.id,
+        nome: usuario.props.nome,
+        email: usuario.props.email,
+        papel: usuario.props.papel,
+        papelPlataforma: usuario.props.papelPlataforma,
+        urlFotoPerfil: usuario.props.urlFotoPerfil,
+        periodo: usuario.props.periodo,
+        bio: usuario.props.bio,
+      };
+
+      return response.status(201).json({
+        user: userResponse,
+        accessToken: token,
+        refreshToken,
+      });
+
     } catch (error) {
       if (error instanceof z.ZodError) {
         registerLogger.warn('Falha de validação no registro de usuário', {

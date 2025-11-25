@@ -11,8 +11,9 @@ export class ListarCentrosController {
       const centros = await listarCentrosUseCase.execute();
 
       return response.status(200).json(centros);
-    } catch {
-      return response.status(500).json({ message: 'Internal server error.' });
+    } catch (error) {
+      console.error('Erro ao listar centros:', error);
+      return response.status(500).json({ message: 'Internal server error.', error: String(error) });
     }
   }
 }

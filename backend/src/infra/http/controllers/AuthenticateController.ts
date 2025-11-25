@@ -40,7 +40,35 @@ export class AuthenticateController {
         }
       );
 
-      return response.status(200).json({ token });
+      const refreshToken = jwt.sign(
+        {
+          papel: usuario.props.papel,
+        },
+        env.JWT_SECRET,
+        {
+          subject: usuario.id,
+          expiresIn: '7d',
+        }
+      );
+
+      // Return user without password
+      const userResponse = {
+        id: usuario.id,
+        nome: usuario.props.nome,
+        email: usuario.props.email,
+        papel: usuario.props.papel,
+        papelPlataforma: usuario.props.papelPlataforma,
+        urlFotoPerfil: usuario.props.urlFotoPerfil,
+        periodo: usuario.props.periodo,
+        bio: usuario.props.bio,
+      };
+
+      return response.status(200).json({ 
+        user: userResponse, 
+        accessToken: token,
+        refreshToken 
+      });
+
     } catch (error) {
       if (error instanceof z.ZodError) {
         authLogger.warn('Falha de validação ao autenticar usuário', {
