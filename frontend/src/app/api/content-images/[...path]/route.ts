@@ -131,6 +131,9 @@ export async function GET(_request: unknown, { params }: { params: { path: strin
         // Handle assets prefixed requests, but default to centro-de-informatica for guias
         contentDir = join(process.cwd(), "content", "aquario-guias", "centro-de-informatica");
       }
+    } else if (slugPath[0] === "mapas") {
+      contentDir = join(process.cwd(), "content", "aquario-mapas");
+      searchPath = slugPath.slice(1);
     } else {
       // Default to guias - now under centro-de-informatica folder
       contentDir = join(process.cwd(), "content", "aquario-guias", "centro-de-informatica");

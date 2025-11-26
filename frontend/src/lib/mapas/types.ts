@@ -28,6 +28,8 @@ export type {
   Library,
   SharedSpace,
   OtherRoom,
+  Professor,
+  ProfessorSlug,
 } from "../../../content/aquario-mapas/types";
 
 // Re-export layout types
