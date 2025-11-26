@@ -3,18 +3,18 @@ import type { MapsData, Building } from "../../mapas/types";
 import { loadFloorData } from "../../mapas/data-loader";
 
 // Import layouts from aquario-mapas
-import { floorSubsolo as floorSubsoloLayout } from "../../../../content/aquario-mapas/centro-de-informatica/mapas/building-1/floor-subsolo";
-import { floorTerreo as floorTerreoLayout } from "../../../../content/aquario-mapas/centro-de-informatica/mapas/building-1/floor-terreo";
-import { floor1 as floor1Layout } from "../../../../content/aquario-mapas/centro-de-informatica/mapas/building-1/floor-1";
-import { floor2 as floor2Layout } from "../../../../content/aquario-mapas/centro-de-informatica/mapas/building-1/floor-2";
-import { floor3 as floor3Layout } from "../../../../content/aquario-mapas/centro-de-informatica/mapas/building-1/floor-3";
+import { floorSubsolo as floorSubsoloLayout } from "../../../../content/aquario-mapas/centro-de-informatica/mapas/ci/floor-subsolo";
+import { floorTerreo as floorTerreoLayout } from "../../../../content/aquario-mapas/centro-de-informatica/mapas/ci/floor-terreo";
+import { floor1 as floor1Layout } from "../../../../content/aquario-mapas/centro-de-informatica/mapas/ci/floor-1";
+import { floor2 as floor2Layout } from "../../../../content/aquario-mapas/centro-de-informatica/mapas/ci/floor-2";
+import { floor3 as floor3Layout } from "../../../../content/aquario-mapas/centro-de-informatica/mapas/ci/floor-3";
 
 // Import room data from aquario-mapas
-import { rooms as roomsSubsolo } from "../../../../content/aquario-mapas/centro-de-informatica/salas/building-1/floor-subsolo";
-import { rooms as roomsTerreo } from "../../../../content/aquario-mapas/centro-de-informatica/salas/building-1/floor-terreo";
-import { rooms as rooms1 } from "../../../../content/aquario-mapas/centro-de-informatica/salas/building-1/floor-1";
-import { rooms as rooms2 } from "../../../../content/aquario-mapas/centro-de-informatica/salas/building-1/floor-2";
-import { rooms as rooms3 } from "../../../../content/aquario-mapas/centro-de-informatica/salas/building-1/floor-3";
+import { rooms as roomsSubsolo } from "../../../../content/aquario-mapas/centro-de-informatica/salas/ci/floor-subsolo";
+import { rooms as roomsTerreo } from "../../../../content/aquario-mapas/centro-de-informatica/salas/ci/floor-terreo";
+import { rooms as rooms1 } from "../../../../content/aquario-mapas/centro-de-informatica/salas/ci/floor-1";
+import { rooms as rooms2 } from "../../../../content/aquario-mapas/centro-de-informatica/salas/ci/floor-2";
+import { rooms as rooms3 } from "../../../../content/aquario-mapas/centro-de-informatica/salas/ci/floor-3";
 
 export class LocalFileMapasProvider implements MapasDataProvider {
   getAll(): Promise<MapsData> {
