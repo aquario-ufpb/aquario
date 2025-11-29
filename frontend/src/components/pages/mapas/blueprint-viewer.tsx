@@ -31,7 +31,7 @@ export default function BlueprintViewer({
   const { scaledWidth, scaledHeight } = useBlueprintScale(blueprint, { compact });
 
   return (
-    <div className="w-full overflow-auto">
+    <div className="w-full max-w-full overflow-hidden">
       <div className="flex justify-center items-center" style={{ minHeight: "100%" }}>
         <svg
           width={scaledWidth}
@@ -41,6 +41,8 @@ export default function BlueprintViewer({
           style={{
             backgroundColor: isDark ? "#1a1a1a" : "#f5f5f5",
             borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "#e2e8f0",
+            maxWidth: "100%",
+            height: "auto",
           }}
           onClick={event => {
             if (event.target === event.currentTarget) {
