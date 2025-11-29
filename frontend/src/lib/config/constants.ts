@@ -12,3 +12,8 @@ export const ENDPOINTS = {
   // ENTIDADES: "/entidades",
   // ENTIDADE_BY_SLUG: (slug: string) => `/entidades/slug/${slug}`,
 } as const;
+
+// External API URLs
+export const EXTERNAL_API_URLS = {
+  PAAS: "https://sa.ci.ufpb.br/api/paas/center",
+} as const;
