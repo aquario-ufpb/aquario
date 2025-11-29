@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Github, CheckCircle2, AlertCircle, Mail, Users, Search, Zap } from "lucide-react";
+import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import WaterRippleEffect from "@/components/ui/water-ripple-effect";
 
 export default function SobrePage() {
@@ -318,17 +319,11 @@ export default function SobrePage() {
                 </div>
 
                 <div className="flex justify-center gap-4 flex-wrap pt-4">
-                  <Button asChild variant="outline" size="lg" className="rounded-full">
-                    <a
-                      href="https://github.com/aquario-ufpb/aquario"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
-                    >
-                      <Github className="w-5 h-5" />
-                      Contribuir no GitHub
-                    </a>
-                  </Button>
+                  <ContributeOnGitHub
+                    url="https://github.com/aquario-ufpb/aquario"
+                    variant="outline"
+                    size="lg"
+                  />
                   <Button asChild variant="outline" size="lg" className="rounded-full">
                     <a href="mailto:ralf.ferreira@academico.ufpb.br">Entrar em Contato</a>
                   </Button>

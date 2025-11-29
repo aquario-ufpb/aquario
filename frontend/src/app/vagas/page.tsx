@@ -7,7 +7,8 @@ import VacancyCard, { TipoVaga, Vaga } from "@/components/pages/vagas/vacancy-ca
 import { SearchBar1 } from "@/components/ui/searchbar1";
 // import { trackEvent } from "@/analytics/posthog-client";
 import { Button } from "@/components/ui/button";
-import { Github, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { useAuth } from "@/contexts/auth-context";
 
 function VagasCard({ vaga }: { vaga: Vaga }) {
@@ -139,22 +140,12 @@ export default function VagasPage() {
           <h1 className="text-4xl md:text-5xl font-display font-bold max-w-3xl">
             Explore vagas de emprego, estágio e projetos no CI e fora dele
           </h1>
-          <Button
-            asChild
-            variant="default"
-            size="sm"
-            className="hidden md:flex rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal flex-shrink-0"
-          >
-            <a
-              href="https://github.com/aquario-ufpb/aquario-entidades"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2"
-            >
-              <Github className="w-4 h-4" />
-              Contribuir no GitHub
-            </a>
-          </Button>
+          <div className="hidden md:flex flex-shrink-0">
+            <ContributeOnGitHub
+              url="https://github.com/aquario-ufpb/aquario-entidades"
+              className="rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
+            />
+          </div>
 
           {canPostJob && (
             <Button

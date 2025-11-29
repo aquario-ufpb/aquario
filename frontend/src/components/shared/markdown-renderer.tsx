@@ -4,7 +4,8 @@ import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import React, { useEffect, useState } from "react";
-import { ChevronRight, Github } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,7 +14,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
 
 type BreadcrumbItemData = {
   label: string;
@@ -146,22 +146,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, breadcrumb
               })}
             </BreadcrumbList>
           </Breadcrumb>
-          <Button
-            asChild
-            variant="default"
-            size="sm"
-            className="rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
-          >
-            <a
-              href="https://github.com/aquario-ufpb/aquario-guias"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2"
-            >
-              <Github className="w-4 h-4" />
-              Contribuir no GitHub
-            </a>
-          </Button>
+          <ContributeOnGitHub url="https://github.com/aquario-ufpb/aquario-guias" />
         </div>
       )}
       <div

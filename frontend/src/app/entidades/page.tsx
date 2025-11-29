@@ -7,8 +7,7 @@ import { Entidade } from "@/lib/types";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Github } from "lucide-react";
+import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { trackEvent } from "@/analytics/posthog-client";
 import { TipoEntidade } from "@/lib/types/entidade.types";
 import { FilterBar } from "@/components/shared/filter-bar";
@@ -192,22 +191,12 @@ export default function EntidadesPage() {
           <h1 className="text-4xl md:text-5xl font-display font-bold max-w-3xl">
             Procure Laboratórios, ligas acadêmicas, grupos de pesquisa e outros
           </h1>
-          <Button
-            asChild
-            variant="default"
-            size="sm"
-            className="hidden md:flex rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal flex-shrink-0"
-          >
-            <a
-              href="https://github.com/aquario-ufpb/aquario-entidades"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2"
-            >
-              <Github className="w-4 h-4" />
-              Contribuir no GitHub
-            </a>
-          </Button>
+          <div className="hidden md:flex flex-shrink-0">
+            <ContributeOnGitHub
+              url="https://github.com/aquario-ufpb/aquario-entidades"
+              className="rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
+            />
+          </div>
         </div>
 
         {/* Search and Filters */}

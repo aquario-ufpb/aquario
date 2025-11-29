@@ -9,6 +9,7 @@ import RoomDetailsDialog from "@/components/pages/mapas/room-details-dialog";
 import { MapFloorSelector } from "@/components/pages/mapas/map-floor-selector";
 import { useMapas } from "@/hooks/use-mapas";
 import type { Room } from "@/lib/mapas/types";
+import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 
 function MapsPageInner() {
   const { theme, resolvedTheme } = useTheme();
@@ -118,15 +119,25 @@ function MapsPageInner() {
     <div className="w-full px-4 md:px-8 lg:px-12 mt-24 pb-20">
       {/* Header */}
       <div className="mb-12">
-        <h1
-          className="text-4xl md:text-5xl font-display font-bold mb-4"
-          style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-        >
-          Mapas dos Prédios
-        </h1>
-        <p className="text-lg md:text-xl" style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
-          Explore os mapas dos prédios do Centro de Informática
-        </p>
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h1
+              className="text-4xl md:text-5xl font-display font-bold mb-4"
+              style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+            >
+              Mapas dos Prédios
+            </h1>
+            <p className="text-lg md:text-xl" style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
+              Explore os mapas dos prédios do Centro de Informática
+            </p>
+          </div>
+          <div className="hidden md:flex flex-shrink-0">
+            <ContributeOnGitHub
+              url="https://github.com/aquario-ufpb/aquario-mapas"
+              className="rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Buildings List */}
