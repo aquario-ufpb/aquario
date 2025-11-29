@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, Users, BookOpen, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, MapPin, Users, BookOpen, AlertTriangle, Calendar } from "lucide-react";
 import { formatHorario } from "@/lib/calendario/utils";
 import type { ClassWithRoom } from "./types";
 import { useMemo, useState } from "react";
@@ -8,6 +9,7 @@ import { useMapas } from "@/hooks/use-mapas";
 import type { Building, Floor, Room as MapRoom } from "@/lib/mapas/types";
 import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
 import { MapFloorSelector } from "@/components/pages/mapas/map-floor-selector";
+import { generateGoogleCalendarLinks } from "@/lib/calendario/google-calendar";
 
 type ClassDetailsDialogProps = {
   classes: ClassWithRoom[];
@@ -73,6 +75,14 @@ export default function ClassDetailsDialog({
     const targetId = selectedFloorId ?? mapContext.floor.id;
     return mapContext.building.floors.find(f => f.id === targetId) ?? mapContext.floor;
   }, [mapContext, selectedFloorId]);
+
+  const handleOpenGoogleCalendar = (classItem: ClassWithRoom) => {
+    const events = generateGoogleCalendarLinks([classItem]);
+    // Open all events in new tabs
+    events.forEach(event => {
+      window.open(event.url, "_blank", "noopener,noreferrer");
+    });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -249,6 +259,22 @@ export default function ClassDetailsDialog({
                         {classItem.departamento}
                       </p>
                     </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <Button
+                      onClick={() => handleOpenGoogleCalendar(classItem)}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2 w-full"
+                      style={{
+                        borderColor: isDark ? "rgba(255,255,255,0.2)" : "#e2e8f0",
+                        color: isDark ? "#C8E6FA" : "#0e3a6c",
+                      }}
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Adicionar ao Google Calendar
+                    </Button>
                   </div>
 
                   {classItem.pcd === 1 && (
