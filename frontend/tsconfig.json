@@ -28,5 +28,5 @@
     ".next/types/**/*.ts",
     "src/Tests & Examples - Dev/Week1 - CSS, Tailwind and Shadcn/Exemplo/ComponentWithCss"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "content"]
 }

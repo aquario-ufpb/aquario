@@ -4,7 +4,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "lucide-react";
+import { Calendar, Map } from "lucide-react";
 
 export default function FerramentasPage() {
   const { theme, resolvedTheme } = useTheme();
@@ -24,6 +24,14 @@ export default function FerramentasPage() {
         "Crie e visualize seu calendário personalizado com as disciplinas selecionadas. Busque por código, nome, professor ou localização e veja sua grade horária de forma visual e organizada.",
       href: "/calendario",
       icon: Calendar,
+    },
+    {
+      id: "maps",
+      title: "Mapas dos Prédios",
+      description:
+        "Explore os mapas interativos dos prédios do Centro de Informática. Visualize plantas baixas, navegue entre andares e descubra informações sobre cada sala e laboratório.",
+      href: "/mapas",
+      icon: Map,
     },
   ];
 

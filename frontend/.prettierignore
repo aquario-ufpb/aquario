@@ -102,3 +102,8 @@ pnpm-lock.yaml
 # Test and example files
 src/Tests & Examples - Dev/
 **/Tests & Examples - Dev/
+
+# Git submodules (separate repositories with their own formatting)
+content/aquario-guias/
+content/aquario-entidades/
+content/aquario-mapas/
