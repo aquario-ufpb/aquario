@@ -30,7 +30,7 @@ export default function FerramentasPage() {
       title: "Mapas dos Prédios",
       description:
         "Explore os mapas interativos dos prédios do Centro de Informática. Visualize plantas baixas, navegue entre andares e descubra informações sobre cada sala e laboratório.",
-      href: "/ferramentas/maps",
+      href: "/mapas",
       icon: Map,
     },
   ];

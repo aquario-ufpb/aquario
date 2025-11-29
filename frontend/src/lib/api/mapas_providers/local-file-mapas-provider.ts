@@ -46,6 +46,7 @@ export class LocalFileMapasProvider implements MapasDataProvider {
     const laserFloor2 = loadFloorData(laserFloor2Layout, laserRooms2);
 
     // Create laser building with merged floors
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const laserBuilding: Building = {
       id: "laser",
       name: "LASER",
@@ -53,6 +54,6 @@ export class LocalFileMapasProvider implements MapasDataProvider {
       floors: [laserFloor1, laserFloor2],
     };
 
-    return Promise.resolve([building1, laserBuilding]);
+    return Promise.resolve([building1]);
   }
 }

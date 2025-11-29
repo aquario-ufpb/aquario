@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Users, Info, Ruler, User } from "lucide-react";
+import { MapPin, Users, Info, User } from "lucide-react";
 import Link from "next/link";
 import type { Room } from "@/lib/mapas/types";
 import { isLabResearch, isProfessorOffice } from "@/lib/mapas/utils";
@@ -19,12 +19,8 @@ type RoomDetailsDialogProps = {
   isDark: boolean;
 };
 
-export default function RoomDetailsDialog({
-  room,
-  open,
-  onOpenChange,
-  isDark,
-}: RoomDetailsDialogProps) {
+export default function RoomDetailsDialog(props: RoomDetailsDialogProps) {
+  const { room, open, onOpenChange, isDark } = props;
   const [labEntidades, setLabEntidades] = useState<Entidade[]>([]);
   const [isLoadingLabs, setIsLoadingLabs] = useState(false);
 
@@ -79,6 +75,13 @@ export default function RoomDetailsDialog({
   };
 
   const capacity = hasCapacity(room) ? room.capacity : undefined;
+  const primaryLabEntidade =
+    isLabResearch(room) && labEntidades.length > 0 ? labEntidades[0] : null;
+  const isLabRoom = isLabResearch(room) && room.labs && room.labs.length > 0;
+  const isProfessorRoom = isProfessorOffice(room) && room.professors && room.professors.length > 0;
+  const hasLoadedLabs = Boolean(primaryLabEntidade);
+  const titleText = primaryLabEntidade ? primaryLabEntidade.name : room.location;
+  const subtitleText = primaryLabEntidade ? room.location : undefined;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -93,295 +96,441 @@ export default function RoomDetailsDialog({
             style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
           >
             <MapPin className="w-5 h-5" />
-            {room.location}
+            <span className="flex flex-col">
+              <span>{titleText}</span>
+              {subtitleText && (
+                <span
+                  className="text-xs opacity-80"
+                  style={{ color: isDark ? "#E5F6FF/80" : "#0e3a6c/80" }}
+                >
+                  {subtitleText}
+                </span>
+              )}
+            </span>
           </DialogTitle>
         </DialogHeader>
 
-        <div
-          className={`p-4 rounded-lg border mt-4 ${
-            isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200"
-          }`}
+        <RoomDetailsContainer
+          isDark={isDark}
+          title={hasLoadedLabs ? "Informações do laboratório" : "Informações da sala"}
         >
-          <h3
-            className="text-lg font-semibold mb-4"
-            style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-          >
-            Informações da Sala
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-2">
-                <MapPin
-                  className="w-4 h-4 mt-1 flex-shrink-0"
-                  style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+          {hasLoadedLabs && primaryLabEntidade ? (
+            // Lab loaded: focus the modal entirely on the entidade card
+            <EntidadeMainSection entidade={primaryLabEntidade} isDark={isDark} />
+          ) : (
+            <>
+              {/* Professors and labs are primary content. Order them by room type. */}
+              {isProfessorRoom && (
+                <RoomProfessorsSection
+                  room={room}
+                  isDark={isDark}
+                  professorProfiles={professorProfiles}
                 />
-                <div>
-                  <p
-                    className="text-xs mb-1"
-                    style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
-                  >
-                    Tipo
-                  </p>
-                  <Badge
-                    variant="outline"
-                    className={
-                      isDark
-                        ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                        : "bg-blue-100 text-blue-800 border-blue-200"
-                    }
-                  >
-                    {room.type}
-                  </Badge>
-                </div>
-              </div>
-
-              {capacity !== undefined && (
-                <div className="flex items-start gap-2">
-                  <Users
-                    className="w-4 h-4 mt-1 flex-shrink-0"
-                    style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
-                  />
-                  <div>
-                    <p
-                      className="text-xs mb-1"
-                      style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
-                    >
-                      Capacidade
-                    </p>
-                    <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{capacity} pessoas</p>
-                  </div>
-                </div>
               )}
 
-              <div className="flex items-start gap-2">
-                <Ruler
-                  className="w-4 h-4 mt-1 flex-shrink-0"
-                  style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+              {isLabRoom && (
+                <RoomLabsSection
+                  room={room}
+                  isDark={isDark}
+                  isLoadingLabs={isLoadingLabs}
+                  labEntidades={labEntidades}
                 />
-                <div>
-                  <p
-                    className="text-xs mb-1"
-                    style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
-                  >
-                    Forma
-                  </p>
-                  <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
-                    {room.shapes.length} segmento{room.shapes.length !== 1 ? "s" : ""}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {isLabResearch(room) && room.labs && room.labs.length > 0 && (
-                <div>
-                  <p
-                    className="text-xs mb-3"
-                    style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
-                  >
-                    Laboratórios
-                  </p>
-                  <div className="space-y-2">
-                    {isLoadingLabs ? (
-                      <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
-                        Carregando laboratórios...
-                      </p>
-                    ) : labEntidades.length > 0 ? (
-                      labEntidades.map(entidade => (
-                        <Link
-                          key={entidade.slug}
-                          href={`/entidade/${entidade.slug}`}
-                          className="block"
-                        >
-                          <Card
-                            className={`hover:bg-accent/20 transition-all duration-200 cursor-pointer border-border/90 ${
-                              isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"
-                            }`}
-                          >
-                            <CardContent className="p-3">
-                              <div className="flex gap-3">
-                                {/* Image on the left */}
-                                <div className="flex-shrink-0 flex items-center">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={entidade.imagePath || ""}
-                                    alt={entidade.name}
-                                    className="w-12 h-12 object-contain rounded-lg"
-                                    onError={e => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.style.display = "none";
-                                    }}
-                                  />
-                                </div>
-
-                                {/* Content on the right */}
-                                <div className="flex-1 min-w-0">
-                                  {/* Name with badge */}
-                                  <div className="flex items-start justify-between gap-2 mb-1">
-                                    <h4
-                                      className="text-sm font-semibold truncate flex-1"
-                                      style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-                                    >
-                                      {entidade.name}
-                                    </h4>
-                                    <Badge
-                                      variant="outline"
-                                      className={`text-xs px-2 py-0.5 flex-shrink-0 font-normal ${
-                                        isDark
-                                          ? "text-muted-foreground border-muted-foreground/30"
-                                          : "text-muted-foreground border-muted-foreground/30"
-                                      }`}
-                                    >
-                                      LAB
-                                    </Badge>
-                                  </div>
-
-                                  {/* Description */}
-                                  {entidade.description && (
-                                    <p
-                                      className="text-xs line-clamp-2 leading-relaxed"
-                                      style={{
-                                        color: isDark ? "#E5F6FF/80" : "#0e3a6c/80",
-                                      }}
-                                    >
-                                      {entidade.description}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </Link>
-                      ))
-                    ) : (
-                      <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
-                        Nenhum laboratório encontrado.
-                      </p>
-                    )}
-                  </div>
-                </div>
               )}
 
-              {isProfessorOffice(room) && room.professors && room.professors.length > 0 && (
-                <div>
-                  <div className="flex items-start gap-2">
-                    <Users
-                      className="w-4 h-4 mt-1 flex-shrink-0"
-                      style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
-                    />
-                    <p
-                      className="text-xs mb-1"
-                      style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
-                    >
-                      Professores
-                    </p>
-                  </div>
-                  <div className="mt-2 space-y-2">
-                    {professorProfiles.length > 0 ? (
-                      professorProfiles.map(professor => (
-                        <Card
-                          key={professor.id}
-                          className={`border-border/90 ${
-                            isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"
-                          }`}
-                        >
-                          <CardContent className="p-3">
-                            <div className="flex gap-3">
-                              <div className="flex-shrink-0">
-                                {professor.image ? (
-                                  <ProfessorImageWithFallback
-                                    src={professor.image}
-                                    alt={professor.name}
-                                    isDark={isDark}
-                                  />
-                                ) : (
-                                  <div
-                                    className={`w-12 h-12 rounded-full flex items-center justify-center border ${
-                                      isDark
-                                        ? "bg-white/5 border-white/10"
-                                        : "bg-slate-100 border-slate-200"
-                                    }`}
-                                  >
-                                    <User
-                                      className="w-6 h-6"
-                                      style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-                                      strokeWidth={1.8}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex flex-1 flex-col gap-2">
-                                <div className="flex items-start justify-between gap-2">
-                                  <h4
-                                    className="text-sm font-semibold"
-                                    style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-                                  >
-                                    {professor.name}
-                                  </h4>
-                                  {professor.sigaa && (
-                                    <Link
-                                      href={professor.sigaa}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className={`text-xs font-medium underline ${
-                                        isDark ? "text-blue-200" : "text-blue-700"
-                                      }`}
-                                    >
-                                      SIGAA
-                                    </Link>
-                                  )}
-                                </div>
-                                {professor.department && (
-                                  <p
-                                    className="text-xs"
-                                    style={{ color: isDark ? "#E5F6FF/80" : "#0e3a6c/80" }}
-                                  >
-                                    {professor.department}
-                                  </p>
-                                )}
-                                {professor.room && (
-                                  <p className="text-xs text-muted-foreground">
-                                    Sala {professor.room}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
-                        Informações dos professores indisponíveis.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {room.description && (
-                <div className="flex items-start gap-2">
-                  <Info
-                    className="w-4 h-4 mt-1 flex-shrink-0"
-                    style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+              {/* For non-professor / non-lab rooms, still show any labs/profs if present, but after type */}
+              {!isProfessorRoom && !isLabRoom && (
+                <>
+                  <RoomSummaryColumn room={room} capacity={capacity} isDark={isDark} />
+                  <RoomProfessorsSection
+                    room={room}
+                    isDark={isDark}
+                    professorProfiles={professorProfiles}
                   />
-                  <div>
-                    <p
-                      className="text-xs mb-1"
-                      style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
-                    >
-                      Descrição
-                    </p>
-                    <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{room.description}</p>
-                  </div>
-                </div>
+                  <RoomLabsSection
+                    room={room}
+                    isDark={isDark}
+                    isLoadingLabs={isLoadingLabs}
+                    labEntidades={labEntidades}
+                  />
+                </>
               )}
-            </div>
-          </div>
-        </div>
+
+              {/* For professor / lab rooms, show the generic summary after the primary content */}
+              {(isProfessorRoom || isLabRoom) && (
+                <RoomSummaryColumn room={room} capacity={capacity} isDark={isDark} />
+              )}
+
+              <RoomDescriptionSection room={room} isDark={isDark} />
+            </>
+          )}
+        </RoomDetailsContainer>
       </DialogContent>
     </Dialog>
   );
+}
+
+type RoomDetailsContainerProps = {
+  isDark: boolean;
+  title: string;
+  children: React.ReactNode;
+};
+
+function RoomDetailsContainer({ isDark, title, children }: RoomDetailsContainerProps) {
+  return (
+    <div className={`mt-4 space-y-4 ${isDark ? "" : ""}`}>
+      <h3 className="text-lg font-semibold" style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
+
+type RoomSummaryColumnProps = {
+  room: Room;
+  capacity: number | undefined;
+  isDark: boolean;
+};
+
+function RoomSummaryColumn({ room, capacity, isDark }: RoomSummaryColumnProps) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start gap-2">
+        <MapPin
+          className="w-4 h-4 mt-1 flex-shrink-0"
+          style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+        />
+        <div>
+          <p className="text-xs mb-1" style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}>
+            Tipo de espaço
+          </p>
+          <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{getRoomTypeLabel(room)}</p>
+        </div>
+      </div>
+
+      {capacity !== undefined && (
+        <div className="flex items-start gap-2">
+          <Users
+            className="w-4 h-4 mt-1 flex-shrink-0"
+            style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+          />
+          <div>
+            <p className="text-xs mb-1" style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}>
+              Capacidade
+            </p>
+            <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{capacity} pessoas</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type RoomLabsSectionProps = {
+  room: Room;
+  isDark: boolean;
+  isLoadingLabs: boolean;
+  labEntidades: Entidade[];
+};
+
+function RoomLabsSection({ room, isDark, isLoadingLabs, labEntidades }: RoomLabsSectionProps) {
+  if (!isLabResearch(room) || !room.labs || room.labs.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <p className="text-xs mb-3" style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}>
+        Laboratórios
+      </p>
+      <div className="space-y-2">
+        {isLoadingLabs ? (
+          <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>Carregando laboratórios...</p>
+        ) : labEntidades.length > 0 ? (
+          labEntidades.map(entidade => (
+            <Link key={entidade.slug} href={`/entidade/${entidade.slug}`} className="block">
+              <Card
+                className={`hover:bg-accent/20 transition-all duration-200 cursor-pointer border-border/90 ${
+                  isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"
+                }`}
+              >
+                <CardContent className="p-3">
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 flex items-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={entidade.imagePath || ""}
+                        alt={entidade.name}
+                        className="w-12 h-12 object-contain rounded-lg"
+                        onError={e => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h4
+                          className="text-sm font-semibold truncate flex-1"
+                          style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+                        >
+                          {entidade.name}
+                        </h4>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs px-2 py-0.5 flex-shrink-0 font-normal ${
+                            isDark
+                              ? "text-muted-foreground border-muted-foreground/30"
+                              : "text-muted-foreground border-muted-foreground/30"
+                          }`}
+                        >
+                          LAB
+                        </Badge>
+                      </div>
+                      {entidade.description && (
+                        <p
+                          className="text-xs line-clamp-2 leading-relaxed"
+                          style={{
+                            color: isDark ? "#E5F6FF/80" : "#0e3a6c/80",
+                          }}
+                        >
+                          {entidade.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+type EntidadeMainSectionProps = {
+  entidade: Entidade;
+  isDark: boolean;
+};
+
+function EntidadeMainSection({ entidade, isDark }: EntidadeMainSectionProps) {
+  return (
+    <Link href={`/entidade/${entidade.slug}`} className="block">
+      <Card
+        className={`cursor-pointer transition-all duration-200 hover:bg-accent/20 border-border/90 ${
+          isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"
+        }`}
+      >
+        <CardContent className="p-4 md:p-6">
+          <div className="flex gap-4">
+            <div className="flex-shrink-0 flex items-start">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={entidade.imagePath || ""}
+                alt={entidade.name}
+                className="w-16 h-16 md:w-20 md:h-20 object-contain rounded-lg"
+                onError={e => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                }}
+              />
+            </div>
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <h4
+                  className="text-base md:text-lg font-semibold truncate flex-1"
+                  style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+                >
+                  {entidade.name}
+                </h4>
+                <Badge
+                  variant="outline"
+                  className={`text-xs px-2 py-0.5 flex-shrink-0 font-normal ${
+                    isDark
+                      ? "text-muted-foreground border-muted-foreground/30"
+                      : "text-muted-foreground border-muted-foreground/30"
+                  }`}
+                >
+                  LAB
+                </Badge>
+              </div>
+              {entidade.description && (
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: isDark ? "#E5F6FF/80" : "#0e3a6c/80" }}
+                >
+                  {entidade.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+type RoomProfessorsSectionProps = {
+  room: Room;
+  isDark: boolean;
+  professorProfiles: ReturnType<typeof getProfessorsByIds>;
+};
+
+function RoomProfessorsSection({ room, isDark, professorProfiles }: RoomProfessorsSectionProps) {
+  if (!isProfessorOffice(room) || !room.professors || room.professors.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <div className="flex items-start gap-2">
+        <Users
+          className="w-4 h-4 mt-1 flex-shrink-0"
+          style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+        />
+        <p className="text-xs mb-1" style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}>
+          Professores
+        </p>
+      </div>
+      <div className="mt-2 space-y-2">
+        {professorProfiles.length > 0 ? (
+          professorProfiles.map(professor => (
+            <Card
+              key={professor.id}
+              className={`border-border/90 ${
+                isDark ? "bg-white/5 border-white/10" : "bg-white border-slate-200"
+              }`}
+            >
+              <CardContent className="p-3">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0">
+                    {professor.image ? (
+                      <ProfessorImageWithFallback
+                        src={professor.image}
+                        alt={professor.name}
+                        isDark={isDark}
+                      />
+                    ) : (
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center border ${
+                          isDark ? "bg-white/5 border-white/10" : "bg-slate-100 border-slate-200"
+                        }`}
+                      >
+                        <User
+                          className="w-6 h-6"
+                          style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+                          strokeWidth={1.8}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h4
+                        className="text-sm font-semibold"
+                        style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
+                      >
+                        {professor.name}
+                      </h4>
+                      {professor.sigaa && (
+                        <Link
+                          href={professor.sigaa}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src="/SIGAA-horizontal.png"
+                            alt="SIGAA"
+                            className="h-5 w-auto object-contain"
+                          />
+                        </Link>
+                      )}
+                    </div>
+                    {professor.department && (
+                      <p
+                        className="text-xs"
+                        style={{ color: isDark ? "#E5F6FF/80" : "#0e3a6c/80" }}
+                      >
+                        {professor.department}
+                      </p>
+                    )}
+                    {professor.room && (
+                      <p className="text-xs text-muted-foreground">Sala {professor.room}</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
+            Informações dos professores indisponíveis.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type RoomDescriptionSectionProps = {
+  room: Room;
+  isDark: boolean;
+};
+
+function RoomDescriptionSection({ room, isDark }: RoomDescriptionSectionProps) {
+  // For professor rooms we don't show the description at all
+  if (isProfessorOffice(room)) {
+    return null;
+  }
+
+  if (!room.description) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-start gap-2">
+      <Info
+        className="w-4 h-4 mt-1 flex-shrink-0"
+        style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+      />
+      <div>
+        <p className="text-xs mb-1" style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}>
+          Descrição
+        </p>
+        <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{room.description}</p>
+      </div>
+    </div>
+  );
+}
+
+function getRoomTypeLabel(room: Room): string {
+  switch (room.type) {
+    case "classroom":
+      return "Sala de aula";
+    case "lab-class":
+      return "Laboratório de aula";
+    case "lab-research":
+      return "Laboratório de pesquisa";
+    case "professor-office":
+      return "Sala de professores";
+    case "institutional-office":
+      return "Sala administrativa";
+    case "bathroom":
+      return "Banheiro";
+    case "corridor":
+      return "Corredor";
+    case "stairs":
+      return "Escadas";
+    case "library":
+      return "Biblioteca";
+    case "shared-space":
+      return "Espaço compartilhado";
+    default:
+      return room.type;
+  }
 }
 
 type ProfessorImageWithFallbackProps = {
