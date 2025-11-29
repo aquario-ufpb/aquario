@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import type { Floor } from "@/lib/mapas/types";
 import { getBlueprintScale } from "./blueprint-utils";
 
-export function useBlueprintScale(blueprint: Floor["blueprint"]) {
+export function useBlueprintScale(
+  blueprint: Floor["blueprint"],
+  options?: {
+    compact?: boolean;
+  }
+) {
   const [windowWidth, setWindowWidth] = useState(0);
 
   useEffect(() => {
@@ -24,5 +29,5 @@ export function useBlueprintScale(blueprint: Floor["blueprint"]) {
     };
   }, []);
 
-  return getBlueprintScale(blueprint, windowWidth);
+  return getBlueprintScale(blueprint, windowWidth, options);
 }

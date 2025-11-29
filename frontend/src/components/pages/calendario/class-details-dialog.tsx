@@ -3,6 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, Users, BookOpen, AlertTriangle } from "lucide-react";
 import { formatHorario } from "@/lib/calendario/utils";
 import type { ClassWithRoom } from "./types";
+import { useMemo, useState } from "react";
+import { useMapas } from "@/hooks/use-mapas";
+import type { Building, Floor, Room as MapRoom } from "@/lib/mapas/types";
+import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
+import { MapFloorSelector } from "@/components/pages/mapas/map-floor-selector";
 
 type ClassDetailsDialogProps = {
   classes: ClassWithRoom[];
@@ -22,6 +27,52 @@ export default function ClassDetailsDialog({
   timeSlot,
 }: ClassDetailsDialogProps) {
   const hasConflict = classes.length > 1;
+
+  const { data: mapasData } = useMapas();
+  const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null);
+
+  const mapContext = useMemo<{
+    building: Building;
+    floor: Floor;
+    room: MapRoom;
+  } | null>(() => {
+    if (!mapasData || !classes || classes.length === 0) {
+      return null;
+    }
+
+    const primaryClass = classes[0];
+    const normalizeRoomKey = (value: string) =>
+      value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "-");
+
+    const targetKey = normalizeRoomKey(
+      `${primaryClass.room.bloco} ${primaryClass.room.nome}`.trim()
+    );
+
+    for (const building of mapasData) {
+      for (const floor of building.floors) {
+        for (const room of floor.rooms) {
+          const roomKey = normalizeRoomKey(room.location);
+          if (roomKey === targetKey) {
+            return { building, floor, room };
+          }
+        }
+      }
+    }
+
+    return null;
+  }, [mapasData, classes]);
+
+  const effectiveFloor = useMemo<Floor | null>(() => {
+    if (!mapContext) {
+      return null;
+    }
+    const targetId = selectedFloorId ?? mapContext.floor.id;
+    return mapContext.building.floors.find(f => f.id === targetId) ?? mapContext.floor;
+  }, [mapContext, selectedFloorId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -218,6 +269,35 @@ export default function ClassDetailsDialog({
             </div>
           ))}
         </div>
+
+        {mapContext && effectiveFloor && (
+          <div className="mt-6 space-y-3">
+            <h3 className="text-sm font-semibold" style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
+              Mapa da sala
+            </h3>
+            <div className="space-y-2">
+              <MapFloorSelector
+                building={mapContext.building}
+                selectedFloorId={effectiveFloor.id}
+                onSelectFloor={floorId => setSelectedFloorId(floorId)}
+                isDark={isDark}
+                roomFloorId={mapContext.floor.id}
+                label={`Andares do ${mapContext.building.code || mapContext.building.name}:`}
+              />
+            </div>
+            <div className="mt-3">
+              <BlueprintViewer
+                floor={effectiveFloor}
+                onRoomClick={() => {
+                  // No room details from here; map is for context only
+                }}
+                isDark={isDark}
+                highlightedRoomId={mapContext.room.id}
+                compact
+              />
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

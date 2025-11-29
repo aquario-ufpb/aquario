@@ -1,11 +1,12 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Building2, Layers } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { Building2 } from "lucide-react";
 import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
 import RoomDetailsDialog from "@/components/pages/mapas/room-details-dialog";
+import { MapFloorSelector } from "@/components/pages/mapas/map-floor-selector";
 import { useMapas } from "@/hooks/use-mapas";
 import type { Room } from "@/lib/mapas/types";
 
@@ -17,24 +18,55 @@ export default function MapsPage() {
   const [selectedFloors, setSelectedFloors] = useState<Record<string, string>>({});
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [highlightedRoomId, setHighlightedRoomId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const predioParam = searchParams?.get("predio")?.toLowerCase() ?? null;
+  const pisoParam = searchParams?.get("piso");
+  const salaParam = searchParams?.get("sala") ?? null;
+  const floorsInitializedRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
-    // Auto-select first floor of each building on mount
-    if (mapsData) {
-      const initialSelections: Record<string, string> = {};
-      mapsData.forEach(building => {
-        if (building.floors.length > 0) {
-          initialSelections[building.id] = building.floors[0].id;
-        }
-      });
-      setSelectedFloors(initialSelections);
+  }, []);
+
+  useEffect(() => {
+    if (!mapsData || floorsInitializedRef.current) {
+      return;
     }
-  }, [mapsData]);
+
+    const initialSelections: Record<string, string> = {};
+    mapsData.forEach(building => {
+      if (building.floors.length === 0) {
+        return;
+      }
+
+      const isTargetBuilding =
+        predioParam && building.code?.toLowerCase() === predioParam.toLowerCase();
+      let selectedFloor = building.floors[0];
+
+      if (isTargetBuilding && pisoParam !== null) {
+        const pisoIndex = Number(pisoParam);
+        if (!Number.isNaN(pisoIndex) && building.floors[pisoIndex]) {
+          selectedFloor = building.floors[pisoIndex];
+        }
+      }
+
+      initialSelections[building.id] = selectedFloor.id;
+    });
+
+    setSelectedFloors(initialSelections);
+    floorsInitializedRef.current = true;
+  }, [mapsData, predioParam, pisoParam]);
+
+  useEffect(() => {
+    setHighlightedRoomId(salaParam);
+  }, [salaParam]);
 
   const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
 
   const handleRoomClick = (room: Room) => {
+    // Any explicit room click clears URL-based highlight state
+    setHighlightedRoomId(null);
     setSelectedRoom(room);
     setIsDialogOpen(true);
   };
@@ -121,48 +153,12 @@ export default function MapsPage() {
             </div>
 
             {/* Floor Buttons */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Layers
-                  className="w-4 h-4"
-                  style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
-                />
-                <p
-                  className="text-sm font-medium"
-                  style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-                >
-                  Andares:
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {building.floors.map(floor => {
-                  const isSelected = selectedFloors[building.id] === floor.id;
-                  return (
-                    <Button
-                      key={floor.id}
-                      onClick={() => handleFloorClick(building.id, floor.id)}
-                      variant={isSelected ? "default" : "outline"}
-                      size="sm"
-                      className="rounded-full"
-                      style={
-                        isSelected
-                          ? {
-                              backgroundColor: isDark ? "#1a3a5c" : "#0e3a6c",
-                              color: isDark ? "#C8E6FA" : "#fff",
-                            }
-                          : {
-                              borderColor: isDark ? "rgba(255,255,255,0.2)" : "#e2e8f0",
-                              color: isDark ? "#C8E6FA" : "#0e3a6c",
-                              backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "#fff",
-                            }
-                      }
-                    >
-                      {floor.name}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
+            <MapFloorSelector
+              building={building}
+              selectedFloorId={selectedFloors[building.id] ?? null}
+              onSelectFloor={floorId => handleFloorClick(building.id, floorId)}
+              isDark={isDark}
+            />
 
             {/* Blueprint Viewer for Selected Floor */}
             {selectedFloors[building.id] && (
@@ -175,6 +171,8 @@ export default function MapsPage() {
                       floor={selectedFloor}
                       onRoomClick={handleRoomClick}
                       isDark={isDark}
+                      highlightedRoomId={highlightedRoomId}
+                      onBackgroundClick={() => setHighlightedRoomId(null)}
                     />
                   ) : null;
                 })()}

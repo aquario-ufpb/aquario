@@ -273,13 +273,21 @@ export function getTextDimensions(
 // Calculate blueprint scale based on viewport
 export function getBlueprintScale(
   blueprint: Floor["blueprint"],
-  windowWidth: number
+  windowWidth: number,
+  options?: {
+    compact?: boolean;
+  }
 ): { scale: number; scaledWidth: number; scaledHeight: number } {
   const isDesktop = windowWidth >= 1024;
   const isTablet = windowWidth >= 768 && windowWidth < 1024;
 
-  const maxWidth = isDesktop ? 1400 : isTablet ? 1400 : 1000;
-  const maxHeight = isDesktop ? 600 : isTablet ? 1000 : 700;
+  let maxWidth = isDesktop ? 1400 : isTablet ? 1400 : 1000;
+  let maxHeight = isDesktop ? 600 : isTablet ? 1000 : 700;
+
+  if (options?.compact) {
+    maxWidth = isDesktop ? 700 : isTablet ? 650 : 550;
+    maxHeight = isDesktop ? 350 : isTablet ? 400 : 350;
+  }
 
   const scaleX = maxWidth / blueprint.width;
   const scaleY = maxHeight / blueprint.height;

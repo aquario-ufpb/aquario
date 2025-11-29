@@ -11,6 +11,7 @@ type RoomGroupProps = {
   room: Room;
   isDark: boolean;
   isHovered: boolean;
+  highlightedRoomId?: string | null;
   onHover: (id: string | null) => void;
   onClick: (room: Room) => void;
   entidadesMap?: Map<EntidadeSlug, Entidade>;
@@ -20,12 +21,14 @@ export function RoomGroup({
   room,
   isDark,
   isHovered,
+  highlightedRoomId,
   onHover,
   onClick,
   entidadesMap,
 }: RoomGroupProps) {
   const isCorridor = room.type === "corridor";
-  const { fillColor, strokeColor } = getRoomColors(isCorridor, isHovered, isDark);
+  const isHighlighted = highlightedRoomId === room.id;
+  const { fillColor, strokeColor } = getRoomColors(isCorridor, isHovered || isHighlighted, isDark);
   const { centerX, centerY } = getRoomCenter(room);
   const { fontSize, subtitleFontSize, textWidth, textHeight, showIcon } = getTextDimensions(
     room,
@@ -45,7 +48,14 @@ export function RoomGroup({
           fill={fillColor}
           stroke="none"
           className={isCorridor ? "pointer-events-none" : "cursor-pointer transition-all"}
-          onClick={isCorridor ? undefined : () => onClick(room)}
+          onClick={
+            isCorridor
+              ? undefined
+              : event => {
+                  event.stopPropagation();
+                  onClick(room);
+                }
+          }
           onMouseEnter={isCorridor ? undefined : () => onHover(room.id)}
           onMouseLeave={isCorridor ? undefined : () => onHover(null)}
         />

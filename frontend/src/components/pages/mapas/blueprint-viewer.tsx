@@ -10,15 +10,25 @@ type BlueprintViewerProps = {
   floor: Floor;
   onRoomClick: (room: Room) => void;
   isDark: boolean;
+  highlightedRoomId?: string | null;
+  onBackgroundClick?: () => void;
+  compact?: boolean;
 };
 
-export default function BlueprintViewer({ floor, onRoomClick, isDark }: BlueprintViewerProps) {
+export default function BlueprintViewer({
+  floor,
+  onRoomClick,
+  isDark,
+  highlightedRoomId,
+  onBackgroundClick,
+  compact = false,
+}: BlueprintViewerProps) {
   const [hoveredRoomId, setHoveredRoomId] = useState<string | null>(null);
 
   const { blueprint, rooms } = floor;
 
   const entidadesMap = useEntidadesMap(rooms);
-  const { scaledWidth, scaledHeight } = useBlueprintScale(blueprint);
+  const { scaledWidth, scaledHeight } = useBlueprintScale(blueprint, { compact });
 
   return (
     <div className="w-full overflow-auto">
@@ -31,6 +41,11 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
           style={{
             backgroundColor: isDark ? "#1a1a1a" : "#f5f5f5",
             borderColor: isDark ? "rgba(255, 255, 255, 0.1)" : "#e2e8f0",
+          }}
+          onClick={event => {
+            if (event.target === event.currentTarget) {
+              onBackgroundClick?.();
+            }
           }}
         >
           {/* Background image if available */}
@@ -52,6 +67,7 @@ export default function BlueprintViewer({ floor, onRoomClick, isDark }: Blueprin
               room={room}
               isDark={isDark}
               isHovered={hoveredRoomId === room.id}
+              highlightedRoomId={highlightedRoomId}
               onHover={setHoveredRoomId}
               onClick={onRoomClick}
               entidadesMap={entidadesMap}
