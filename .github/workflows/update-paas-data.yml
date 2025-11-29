@@ -1,0 +1,77 @@
+name: Update PAAS Data
+
+on:
+  schedule:
+    # Run every Monday at 2 AM UTC (adjust timezone as needed)
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-paas-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TOKEN_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Download PAAS data
+        id: download_paas
+        continue-on-error: true
+        run: |
+          echo "🔄 Downloading PAAS data from external API..."
+
+          API_URL="https://sa.ci.ufpb.br/api/paas/center?id=CI"
+          OUTPUT_FILE="frontend/content/aquario-paas/saci.json"
+
+          # Try to download with timeout (10 seconds)
+          if curl --max-time 10 --fail --silent --show-error -o "$OUTPUT_FILE" "$API_URL"; then
+            echo "✅ Successfully downloaded PAAS data"
+            echo "downloaded=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Failed to download PAAS data (API may be down)"
+            echo "downloaded=false" >> $GITHUB_OUTPUT
+            exit 0  # Don't fail the workflow if API is down
+          fi
+
+      - name: Check for changes
+        id: check_changes
+        if: steps.download_paas.outputs.downloaded == 'true'
+        run: |
+          if git diff --quiet HEAD frontend/content/aquario-paas/saci.json 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No changes detected - PAAS data is already up to date"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "📝 Changes detected in PAAS data"
+          fi
+
+      - name: Commit and push changes
+        if: steps.download_paas.outputs.downloaded == 'true' && steps.check_changes.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          git add frontend/content/aquario-paas/saci.json
+          git commit -m "chore: update PAAS data from external API [skip ci]"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          git push
+          echo "✅ PAAS data updated and committed!"
+
+      - name: No changes summary
+        if: steps.download_paas.outputs.downloaded == 'true' && steps.check_changes.outputs.changed == 'false'
+        run: |
+          echo "✅ Workflow completed - PAAS data is up to date"
+
+      - name: API unavailable summary
+        if: steps.download_paas.outputs.downloaded == 'false'
+        run: |
+          echo "⚠️ Workflow completed - External API was unavailable, no update made"
