@@ -3,8 +3,9 @@
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Map } from "lucide-react";
+import { Calendar, Map, BookOpen } from "lucide-react";
 
 export default function FerramentasPage() {
   const { theme, resolvedTheme } = useTheme();
@@ -24,6 +25,7 @@ export default function FerramentasPage() {
         "Crie e visualize seu calendário personalizado com as disciplinas selecionadas. Busque por código, nome, professor ou localização e veja sua grade horária de forma visual e organizada.",
       href: "/calendario",
       icon: Calendar,
+      imagePath: "/calendario",
     },
     {
       id: "maps",
@@ -32,6 +34,16 @@ export default function FerramentasPage() {
         "Explore os mapas interativos dos prédios do Centro de Informática. Visualize plantas baixas, navegue entre andares e descubra informações sobre cada sala e laboratório.",
       href: "/mapas",
       icon: Map,
+      imagePath: "/mapas",
+    },
+    {
+      id: "guias",
+      title: "Guias e Recursos",
+      description:
+        "Encontre orientações, dicas e recursos que vão te ajudar em sua jornada acadêmica no Centro de Informática. Tudo que precisa saber para começar seu curso.",
+      href: "/guias",
+      icon: BookOpen,
+      imagePath: "/guias",
     },
   ];
 
@@ -76,13 +88,28 @@ export default function FerramentasPage() {
                     {ferramenta.title}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-col gap-4">
                   <p
                     className="text-sm leading-relaxed"
                     style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}
                   >
                     {ferramenta.description}
                   </p>
+                  {ferramenta.imagePath && (
+                    <div className="mt-auto">
+                      <Image
+                        src={
+                          isDark
+                            ? `${ferramenta.imagePath}/dark.png`
+                            : `${ferramenta.imagePath}/light.png`
+                        }
+                        alt={ferramenta.title}
+                        width={300}
+                        height={150}
+                        className="w-full h-auto object-contain rounded-lg shadow-md"
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </Link>

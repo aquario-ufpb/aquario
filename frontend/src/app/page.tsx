@@ -7,7 +7,7 @@ import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { useTheme } from "next-themes";
 import { useEffect, useState, useRef } from "react";
-import { Github, Calendar } from "lucide-react";
+import { Github, Calendar, Map } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { entidadesService } from "@/lib/api/entidades";
@@ -159,12 +159,15 @@ export default function Home() {
                   </div>
                 </HoverBorderGradient>
               </Link>
-              <Link href="/entidades" className="w-full md:w-auto">
+              <Link href="/mapas" className="w-full md:w-auto">
                 <HoverBorderGradient
                   containerClassName="rounded-full w-full md:w-auto"
                   className="px-10 py-4 text-lg font-semibold"
                 >
-                  <div className="block w-full text-center">Veja as Entidades</div>
+                  <div className="flex items-center justify-center gap-2 w-full">
+                    <Map className="w-5 h-5" />
+                    Explore o Mapa
+                  </div>
                 </HoverBorderGradient>
               </Link>
               <a
@@ -191,10 +194,10 @@ export default function Home() {
         <section className="py-16">
           <div className="max-w-4xl mx-auto">
             <div className="space-y-6">
-              {/* Calendario and Guias Section - Side by Side */}
+              {/* Calendario and Mapas Section - Side by Side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Calendario Section */}
-                <Link href="/calendario" className="block">
+                {/* Mapas Section */}
+                <Link href="/mapas" className="block">
                   <Card
                     className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
                       isDark
@@ -210,7 +213,7 @@ export default function Home() {
                               isDark ? "text-white" : "text-aquario-primary"
                             }`}
                           >
-                            Calendário
+                            Mapas
                           </h3>
                           <Badge
                             className={
@@ -222,6 +225,53 @@ export default function Home() {
                             Novo
                           </Badge>
                         </div>
+                        <p
+                          className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
+                        >
+                          Explore os mapas interativos do CI e encontre salas e laboratórios.
+                        </p>
+                        <Button
+                          variant="outline"
+                          className={
+                            isDark
+                              ? "border-white text-white hover:bg-white/20"
+                              : "border-blue-900 text-blue-900 hover:bg-blue-50"
+                          }
+                        >
+                          Ver Mapas
+                        </Button>
+                      </div>
+                      <div className="flex-shrink-0 hidden sm:block">
+                        <Image
+                          src={isDark ? "/mapas/dark.png" : "/mapas/light.png"}
+                          alt="Mapas"
+                          width={220}
+                          height={120}
+                          className="object-contain rounded-lg shadow-md"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+
+                {/* Calendario Section */}
+                <Link href="/calendario" className="block">
+                  <Card
+                    className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
+                      isDark
+                        ? "bg-white/10 border-white/20 hover:bg-white/15"
+                        : "bg-white/60 border-blue-200 hover:bg-white/80"
+                    }`}
+                  >
+                    <CardContent className="p-6 flex items-center gap-4">
+                      <div className="flex-1">
+                        <h3
+                          className={`font-display text-xl font-bold mb-3 ${
+                            isDark ? "text-white" : "text-aquario-primary"
+                          }`}
+                        >
+                          Calendário
+                        </h3>
                         <p
                           className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
                         >
@@ -251,17 +301,19 @@ export default function Home() {
                     </CardContent>
                   </Card>
                 </Link>
+              </div>
 
-                {/* Guias Section */}
-                <Link href="/guias" className="block">
-                  <Card
-                    className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                      isDark
-                        ? "bg-white/10 border-white/20 hover:bg-white/15"
-                        : "bg-white/60 border-blue-200 hover:bg-white/80"
-                    }`}
-                  >
-                    <CardContent className="p-6">
+              {/* Guias Section */}
+              <Link href="/guias" className="block">
+                <Card
+                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
+                    isDark
+                      ? "bg-white/10 border-white/20 hover:bg-white/15"
+                      : "bg-white/60 border-blue-200 hover:bg-white/80"
+                  }`}
+                >
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="flex-1">
                       <h3
                         className={`font-display text-xl font-bold mb-3 ${
                           isDark ? "text-white" : "text-aquario-primary"
@@ -283,10 +335,19 @@ export default function Home() {
                       >
                         Explorar Guias
                       </Button>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </div>
+                    </div>
+                    <div className="flex-shrink-0 hidden sm:block">
+                      <Image
+                        src={isDark ? "/guias/dark.png" : "/guias/light.png"}
+                        alt="Guias"
+                        width={220}
+                        height={120}
+                        className="object-contain rounded-lg shadow-md"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
 
               {/* Sobre Section */}
               <Link href="/sobre" className="block">
