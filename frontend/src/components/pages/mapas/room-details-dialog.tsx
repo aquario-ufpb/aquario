@@ -142,7 +142,7 @@ export default function RoomDetailsDialog(props: RoomDetailsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`max-w-md sm:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden ${
+        className={`max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden ${
           isDark ? "bg-gray-900 border-white/20" : "bg-white border-gray-200"
         }`}
       >

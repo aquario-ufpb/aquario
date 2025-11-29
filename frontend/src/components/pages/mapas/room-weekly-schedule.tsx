@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import type { ClassWithRoom } from "@/components/pages/calendario/types";
 import { CALENDAR_TIME_SLOTS, CLASS_COLORS, DAY_NAMES } from "@/lib/calendario/constants";
 import { CalendarGridTable } from "@/components/pages/calendario/calendar-grid-table";
+import { CalendarMobileView } from "@/components/pages/calendario/calendar-mobile-view";
 import ClassDetailsDialog from "@/components/pages/calendario/class-details-dialog";
 
 type RoomWeeklyScheduleProps = {
@@ -57,7 +58,18 @@ export function RoomWeeklySchedule({ classes, isDark }: RoomWeeklyScheduleProps)
         Horário nesta sala
       </h4>
 
-      <div className="overflow-x-auto rounded-lg border border-transparent max-w-full">
+      {/* Mobile view - vertical day-by-day layout */}
+      <div className="md:hidden w-full max-w-full overflow-hidden">
+        <CalendarMobileView
+          classes={classes}
+          classColors={classColors}
+          isDark={isDark}
+          onCellClick={handleCellClick}
+        />
+      </div>
+
+      {/* Desktop view - table layout */}
+      <div className="hidden md:block overflow-x-auto rounded-lg border border-transparent max-w-full">
         <CalendarGridTable
           classes={classes}
           classColors={classColors}

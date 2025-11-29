@@ -11,6 +11,7 @@ import CalendarLegend from "./calendar-legend";
 import ClassDetailsDialog from "./class-details-dialog";
 import GoogleCalendarDialog from "./google-calendar-dialog";
 import { CalendarGridTable } from "./calendar-grid-table";
+import { CalendarMobileView } from "./calendar-mobile-view";
 import type { ClassWithRoom } from "./types";
 
 type CalendarGridProps = {
@@ -146,7 +147,18 @@ export default function CalendarGrid({
         </CardHeader>
         <CardContent>
           <div ref={contentRef} className="w-full" data-export-target>
-            <div className="overflow-x-auto">
+            {/* Mobile view - vertical day-by-day layout */}
+            <div className="md:hidden">
+              <CalendarMobileView
+                classes={selectedClasses}
+                classColors={classColors}
+                isDark={isDark}
+                onCellClick={handleCellClick}
+              />
+            </div>
+
+            {/* Desktop view - table layout */}
+            <div className="hidden md:block overflow-x-auto">
               <CalendarGridTable
                 classes={selectedClasses}
                 classColors={classColors}
