@@ -2,7 +2,17 @@
 
 import React from "react";
 import WcIcon from "@mui/icons-material/Wc";
-import { BookOpen, Monitor, Search } from "lucide-react";
+import {
+  ArrowUpDown,
+  BookOpen,
+  Building2,
+  Info,
+  Library,
+  Monitor,
+  Search,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import type { Room, EntidadeSlug } from "@/lib/mapas/types";
 import type { Entidade } from "@/lib/types/entidade.types";
 import {
@@ -22,6 +32,7 @@ type RoomLabelProps = {
   textHeight: number;
   isDark: boolean;
   entidadesMap?: Map<EntidadeSlug, Entidade>;
+  showIcon: boolean;
 };
 
 export function RoomLabel({
@@ -34,22 +45,35 @@ export function RoomLabel({
   textHeight,
   isDark,
   entidadesMap,
+  showIcon,
 }: RoomLabelProps) {
   if (room.type === "bathroom") {
     return (
       <foreignObject
-        x={centerX - 8}
+        x={centerX - 14}
         y={centerY - 14}
-        width="24"
-        height="24"
+        width="28"
+        height="28"
         className="pointer-events-none"
       >
-        <WcIcon
-          sx={{
-            fontSize: 16,
-            color: isDark ? "#C8E6FA" : "#0e3a6c",
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "9999px",
+            backgroundColor: isDark ? "rgba(15,23,42,0.4)" : "rgba(241,245,249,0.5)",
           }}
-        />
+        >
+          <WcIcon
+            sx={{
+              fontSize: 16,
+              color: isDark ? "#C8E6FA" : "#0e3a6c",
+            }}
+          />
+        </div>
       </foreignObject>
     );
   }
@@ -57,13 +81,34 @@ export function RoomLabel({
   const textColor = isDark ? "#C8E6FA" : "#0e3a6c";
 
   // Determine which icon to show based on room type
-  let RoomIcon: typeof Monitor | typeof Search | typeof BookOpen | null = null;
-  if (room.type === "lab-class") {
-    RoomIcon = Monitor;
-  } else if (room.type === "lab-research") {
-    RoomIcon = Search;
-  } else if (room.type === "classroom") {
-    RoomIcon = BookOpen;
+  let RoomIcon: LucideIcon | null = null;
+  switch (room.type) {
+    case "lab-class":
+      RoomIcon = Monitor;
+      break;
+    case "lab-research":
+      RoomIcon = Search;
+      break;
+    case "classroom":
+      RoomIcon = BookOpen;
+      break;
+    case "library":
+      RoomIcon = Library;
+      break;
+    case "professor-office":
+      RoomIcon = Users;
+      break;
+    case "institutional-office":
+      RoomIcon = Building2;
+      break;
+    case "shared-space":
+      RoomIcon = Users;
+      break;
+    case "stairs":
+      RoomIcon = ArrowUpDown;
+      break;
+    default:
+      RoomIcon = Info;
   }
 
   const textStyle = {
@@ -90,6 +135,7 @@ export function RoomLabel({
           .map(slug => entidadesMap.get(slug))
           .filter((entidade): entidade is Entidade => entidade !== undefined)
       : [];
+  const hasLabLogos = labEntidades.some(entidade => Boolean(entidade.imagePath));
 
   const hasProfessorsCheck =
     isProfessorOffice(room) && room.professors && room.professors.length > 0;
@@ -112,7 +158,7 @@ export function RoomLabel({
       >
         <div style={textStyle}>
           {/* Display entidade logos for labs */}
-          {hasLabs && labEntidades.length > 0 && (
+          {hasLabLogos && (
             <div
               style={{
                 marginBottom: "4px",
@@ -127,7 +173,7 @@ export function RoomLabel({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={entidade.slug}
-                  src={entidade.imagePath}
+                  src={entidade.imagePath || ""}
                   alt={entidade.name}
                   style={{
                     width: `${Math.min(fontSize * 1.5, 32)}px`,
@@ -144,9 +190,21 @@ export function RoomLabel({
             </div>
           )}
           {/* Display icon if applicable (only if no lab logos) */}
-          {RoomIcon && !hasLabs && (
+          {RoomIcon && showIcon && !hasLabLogos && (
             <div style={{ marginBottom: "4px", display: "flex", justifyContent: "center" }}>
-              <RoomIcon size={Math.round(fontSize * 1.2)} color={textColor} strokeWidth={2} />
+              <div
+                style={{
+                  width: Math.round(fontSize * 1.8),
+                  height: Math.round(fontSize * 1.8),
+                  borderRadius: "9999px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isDark ? "rgba(15,23,42,0.4)" : "rgba(241,245,249,0.5)",
+                }}
+              >
+                <RoomIcon size={Math.round(fontSize * 1.1)} color={textColor} strokeWidth={2} />
+              </div>
             </div>
           )}
           {/* Display title (professors first names or room title) */}
@@ -187,7 +245,7 @@ export function RoomLabel({
     >
       <div style={textStyle}>
         {/* Display entidade logos for labs */}
-        {hasLabs && labEntidades.length > 0 && (
+        {hasLabLogos && (
           <div
             style={{
               marginBottom: "4px",
@@ -202,7 +260,7 @@ export function RoomLabel({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={entidade.slug}
-                src={entidade.imagePath}
+                src={entidade.imagePath || ""}
                 alt={entidade.name}
                 style={{
                   width: `${Math.min(fontSize * 1.5, 32)}px`,
@@ -218,9 +276,21 @@ export function RoomLabel({
           </div>
         )}
         {/* Display icon if applicable (only if no lab logos) */}
-        {RoomIcon && !hasLabs && (
+        {RoomIcon && showIcon && !hasLabLogos && (
           <div style={{ marginBottom: "4px", display: "flex", justifyContent: "center" }}>
-            <RoomIcon size={Math.round(fontSize * 1.2)} color={textColor} strokeWidth={2} />
+            <div
+              style={{
+                width: Math.round(fontSize * 1.8),
+                height: Math.round(fontSize * 1.8),
+                borderRadius: "9999px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: isDark ? "rgba(15,23,42,0.4)" : "rgba(241,245,249,0.5)",
+              }}
+            >
+              <RoomIcon size={Math.round(fontSize * 1.1)} color={textColor} strokeWidth={2} />
+            </div>
           </div>
         )}
         {/* Display name (or professors first names) */}

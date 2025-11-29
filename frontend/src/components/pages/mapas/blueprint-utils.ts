@@ -203,6 +203,7 @@ export function getTextDimensions(
   subtitleFontSize: number;
   textWidth: number;
   textHeight: number;
+  showIcon: boolean;
 } {
   // Calculate bounding box of all shapes (for multi-shape rooms)
   const minY = Math.min(...room.shapes.map(shape => shape.position.y));
@@ -240,10 +241,16 @@ export function getTextDimensions(
   // Use bounding box height for better sizing in multi-shape rooms
   const textWidth = Math.max(minWidth * 0.9, 40);
   // Account for icon height if there's an icon, plus text lines
-  const hasIcon =
-    room.type === "lab-class" || room.type === "lab-research" || room.type === "classroom";
-  // Check if we'll show logos (for labs) or icon
-  const willShowLogos = hasLabs && entidadesMap;
+  const hasIcon = room.type !== "bathroom" && room.type !== "corridor";
+  // Check if we'll show logos (for labs) or icon.
+  // Only consider logos when we have entidades and at least one has an imagePath.
+  const willShowLogos =
+    hasLabs &&
+    entidadesMap &&
+    room.labs?.some(slug => {
+      const entidade = entidadesMap.get(slug);
+      return entidade && Boolean(entidade.imagePath);
+    });
   const iconHeight = willShowLogos
     ? Math.min(fontSize * 1.5, 32) + 4 // logo height + margin
     : hasIcon
@@ -256,7 +263,11 @@ export function getTextDimensions(
     : fontSize + 4; // name only + margin
   const textHeight = Math.max(boundingHeight * 0.6, iconHeight + textLinesHeight);
 
-  return { fontSize, subtitleFontSize, textWidth, textHeight };
+  // Only show icon when there's enough vertical space in the room itself
+  const canFitIcon = boundingHeight >= iconHeight + textLinesHeight + 15;
+  const showIcon = hasIcon && !willShowLogos && canFitIcon;
+
+  return { fontSize, subtitleFontSize, textWidth, textHeight, showIcon };
 }
 
 // Calculate blueprint scale based on viewport

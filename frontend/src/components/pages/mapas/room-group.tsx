@@ -27,7 +27,7 @@ export function RoomGroup({
   const isCorridor = room.type === "corridor";
   const { fillColor, strokeColor } = getRoomColors(isCorridor, isHovered, isDark);
   const { centerX, centerY } = getRoomCenter(room);
-  const { fontSize, subtitleFontSize, textWidth, textHeight } = getTextDimensions(
+  const { fontSize, subtitleFontSize, textWidth, textHeight, showIcon } = getTextDimensions(
     room,
     entidadesMap
   );
@@ -76,6 +76,7 @@ export function RoomGroup({
           textHeight={textHeight}
           isDark={isDark}
           entidadesMap={entidadesMap}
+          showIcon={showIcon}
         />
       )}
     </g>

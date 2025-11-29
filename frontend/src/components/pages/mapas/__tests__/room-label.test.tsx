@@ -33,6 +33,7 @@ describe("RoomLabel", () => {
           textWidth={80}
           textHeight={40}
           isDark={false}
+          showIcon
         />
       </svg>
     );
@@ -56,6 +57,7 @@ describe("RoomLabel", () => {
           textWidth={80}
           textHeight={40}
           isDark={false}
+          showIcon
         />
       </svg>
     );
@@ -91,6 +93,7 @@ describe("RoomLabel", () => {
           textHeight={40}
           isDark={false}
           entidadesMap={entidadesMap}
+          showIcon
         />
       </svg>
     );
