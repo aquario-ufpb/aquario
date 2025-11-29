@@ -43,3 +43,32 @@ vi.mock("./src/lib/api/guias_providers/local-file-guias-provider", () => {
     },
   };
 });
+
+// Mock the LocalFilePaasProvider to avoid require.context issues
+vi.mock("./src/lib/api/paas_providers/local-file-paas-provider", () => {
+  return {
+    LocalFilePaasProvider: class MockLocalFilePaasProvider {
+      getCenter() {
+        return Promise.resolve({
+          id: 0,
+          centro: "Centro de Informática",
+          date: "",
+          description: "",
+          hash: "",
+          status: "",
+          userId: null,
+          sigla: "CI",
+          paasPublicSolutions: [],
+          solution: {
+            id: 0,
+            status: "Ready",
+            error: "",
+            paasPlanId: null,
+            date: "",
+            solution: [],
+          },
+        });
+      }
+    },
+  };
+});
