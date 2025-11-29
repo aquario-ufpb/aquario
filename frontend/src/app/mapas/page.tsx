@@ -1,7 +1,7 @@
 "use client";
 
+import React, { Suspense, useEffect, useState, useRef } from "react";
 import { useTheme } from "next-themes";
-import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Building2 } from "lucide-react";
 import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
@@ -10,7 +10,7 @@ import { MapFloorSelector } from "@/components/pages/mapas/map-floor-selector";
 import { useMapas } from "@/hooks/use-mapas";
 import type { Room } from "@/lib/mapas/types";
 
-export default function MapsPage() {
+function MapsPageInner() {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { data: mapsData, isLoading, error } = useMapas();
@@ -190,5 +190,22 @@ export default function MapsPage() {
         isDark={isDark}
       />
     </div>
+  );
+}
+
+export default function MapsPage() {
+  // Wrap in Suspense so useSearchParams is allowed during prerender
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full px-4 md:px-8 lg:px-12 mt-24 pb-20">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <p className="text-lg">Carregando mapas...</p>
+          </div>
+        </div>
+      }
+    >
+      <MapsPageInner />
+    </Suspense>
   );
 }
