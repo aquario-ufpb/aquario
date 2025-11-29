@@ -95,6 +95,15 @@ export default function HamburgerMenu() {
                 </li>
                 <li>
                   <Link
+                    href="/mapas"
+                    onClick={() => setIsOpen(false)}
+                    className="text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-500 dark:hover:text-blue-400 transition-colors block py-2"
+                  >
+                    MAPAS
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/guias"
                     onClick={() => setIsOpen(false)}
                     className="text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-500 dark:hover:text-blue-400 transition-colors block py-2"
