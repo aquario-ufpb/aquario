@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,10 @@ import { isLabResearch, isProfessorOffice } from "@/lib/mapas/utils";
 import { entidadesService } from "@/lib/api/entidades";
 import type { Entidade } from "@/lib/types/entidade.types";
 import { getProfessorsByIds } from "@/lib/mapas/professors-directory";
+import { usePaasCalendar } from "@/hooks";
+import type { ClassWithRoom } from "@/components/pages/calendario/types";
+import type { PaasRoom } from "@/lib/types";
+import { RoomWeeklySchedule } from "./room-weekly-schedule";
 
 type RoomDetailsDialogProps = {
   room: Room | null;
@@ -55,6 +59,58 @@ export default function RoomDetailsDialog(props: RoomDetailsDialogProps) {
     }
   }, [room, open]);
 
+  const { data: calendarData } = usePaasCalendar("CI");
+
+  const allClassesForCenter = useMemo<ClassWithRoom[]>(() => {
+    const classes: ClassWithRoom[] = [];
+    const solutionRooms = calendarData?.solution?.solution as PaasRoom[] | undefined;
+    if (!solutionRooms) {
+      return classes;
+    }
+
+    solutionRooms.forEach((paasRoom: PaasRoom) => {
+      if (paasRoom.classes && paasRoom.classes.length > 0) {
+        paasRoom.classes.forEach(classItem => {
+          classes.push({
+            ...classItem,
+            room: {
+              bloco: paasRoom.bloco,
+              nome: paasRoom.nome,
+            },
+          });
+        });
+      }
+    });
+
+    return classes;
+  }, [calendarData]);
+
+  const normalizeRoomKey = (value: string) =>
+    value
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "-");
+
+  const currentRoomKey = room ? normalizeRoomKey(room.location) : "";
+
+  const classesForThisRoom = useMemo(
+    () =>
+      allClassesForCenter.filter(classItem => {
+        if (!room) {
+          return false;
+        }
+        const key = normalizeRoomKey(`${classItem.room.bloco} ${classItem.room.nome}`);
+        return key === currentRoomKey;
+      }),
+    [allClassesForCenter, currentRoomKey, room]
+  );
+
+  const uniqueClassCount = useMemo(
+    () => new Set(classesForThisRoom.map(cls => cls.id)).size,
+    [classesForThisRoom]
+  );
+
   if (!room) {
     return null;
   }
@@ -86,7 +142,7 @@ export default function RoomDetailsDialog(props: RoomDetailsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`w-full max-w-md sm:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto ${
+        className={`w-full max-w-md sm:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden ${
           isDark ? "bg-gray-900 border-white/20" : "bg-white border-gray-200"
         }`}
       >
@@ -140,7 +196,12 @@ export default function RoomDetailsDialog(props: RoomDetailsDialogProps) {
               {/* For non-professor / non-lab rooms, still show any labs/profs if present, but after type */}
               {!isProfessorRoom && !isLabRoom && (
                 <>
-                  <RoomSummaryColumn room={room} capacity={capacity} isDark={isDark} />
+                  <RoomSummaryColumn
+                    room={room}
+                    capacity={capacity}
+                    classCount={uniqueClassCount}
+                    isDark={isDark}
+                  />
                   <RoomProfessorsSection
                     room={room}
                     isDark={isDark}
@@ -157,10 +218,20 @@ export default function RoomDetailsDialog(props: RoomDetailsDialogProps) {
 
               {/* For professor / lab rooms, show the generic summary after the primary content */}
               {(isProfessorRoom || isLabRoom) && (
-                <RoomSummaryColumn room={room} capacity={capacity} isDark={isDark} />
+                <RoomSummaryColumn
+                  room={room}
+                  capacity={capacity}
+                  classCount={uniqueClassCount}
+                  isDark={isDark}
+                />
               )}
 
               <RoomDescriptionSection room={room} isDark={isDark} />
+
+              {/* Weekly schedule for this room when we have matching classes */}
+              {classesForThisRoom.length > 0 && (
+                <RoomWeeklySchedule classes={classesForThisRoom} isDark={isDark} />
+              )}
             </>
           )}
         </RoomDetailsContainer>
@@ -189,39 +260,66 @@ function RoomDetailsContainer({ isDark, title, children }: RoomDetailsContainerP
 type RoomSummaryColumnProps = {
   room: Room;
   capacity: number | undefined;
+  classCount: number;
   isDark: boolean;
 };
 
-function RoomSummaryColumn({ room, capacity, isDark }: RoomSummaryColumnProps) {
+function RoomSummaryColumn({ room, capacity, classCount, isDark }: RoomSummaryColumnProps) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-start gap-2">
-        <MapPin
-          className="w-4 h-4 mt-1 flex-shrink-0"
-          style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
-        />
-        <div>
-          <p className="text-xs mb-1" style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}>
-            Tipo de espaço
-          </p>
-          <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{getRoomTypeLabel(room)}</p>
-        </div>
-      </div>
-
-      {capacity !== undefined && (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Left column: tipo + capacidade */}
+      <div className="space-y-3">
         <div className="flex items-start gap-2">
-          <Users
+          <MapPin
             className="w-4 h-4 mt-1 flex-shrink-0"
             style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
           />
           <div>
             <p className="text-xs mb-1" style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}>
-              Capacidade
+              Tipo de espaço
             </p>
-            <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{capacity} pessoas</p>
+            <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{getRoomTypeLabel(room)}</p>
           </div>
         </div>
-      )}
+
+        {capacity !== undefined && (
+          <div className="flex items-start gap-2">
+            <Users
+              className="w-4 h-4 mt-1 flex-shrink-0"
+              style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+            />
+            <div>
+              <p className="text-xs mb-1" style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}>
+                Capacidade
+              </p>
+              <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>{capacity} pessoas</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Right column: turmas no SACI */}
+      <div className="space-y-3 md:text-right">
+        <div className="flex items-start gap-2 md:justify-end">
+          <Info
+            className="w-4 h-4 mt-1 flex-shrink-0"
+            style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+          />
+          <div>
+            <p
+              className="text-xs mb-1 text-left"
+              style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
+            >
+              Turmas no SACI
+            </p>
+            <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
+              {classCount > 0
+                ? `${classCount} turma${classCount > 1 ? "s" : ""}`
+                : "Nenhuma turma registrada"}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
