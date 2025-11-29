@@ -75,13 +75,14 @@ describe("blueprint-utils", () => {
       expect(centerY).toBe(60);
     });
 
-    it("computes the average center across multiple shapes", () => {
+    it("uses the largest shape as anchor for the center when there are multiple shapes", () => {
       const room = makeRoom({
-        shapes: [makeShape(0, 0, 100, 100), makeShape(100, 0, 100, 100)],
+        shapes: [makeShape(0, 0, 100, 100), makeShape(100, 0, 50, 100)],
       });
 
       const { centerX, centerY } = getRoomCenter(room);
-      expect(centerX).toBe(100);
+      // Largest shape is the first one: center should be at (50, 50)
+      expect(centerX).toBe(50);
       expect(centerY).toBe(50);
     });
   });

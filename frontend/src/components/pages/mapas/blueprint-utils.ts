@@ -177,12 +177,19 @@ export function getRoomColors(
 
 // Calculate room center point (average of all shapes)
 export function getRoomCenter(room: Room): { centerX: number; centerY: number } {
-  const centerX =
-    room.shapes.reduce((sum, shape) => sum + shape.position.x + shape.size.width / 2, 0) /
-    room.shapes.length;
-  const centerY =
-    room.shapes.reduce((sum, shape) => sum + shape.position.y + shape.size.height / 2, 0) /
-    room.shapes.length;
+  if (room.shapes.length === 0) {
+    return { centerX: 0, centerY: 0 };
+  }
+
+  // Use the largest shape (by area) as the anchor for the label/icon center
+  const largestShape = room.shapes.reduce((largest, current) => {
+    const largestArea = largest.size.width * largest.size.height;
+    const currentArea = current.size.width * current.size.height;
+    return currentArea > largestArea ? current : largest;
+  });
+
+  const centerX = largestShape.position.x + largestShape.size.width / 2;
+  const centerY = largestShape.position.y + largestShape.size.height / 2;
 
   return { centerX, centerY };
 }
