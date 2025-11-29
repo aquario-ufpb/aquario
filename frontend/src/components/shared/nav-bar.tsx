@@ -7,6 +7,14 @@ import { Search } from "lucide-react";
 import LinkHover from "@/components/shared/link-hover";
 import { ModeToggle } from "@/components/shared/mode-toggle";
 import Link from "next/link";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 
 export default function NavBar() {
   const [query, setQuery] = useState("");
@@ -70,9 +78,58 @@ export default function NavBar() {
           <div className="flex items-center justify-end gap-2">
             <LinkHover href="/sobre">SOBRE</LinkHover>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
-            <LinkHover href="/calendario">CALENDÁRIO</LinkHover>
-            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
-            <LinkHover href="/guias">GUIAS</LinkHover>
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem className="!h-auto !p-0 !m-0 !flex !items-start">
+                  <NavigationMenuTrigger className="!h-auto !rounded-none !bg-transparent !px-0 !py-0 !font-normal hover:!bg-transparent focus:!bg-transparent focus:!outline-none data-[state=open]:!bg-transparent data-[active]:!bg-transparent [&>svg]:hidden">
+                    <LinkHover href="/ferramentas">FERRAMENTAS</LinkHover>
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[200px] gap-2 p-2">
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/calendario"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Calendário</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Visualize eventos e horários
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/guias"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Guias</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Documentação e tutoriais
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/mapas"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Mapas</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Localização de salas e espaços
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
             <LinkHover href="/entidades">ENTIDADES</LinkHover>
             {/* <ProfileButton /> */}
