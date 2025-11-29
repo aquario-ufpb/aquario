@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { Search } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import LinkHover from "@/components/shared/link-hover";
 import { ModeToggle } from "@/components/shared/mode-toggle";
@@ -18,6 +19,8 @@ import {
 
 export default function NavBar() {
   const [query, setQuery] = useState("");
+  const { theme, resolvedTheme } = useTheme();
+  const isDark = (resolvedTheme || theme) === "dark";
 
   const handleSearch = (_e: React.KeyboardEvent<HTMLInputElement>) => {
     // if (e.key === "Enter" && query.trim() !== "") {
@@ -78,23 +81,32 @@ export default function NavBar() {
           <div className="flex items-center justify-end gap-2">
             <LinkHover href="/sobre">SOBRE</LinkHover>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
-            <NavigationMenu>
+            <NavigationMenu className="[&>div>div]:!mt-6">
               <NavigationMenuList>
                 <NavigationMenuItem className="!h-auto !p-0 !m-0 !flex !items-start">
-                  <NavigationMenuTrigger className="!h-auto !rounded-none !bg-transparent !px-0 !py-0 !font-normal hover:!bg-transparent focus:!bg-transparent focus:!outline-none data-[state=open]:!bg-transparent data-[active]:!bg-transparent [&>svg]:hidden">
+                  <NavigationMenuTrigger className="!h-auto !rounded-none !bg-transparent !px-0 !py-0 !font-normal hover:!bg-transparent focus:!bg-transparent focus:!outline-none data-[state=open]:!bg-transparent data-[active]:!bg-transparent">
                     <LinkHover href="/ferramentas">FERRAMENTAS</LinkHover>
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[200px] gap-2 p-2">
+                    <ul className="flex gap-4 p-4 w-auto">
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
                             href="/calendario"
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            className="flex flex-col items-center gap-2 select-none rounded-md p-4 min-w-[180px] no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Calendário</div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Visualize eventos e horários
+                            <Image
+                              src={isDark ? "/calendario/dark.png" : "/calendario/light.png"}
+                              alt="Calendário"
+                              width={120}
+                              height={80}
+                              className="object-contain rounded-lg"
+                            />
+                            <div className="text-sm font-medium leading-none text-center">
+                              Calendário
+                            </div>
+                            <p className="text-xs leading-snug text-muted-foreground text-center">
+                              Visualize de horários
                             </p>
                           </Link>
                         </NavigationMenuLink>
@@ -103,10 +115,19 @@ export default function NavBar() {
                         <NavigationMenuLink asChild>
                           <Link
                             href="/guias"
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            className="flex flex-col items-center gap-2 select-none rounded-md p-4 min-w-[180px] no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Guias</div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            <Image
+                              src={isDark ? "/guias/dark.png" : "/guias/light.png"}
+                              alt="Guias"
+                              width={120}
+                              height={80}
+                              className="object-contain rounded-lg"
+                            />
+                            <div className="text-sm font-medium leading-none text-center">
+                              Guias
+                            </div>
+                            <p className="text-xs leading-snug text-muted-foreground text-center">
                               Documentação e tutoriais
                             </p>
                           </Link>
@@ -116,11 +137,20 @@ export default function NavBar() {
                         <NavigationMenuLink asChild>
                           <Link
                             href="/mapas"
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            className="flex flex-col items-center gap-2 select-none rounded-md p-4 min-w-[180px] no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Mapas</div>
-                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Localização de salas e espaços
+                            <Image
+                              src={isDark ? "/mapas/dark.png" : "/mapas/light.png"}
+                              alt="Mapas"
+                              width={120}
+                              height={80}
+                              className="object-contain rounded-lg"
+                            />
+                            <div className="text-sm font-medium leading-none text-center">
+                              Mapas
+                            </div>
+                            <p className="text-xs leading-snug text-muted-foreground text-center">
+                              Localização de salas
                             </p>
                           </Link>
                         </NavigationMenuLink>
