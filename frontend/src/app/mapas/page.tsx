@@ -119,18 +119,10 @@ function MapsPageInner() {
     <div className="w-full px-4 md:px-8 lg:px-12 mt-24 pb-20">
       {/* Header */}
       <div className="mb-12">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div>
-            <h1
-              className="text-4xl md:text-5xl font-display font-bold mb-4"
-              style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-            >
-              Mapas dos Prédios
-            </h1>
-            <p className="text-lg md:text-xl" style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
-              Explore os mapas dos prédios do Centro de Informática
-            </p>
-          </div>
+        <div className="flex items-start justify-between gap-4 mb-8">
+          <h1 className="text-4xl md:text-5xl font-display font-bold max-w-3xl">
+            Mapas dos Prédios
+          </h1>
           <div className="hidden md:flex flex-shrink-0">
             <ContributeOnGitHub
               url="https://github.com/aquario-ufpb/aquario-mapas"
