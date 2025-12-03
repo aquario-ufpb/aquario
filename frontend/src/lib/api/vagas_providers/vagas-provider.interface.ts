@@ -2,22 +2,22 @@ import { Vaga, TipoVaga, EntidadeVaga } from "../../../components/pages/vagas/va
 
 export type VagasDataProvider = {
   /**
-   * Retorna todas as vagas disponíveis.
+   * Retorna todas as vagas disponíveis
    */
   getAll(): Promise<Vaga[]>;
 
   /**
-   * Busca uma vaga pelo slug (derivado do nome do arquivo JSON).
+   * Busca uma vaga pelo id
    */
   getById(id: string): Promise<Vaga | null>;
 
   /**
-   * Filtra vagas pelo tipo (ESTAGIO, CLT, etc).
+   * Filtra vagas pelo tipo
    */
   getByTipo(tipo: TipoVaga): Promise<Vaga[]>;
 
   /**
-   * Filtra vagas baseadas na entidade responsável (laboratorios, grupos, ufpb, etc).
+   * Filtra vagas baseadas na entidade responsável
    */
   getByEntidade(entidade: EntidadeVaga): Promise<Vaga[]>;
 };
