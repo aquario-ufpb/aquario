@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Checkbox from "@/components/pages/vagas/checkbox-filter";
-import VacancyCard, { TipoVaga, Vaga } from "@/components/pages/vagas/vacancy-card";
+import VacancyCard, { Vaga } from "@/components/pages/vagas/vacancy-card";
 import { SearchBar1 } from "@/components/ui/searchbar1";
 // import { trackEvent } from "@/analytics/posthog-client";
 import { Button } from "@/components/ui/button";
