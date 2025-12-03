@@ -30,6 +30,14 @@ export type Vaga = {
   publicador: Publicador;
   criadoEm: string;
   entidade: EntidadeVaga;
+  prazo: string;
+  salario: string;
+  sobreEmpresa: string;
+  responsabilidades: string[];
+  requisitos: string[];
+  informacoesAdicionais: string;
+  etapasProcesso: string[];
+  link_vaga: string;
 };
 
 type VacancyCardProps = {
