@@ -144,7 +144,7 @@ export default function VagasPage() {
             />
           </div>
 
-          {/* Right column – Search + Jobs */}
+          {/* Right column – Search + Jobs  */}
           <div className="w-full md:w-3/4 flex flex-col">
             <div className="mb-6 w-full">
               <SearchBar1
