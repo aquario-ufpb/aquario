@@ -32,7 +32,7 @@ export default function VagaPage({ params }: { params: { id: string } }) {
 
         // Filters the same type of vacancies and excludes the current one
         const similares = allVagas
-          .filter((v) => v.tipoVaga === data.tipoVaga && v.id !== data.id)
+          .filter(v => v.tipoVaga === data.tipoVaga && v.id !== data.id)
           .slice(0, 8); // Limit to 8
 
         setOtherVagas(similares);
@@ -71,7 +71,6 @@ export default function VagaPage({ params }: { params: { id: string } }) {
       <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-8">
         <div className="border border-border/50 rounded-2xl p-8 md:p-12">
           <div className="flex flex-col lg:grid lg:grid-cols-[1fr_300px] gap-10">
-
             {/* The card slot appears on the right on large screens and at the top on small screens. */}
             <div className="order-1 lg:order-2">
               <VagaProfileCard vaga={vaga} />
@@ -79,9 +78,7 @@ export default function VagaPage({ params }: { params: { id: string } }) {
 
             {/* Information about the vacancy */}
             <div className="order-2 lg:order-1">
-              <h1 className="text-3xl md:text-4xl font-bold mb-6">
-                {vaga.titulo}
-              </h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-6">{vaga.titulo}</h1>
 
               {(vaga.prazo || vaga.salario) && (
                 <div className="flex flex-col md:flex-row gap-6 text-sm text-muted-foreground mb-8">
@@ -180,7 +177,7 @@ export default function VagaPage({ params }: { params: { id: string } }) {
 
           {/* Related vacancies grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {otherVagas.map((v) => (
+            {otherVagas.map(v => (
               <Link key={v.id} href={`/vagas/${v.id}`}>
                 <VacancyCard vaga={v} />
               </Link>

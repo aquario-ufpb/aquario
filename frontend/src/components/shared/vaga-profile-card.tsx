@@ -50,7 +50,6 @@ export default function VagaProfileCard({ vaga }: VagaProfileCardProps) {
       <hr className="w-44" />
 
       <CardFooter className="flex justify-center">
-        
         <Button asChild className="w-28 h-8 rounded-full text-[0.75rem]">
           <a href={`${vaga.link_vaga ?? "#"}`} target="_blank" rel="noopener noreferrer">
             Aplicar

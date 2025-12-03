@@ -36,11 +36,7 @@ declare const require: {
 };
 
 // Import JSON files
-const contentContext = require.context(
-  "../../../../content/aquario-vagas",
-  true,
-  /\.json$/
-);
+const contentContext = require.context("../../../../content/aquario-vagas", true, /\.json$/);
 
 export class LocalFileVagasProvider implements VagasDataProvider {
   private vagasData: Record<string, VagaJson> = {};
@@ -49,11 +45,9 @@ export class LocalFileVagasProvider implements VagasDataProvider {
     contentContext.keys().forEach((key: string) => {
       if (!key.includes("/centro-de-informatica/")) return;
 
-      const content =
-        contentContext(key) as VagaJson | { default: VagaJson };
+      const content = contentContext(key) as VagaJson | { default: VagaJson };
 
-      const json: VagaJson =
-        "default" in content ? content.default : content;
+      const json: VagaJson = "default" in content ? content.default : content;
 
       if (!json.id) {
         console.warn("Arquivo JSON sem id:", key);
@@ -65,9 +59,7 @@ export class LocalFileVagasProvider implements VagasDataProvider {
   }
 
   getAll(): Promise<Vaga[]> {
-    const vagas = Object.keys(this.vagasData).map(id =>
-      this.jsonToVaga(this.vagasData[id])
-    );
+    const vagas = Object.keys(this.vagasData).map(id => this.jsonToVaga(this.vagasData[id]));
     return Promise.resolve(vagas);
   }
 

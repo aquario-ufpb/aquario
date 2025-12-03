@@ -40,7 +40,7 @@ export default function VagasPage() {
       user.papelPlataforma === "MASTER_ADMIN")
   );
 
-    useEffect(() => {
+  useEffect(() => {
     const fetchVagas = async () => {
       try {
         const data = await vagasService.getAll();
@@ -52,7 +52,6 @@ export default function VagasPage() {
 
     fetchVagas();
   }, []);
-
 
   // Filters
   const vagasFiltradas = vagas.filter(vaga => {
