@@ -16,10 +16,11 @@ export default function VagaPage({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => { // Only runs when the ID exists
+  useEffect(() => {
+    // Only runs when the ID exists
     if (!params.id) {
       return;
-    } 
+    }
 
     const fetchVaga = async () => {
       try {
@@ -65,7 +66,7 @@ export default function VagaPage({ params }: { params: { id: string } }) {
       </div>
     );
   }
-  
+
   return (
     <main className="mt-24">
       <div className="container mx-auto px-6 md:px-8 lg:px-16 pt-8 pb-4">

@@ -20,4 +20,4 @@ export type VagasDataProvider = {
    * Filtra vagas baseadas na entidade responsável (laboratorios, grupos, ufpb, etc).
    */
   getByEntidade(entidade: EntidadeVaga): Promise<Vaga[]>;
-}
+};
