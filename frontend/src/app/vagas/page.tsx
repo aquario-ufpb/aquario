@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { useAuth } from "@/contexts/auth-context";
+import { vagasService } from "@/lib/api/vagas";
 
 function VagasCard({ vaga }: { vaga: Vaga }) {
   /*const handleClick = () => {
@@ -20,7 +21,7 @@ function VagasCard({ vaga }: { vaga: Vaga }) {
     };*/
 
   return (
-    <Link href={"/vagas/${vaga.id}"} /*onClick={handleClick}*/ className="block">
+    <Link href={`/vagas/${vaga.id}`} /*onClick={handleClick}*/ className="block">
       <VacancyCard vaga={vaga} />
     </Link>
   );
@@ -39,20 +40,19 @@ export default function VagasPage() {
       user.papelPlataforma === "MASTER_ADMIN")
   );
 
-  /*useEffect(() => {
+    useEffect(() => {
     const fetchVagas = async () => {
       try {
-        const response = await fetch("/vagas.json");
-        if (!response.ok) throw new Error("Falha ao buscar vagas");
-        const data: Vaga[] = await response.json();
+        const data = await vagasService.getAll();
         setVagas(data);
       } catch (error) {
-        console.error("Erro ao buscar vagas:", error);
+        console.error("Error fetching vagas:", error);
       }
     };
 
     fetchVagas();
-  }, []);*/
+  }, []);
+
 
   // Filters
   const vagasFiltradas = vagas.filter(vaga => {
@@ -84,55 +84,6 @@ export default function VagasPage() {
     setSelectedCheckboxes(selected.map(s => s.toLowerCase()));
   };
 
-  // Static fallback slots
-  useEffect(() => {
-    if (vagas.length === 0) {
-      const vagasPadrao: Vaga[] = [
-        {
-          id: "1",
-          titulo: "UX/UI Designer",
-          descricao: "",
-          tipoVaga: TipoVaga.VOLUNTARIO,
-          criadoEm: new Date().toISOString(),
-          entidade: "laboratorios",
-          publicador: { nome: "TRIL", urlFotoPerfil: "/ian.jpeg" },
-          areas: ["Design", "FrontEnd"],
-        },
-        {
-          id: "2",
-          titulo: "Software Engineer Internship",
-          descricao: "",
-          tipoVaga: TipoVaga.ESTAGIO,
-          criadoEm: new Date().toISOString(),
-          entidade: "externo",
-          publicador: { nome: "Google", urlFotoPerfil: "/ian.jpeg" },
-          areas: ["BackEnd", "Infraestrutura"],
-        },
-        {
-          id: "3",
-          titulo: "Trainee",
-          descricao: "",
-          tipoVaga: TipoVaga.TRAINEE,
-          criadoEm: new Date().toISOString(),
-          entidade: "ligas",
-          publicador: { nome: "TAIL", urlFotoPerfil: "/ian.jpeg" },
-          areas: ["Robótica", "Pesquisa"],
-        },
-        {
-          id: "4",
-          titulo: "Voluntário Extensionista",
-          descricao: "",
-          tipoVaga: TipoVaga.VOLUNTARIO,
-          criadoEm: new Date().toISOString(),
-          entidade: "ufpb",
-          publicador: { nome: "UFPB", urlFotoPerfil: "/ian.jpeg" },
-          areas: ["Otimização e Algoritmos", "Pesquisa"],
-        },
-      ];
-      setVagas(vagasPadrao);
-    }
-  }, [vagas]);
-
   return (
     <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl">
       <div className="mb-12">
@@ -142,7 +93,7 @@ export default function VagasPage() {
           </h1>
           <div className="hidden md:flex flex-shrink-0">
             <ContributeOnGitHub
-              url="https://github.com/aquario-ufpb/aquario-entidades"
+              url="https://github.com/aquario-ufpb/aquario-vagas"
               className="rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
             />
           </div>
