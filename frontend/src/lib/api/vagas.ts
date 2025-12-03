@@ -2,7 +2,6 @@ import { Vaga, TipoVaga, EntidadeVaga } from "../../components/pages/vagas/vacan
 import { VagasDataProvider } from "./vagas_providers/vagas-provider.interface";
 import { LocalFileVagasProvider } from "./vagas_providers/local-file-vagas-provider";
 
-// Sempre usar apenas o provider local
 const provider: VagasDataProvider = new LocalFileVagasProvider();
 
 export const vagasService = {
