@@ -43,7 +43,9 @@ export class LocalFileVagasProvider implements VagasDataProvider {
 
   constructor() {
     contentContext.keys().forEach((key: string) => {
-      if (!key.includes("/centro-de-informatica/")) return;
+      if (!key.includes("/centro-de-informatica/")) {
+        return;
+      }
 
       const content = contentContext(key) as VagaJson | { default: VagaJson };
 
@@ -65,7 +67,9 @@ export class LocalFileVagasProvider implements VagasDataProvider {
 
   getById(id: string): Promise<Vaga | null> {
     const data = this.vagasData[id];
-    if (!data) return Promise.resolve(null);
+    if (!data) {
+      return Promise.resolve(null);
+    }
 
     return Promise.resolve(this.jsonToVaga(data));
   }
@@ -119,7 +123,9 @@ export class LocalFileVagasProvider implements VagasDataProvider {
   private normalizeEntidade(value: string): EntidadeVaga {
     const e = value.trim().toLowerCase();
     const allowed = ["laboratorios", "grupos", "ufpb", "pessoa", "externo", "ligas"];
-    if (allowed.includes(e)) return e as EntidadeVaga;
+    if (allowed.includes(e)) {
+      return e as EntidadeVaga;
+    }
     return "externo";
   }
 }

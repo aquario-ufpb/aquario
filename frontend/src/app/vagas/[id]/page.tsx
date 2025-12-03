@@ -16,14 +16,18 @@ export default function VagaPage({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    if (!params.id) return; // Only runs when the ID exists
+  useEffect(() => { // Only runs when the ID exists
+    if (!params.id) {
+      return;
+    } 
 
     const fetchVaga = async () => {
       try {
         const data = await vagasService.getById(params.id);
 
-        if (!data) throw new Error("Vaga não encontrada");
+        if (!data) {
+          throw new Error("Vaga não encontrada");
+        }
 
         setVaga(data);
 
@@ -37,8 +41,11 @@ export default function VagaPage({ params }: { params: { id: string } }) {
 
         setOtherVagas(similares);
       } catch (err: unknown) {
-        if (err instanceof Error) setError(err.message);
-        else setError("Ocorreu um erro desconhecido");
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Ocorreu um erro desconhecido");
+        }
       } finally {
         setIsLoading(false); // Finalizes the loading in all cases
       }
@@ -47,15 +54,18 @@ export default function VagaPage({ params }: { params: { id: string } }) {
     fetchVaga();
   }, [params.id]); // Reloads when the ID changes
 
-  if (isLoading) return <Skeleton className="h-screen w-full" />;
+  if (isLoading) {
+    return <Skeleton className="h-screen w-full" />;
+  }
 
-  if (error || !vaga)
+  if (error || !vaga) {
     return (
       <div className="container mx-auto p-4 pt-24 text-center text-red-500">
         {error || "Vaga não encontrada."}
       </div>
     );
-
+  }
+  
   return (
     <main className="mt-24">
       <div className="container mx-auto px-6 md:px-8 lg:px-16 pt-8 pb-4">

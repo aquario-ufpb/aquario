@@ -1,6 +1,6 @@
 import { Vaga, TipoVaga, EntidadeVaga } from "../../../components/pages/vagas/vacancy-card";
 
-export interface VagasDataProvider {
+export type VagasDataProvider = {
   /**
    * Retorna todas as vagas disponíveis.
    */
