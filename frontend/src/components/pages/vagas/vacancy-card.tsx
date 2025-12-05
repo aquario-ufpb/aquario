@@ -37,7 +37,7 @@ export type Vaga = {
   requisitos: string[];
   informacoesAdicionais: string;
   etapasProcesso: string[];
-  link_vaga: string;
+  linkVaga: string;
 };
 
 type VacancyCardProps = {
