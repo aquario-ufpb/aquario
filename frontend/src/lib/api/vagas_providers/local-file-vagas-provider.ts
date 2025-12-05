@@ -11,7 +11,7 @@ type VagaJson = {
   entidade: string;
   publicador: {
     nome: string;
-    urlFotoPerfil?: string | null;
+    urlFotoPerfil: string;
   };
 
   prazo: string;
@@ -21,7 +21,7 @@ type VagaJson = {
   requisitos: string[];
   informacoesAdicionais: string;
   etapasProcesso: string[];
-  link_vaga: string;
+  linkVaga: string;
 };
 
 declare const require: {
@@ -91,6 +91,28 @@ export class LocalFileVagasProvider implements VagasDataProvider {
   }
 
   private jsonToVaga(data: VagaJson): Vaga {
+    // Transform image path to API route
+    // Handles both relative paths (./assets/Compilada.png or assets/Compilada.png)
+    // and absolute paths (/assets/Compilada.png)
+    let imagePath = data.publicador.urlFotoPerfil;
+
+    // Remove leading ./ if present
+    if (imagePath.startsWith("./")) {
+      imagePath = imagePath.substring(2);
+    }
+
+    // Handle relative paths (assets/Compilada.png) - relative to JSON file location
+    if (imagePath.startsWith("assets/")) {
+      console.log("imagePath", imagePath);
+      // Convert to API route: assets/Compilada.png -> /api/content-images/aquario-vagas/centro-de-informatica/assets/Compilada.png
+      imagePath = `/api/content-images/aquario-vagas/centro-de-informatica/${imagePath}`;
+    } else if (imagePath.startsWith("/assets/")) {
+      imagePath = imagePath.replace(
+        "/assets/",
+        "/api/content-images/aquario-vagas/centro-de-informatica/assets/"
+      );
+    }
+
     return {
       id: data.id,
       titulo: data.titulo,
@@ -101,7 +123,7 @@ export class LocalFileVagasProvider implements VagasDataProvider {
       entidade: this.normalizeEntidade(data.entidade),
       publicador: {
         nome: data.publicador.nome,
-        urlFotoPerfil: data.publicador.urlFotoPerfil || null,
+        urlFotoPerfil: imagePath,
       },
 
       prazo: data.prazo,
@@ -111,7 +133,7 @@ export class LocalFileVagasProvider implements VagasDataProvider {
       requisitos: data.requisitos,
       informacoesAdicionais: data.informacoesAdicionais,
       etapasProcesso: data.etapasProcesso,
-      link_vaga: data.link_vaga,
+      linkVaga: data.linkVaga,
     };
   }
 
