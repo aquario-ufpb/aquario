@@ -106,9 +106,11 @@ export class LocalFileVagasProvider implements VagasDataProvider {
       console.log("imagePath", imagePath);
       // Convert to API route: assets/Compilada.png -> /api/content-images/aquario-vagas/centro-de-informatica/assets/Compilada.png
       imagePath = `/api/content-images/aquario-vagas/centro-de-informatica/${imagePath}`;
-    }
-    else if (imagePath.startsWith("/assets/")) {
-      imagePath = imagePath.replace("/assets/", "/api/content-images/aquario-vagas/centro-de-informatica/assets/");
+    } else if (imagePath.startsWith("/assets/")) {
+      imagePath = imagePath.replace(
+        "/assets/",
+        "/api/content-images/aquario-vagas/centro-de-informatica/assets/"
+      );
     }
 
     return {
