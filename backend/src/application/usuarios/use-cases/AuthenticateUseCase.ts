@@ -29,14 +29,20 @@ export class AuthenticateUseCase {
 
     if (!usuario) {
       this.log.warn('Usuário não encontrado durante autenticação', { email: normalizedEmail });
-      throw new Error('E-mail ou senha inválidos.');
+      throw new Error('EMAIL_NAO_ENCONTRADO');
     }
 
     const senhaCorresponde = await compare(senha, usuario.props.senhaHash);
 
     if (!senhaCorresponde) {
       this.log.warn('Senha inválida fornecida', { usuarioId: usuario.id });
-      throw new Error('E-mail ou senha inválidos.');
+      throw new Error('SENHA_INVALIDA');
+    }
+
+    // Check if email is verified
+    if (!usuario.eVerificado) {
+      this.log.warn('Tentativa de login com email não verificado', { usuarioId: usuario.id });
+      throw new Error('Email não verificado. Verifique sua caixa de entrada ou solicite um novo email de verificação.');
     }
 
     this.log.info('Autenticação concluída com sucesso', { usuarioId: usuario.id });

@@ -1,13 +1,11 @@
 export interface MembroComUsuario {
   id: string;
-  papel: string;
+  papel: string; // PapelMembro: ADMIN or MEMBRO
   usuario: {
     id: string;
     nome: string;
     urlFotoPerfil?: string | null;
-    papel: 'DOCENTE' | 'DISCENTE';
     curso?: { nome: string } | null;
-    periodo?: number | null;
   };
 }
 

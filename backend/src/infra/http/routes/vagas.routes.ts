@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated';
-import { ensureAdminOrDocente } from '../middlewares/ensureAdminOrDocente';
+import { ensureAdmin } from '../middlewares/ensureAdmin';
 import { CriarVagaController } from '../controllers/CriarVagaController';
 import { ListarVagasController } from '../controllers/ListarVagasController';
 import { EditarVagaController } from '../controllers/EditarVagaController';
@@ -17,7 +17,7 @@ const buscarVagaPorIdController = new BuscarVagaPorIdController();
 
 vagasRouter.get('/', listarVagasController.handle);
 vagasRouter.get('/:id', buscarVagaPorIdController.handle);
-vagasRouter.post('/', ensureAuthenticated, ensureAdminOrDocente, criarVagaController.handle);
+vagasRouter.post('/', ensureAuthenticated, ensureAdmin, criarVagaController.handle);
 vagasRouter.put('/:id', ensureAuthenticated, editarVagaController.handle);
 vagasRouter.delete('/:id', ensureAuthenticated, deletarVagaController.handle);
 

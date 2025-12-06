@@ -28,9 +28,7 @@ export default function NovaVagaPage() {
 
   const canPostJob = !!(
     user &&
-    (user.papel === "DOCENTE" ||
-      user.permissoes.includes("ADMIN") ||
-      user.papelPlataforma === "MASTER_ADMIN")
+    (user.permissoes.includes("ADMIN") || user.papelPlataforma === "MASTER_ADMIN")
   );
 
   useEffect(() => {

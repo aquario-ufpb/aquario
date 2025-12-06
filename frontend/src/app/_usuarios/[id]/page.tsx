@@ -21,7 +21,6 @@ type User = {
   email: string;
   papel: "DISCENTE" | "DOCENTE";
   urlFotoPerfil?: string | null;
-  bio?: string | null;
   periodo?: number | null;
   centro: Centro;
   curso?: Curso | null;
@@ -96,13 +95,6 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
           )}
         </div>
       </div>
-
-      {user.bio && (
-        <div className="mt-12">
-          <h2 className="text-2xl font-semibold mb-2">Sobre</h2>
-          <p className="text-muted-foreground whitespace-pre-wrap">{user.bio}</p>
-        </div>
-      )}
     </main>
   );
 }

@@ -7,6 +7,45 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Parse command line arguments
+DO_RESET=false
+DO_SEED=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --reset)
+            DO_RESET=true
+            shift
+            ;;
+        --seed)
+            DO_SEED=true
+            shift
+            ;;
+        -h|--help)
+            echo -e "${BLUE}🌊 Aquário Backend Startup Script${NC}"
+            echo ""
+            echo "Usage: $0 [options]"
+            echo ""
+            echo "Options:"
+            echo "  --reset    Reset all database data (will ask for confirmation)"
+            echo "  --seed     Seed the database with example data"
+            echo "  -h, --help Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0              # Start backend normally"
+            echo "  $0 --seed       # Start backend and seed database"
+            echo "  $0 --reset      # Reset database, then start backend"
+            echo "  $0 --reset --seed  # Reset database, seed it, then start"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
 echo -e "${BLUE}🚀 Starting Aquário Backend...${NC}"
 
 # Function to check if Docker is running
@@ -62,6 +101,27 @@ check_database() {
             sleep 1
             echo -n "."
         done
+    fi
+}
+
+# Function to reset the database
+reset_database() {
+    echo -e "${RED}⚠️  WARNING: This will delete ALL data in the database!${NC}"
+    echo -e "${YELLOW}This action cannot be undone.${NC}"
+    echo ""
+    read -p "Are you sure you want to reset the database? (y/N): " confirm
+    
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo -e "${BLUE}🗑️  Resetting database...${NC}"
+        npx prisma migrate reset --force --skip-seed
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}✅ Database reset successfully!${NC}"
+        else
+            echo -e "${RED}❌ Database reset failed!${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}Reset cancelled.${NC}"
     fi
 }
 
@@ -153,16 +213,27 @@ main() {
         echo -e "   backend/"
         echo -e "   ├── package.json"
         echo -e "   ├── prisma/"
-        echo -e "   └── start-backend.sh"
+        echo -e "   └── scripts/start-backend.sh"
         exit 1
     fi
     
     # Run all checks and setup
     check_docker
     check_database
+    
+    # Handle --reset flag
+    if [ "$DO_RESET" = true ]; then
+        reset_database
+    fi
+    
     run_migrations
     generate_client
-    seed_database
+    
+    # Handle --seed flag
+    if [ "$DO_SEED" = true ]; then
+        seed_database
+    fi
+    
     start_backend
 }
 
