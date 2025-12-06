@@ -110,6 +110,7 @@ async function main() {
       eVerificado: true,
       centroId: ci.id,
       cursoId: cc.id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
   });
 
