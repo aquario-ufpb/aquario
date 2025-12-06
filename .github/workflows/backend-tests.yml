@@ -71,6 +71,12 @@ jobs:
         run: |
           cd backend
           npm run test
+        env:
+          JWT_SECRET: test-jwt-secret-for-ci-minimum-32-chars
+          DATABASE_URL: postgresql://aquario:aquario@localhost:5432/aquario_test
+          NODE_ENV: test
+          EMAIL_MOCK_MODE: "true"
+          FRONTEND_URL: http://localhost:3000
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -105,4 +111,3 @@ jobs:
       - name: Fail if any tests failed
         if: needs.unit-tests.result != 'success'
         run: exit 1
-

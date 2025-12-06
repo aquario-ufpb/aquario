@@ -5,7 +5,7 @@
   "description": "O backend do Aquário é construído seguindo os princípios do **Domain-Driven Design (DDD)**, organizado em uma arquitetura de camadas para garantir separação de responsabilidades, testabilidade e escalabilidade. A estrutura é modular, com cada funcionalidade (módulo) contida dentro de sua própria pasta nas camadas correspondentes.",
   "main": "index.js",
   "scripts": {
-    "test": "tsx --test \"src/**/*.spec.ts\"",
+    "test": "node --import tsx --test 'src/**/*.spec.ts'",
     "dev": "tsx watch src/infra/http/server.ts",
     "start": "node dist/infra/http/server.js",
     "build": "tsc",
