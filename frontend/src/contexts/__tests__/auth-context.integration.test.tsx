@@ -119,17 +119,35 @@ describe("AuthContext", () => {
       expect(result.current.isAuthenticated).toBe(true);
     });
 
-    // Mock window.location.href
-    Object.defineProperty(window, "location", {
-      value: { href: "/login" },
-      writable: true,
+    // Mock window.location.href setter
+    const mockLocationHref = vi.fn();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).location;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).location = {
+      href: "",
+    };
+    Object.defineProperty(window.location, "href", {
+      set: mockLocationHref,
+      get: () => "",
+      configurable: true,
     });
 
     result.current.logout();
 
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
+    // Wait for state to update asynchronously
+    await waitFor(() => {
+      expect(result.current.token).toBeNull();
+    });
+
+    await waitFor(() => {
+      expect(result.current.user).toBeNull();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
     expect(localStorage.getItem("token")).toBeNull();
   });
 });

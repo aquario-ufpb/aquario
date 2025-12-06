@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Login from "../page";
 import * as authService from "../../../lib/api/auth";
 import { AuthProvider } from "../../../contexts/auth-context";
@@ -14,36 +14,53 @@ import { AuthProvider } from "../../../contexts/auth-context";
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
+  useSearchParams: vi.fn(),
 }));
 
 // Mock auth service
-vi.mock("../../../lib/api/auth");
+vi.mock("../../../lib/api/auth", () => ({
+  authService: {
+    login: vi.fn(),
+  },
+}));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockAuthService = authService as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockRouter = useRouter as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockSearchParams = useSearchParams as any;
 
 describe("Login Page", () => {
   const mockPush = vi.fn();
+  const mockGet = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockRouter.mockReturnValue({
       push: mockPush,
     });
+    mockGet.mockReturnValue(null);
+    mockSearchParams.mockReturnValue({
+      get: mockGet,
+    });
   });
 
-  const renderLogin = () => {
-    return render(
+  const renderLogin = async () => {
+    const result = render(
       <AuthProvider>
         <Login />
       </AuthProvider>
     );
+    // Wait for Suspense to resolve and form to be ready
+    await waitFor(() => {
+      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    });
+    return result;
   };
 
-  it("should render login form", () => {
-    renderLogin();
+  it("should render login form", async () => {
+    await renderLogin();
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/senha/i)).toBeInTheDocument();
@@ -51,11 +68,9 @@ describe("Login Page", () => {
   });
 
   it("should show error on failed login", async () => {
-    mockAuthService.authService = {
-      login: vi.fn().mockRejectedValue(new Error("E-mail ou senha inválidos.")),
-    };
+    mockAuthService.authService.login.mockRejectedValue(new Error("E-mail ou senha inválidos."));
 
-    renderLogin();
+    await renderLogin();
 
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/senha/i);
@@ -71,11 +86,9 @@ describe("Login Page", () => {
   });
 
   it("should redirect to home on successful login", async () => {
-    mockAuthService.authService = {
-      login: vi.fn().mockResolvedValue({ token: "test-token" }),
-    };
+    mockAuthService.authService.login.mockResolvedValue({ token: "test-token" });
 
-    renderLogin();
+    await renderLogin();
 
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/senha/i);
@@ -90,14 +103,14 @@ describe("Login Page", () => {
     });
   });
 
-  it("should show link to forgot password", () => {
-    renderLogin();
+  it("should show link to forgot password", async () => {
+    await renderLogin();
 
     expect(screen.getByText(/esqueci minha senha/i)).toBeInTheDocument();
   });
 
-  it("should show link to registration", () => {
-    renderLogin();
+  it("should show link to registration", async () => {
+    await renderLogin();
 
     expect(screen.getByText(/criar conta/i)).toBeInTheDocument();
   });
