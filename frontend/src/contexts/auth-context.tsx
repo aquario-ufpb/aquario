@@ -1,31 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-
-type Centro = {
-  id: string;
-  nome: string;
-  sigla: string;
-};
-
-type Curso = {
-  id: string;
-  nome: string;
-};
-
-type User = {
-  id: string;
-  nome: string;
-  email: string;
-  papel: "DISCENTE" | "DOCENTE";
-  papelPlataforma: "USER" | "MASTER_ADMIN";
-  urlFotoPerfil?: string | null;
-  centro: Centro;
-  curso?: Curso | null;
-  periodo?: number | null;
-  bio?: string | null;
-  permissoes: string[];
-};
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
+import { usuariosService, type User } from "@/lib/api/usuarios";
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -43,6 +26,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+    window.location.href = "/login";
+  }, []);
+
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
@@ -56,17 +46,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (token) {
       const fetchUser = async () => {
         try {
-          const response = await fetch("http://localhost:3001/me", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-          } else {
-            logout();
-          }
+          const userData = await usuariosService.getCurrentUser(token);
+          setUser(userData);
         } catch (error) {
           console.error("Falha ao buscar usuário:", error);
           logout();
@@ -77,19 +58,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       fetchUser();
     } else {
       setUser(null);
+      setIsLoading(false);
     }
-  }, [token]);
+  }, [token, logout]);
 
   const login = (newToken: string) => {
     localStorage.setItem("token", newToken);
     setToken(newToken);
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
-    window.location.href = "/login";
   };
 
   return (

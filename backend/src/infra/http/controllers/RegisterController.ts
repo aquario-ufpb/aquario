@@ -17,7 +17,6 @@ const registerBodySchema = z.object({
     .max(128, 'A senha deve ter no máximo 128 caracteres.'),
   centroId: z.string().uuid(),
   cursoId: z.string().uuid(),
-  bio: z.string().optional(),
   urlFotoPerfil: z.string().url().optional(),
 });
 
@@ -26,7 +25,7 @@ const registerLogger = logger.child('controller:register');
 export class RegisterController {
   async handle(request: Request, response: Response): Promise<Response> {
     try {
-      const { nome, email, senha, centroId, cursoId, bio, urlFotoPerfil } =
+      const { nome, email, senha, centroId, cursoId, urlFotoPerfil } =
         registerBodySchema.parse(request.body);
 
       registerLogger.info('Tentativa de registro recebida', {
@@ -55,7 +54,6 @@ export class RegisterController {
         senha,
         centroId,
         cursoId,
-        bio,
         urlFotoPerfil,
       });
 

@@ -35,9 +35,7 @@ export default function VagasPage() {
 
   const canPostJob = !!(
     user &&
-    (user.papel === "DOCENTE" ||
-      user.permissoes.includes("ADMIN") ||
-      user.papelPlataforma === "MASTER_ADMIN")
+    (user.permissoes.includes("ADMIN") || user.papelPlataforma === "MASTER_ADMIN")
   );
 
   useEffect(() => {

@@ -24,7 +24,6 @@ export class BuscarUsuarioPorIdController {
         nome: usuario.props.nome,
         email: usuario.props.email,
         urlFotoPerfil: usuario.props.urlFotoPerfil,
-        bio: usuario.props.bio,
         centro: usuario.props.centro,
         curso: usuario.props.curso,
       };

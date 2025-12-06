@@ -20,7 +20,6 @@ interface RegisterUseCaseRequest {
   senha: string;
   centroId: string;
   cursoId: string;
-  bio?: string;
   urlFotoPerfil?: string;
 }
 
@@ -88,7 +87,6 @@ export class RegisterUseCase {
     senha,
     centroId,
     cursoId,
-    bio,
     urlFotoPerfil,
   }: RegisterUseCaseRequest): Promise<RegisterUseCaseResponse> {
     const normalizedEmail = email.trim().toLowerCase();
@@ -157,7 +155,6 @@ export class RegisterUseCase {
       eVerificado: autoVerificado,
       centro,
       curso,
-      bio,
       urlFotoPerfil,
     });
 

@@ -68,7 +68,7 @@ describe('AuthenticateUseCase', () => {
         });
       },
       {
-        message: 'E-mail ou senha inválidos.',
+        message: 'EMAIL_NAO_ENCONTRADO',
       }
     );
   });
@@ -85,7 +85,7 @@ describe('AuthenticateUseCase', () => {
         });
       },
       {
-        message: 'E-mail ou senha inválidos.',
+        message: 'SENHA_INVALIDA',
       }
     );
   });
@@ -102,7 +102,8 @@ describe('AuthenticateUseCase', () => {
         });
       },
       {
-        message: 'Email não verificado. Verifique sua caixa de entrada ou solicite um novo email de verificação.',
+        message:
+          'Email não verificado. Verifique sua caixa de entrada ou solicite um novo email de verificação.',
       }
     );
   });

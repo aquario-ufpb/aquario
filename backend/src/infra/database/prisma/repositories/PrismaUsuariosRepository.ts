@@ -30,7 +30,6 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
             permissoes: usuario.permissoes,
             centro: usuario.centro!,
             curso: usuario.curso!,
-            bio: usuario.bio,
             urlFotoPerfil: usuario.urlFotoPerfil,
             papelPlataforma: usuario.papelPlataforma,
             eVerificado: usuario.eVerificado,
@@ -59,7 +58,6 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
         eVerificado: usuario.props.eVerificado ?? false,
         centroId: usuario.props.centro.id,
         cursoId: usuario.props.curso.id,
-        bio: usuario.props.bio,
         urlFotoPerfil: usuario.props.urlFotoPerfil,
       },
     });
@@ -91,7 +89,6 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
         eVerificado: usuario.eVerificado,
         centro: usuario.centro,
         curso: usuario.curso,
-        bio: usuario.bio,
         urlFotoPerfil: usuario.urlFotoPerfil,
       },
       usuario.id
@@ -126,7 +123,6 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
         eVerificado: usuario.eVerificado,
         centro: usuario.centro,
         curso: usuario.curso,
-        bio: usuario.bio,
         urlFotoPerfil: usuario.urlFotoPerfil,
       },
       usuario.id
@@ -153,5 +149,16 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     });
 
     log.info('Senha do usuário atualizada', { id });
+  }
+
+  async updatePapelPlataforma(id: string, papelPlataforma: 'USER' | 'MASTER_ADMIN'): Promise<void> {
+    log.debug('Atualizando papel do usuário', { id, papelPlataforma });
+
+    await prisma.usuario.update({
+      where: { id },
+      data: { papelPlataforma },
+    });
+
+    log.info('Papel do usuário atualizado', { id, papelPlataforma });
   }
 }

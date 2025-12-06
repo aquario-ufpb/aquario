@@ -43,30 +43,30 @@ app.use(express.json({ limit: '10kb' }));
 // Rate Limiting
 // ===========================================
 
-// Global rate limit (100 requests per 15 minutes per IP)
+// Global rate limit (300 requests per 15 minutes per IP)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Muitas requisições. Tente novamente mais tarde.' },
   skip: () => env.NODE_ENV === 'test', // Skip in test environment
 });
 
-// Strict rate limit for sensitive auth routes (5 requests per 15 minutes per IP)
+// Strict rate limit for sensitive auth routes (15 requests per 15 minutes per IP)
 const strictAuthLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: 15,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Muitas tentativas. Tente novamente em 15 minutos.' },
   skip: () => env.NODE_ENV === 'test', // Skip in test environment
 });
 
-// Moderate rate limit for general write operations (20 requests per 15 minutes per IP)
+// Moderate rate limit for general write operations (100 requests per 15 minutes per IP)
 const writeOperationsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Muitas requisições de escrita. Tente novamente mais tarde.' },

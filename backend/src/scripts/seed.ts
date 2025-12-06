@@ -1,7 +1,45 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, TipoEntidade } from '@prisma/client';
+import { readFileSync, readdirSync } from 'fs';
+import { join } from 'path';
 import { hash } from 'bcryptjs';
 
 const prisma = new PrismaClient();
+
+// Map JSON tipo values to database TipoEntidade enum
+function mapTipo(jsonTipo: string): TipoEntidade {
+  const tipoMap: Record<string, TipoEntidade> = {
+    LABORATORIO: TipoEntidade.LABORATORIO,
+    GRUPO_PESQUISA: TipoEntidade.GRUPO_PESQUISA,
+    GRUPO_ESTUDANTIL: TipoEntidade.GRUPO_PESQUISA, // Map to GRUPO_PESQUISA
+    LIGA_ACADEMICA: TipoEntidade.LIGA_ACADEMICA,
+    LIGA_ESTUDANTIL: TipoEntidade.LIGA_ACADEMICA, // Map to LIGA_ACADEMICA
+    CENTRO_ACADEMICO: TipoEntidade.OUTRO,
+    ATLETICA: TipoEntidade.OUTRO,
+    EMPRESA: TipoEntidade.OUTRO,
+    OUTRO: TipoEntidade.OUTRO,
+  };
+
+  return tipoMap[jsonTipo] || TipoEntidade.OUTRO;
+}
+
+interface EntityJson {
+  name: string;
+  subtitle?: string;
+  description?: string;
+  tipo: string;
+  imagePath?: string;
+  contato_email?: string;
+  instagram?: string;
+  linkedin?: string;
+  website?: string;
+  location?: string;
+  people?: Array<{
+    name: string;
+    email: string;
+    role: string;
+    profession: string;
+  }>;
+}
 
 async function main() {
   console.log('Iniciando o seeding...');
@@ -44,86 +82,6 @@ async function main() {
     ],
   });
 
-  console.log('Campi, Centros e Cursos criados.');
-
-  const passwordHash = await hash('123456', 10);
-
-  const usersData = [
-    {
-      nome: 'Thais',
-      email: 'thais@ci.ufpb.br',
-      senhaHash: passwordHash,
-      papel: 'DOCENTE' as const,
-      permissoes: [],
-      eVerificado: true,
-      centroId: ci.id,
-      papelPlataforma: 'MASTER_ADMIN' as const,
-    },
-    {
-      nome: 'Itamar',
-      email: 'itamar@aquario.com',
-      matricula: '20220060783',
-      senhaHash: passwordHash,
-      papel: 'DISCENTE' as const,
-      permissoes: [],
-      eVerificado: true,
-      centroId: ci.id,
-      papelPlataforma: 'USER' as const,
-    },
-    {
-      nome: 'Usuário de Teste',
-      email: 'teste@aquario.com',
-      matricula: '20220000000',
-      senhaHash: passwordHash,
-      papel: 'DISCENTE' as const,
-      permissoes: [],
-      eVerificado: true,
-      centroId: ci.id,
-      papelPlataforma: 'USER' as const,
-    },
-    {
-      nome: 'Tadea Silva',
-      email: 'tadea@ci.ufpb.br',
-      senhaHash: passwordHash,
-      papel: 'DOCENTE' as const,
-      permissoes: ['ADMIN'],
-      eVerificado: true,
-      centroId: ci.id,
-      papelPlataforma: 'USER' as const,
-    },
-    {
-      nome: 'Rivailda Rocha',
-      email: 'rivailda@ci.ufpb.br',
-      senhaHash: passwordHash,
-      papel: 'DOCENTE' as const,
-      permissoes: ['ADMIN'],
-      eVerificado: true,
-      centroId: ci.id,
-      papelPlataforma: 'USER' as const,
-    },
-  ];
-
-  for (const userData of usersData) {
-    try {
-      await prisma.usuario.create({ data: userData });
-      console.log(`- Usuário '${userData.nome}' criado com sucesso.`);
-    } catch (error) {
-      console.error(`Falha ao criar o usuário '${userData.nome}':`, error);
-      throw error;
-    }
-  }
-
-  console.log('Usuários criados.');
-
-  const user = await prisma.usuario.findUnique({
-    where: { email: 'teste@aquario.com' },
-  });
-  const tadea = await prisma.usuario.findUnique({
-    where: { email: 'tadea@ci.ufpb.br' },
-  });
-  const rivailda = await prisma.usuario.findUnique({
-    where: { email: 'rivailda@ci.ufpb.br' },
-  });
   const cc = await prisma.curso.findUnique({
     where: { nome: 'Ciência da Computação' },
   });
@@ -134,63 +92,87 @@ async function main() {
     where: { nome: 'Ciências de Dados e Inteligência Artificial' },
   });
 
-  const thais = await prisma.usuario.findUnique({
-    where: { email: 'thais@ci.ufpb.br' },
-  });
-  const itamar = await prisma.usuario.findUnique({
-    where: { email: 'itamar@aquario.com' },
-  });
+  if (!cc || !ec || !cdia) {
+    throw new Error('Erro ao buscar cursos no seed.');
+  }
 
-  if (!user || !tadea || !rivailda || !cc || !ec || !cdia || !thais || !itamar)
-    throw new Error('Erro ao buscar entidades no seed.');
+  console.log('Campi, Centros e Cursos criados.');
 
-  const aria = await prisma.entidade.create({
+  // Create a dummy user for entity creators (required by schema)
+  const passwordHash = await hash('dummy-password', 10);
+  const dummyUser = await prisma.usuario.create({
     data: {
-      nome: 'ARIA - Laboratório de Aplicações de Inteligência Artificial',
-      tipo: 'LABORATORIO',
+      nome: 'Sistema Aquário',
+      email: 'sistema@aquario.ufpb.br',
+      senhaHash: passwordHash,
+      permissoes: [],
+      papelPlataforma: 'MASTER_ADMIN',
+      eVerificado: true,
       centroId: ci.id,
-      criadorId: thais.id,
-    },
+      cursoId: cc.id,
+    } as any,
   });
 
-  const tail = await prisma.entidade.create({
-    data: {
-      nome: 'TAIL - Liga Acadêmica de IA e Lógica',
-      tipo: 'LIGA_ACADEMICA',
-      centroId: ci.id,
-      criadorId: itamar.id,
-    },
-  });
+  console.log('Usuário dummy criado para entidades.');
 
-  console.log('Entidades de exemplo criadas.');
+  // Load entities from JSON files
+  // Path from backend directory to frontend/content/aquario-entidades/centro-de-informatica
+  const entitiesDir = join(
+    process.cwd(),
+    '../frontend/content/aquario-entidades/centro-de-informatica'
+  );
+  const jsonFiles = readdirSync(entitiesDir).filter(file => file.endsWith('.json'));
 
-  const membrosData = [
-    {
-      usuarioId: thais.id,
-      entidadeId: aria.id,
-      papel: 'ADMIN' as const,
-      nome: 'Thais no ARIA',
-    },
-    {
-      usuarioId: itamar.id,
-      entidadeId: tail.id,
-      papel: 'ADMIN' as const,
-      nome: 'Itamar no TAIL',
-    },
-  ];
+  console.log(`Encontrados ${jsonFiles.length} arquivos JSON de entidades.`);
 
-  for (const membroData of membrosData) {
+  const entities = [];
+  for (const file of jsonFiles) {
     try {
-      const { nome, ...rest } = membroData;
-      await prisma.membroEntidade.create({ data: rest });
-      console.log(`- Membro '${nome}' criado com sucesso.`);
+      const filePath = join(entitiesDir, file);
+      const fileContent = readFileSync(filePath, 'utf-8');
+      const entityJson: EntityJson = JSON.parse(fileContent);
+
+      // Map JSON to database structure
+      const tipo = mapTipo(entityJson.tipo);
+      const descricao = entityJson.description || entityJson.subtitle || null;
+      const contato = entityJson.contato_email || null;
+
+      // Extract image filename from imagePath (e.g., "./assets/ARIA.png" -> "ARIA.png")
+      let urlFoto = null;
+      if (entityJson.imagePath) {
+        const imageMatch = entityJson.imagePath.match(/assets\/(.+)$/);
+        if (imageMatch) {
+          urlFoto = imageMatch[1];
+        }
+      }
+
+      entities.push({
+        nome: entityJson.name,
+        descricao,
+        tipo,
+        urlFoto,
+        contato,
+        centroId: ci.id,
+        criadorId: dummyUser.id,
+      });
     } catch (error) {
-      console.error(`Falha ao criar o membro '${membroData.nome}':`, error);
-      throw error;
+      console.error(`Erro ao processar arquivo ${file}:`, error);
     }
   }
 
-  console.log('Membros de entidades criados.');
+  // Create entities in database
+  for (const entityData of entities) {
+    try {
+      await prisma.entidade.create({
+        data: entityData,
+      });
+      console.log(`- Entidade '${entityData.nome}' criada com sucesso.`);
+    } catch (error) {
+      console.error(`Falha ao criar entidade '${entityData.nome}':`, error);
+    }
+  }
+
+  console.log(`${entities.length} entidades criadas.`);
 
   // Create example guides (CC)
   const guia1 = await prisma.guia.create({
@@ -401,9 +383,6 @@ async function main() {
   console.log(`Curso de CC (cursoId):          ${cc.id}`);
   console.log(`Curso de EC (cursoId):          ${ec.id}`);
   console.log(`Curso de CDIA (cursoId):        ${cdia.id}`);
-  console.log(`Usuário de Teste (NÃO AUTORIZADO): ${user.id}`);
-  console.log(`Usuário Tadea (AUTORIZADO):       ${tadea.id}`);
-  console.log(`Usuário Rivailda (AUTORIZADO):    ${rivailda.id}`);
   console.log(`Guia CC 1 (guiaId):              ${guia1.id}`);
   console.log(`Guia CC 2 (guiaId):              ${guia2.id}`);
   console.log(`Guia EC 1 (guiaId):              ${guiaEc1.id}`);

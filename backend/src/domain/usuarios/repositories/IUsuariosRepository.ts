@@ -7,4 +7,5 @@ export interface IUsuariosRepository {
   findMany(): Promise<Usuario[]>;
   markAsVerified(id: string): Promise<void>;
   updatePassword(id: string, senhaHash: string): Promise<void>;
+  updatePapelPlataforma(id: string, papelPlataforma: 'USER' | 'MASTER_ADMIN'): Promise<void>;
 }

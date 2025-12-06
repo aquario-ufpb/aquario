@@ -42,6 +42,13 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     }
   }
 
+  async updatePapelPlataforma(id: string, papelPlataforma: 'USER' | 'MASTER_ADMIN'): Promise<void> {
+    const usuario = this.items.find(item => item.id === id);
+    if (usuario) {
+      usuario.props.papelPlataforma = papelPlataforma;
+    }
+  }
+
   // Helper method for tests
   clear(): void {
     this.items = [];
@@ -123,9 +130,7 @@ export class InMemoryTokenVerificacaoRepository implements ITokenVerificacaoRepo
   }
 
   async deleteByUsuarioIdAndTipo(usuarioId: string, tipo: TipoToken): Promise<void> {
-    this.items = this.items.filter(
-      item => !(item.usuarioId === usuarioId && item.tipo === tipo)
-    );
+    this.items = this.items.filter(item => !(item.usuarioId === usuarioId && item.tipo === tipo));
   }
 
   // Helper method for tests

@@ -14,10 +14,12 @@ export class ListarUsuariosController {
         id: usuario.id,
         nome: usuario.props.nome,
         email: usuario.props.email,
+        papelPlataforma: usuario.props.papelPlataforma,
+        eVerificado: usuario.eVerificado,
         urlFotoPerfil: usuario.props.urlFotoPerfil,
-        bio: usuario.props.bio,
         centro: usuario.props.centro,
         curso: usuario.props.curso,
+        permissoes: usuario.props.permissoes,
       }));
 
       return response.status(200).json(responseData);

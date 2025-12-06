@@ -11,7 +11,6 @@ interface UsuarioProps {
   eVerificado?: boolean;
   centro: Centro;
   curso: Curso;
-  bio?: string | null;
   urlFotoPerfil?: string | null;
 }
 

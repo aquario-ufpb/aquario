@@ -97,7 +97,6 @@ model Usuario {
   permissoes        String[]         @default([])
   papelPlataforma   PapelPlataforma  @default(USER)
   eVerificado       Boolean          @default(false)
-  bio               String?
   urlFotoPerfil     String?
   criadoEm          DateTime         @default(now())
   atualizadoEm      DateTime         @updatedAt

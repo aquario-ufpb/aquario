@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
-import { Search } from "lucide-react";
+import { User, LogOut, Settings, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/contexts/auth-context";
 
 import LinkHover from "@/components/shared/link-hover";
 import { ModeToggle } from "@/components/shared/mode-toggle";
@@ -16,40 +17,34 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 export default function NavBar() {
-  const [query, setQuery] = useState("");
-  const { theme, resolvedTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { isAuthenticated, user, logout, isLoading } = useAuth();
   const isDark = (resolvedTheme || theme) === "dark";
 
-  const handleSearch = (_e: React.KeyboardEvent<HTMLInputElement>) => {
-    // if (e.key === "Enter" && query.trim() !== "") {
-    //   router.push(`/pesquisar?q=${query}`);
-    // }
+  const getInitials = (name: string) => {
+    const names = name.split(" ");
+    const initials = names.map(n => n[0]).join("");
+    return initials.toUpperCase().slice(0, 2);
   };
 
   return (
     <>
       <nav className="fixed top-4 z-50 w-full flex justify-center">
-        <div className="grid grid-cols-2 lg:grid-cols-3 items-center h-[60px] px-6 gap-4 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg w-full max-w-4xl">
-          {/* Left side - Search (hidden on mobile) */}
-          <div className="hidden lg:flex items-center justify-start">
-            <div className="relative w-48">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 dark:text-zinc-300 z-10 pointer-events-none" />
-              <input
-                type="search"
-                placeholder="Pesquisar"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                onKeyDown={handleSearch}
-                className="w-full h-10 rounded-full border border-white/30 dark:border-white/30 pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground dark:placeholder:text-zinc-300 dark:text-zinc-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 dark:focus-visible:ring-white/30 disabled:cursor-not-allowed disabled:opacity-50 bg-transparent dark:bg-transparent backdrop-blur-0"
-                style={{ backgroundColor: "transparent" }}
-              />
-            </div>
-          </div>
-
-          {/* Logo - Left on mobile, Center on desktop */}
-          <div className="flex items-center justify-start md:justify-center select-none">
+        <div className="grid grid-cols-2 lg:grid-cols-2 items-center h-[60px] px-6 gap-4 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg w-full max-w-4xl">
+          {/* Left side - Logo */}
+          <div className="flex items-center justify-start select-none">
             <Link
               href="/"
               className="flex items-center gap-2 cursor-pointer select-none"
@@ -162,9 +157,84 @@ export default function NavBar() {
             </NavigationMenu>
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
             <LinkHover href="/entidades">ENTIDADES</LinkHover>
-            {/* <ProfileButton /> */}
             <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
-            <ModeToggle />
+            {!isLoading && (
+              <>
+                {isAuthenticated && user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="relative h-8 w-8 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2"
+                      >
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.urlFotoPerfil || ""} alt={user.nome} />
+                          <AvatarFallback className="text-xs">
+                            {getInitials(user.nome)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user.nome}</p>
+                          <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/perfil" className="flex items-center cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Perfil</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      {user.papelPlataforma === "MASTER_ADMIN" && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin" className="flex items-center cursor-pointer">
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Administração</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => setTheme(isDark ? "light" : "dark")}
+                        className="cursor-pointer"
+                      >
+                        {isDark ? (
+                          <>
+                            <Sun className="mr-2 h-4 w-4" />
+                            <span>Tema Claro</span>
+                          </>
+                        ) : (
+                          <>
+                            <Moon className="mr-2 h-4 w-4" />
+                            <span>Tema Escuro</span>
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={logout}
+                        className="text-red-600 dark:text-red-400 cursor-pointer"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sair</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <LinkHover href="/login">ENTRAR</LinkHover>
+                )}
+              </>
+            )}
+            {!isAuthenticated && (
+              <>
+                <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
+                <ModeToggle />
+              </>
+            )}
           </div>
         </div>
       </nav>
