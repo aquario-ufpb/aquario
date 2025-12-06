@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function AdminPage() {
   const { user, isLoading: authLoading, isAuthenticated, token } = useAuth();
@@ -73,10 +74,19 @@ export default function AdminPage() {
   const handleRoleUpdate = async (userId: string, newRole: "USER" | "MASTER_ADMIN") => {
     try {
       await updateRoleMutation.mutateAsync({ userId, papelPlataforma: newRole });
+      const user = users.find(u => u.id === userId);
+      toast.success("Papel atualizado", {
+        description: `O papel de ${user?.nome || "o usuário"} foi atualizado para ${
+          newRole === "MASTER_ADMIN" ? "Administrador" : "Usuário"
+        }.`,
+      });
       // React Query will automatically refetch the users list
     } catch (err) {
-      // Error is handled by React Query, but we can show it if needed
-      console.error("Erro ao atualizar papel:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro ao atualizar papel do usuário";
+      toast.error("Erro ao atualizar papel", {
+        description: errorMessage,
+      });
     }
   };
 
@@ -230,10 +240,7 @@ export default function AdminPage() {
                         </Select>
                       </td>
                       <td className="p-4 text-right">
-                        {updateRoleMutation.isPending &&
-                          updateRoleMutation.variables?.userId === userItem.id && (
-                            <span className="text-xs text-muted-foreground">...</span>
-                          )}
+                        {/* Loading state is now handled by toast notifications */}
                       </td>
                     </tr>
                   ))
