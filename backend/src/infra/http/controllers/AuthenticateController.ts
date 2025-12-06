@@ -29,7 +29,6 @@ export class AuthenticateController {
 
       const token = jwt.sign(
         {
-          papel: usuario.props.papel,
           permissoes: usuario.props.permissoes,
           papelPlataforma: usuario.props.papelPlataforma,
         },

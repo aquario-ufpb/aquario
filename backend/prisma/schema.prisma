@@ -7,11 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum PapelUsuario {
-  DISCENTE
-  DOCENTE
-}
-
 enum PapelPlataforma {
   USER
   MASTER_ADMIN
@@ -54,6 +49,11 @@ enum StatusGuia {
   RASCUNHO
 }
 
+enum TipoToken {
+  VERIFICACAO_EMAIL
+  RESET_SENHA
+}
+
 model Campus {
   id      String   @id @default(uuid())
   nome    String   @unique
@@ -94,21 +94,19 @@ model Usuario {
   email             String           @unique
   matricula         String?          @unique
   senhaHash         String
-  papel             PapelUsuario
   permissoes        String[]         @default([])
   papelPlataforma   PapelPlataforma  @default(USER)
   eVerificado       Boolean          @default(false)
   bio               String?
   urlFotoPerfil     String?
-  periodo           Int?
   criadoEm          DateTime         @default(now())
   atualizadoEm      DateTime         @updatedAt
 
   centroId String
-  cursoId  String?
+  cursoId  String
 
-  centro Centro? @relation(fields: [centroId], references: [id])
-  curso  Curso?  @relation(fields: [cursoId], references: [id])
+  centro Centro @relation(fields: [centroId], references: [id])
+  curso  Curso  @relation(fields: [cursoId], references: [id])
 
   publicacoes           Publicacao[]
   vagasPublicadas       Vaga[]
@@ -116,6 +114,7 @@ model Usuario {
   projetos              Projeto[]
   projetosMembro        Projeto[]            @relation("MembrosDoProjeto")
   entidadesCriadas      Entidade[]           @relation("CriadorDeEntidade")
+  tokensVerificacao     TokenVerificacao[]
 }
 
 model Publicacao {
@@ -286,4 +285,20 @@ model SubSecaoGuia {
   @@index([secaoId])
   @@index([ordem])
   @@index([status])
+}
+
+model TokenVerificacao {
+  id        String    @id @default(uuid())
+  usuarioId String
+  token     String    @unique
+  tipo      TipoToken
+  expiraEm  DateTime
+  usadoEm   DateTime?
+  criadoEm  DateTime  @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([usuarioId])
+  @@index([expiraEm])
 }

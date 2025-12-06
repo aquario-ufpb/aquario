@@ -1,82 +1,133 @@
 import { describe, it, beforeEach } from 'node:test';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
+import { hash } from 'bcryptjs';
 import { AuthenticateUseCase } from '../AuthenticateUseCase';
-import { RegisterUseCase } from '../RegisterUseCase';
-import {
-  InMemoryUsuariosRepository,
-  InMemoryCentrosRepository,
-  InMemoryCursosRepository,
-} from './in-memory-repositories';
-import { Centro, Curso, PapelUsuario } from '@prisma/client';
-
-let usuariosRepository: InMemoryUsuariosRepository;
-let authenticateUseCase: AuthenticateUseCase;
-let registerUseCase: RegisterUseCase;
-let centro: Centro;
-let curso: Curso;
+import { InMemoryUsuariosRepository } from './in-memory-repositories';
+import { Usuario } from '@/domain/usuarios/entities/Usuario';
+import { Centro, Curso } from '@prisma/client';
 
 describe('AuthenticateUseCase', () => {
+  let usuariosRepository: InMemoryUsuariosRepository;
+  let sut: AuthenticateUseCase;
+
+  const mockCentro: Centro = {
+    id: 'centro-1',
+    nome: 'Centro de Informática',
+    sigla: 'CI',
+    descricao: 'Centro de Informática da UFPB',
+    campusId: 'campus-1',
+  };
+
+  const mockCurso: Curso = {
+    id: 'curso-1',
+    nome: 'Ciência da Computação',
+    centroId: 'centro-1',
+  };
+
+  const createUser = async (overrides = {}) => {
+    const senhaHash = await hash('password123', 10);
+    return Usuario.create({
+      nome: 'Test User',
+      email: 'test@academico.ufpb.br',
+      senhaHash,
+      permissoes: [],
+      papelPlataforma: 'USER',
+      eVerificado: true,
+      centro: mockCentro,
+      curso: mockCurso,
+      ...overrides,
+    });
+  };
+
   beforeEach(() => {
     usuariosRepository = new InMemoryUsuariosRepository();
-
-    centro = {
-      id: 'centro-1',
-      nome: 'Centro de Informática',
-      sigla: 'CI',
-      descricao: null,
-      campusId: 'campus-1',
-    };
-
-    curso = {
-      id: 'curso-1',
-      nome: 'Ciência da Computação',
-      centroId: centro.id,
-    };
-
-    const centrosRepository = new InMemoryCentrosRepository([centro]);
-    const cursosRepository = new InMemoryCursosRepository([curso]);
-
-    authenticateUseCase = new AuthenticateUseCase(usuariosRepository);
-    registerUseCase = new RegisterUseCase(usuariosRepository, centrosRepository, cursosRepository);
+    sut = new AuthenticateUseCase(usuariosRepository);
   });
 
-  it('should authenticate with a case-insensitive email match', async () => {
-    await registerUseCase.execute({
-      nome: 'Usuário Autenticado',
-      email: 'usuario.autenticado@example.com',
-      senha: 'SenhaForte123',
-      papel: PapelUsuario.DISCENTE,
-      centroId: centro.id,
-      cursoId: curso.id,
-      periodo: 5,
+  it('should authenticate user with valid credentials', async () => {
+    const user = await createUser();
+    await usuariosRepository.create(user);
+
+    const result = await sut.execute({
+      email: 'test@academico.ufpb.br',
+      senha: 'password123',
     });
 
-    const { usuario } = await authenticateUseCase.execute({
-      email: 'USUARIO.AUTENTICADO@EXAMPLE.COM',
-      senha: 'SenhaForte123',
-    });
-
-    assert.equal(usuario.props.email, 'usuario.autenticado@example.com');
-    assert.equal(usuario.props.papelPlataforma, 'USER');
+    assert.strictEqual(result.usuario.id, user.id);
   });
 
-  it('should throw an error when the password does not match', async () => {
-    await registerUseCase.execute({
-      nome: 'Usuário com Senha',
-      email: 'senha.errada@example.com',
-      senha: 'SenhaCorreta123',
-      papel: PapelUsuario.DOCENTE,
-      centroId: centro.id,
-    });
+  it('should reject invalid email', async () => {
+    const user = await createUser();
+    await usuariosRepository.create(user);
 
     await assert.rejects(
-      authenticateUseCase.execute({
-        email: 'senha.errada@example.com',
-        senha: 'senhaIncorreta',
-      }),
+      async () => {
+        await sut.execute({
+          email: 'wrong@academico.ufpb.br',
+          senha: 'password123',
+        });
+      },
       {
         message: 'E-mail ou senha inválidos.',
       }
     );
+  });
+
+  it('should reject invalid password', async () => {
+    const user = await createUser();
+    await usuariosRepository.create(user);
+
+    await assert.rejects(
+      async () => {
+        await sut.execute({
+          email: 'test@academico.ufpb.br',
+          senha: 'wrongpassword',
+        });
+      },
+      {
+        message: 'E-mail ou senha inválidos.',
+      }
+    );
+  });
+
+  it('should block unverified users', async () => {
+    const user = await createUser({ eVerificado: false });
+    await usuariosRepository.create(user);
+
+    await assert.rejects(
+      async () => {
+        await sut.execute({
+          email: 'test@academico.ufpb.br',
+          senha: 'password123',
+        });
+      },
+      {
+        message: 'Email não verificado. Verifique sua caixa de entrada ou solicite um novo email de verificação.',
+      }
+    );
+  });
+
+  it('should normalize email to lowercase', async () => {
+    const user = await createUser();
+    await usuariosRepository.create(user);
+
+    const result = await sut.execute({
+      email: 'TEST@ACADEMICO.UFPB.BR',
+      senha: 'password123',
+    });
+
+    assert.strictEqual(result.usuario.id, user.id);
+  });
+
+  it('should trim whitespace from email', async () => {
+    const user = await createUser();
+    await usuariosRepository.create(user);
+
+    const result = await sut.execute({
+      email: '  test@academico.ufpb.br  ',
+      senha: 'password123',
+    });
+
+    assert.strictEqual(result.usuario.id, user.id);
   });
 });

@@ -39,6 +39,12 @@ export class AuthenticateUseCase {
       throw new Error('E-mail ou senha inválidos.');
     }
 
+    // Check if email is verified
+    if (!usuario.eVerificado) {
+      this.log.warn('Tentativa de login com email não verificado', { usuarioId: usuario.id });
+      throw new Error('Email não verificado. Verifique sua caixa de entrada ou solicite um novo email de verificação.');
+    }
+
     this.log.info('Autenticação concluída com sucesso', { usuarioId: usuario.id });
     return { usuario };
   }
