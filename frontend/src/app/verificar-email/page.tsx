@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { authService } from "@/lib/api/auth";
 import { useAuth } from "@/contexts/auth-context";
 
-export default function VerificarEmail() {
+function VerificarEmailForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -203,5 +203,24 @@ export default function VerificarEmail() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerificarEmail() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen p-4">
+          <div className="w-full max-w-md">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <VerificarEmailForm />
+    </Suspense>
   );
 }
