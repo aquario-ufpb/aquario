@@ -10,6 +10,8 @@ import React, {
 } from "react";
 import { usuariosService, type User } from "@/lib/api/usuarios";
 import { tokenManager } from "@/lib/api/token-manager";
+import { identify, reset as resetPostHog } from "@/analytics/posthog-client";
+import { USE_BACKEND } from "@/lib/config/env";
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -32,6 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
     setUser(null);
     tokenManager.clear();
+    resetPostHog(); // Reset PostHog on logout
     window.location.href = "/login";
   }, []);
 
@@ -63,6 +66,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           const userData = await usuariosService.getCurrentUser(token);
           setUser(userData);
+          // Identify user in PostHog (only if backend is enabled)
+          if (USE_BACKEND) {
+            identify(userData.id, {
+              email: userData.email,
+              name: userData.nome,
+              papelPlataforma: userData.papelPlataforma,
+              centroId: userData.centro.id,
+              centroNome: userData.centro.nome,
+              centroSigla: userData.centro.sigla,
+              cursoId: userData.curso.id,
+              cursoNome: userData.curso.nome,
+              eVerificado: userData.eVerificado,
+              permissoes: userData.permissoes,
+            });
+          }
         } catch (error) {
           console.error("Falha ao buscar usuário:", error);
           logout();
@@ -74,6 +92,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setUser(null);
       setIsLoading(false);
+      // Reset PostHog when user is logged out
+      resetPostHog();
     }
   }, [token, logout, handleTokenRefresh]);
 

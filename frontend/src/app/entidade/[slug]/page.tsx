@@ -17,9 +17,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { EditarEntidadeDialog } from "@/components/pages/entidades/editar-entidade-dialog";
 import { isUserAdminOfEntidade } from "@/lib/types/membro.types";
+import { useBackend } from "@/lib/config/env";
 
 export default function EntidadeDetailPage({ params }: { params: { slug: string } }) {
   const { user } = useAuth();
+  const { isEnabled: backendEnabled } = useBackend();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -38,8 +40,9 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
       .slice(0, 8); // Limit to 8 similar entities
   }, [entidade, allEntidades]);
 
-  // Check if user can edit this entidade
+  // Check if user can edit this entidade (only if backend is enabled)
   const canEdit =
+    backendEnabled &&
     user &&
     (user.papelPlataforma === "MASTER_ADMIN" || isUserAdminOfEntidade(user.id, entidade?.membros));
 
