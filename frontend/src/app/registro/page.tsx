@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, FormEvent, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Image from "next/image";
 import { authService } from "@/lib/api/auth";
 import { centrosService } from "@/lib/api/centros";
 import { cursosService } from "@/lib/api/cursos";
@@ -114,45 +114,54 @@ export default function Registro() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-2 mt-20">
-      <div className="grid w-full max-w-7xl h-auto gap-0 lg:grid-cols-2 border border-gray-200 dark:border-gray-700 dark:bg-transparent rounded-lg overflow-hidden my-12">
-        <div className="relative hidden lg:flex items-center justify-center bg-sky-300 dark:bg-sky-800">
-          <Image
-            src="/logo_removebg.png"
-            alt="Logo"
-            width={96}
-            height={96}
-            className="absolute top-6 left-6 object-contain"
-          />
+    <div className="flex items-center justify-center min-h-screen p-4 mt-20">
+      <div className="w-full max-w-md">
+        {/* Logo and Header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/logo.png"
+              alt="Logo do Aquário"
+              width={64}
+              height={64}
+              className="rounded-full"
+            />
+          </div>
+          <h1 className="text-3xl font-bold text-aquario-primary dark:text-white mb-2">
+            Crie sua conta
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">Preencha os campos para se registrar</p>
         </div>
 
-        <div className="flex items-center justify-center p-6 md:p-8 bg-white dark:bg-transparent">
-          <form
-            onSubmit={handleRegister}
-            className="w-full max-w-md space-y-6 flex flex-col items-center"
-          >
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-aquario-primary dark:text-white">
-                Crie sua conta
-              </h1>
-              <p className="text-sm text-muted-foreground dark:text-muted-foreground">
-                Preencha os campos para se registrar
-              </p>
-            </div>
-
-            <div className="space-y-4 w-full max-w-xs">
+        {/* Registration Form */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
+          <form onSubmit={handleRegister} className="space-y-6">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="nome">Nome Completo</Label>
+                <Label
+                  htmlFor="nome"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Nome Completo
+                </Label>
                 <Input
                   id="nome"
                   value={nome}
                   onChange={e => setNome(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="h-12 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Seu nome completo"
                 />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -161,13 +170,20 @@ export default function Registro() {
                   onChange={e => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="h-12 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Apenas emails @academico.ufpb.br são permitidos
                 </p>
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Senha
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -176,77 +192,115 @@ export default function Registro() {
                   required
                   disabled={isLoading}
                   minLength={8}
+                  className="h-12 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Mínimo de 8 caracteres"
                 />
-                <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Mínimo de 8 caracteres</p>
               </div>
+
               <div className="space-y-2">
-                <Label>Centro</Label>
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Centro
+                </Label>
                 <Select
                   onValueChange={setCentroId}
                   value={centroId}
                   disabled={isLoadingCentros || isLoading}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600">
                     <SelectValue placeholder="Selecione seu centro" />
                   </SelectTrigger>
                   <SelectContent>
-                    {centros.map(centro => (
-                      <SelectItem key={centro.id} value={centro.id}>
-                        {centro.sigla} - {centro.nome}
+                    {isLoadingCentros ? (
+                      <SelectItem value="loading" disabled>
+                        Carregando centros...
                       </SelectItem>
-                    ))}
+                    ) : (
+                      centros.map(centro => (
+                        <SelectItem key={centro.id} value={centro.id}>
+                          {centro.sigla} - {centro.nome}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="space-y-2">
-                <Label>Curso</Label>
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Curso
+                </Label>
                 <Select
                   onValueChange={setCursoId}
                   value={cursoId}
                   disabled={!centroId || isLoadingCursos || cursos.length === 0 || isLoading}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600">
                     <SelectValue placeholder="Selecione seu curso" />
                   </SelectTrigger>
                   <SelectContent>
-                    {cursos.map(curso => (
-                      <SelectItem key={curso.id} value={curso.id}>
-                        {curso.nome}
+                    {isLoadingCursos ? (
+                      <SelectItem value="loading" disabled>
+                        Carregando cursos...
                       </SelectItem>
-                    ))}
+                    ) : cursos.length === 0 && centroId ? (
+                      <SelectItem value="no-courses" disabled>
+                        Nenhum curso encontrado
+                      </SelectItem>
+                    ) : (
+                      cursos.map(curso => (
+                        <SelectItem key={curso.id} value={curso.id}>
+                          {curso.nome}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 {!centroId && (
-                  <p className="text-xs text-muted-foreground">Selecione um centro primeiro</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Selecione um centro primeiro
+                  </p>
                 )}
               </div>
-              {error && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
-                </div>
-              )}
-              {success && (
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <p className="text-sm text-green-600 dark:text-green-400 text-center">
-                    {success}
-                  </p>
-                </div>
-              )}
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || !centroId || !cursoId}
-              >
-                {isLoading ? "Registrando..." : "Registrar"}
-              </Button>
             </div>
-            <p className="text-center text-sm">
+
+            {error && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+              </div>
+            )}
+
+            {success && (
+              <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <p className="text-sm text-green-600 dark:text-green-400 text-center">{success}</p>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={isLoading || !centroId || !cursoId}
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? "Registrando..." : "Criar conta"}
+            </Button>
+          </form>
+
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
               Já tem uma conta?{" "}
-              <Link href="/login" className="font-semibold text-sky-500 hover:underline">
+              <Link
+                href="/login"
+                className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+              >
                 Faça login
               </Link>
             </p>
-          </form>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Centro de Informática - UFPB</p>
         </div>
       </div>
     </div>
