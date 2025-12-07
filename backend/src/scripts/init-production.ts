@@ -33,6 +33,8 @@ interface EntityJson {
   linkedin?: string;
   website?: string;
   location?: string;
+  founding_date?: string; // ISO date string or date string
+  order?: number;
   people?: Array<{
     name: string;
     email: string;
@@ -167,8 +169,29 @@ async function main() {
 
         // Map JSON to database structure
         const tipo = mapTipo(entityJson.tipo);
-        const descricao = entityJson.description || entityJson.subtitle || null;
+        const subtitle = entityJson.subtitle || null;
+        const descricao = entityJson.description || null;
         const contato = entityJson.contato_email || null;
+        const instagram = entityJson.instagram || null;
+        const linkedin = entityJson.linkedin || null;
+        const website = entityJson.website || null;
+        const location = entityJson.location || null;
+
+        // Parse founding_date if provided
+        let foundingDate: Date | null = null;
+        if (entityJson.founding_date) {
+          const parsed = new Date(entityJson.founding_date);
+          if (!isNaN(parsed.getTime())) {
+            foundingDate = parsed;
+          }
+        }
+
+        // Build metadata object (currently only contains order)
+        // Use Prisma's JsonValue type for metadata
+        const metadata: { order?: number } | undefined =
+          entityJson.order !== undefined && entityJson.order !== null
+            ? { order: entityJson.order }
+            : undefined;
 
         // Extract image filename from imagePath (e.g., "./assets/ARIA.png" -> "ARIA.png")
         let urlFoto = null;
@@ -189,17 +212,31 @@ async function main() {
               },
             },
             update: {
+              subtitle,
               descricao,
               urlFoto,
               contato,
+              instagram,
+              linkedin,
+              website,
+              location,
+              foundingDate,
+              metadata: metadata || undefined,
               centroId: centroInfo.id,
             },
             create: {
               nome: entityJson.name,
+              subtitle,
               descricao,
               tipo,
               urlFoto,
               contato,
+              instagram,
+              linkedin,
+              website,
+              location,
+              foundingDate,
+              metadata: metadata || undefined,
               centroId: centroInfo.id,
             },
           });
@@ -218,9 +255,16 @@ async function main() {
             await prisma.entidade.update({
               where: { id: existing.id },
               data: {
+                subtitle,
                 descricao,
                 urlFoto,
                 contato,
+                instagram,
+                linkedin,
+                website,
+                location,
+                foundingDate,
+                metadata: metadata || undefined,
                 centroId: centroInfo.id,
               },
             });

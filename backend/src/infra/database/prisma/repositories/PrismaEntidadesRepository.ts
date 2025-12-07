@@ -40,7 +40,21 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
 
     return Entidade.create(
       {
-        ...entidade,
+        nome: entidade.nome,
+        subtitle: entidade.subtitle,
+        descricao: entidade.descricao,
+        tipo: entidade.tipo,
+        urlFoto: entidade.urlFoto,
+        contato: entidade.contato,
+        instagram: entidade.instagram,
+        linkedin: entidade.linkedin,
+        website: entidade.website,
+        location: entidade.location,
+        foundingDate: entidade.foundingDate,
+        metadata: entidade.metadata as Record<string, unknown> | null,
+        centroId: entidade.centroId,
+        projetos: entidade.projetos as Record<string, unknown>[],
+        publicacoes: entidade.publicacoes as Record<string, unknown>[],
       },
       entidade.id
     );
@@ -61,10 +75,17 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
       Entidade.create(
         {
           nome: entidade.nome,
+          subtitle: entidade.subtitle,
           descricao: entidade.descricao,
           tipo: entidade.tipo,
           urlFoto: entidade.urlFoto,
           contato: entidade.contato,
+          instagram: entidade.instagram,
+          linkedin: entidade.linkedin,
+          website: entidade.website,
+          location: entidade.location,
+          foundingDate: entidade.foundingDate,
+          metadata: entidade.metadata as Record<string, unknown> | null,
           centroId: entidade.centroId,
         },
         entidade.id

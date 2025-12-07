@@ -197,13 +197,20 @@ model ItemAchadoEPerdido {
 }
 
 model Entidade {
-  id        String       @id @default(uuid())
-  nome      String
-  descricao String?
-  tipo      TipoEntidade
-  urlFoto   String?
-  contato   String?
-  centroId  String
+  id           String       @id @default(uuid())
+  nome         String
+  subtitle     String?
+  descricao    String?
+  tipo         TipoEntidade
+  urlFoto      String?
+  contato      String?
+  instagram    String?
+  linkedin     String?
+  website      String?
+  location     String?
+  foundingDate  DateTime?
+  metadata     Json?        @default("{}")
+  centroId     String
 
   centro      Centro           @relation(fields: [centroId], references: [id])
   membros     MembroEntidade[]

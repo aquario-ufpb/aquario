@@ -19,9 +19,8 @@ export const ENDPOINTS = {
   REFRESH: "/refresh",
   ME: "/me",
   USUARIOS: "/usuarios",
-  // TODO: Uncomment when backend integration is implemented
-  // ENTIDADES: "/entidades",
-  // ENTIDADE_BY_SLUG: (slug: string) => `/entidades/slug/${slug}`,
+  ENTIDADES: "/entidades",
+  ENTIDADE_BY_SLUG: (slug: string) => `/entidades/slug/${slug}`,
 } as const;
 
 // External API URLs
