@@ -18,7 +18,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 // Mock useBackend to return true for these tests
-vi.mock("../../../lib/config/env", async (importOriginal) => {
+vi.mock("../../../lib/config/env", async importOriginal => {
   const actual = await importOriginal<typeof import("../../../lib/config/env")>();
   return {
     ...actual,
