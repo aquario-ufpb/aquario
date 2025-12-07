@@ -37,10 +37,10 @@ export class SolicitarReenvioVerificacaoController {
       return response.status(200).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        log.warn('Erro de validação ao solicitar reenvio', { errors: error.errors });
+        log.warn('Erro de validação ao solicitar reenvio', { issues: error.issues });
         return response.status(400).json({
           message: 'Dados inválidos',
-          errors: error.errors,
+          issues: z.treeifyError(error),
         });
       }
       if (error instanceof Error) {
@@ -52,4 +52,3 @@ export class SolicitarReenvioVerificacaoController {
     }
   }
 }
-
