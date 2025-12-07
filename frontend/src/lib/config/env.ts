@@ -4,7 +4,8 @@
 
 // Backend Usage Flag
 // If false, all providers are forced to local and auth features are disabled
-export const USE_BACKEND = process.env.NEXT_PUBLIC_USE_BACKEND !== "false";
+// If not set, default to false
+export const USE_BACKEND = process.env.NEXT_PUBLIC_USE_BACKEND !== "false" ? true : false;
 
 // API Configuration
 export const API_CONFIG = {
