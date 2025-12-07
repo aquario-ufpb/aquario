@@ -72,4 +72,16 @@ export const usuariosService = {
 
     return response.json();
   },
+
+  deleteUser: async (userId: string, token: string): Promise<void> => {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}/${userId}`, {
+      method: "DELETE",
+      token, // Still accept token for explicit override if needed
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Falha ao deletar usuário");
+    }
+  },
 };

@@ -161,4 +161,14 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
 
     log.info('Papel do usuário atualizado', { id, papelPlataforma });
   }
+
+  async delete(id: string): Promise<void> {
+    log.info('Deletando usuário', { id });
+
+    await prisma.usuario.delete({
+      where: { id },
+    });
+
+    log.info('Usuário deletado com sucesso', { id });
+  }
 }

@@ -8,7 +8,6 @@ export interface EntidadeProps {
   urlFoto?: string | null;
   contato?: string | null;
   centroId: string;
-  criadorId: string;
   projetos?: Record<string, unknown>[];
   publicacoes?: Record<string, unknown>[];
 }

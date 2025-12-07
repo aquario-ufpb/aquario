@@ -28,8 +28,11 @@ enum StatusItemAchadoEPerdido {
 
 enum TipoEntidade {
   LABORATORIO
-  GRUPO_PESQUISA
+  GRUPO
   LIGA_ACADEMICA
+  EMPRESA
+  ATLETICA
+  CENTRO_ACADEMICO
   OUTRO
 }
 
@@ -112,7 +115,6 @@ model Usuario {
   itensAchadosEPerdidos ItemAchadoEPerdido[]
   projetos              Projeto[]
   projetosMembro        Projeto[]            @relation("MembrosDoProjeto")
-  entidadesCriadas      Entidade[]           @relation("CriadorDeEntidade")
   tokensVerificacao     TokenVerificacao[]
 }
 
@@ -202,10 +204,8 @@ model Entidade {
   urlFoto   String?
   contato   String?
   centroId  String
-  criadorId String
 
   centro      Centro           @relation(fields: [centroId], references: [id])
-  criador     Usuario          @relation("CriadorDeEntidade", fields: [criadorId], references: [id])
   membros     MembroEntidade[]
   projetos    Projeto[]
   publicacoes Publicacao[]

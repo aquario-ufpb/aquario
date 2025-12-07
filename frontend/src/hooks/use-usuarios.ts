@@ -72,3 +72,25 @@ export const useUpdateUserRole = () => {
     },
   });
 };
+
+/**
+ * Hook to delete a user (admin only)
+ * Returns a mutation that can be called with userId
+ */
+export const useDeleteUser = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return usuariosService.deleteUser(userId, token);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch users list after deletion
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+    },
+  });
+};

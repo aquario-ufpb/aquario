@@ -13,6 +13,7 @@ export const ENDPOINTS = {
   REGISTER: "/register",
   VERIFY_EMAIL: "/verificar-email",
   RESEND_VERIFICATION: "/reenviar-verificacao",
+  REQUEST_RESEND_VERIFICATION: "/solicitar-reenvio-verificacao",
   FORGOT_PASSWORD: "/esqueci-senha",
   RESET_PASSWORD: "/resetar-senha",
   REFRESH: "/refresh",

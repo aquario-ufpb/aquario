@@ -1,7 +1,6 @@
 import { PrismaClient, TipoEntidade } from '@prisma/client';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { hash } from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -9,13 +8,14 @@ const prisma = new PrismaClient();
 function mapTipo(jsonTipo: string): TipoEntidade {
   const tipoMap: Record<string, TipoEntidade> = {
     LABORATORIO: TipoEntidade.LABORATORIO,
-    GRUPO_PESQUISA: TipoEntidade.GRUPO_PESQUISA,
-    GRUPO_ESTUDANTIL: TipoEntidade.GRUPO_PESQUISA, // Map to GRUPO_PESQUISA
+    GRUPO: TipoEntidade.GRUPO,
+    GRUPO_PESQUISA: TipoEntidade.GRUPO, // Map old value to new GRUPO
+    GRUPO_ESTUDANTIL: TipoEntidade.GRUPO, // Map to GRUPO
     LIGA_ACADEMICA: TipoEntidade.LIGA_ACADEMICA,
     LIGA_ESTUDANTIL: TipoEntidade.LIGA_ACADEMICA, // Map to LIGA_ACADEMICA
-    CENTRO_ACADEMICO: TipoEntidade.OUTRO,
-    ATLETICA: TipoEntidade.OUTRO,
-    EMPRESA: TipoEntidade.OUTRO,
+    EMPRESA: TipoEntidade.EMPRESA,
+    ATLETICA: TipoEntidade.ATLETICA,
+    CENTRO_ACADEMICO: TipoEntidade.CENTRO_ACADEMICO,
     OUTRO: TipoEntidade.OUTRO,
   };
 
@@ -98,24 +98,6 @@ async function main() {
 
   console.log('Campi, Centros e Cursos criados.');
 
-  // Create a dummy user for entity creators (required by schema)
-  const passwordHash = await hash('dummy-password', 10);
-  const dummyUser = await prisma.usuario.create({
-    data: {
-      nome: 'Sistema Aquário',
-      email: 'sistema@aquario.ufpb.br',
-      senhaHash: passwordHash,
-      permissoes: [],
-      papelPlataforma: 'MASTER_ADMIN',
-      eVerificado: true,
-      centroId: ci.id,
-      cursoId: cc.id,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any,
-  });
-
-  console.log('Usuário dummy criado para entidades.');
-
   // Load entities from JSON files
   // Path from backend directory to frontend/content/aquario-entidades/centro-de-informatica
   const entitiesDir = join(
@@ -154,7 +136,6 @@ async function main() {
         urlFoto,
         contato,
         centroId: ci.id,
-        criadorId: dummyUser.id,
       });
     } catch (error) {
       console.error(`Erro ao processar arquivo ${file}:`, error);

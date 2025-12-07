@@ -2,7 +2,7 @@
 
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useState, useEffect } from "react";
-import { useUsuarios, useUpdateUserRole } from "@/hooks/use-usuarios";
+import { useUsuarios, useUpdateUserRole, useDeleteUser } from "@/hooks/use-usuarios";
 import type { User } from "@/lib/api/usuarios";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useRequireAuth({ requireRole: "MASTER_ADMIN" });
@@ -25,6 +26,7 @@ export default function AdminPage() {
   // React Query hooks
   const { data: users = [], isLoading, error: queryError, refetch } = useUsuarios();
   const updateRoleMutation = useUpdateUserRole();
+  const deleteUserMutation = useDeleteUser();
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -57,6 +59,29 @@ export default function AdminPage() {
       const errorMessage =
         err instanceof Error ? err.message : "Erro ao atualizar papel do usuário";
       toast.error("Erro ao atualizar papel", {
+        description: errorMessage,
+      });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (
+      !confirm(
+        `Tem certeza que deseja deletar o usuário "${userName}"?\n\nEsta ação não pode ser desfeita.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteUserMutation.mutateAsync(userId);
+      toast.success("Usuário deletado", {
+        description: `${userName} foi removido da plataforma.`,
+      });
+      // React Query will automatically refetch the users list
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao deletar usuário";
+      toast.error("Erro ao deletar usuário", {
         description: errorMessage,
       });
     }
@@ -212,7 +237,28 @@ export default function AdminPage() {
                         </Select>
                       </td>
                       <td className="p-4 text-right">
-                        {/* Loading state is now handled by toast notifications */}
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteUser(userItem.id, userItem.nome)}
+                          disabled={
+                            (deleteUserMutation.isPending &&
+                              deleteUserMutation.variables === userItem.id) ||
+                            userItem.id === user?.id
+                          }
+                          className="gap-2"
+                          title={
+                            userItem.id === user?.id
+                              ? "Você não pode deletar sua própria conta"
+                              : "Deletar usuário"
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          {deleteUserMutation.isPending &&
+                          deleteUserMutation.variables === userItem.id
+                            ? "Deletando..."
+                            : "Deletar"}
+                        </Button>
                       </td>
                     </tr>
                   ))

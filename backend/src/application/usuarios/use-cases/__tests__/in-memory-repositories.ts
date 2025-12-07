@@ -49,6 +49,14 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     }
   }
 
+  async delete(id: string): Promise<void> {
+    const index = this.items.findIndex(item => item.id === id);
+    if (index === -1) {
+      throw new Error('Usuário não encontrado.');
+    }
+    this.items.splice(index, 1);
+  }
+
   // Helper method for tests
   clear(): void {
     this.items = [];

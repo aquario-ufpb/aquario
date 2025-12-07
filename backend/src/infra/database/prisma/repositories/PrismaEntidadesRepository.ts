@@ -66,7 +66,6 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
           urlFoto: entidade.urlFoto,
           contato: entidade.contato,
           centroId: entidade.centroId,
-          criadorId: entidade.criadorId,
         },
         entidade.id
       )

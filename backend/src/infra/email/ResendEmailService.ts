@@ -7,7 +7,7 @@ const log = logger.child('email:resend');
 
 export class ResendEmailService implements IEmailService {
   private resend: Resend;
-  private fromEmail = 'Aquário <noreply@aquario.ufpb.br>';
+  private fromEmail = 'Aquário <onboarding@resend.dev>'; // Resend's test email (works without domain verification)
 
   constructor() {
     this.resend = new Resend(env.RESEND_API_KEY);
@@ -143,4 +143,3 @@ export class ResendEmailService implements IEmailService {
     `.trim();
   }
 }
-

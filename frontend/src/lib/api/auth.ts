@@ -126,6 +126,28 @@ export const authService = {
     return response.json();
   },
 
+  requestResendVerification: async (email: string): Promise<ResendVerificationResponse> => {
+    const response = await fetch(`${API_URL}${ENDPOINTS.REQUEST_RESEND_VERIFICATION}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    // Always return success for security (prevent email enumeration)
+    if (!response.ok) {
+      // Still return success even if there's an error
+      return {
+        success: true,
+        message:
+          "Se o email estiver cadastrado e não verificado, você receberá um novo email de verificação.",
+      };
+    }
+
+    return response.json();
+  },
+
   forgotPassword: async (email: string): Promise<ForgotPasswordResponse> => {
     const response = await fetch(`${API_URL}${ENDPOINTS.FORGOT_PASSWORD}`, {
       method: "POST",

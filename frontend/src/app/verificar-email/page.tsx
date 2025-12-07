@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { authService } from "@/lib/api/auth";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -12,6 +13,8 @@ function VerificarEmailForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [resendSuccess, setResendSuccess] = useState(false);
   const searchParams = useSearchParams();
   const { token, user } = useAuth();
 
@@ -50,26 +53,49 @@ function VerificarEmailForm() {
   }, [searchParams, handleVerify]);
 
   const handleResend = async () => {
-    if (!token) {
-      setError("Você precisa estar logado para reenviar o email de verificação");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      await authService.resendVerification(token);
-      setSuccess(true);
+    if (token) {
+      // User is logged in, use authenticated endpoint
+      setIsLoading(true);
       setError(null);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Falha ao reenviar email de verificação");
+      setResendSuccess(false);
+
+      try {
+        await authService.resendVerification(token);
+        setResendSuccess(true);
+        setError(null);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Falha ao reenviar email de verificação");
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
+    } else {
+      // User is not logged in, use email-based endpoint
+      if (!email || !email.includes("@")) {
+        setError("Por favor, insira um email válido");
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      setResendSuccess(false);
+
+      try {
+        await authService.requestResendVerification(email);
+        setResendSuccess(true);
+        setError(null);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Falha ao solicitar novo email de verificação");
+        }
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -118,20 +144,18 @@ function VerificarEmailForm() {
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-full shadow-lg">
-              <Image
-                src="/logo.png"
-                alt="Logo do Aquário"
-                width={64}
-                height={64}
-                className="rounded-full"
-              />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Logo do Aquário"
+              width={64}
+              height={64}
+              className="rounded-full"
+            />
           </div>
           <h1 className="text-3xl font-bold text-aquario-primary dark:text-white mb-2">
             Verificar email
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             {searchParams.get("token")
               ? "Verificando seu email..."
               : "Verifique seu email ou solicite um novo link"}
@@ -147,6 +171,16 @@ function VerificarEmailForm() {
             </div>
           ) : (
             <>
+              {resendSuccess && (
+                <div className="mb-6 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-sm text-green-600 dark:text-green-400 text-center">
+                    {token
+                      ? "Email de verificação reenviado! Verifique sua caixa de entrada."
+                      : "Se o email estiver cadastrado e não verificado, você receberá um novo email de verificação."}
+                  </p>
+                </div>
+              )}
+
               {error && (
                 <div className="mb-6 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                   <p className="text-sm text-red-600 dark:text-red-400 text-center mb-2">{error}</p>
@@ -165,20 +199,38 @@ function VerificarEmailForm() {
 
               {!searchParams.get("token") && (
                 <div className="space-y-4">
-                  <p className="text-center text-gray-600 dark:text-gray-400">
+                  <p className="text-center text-gray-600 dark:text-gray-400 mb-4">
                     {user && !user.eVerificado
                       ? "Seu email ainda não foi verificado. Clique no botão abaixo para reenviar o email de verificação."
-                      : "Você precisa de um token de verificação. Verifique seu email ou faça login para solicitar um novo link."}
+                      : "Você precisa de um token de verificação. Digite seu email abaixo para solicitar um novo link de verificação."}
                   </p>
-                  {token && user && !user.eVerificado && (
+                  {token && user && !user.eVerificado ? (
                     <Button onClick={handleResend} className="w-full" disabled={isLoading}>
                       {isLoading ? "Enviando..." : "Reenviar email de verificação"}
                     </Button>
-                  )}
-                  {!token && (
-                    <Link href="/login">
-                      <Button className="w-full">Ir para o login</Button>
-                    </Link>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                        >
+                          Email
+                        </label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="seu@email.com"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          disabled={isLoading}
+                          className="w-full"
+                        />
+                      </div>
+                      <Button onClick={handleResend} className="w-full" disabled={isLoading}>
+                        {isLoading ? "Enviando..." : "Solicitar novo email de verificação"}
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}

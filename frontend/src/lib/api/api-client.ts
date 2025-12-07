@@ -12,7 +12,7 @@ let refreshCallbacks: Array<{ resolve: (token: string) => void; reject: (error: 
 /**
  * Refresh the authentication token
  */
-async function refreshToken(currentToken: string): Promise<string> {
+function refreshToken(currentToken: string): Promise<string> {
   // If a refresh is already in progress, wait for it
   if (refreshPromise) {
     return new Promise((resolve, reject) => {
