@@ -1,49 +1,17 @@
-import { PrismaClient, TipoEntidade } from '@prisma/client';
-import { readFileSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Map JSON tipo values to database TipoEntidade enum
-function mapTipo(jsonTipo: string): TipoEntidade {
-  const tipoMap: Record<string, TipoEntidade> = {
-    LABORATORIO: TipoEntidade.LABORATORIO,
-    GRUPO: TipoEntidade.GRUPO,
-    GRUPO_PESQUISA: TipoEntidade.GRUPO, // Map old value to new GRUPO
-    GRUPO_ESTUDANTIL: TipoEntidade.GRUPO, // Map to GRUPO
-    LIGA_ACADEMICA: TipoEntidade.LIGA_ACADEMICA,
-    LIGA_ESTUDANTIL: TipoEntidade.LIGA_ACADEMICA, // Map to LIGA_ACADEMICA
-    EMPRESA: TipoEntidade.EMPRESA,
-    ATLETICA: TipoEntidade.ATLETICA,
-    CENTRO_ACADEMICO: TipoEntidade.CENTRO_ACADEMICO,
-    OUTRO: TipoEntidade.OUTRO,
-  };
-
-  return tipoMap[jsonTipo] || TipoEntidade.OUTRO;
-}
-
-interface EntityJson {
-  name: string;
-  subtitle?: string;
-  description?: string;
-  tipo: string;
-  imagePath?: string;
-  contato_email?: string;
-  instagram?: string;
-  linkedin?: string;
-  website?: string;
-  location?: string;
-  people?: Array<{
-    name: string;
-    email: string;
-    role: string;
-    profession: string;
-  }>;
-}
-
 async function main() {
-  console.log('Iniciando o seeding...');
+  console.log('🌱 Iniciando seeding de dados de desenvolvimento/teste...\n');
+  console.log(
+    '⚠️  Nota: Este script assume que os dados de referência (campus, centros, cursos, entidades)'
+  );
+  console.log(
+    '   já foram criados. Execute "npm run db:init-production" primeiro se necessário.\n'
+  );
 
+  // Only delete test data, not reference data
   await prisma.subSecaoGuia.deleteMany();
   await prisma.secaoGuia.deleteMany();
   await prisma.guia.deleteMany();
@@ -52,36 +20,11 @@ async function main() {
   await prisma.vaga.deleteMany();
   await prisma.projeto.deleteMany();
   await prisma.membroEntidade.deleteMany();
-  await prisma.entidade.deleteMany();
   await prisma.usuario.deleteMany();
-  await prisma.curso.deleteMany();
-  await prisma.centro.deleteMany();
-  await prisma.campus.deleteMany();
 
-  console.log('Dados antigos limpos.');
+  console.log('✅ Dados de teste antigos limpos.\n');
 
-  const campus1 = await prisma.campus.create({
-    data: {
-      nome: 'Campus I - João Pessoa',
-    },
-  });
-
-  const ci = await prisma.centro.create({
-    data: {
-      nome: 'Centro de Informática',
-      sigla: 'CI',
-      campusId: campus1.id,
-    },
-  });
-
-  await prisma.curso.createMany({
-    data: [
-      { nome: 'Ciência da Computação', centroId: ci.id },
-      { nome: 'Engenharia da Computação', centroId: ci.id },
-      { nome: 'Ciências de Dados e Inteligência Artificial', centroId: ci.id },
-    ],
-  });
-
+  // Find existing cursos (assume they exist from init-production)
   const cc = await prisma.curso.findUnique({
     where: { nome: 'Ciência da Computação' },
   });
@@ -93,68 +36,12 @@ async function main() {
   });
 
   if (!cc || !ec || !cdia) {
-    throw new Error('Erro ao buscar cursos no seed.');
+    throw new Error(
+      '❌ Cursos não encontrados. Execute "npm run db:init-production" primeiro para criar os dados de referência.'
+    );
   }
 
-  console.log('Campi, Centros e Cursos criados.');
-
-  // Load entities from JSON files
-  // Path from backend directory to frontend/content/aquario-entidades/centro-de-informatica
-  const entitiesDir = join(
-    process.cwd(),
-    '../frontend/content/aquario-entidades/centro-de-informatica'
-  );
-  const jsonFiles = readdirSync(entitiesDir).filter(file => file.endsWith('.json'));
-
-  console.log(`Encontrados ${jsonFiles.length} arquivos JSON de entidades.`);
-
-  const entities = [];
-  for (const file of jsonFiles) {
-    try {
-      const filePath = join(entitiesDir, file);
-      const fileContent = readFileSync(filePath, 'utf-8');
-      const entityJson: EntityJson = JSON.parse(fileContent);
-
-      // Map JSON to database structure
-      const tipo = mapTipo(entityJson.tipo);
-      const descricao = entityJson.description || entityJson.subtitle || null;
-      const contato = entityJson.contato_email || null;
-
-      // Extract image filename from imagePath (e.g., "./assets/ARIA.png" -> "ARIA.png")
-      let urlFoto = null;
-      if (entityJson.imagePath) {
-        const imageMatch = entityJson.imagePath.match(/assets\/(.+)$/);
-        if (imageMatch) {
-          urlFoto = imageMatch[1];
-        }
-      }
-
-      entities.push({
-        nome: entityJson.name,
-        descricao,
-        tipo,
-        urlFoto,
-        contato,
-        centroId: ci.id,
-      });
-    } catch (error) {
-      console.error(`Erro ao processar arquivo ${file}:`, error);
-    }
-  }
-
-  // Create entities in database
-  for (const entityData of entities) {
-    try {
-      await prisma.entidade.create({
-        data: entityData,
-      });
-      console.log(`- Entidade '${entityData.nome}' criada com sucesso.`);
-    } catch (error) {
-      console.error(`Falha ao criar entidade '${entityData.nome}':`, error);
-    }
-  }
-
-  console.log(`${entities.length} entidades criadas.`);
+  console.log('✅ Cursos encontrados (assumindo que dados de referência já existem).\n');
 
   // Create example guides (CC)
   const guia1 = await prisma.guia.create({
@@ -358,10 +245,17 @@ async function main() {
 
   console.log('Guias de exemplo criados (CC, EC, CDIA).');
 
+  // Find centro for reference
+  const ci = await prisma.centro.findUnique({
+    where: { sigla: 'CI' },
+  });
+
   console.log(`
 --- IDs para Teste ---
 `);
-  console.log(`Centro de Informática (centroId): ${ci.id}`);
+  if (ci) {
+    console.log(`Centro de Informática (centroId): ${ci.id}`);
+  }
   console.log(`Curso de CC (cursoId):          ${cc.id}`);
   console.log(`Curso de EC (cursoId):          ${ec.id}`);
   console.log(`Curso de CDIA (cursoId):        ${cdia.id}`);

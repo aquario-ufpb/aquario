@@ -19,6 +19,7 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:seed": "tsx src/scripts/seed.ts",
+    "db:init-production": "tsx src/scripts/init-production.ts",
     "db:reset": "prisma migrate reset",
     "db:status": "prisma migrate status",
     "migrate": "./scripts/migrate.sh",
