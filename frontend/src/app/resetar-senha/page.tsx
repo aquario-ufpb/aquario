@@ -116,15 +116,13 @@ function ResetarSenhaForm() {
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-full shadow-lg">
-              <Image
-                src="/logo.png"
-                alt="Logo do Aquário"
-                width={64}
-                height={64}
-                className="rounded-full"
-              />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Logo do Aquário"
+              width={64}
+              height={64}
+              className="rounded-full"
+            />
           </div>
           <h1 className="text-3xl font-bold text-aquario-primary dark:text-white mb-2">
             Redefinir senha

@@ -67,15 +67,13 @@ function LoginForm() {
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-white dark:bg-gray-800 rounded-full shadow-lg">
-              <Image
-                src="/logo.png"
-                alt="Logo do Aquário"
-                width={64}
-                height={64}
-                className="rounded-full"
-              />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Logo do Aquário"
+              width={64}
+              height={64}
+              className="rounded-full"
+            />
           </div>
           <h1 className="text-3xl font-bold text-aquario-primary dark:text-white mb-2">
             Bem-vindo de volta
@@ -141,20 +139,6 @@ function LoginForm() {
                     Verifique sua caixa de entrada ou{" "}
                     <Link href="/verificar-email" className="underline">
                       solicite um novo email de verificação
-                    </Link>
-                  </p>
-                )}
-                {error.includes("não está cadastrado") && (
-                  <p className="text-xs text-red-500 dark:text-red-400 text-center mt-2">
-                    <Link href="/registro" className="underline font-semibold">
-                      Criar uma conta
-                    </Link>
-                  </p>
-                )}
-                {error.includes("Senha incorreta") && (
-                  <p className="text-xs text-red-500 dark:text-red-400 text-center mt-2">
-                    <Link href="/esqueci-senha" className="underline">
-                      Esqueci minha senha
                     </Link>
                   </p>
                 )}
