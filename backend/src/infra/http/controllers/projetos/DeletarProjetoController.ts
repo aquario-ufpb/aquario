@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { DeletarProjetoUseCase } from '@/application/projetos/use-cases/DeletarProjetoUseCase';
-import { PrismaProjetosRepository } from '../../database/prisma/repositories/PrismaProjetosRepository';
+import { PrismaProjetosRepository } from '@/infra/database/prisma/repositories/PrismaProjetosRepository';
 
 const deletarProjetoParamsSchema = z.object({
   id: z.string(),

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ListarCentrosUseCase } from '@/application/centros/use-cases/ListarCentrosUseCase';
-import { PrismaCentrosRepository } from '../../database/prisma/repositories/PrismaCentrosRepository';
+import { PrismaCentrosRepository } from '@/infra/database/prisma/repositories/PrismaCentrosRepository';
 
 export class ListarCentrosController {
   async handle(request: Request, response: Response): Promise<Response> {

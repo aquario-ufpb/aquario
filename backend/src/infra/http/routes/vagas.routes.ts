@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated';
 import { ensureAdmin } from '../middlewares/ensureAdmin';
-import { CriarVagaController } from '../controllers/CriarVagaController';
-import { ListarVagasController } from '../controllers/ListarVagasController';
-import { EditarVagaController } from '../controllers/EditarVagaController';
-import { DeletarVagaController } from '../controllers/DeletarVagaController';
-import { BuscarVagaPorIdController } from '../controllers/BuscarVagaPorIdController';
+import { CriarVagaController } from '../controllers/vagas/CriarVagaController';
+import { ListarVagasController } from '../controllers/vagas/ListarVagasController';
+import { EditarVagaController } from '../controllers/vagas/EditarVagaController';
+import { DeletarVagaController } from '../controllers/vagas/DeletarVagaController';
+import { BuscarVagaPorIdController } from '../controllers/vagas/BuscarVagaPorIdController';
 
 const vagasRouter = Router();
 

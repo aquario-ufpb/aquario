@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { RegisterUseCase } from '@/application/usuarios/use-cases/RegisterUseCase';
-import { PrismaUsuariosRepository } from '../../database/prisma/repositories/PrismaUsuariosRepository';
-import { PrismaCentrosRepository } from '../../database/prisma/repositories/PrismaCentrosRepository';
-import { PrismaCursosRepository } from '../../database/prisma/repositories/PrismaCursosRepository';
-import { PrismaTokenVerificacaoRepository } from '../../database/prisma/repositories/PrismaTokenVerificacaoRepository';
+import { PrismaUsuariosRepository } from '@/infra/database/prisma/repositories/PrismaUsuariosRepository';
+import { PrismaCentrosRepository } from '@/infra/database/prisma/repositories/PrismaCentrosRepository';
+import { PrismaCursosRepository } from '@/infra/database/prisma/repositories/PrismaCursosRepository';
+import { PrismaTokenVerificacaoRepository } from '@/infra/database/prisma/repositories/PrismaTokenVerificacaoRepository';
 import { getEmailService } from '@/infra/email';
 import { logger } from '@/infra/logger';
 

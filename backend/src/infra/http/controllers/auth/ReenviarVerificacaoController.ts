@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ReenviarVerificacaoUseCase } from '@/application/usuarios/use-cases/ReenviarVerificacaoUseCase';
-import { PrismaTokenVerificacaoRepository } from '../../database/prisma/repositories/PrismaTokenVerificacaoRepository';
-import { PrismaUsuariosRepository } from '../../database/prisma/repositories/PrismaUsuariosRepository';
+import { PrismaTokenVerificacaoRepository } from '@/infra/database/prisma/repositories/PrismaTokenVerificacaoRepository';
+import { PrismaUsuariosRepository } from '@/infra/database/prisma/repositories/PrismaUsuariosRepository';
 import { getEmailService } from '@/infra/email';
 import { logger } from '@/infra/logger';
 

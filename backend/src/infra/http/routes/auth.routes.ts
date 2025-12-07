@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { AuthenticateController } from '../controllers/AuthenticateController';
-import { RegisterController } from '../controllers/RegisterController';
-import { MeuPerfilController } from '../controllers/MeuPerfilController';
-import { VerificarEmailController } from '../controllers/VerificarEmailController';
-import { ReenviarVerificacaoController } from '../controllers/ReenviarVerificacaoController';
-import { SolicitarReenvioVerificacaoController } from '../controllers/SolicitarReenvioVerificacaoController';
-import { EsqueciSenhaController } from '../controllers/EsqueciSenhaController';
-import { ResetarSenhaController } from '../controllers/ResetarSenhaController';
-import { RefreshTokenController } from '../controllers/RefreshTokenController';
+import { AuthenticateController } from '../controllers/auth/AuthenticateController';
+import { RegisterController } from '../controllers/auth/RegisterController';
+import { MeuPerfilController } from '../controllers/auth/MeuPerfilController';
+import { VerificarEmailController } from '../controllers/auth/VerificarEmailController';
+import { ReenviarVerificacaoController } from '../controllers/auth/ReenviarVerificacaoController';
+import { SolicitarReenvioVerificacaoController } from '../controllers/auth/SolicitarReenvioVerificacaoController';
+import { EsqueciSenhaController } from '../controllers/auth/EsqueciSenhaController';
+import { ResetarSenhaController } from '../controllers/auth/ResetarSenhaController';
+import { RefreshTokenController } from '../controllers/auth/RefreshTokenController';
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated';
 
 const authRouter = Router();

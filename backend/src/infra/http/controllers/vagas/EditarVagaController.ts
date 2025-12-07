@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { EditarVagaUseCase } from '@/application/vagas/use-cases/EditarVagaUseCase';
-import { PrismaVagasRepository } from '../../database/prisma/repositories/PrismaVagasRepository';
+import { PrismaVagasRepository } from '@/infra/database/prisma/repositories/PrismaVagasRepository';
 import { TipoVaga } from '@prisma/client';
 
 const editarVagaBodySchema = z.object({

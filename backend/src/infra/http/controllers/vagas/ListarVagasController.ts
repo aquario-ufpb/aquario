@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ListarVagasUseCase } from '@/application/vagas/use-cases/ListarVagasUseCase';
-import { PrismaVagasRepository } from '../../database/prisma/repositories/PrismaVagasRepository';
+import { PrismaVagasRepository } from '@/infra/database/prisma/repositories/PrismaVagasRepository';
 
 export class ListarVagasController {
   async handle(request: Request, response: Response): Promise<Response> {

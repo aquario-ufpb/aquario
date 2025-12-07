@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { EditarProjetoUseCase } from '@/application/projetos/use-cases/EditarProjetoUseCase';
-import { PrismaProjetosRepository } from '../../database/prisma/repositories/PrismaProjetosRepository';
+import { PrismaProjetosRepository } from '@/infra/database/prisma/repositories/PrismaProjetosRepository';
 
 const editarProjetoBodySchema = z.object({
   titulo: z.string(),

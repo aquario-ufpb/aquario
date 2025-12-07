@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ListarProjetosUseCase } from '@/application/projetos/use-cases/ListarProjetosUseCase';
-import { PrismaProjetosRepository } from '../../database/prisma/repositories/PrismaProjetosRepository';
+import { PrismaProjetosRepository } from '@/infra/database/prisma/repositories/PrismaProjetosRepository';
 
 export class ListarProjetosController {
   async handle(request: Request, response: Response): Promise<Response> {

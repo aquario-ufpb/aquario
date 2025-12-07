@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { ListarEntidadesController } from '../controllers/ListarEntidadesController';
-import { BuscarEntidadePorIdController } from '../controllers/BuscarEntidadePorIdController';
-import { BuscarEntidadePorSlugController } from '../controllers/BuscarEntidadePorSlugController';
-import { EditarEntidadeController } from '../controllers/EditarEntidadeController';
+import { ListarEntidadesController } from '../controllers/entidades/ListarEntidadesController';
+import { BuscarEntidadePorIdController } from '../controllers/entidades/BuscarEntidadePorIdController';
+import { BuscarEntidadePorSlugController } from '../controllers/entidades/BuscarEntidadePorSlugController';
+import { EditarEntidadeController } from '../controllers/entidades/EditarEntidadeController';
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated';
 
 const entidadesRouter = Router();

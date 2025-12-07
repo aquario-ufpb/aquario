@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { ListarUsuariosController } from '../controllers/ListarUsuariosController';
-import { BuscarUsuarioPorIdController } from '../controllers/BuscarUsuarioPorIdController';
-import { AtualizarPapelPlataformaController } from '../controllers/AtualizarPapelPlataformaController';
-import { DeletarUsuarioController } from '../controllers/DeletarUsuarioController';
+import { ListarUsuariosController } from '../controllers/usuarios/ListarUsuariosController';
+import { BuscarUsuarioPorIdController } from '../controllers/usuarios/BuscarUsuarioPorIdController';
+import { AtualizarPapelPlataformaController } from '../controllers/usuarios/AtualizarPapelPlataformaController';
+import { DeletarUsuarioController } from '../controllers/usuarios/DeletarUsuarioController';
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated';
 import { ensureAdmin } from '../middlewares/ensureAdmin';
 

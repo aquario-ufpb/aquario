@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { CriarPublicacaoController } from '../controllers/CriarPublicacaoController';
-import { ListarPublicacoesController } from '../controllers/ListarPublicacoesController';
-import { BuscarPublicacaoPorIdController } from '../controllers/BuscarPublicacaoPorIdController';
-import { EditarPublicacaoController } from '../controllers/EditarPublicacaoController';
-import { DeletarPublicacaoController } from '../controllers/DeletarPublicacaoController';
+import { CriarPublicacaoController } from '../controllers/publicacoes/CriarPublicacaoController';
+import { ListarPublicacoesController } from '../controllers/publicacoes/ListarPublicacoesController';
+import { BuscarPublicacaoPorIdController } from '../controllers/publicacoes/BuscarPublicacaoPorIdController';
+import { EditarPublicacaoController } from '../controllers/publicacoes/EditarPublicacaoController';
+import { DeletarPublicacaoController } from '../controllers/publicacoes/DeletarPublicacaoController';
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated';
 
 const publicacoesRouter = Router();

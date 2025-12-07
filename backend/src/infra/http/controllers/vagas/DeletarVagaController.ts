@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { DeletarVagaUseCase } from '@/application/vagas/use-cases/DeletarVagaUseCase';
-import { PrismaVagasRepository } from '../../database/prisma/repositories/PrismaVagasRepository';
+import { PrismaVagasRepository } from '@/infra/database/prisma/repositories/PrismaVagasRepository';
 
 const deletarVagaParamsSchema = z.object({
   id: z.string(),

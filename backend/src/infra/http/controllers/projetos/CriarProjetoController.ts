@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { CriarProjetoUseCase } from '@/application/projetos/use-cases/CriarProjetoUseCase';
-import { PrismaProjetosRepository } from '../../database/prisma/repositories/PrismaProjetosRepository';
-import { PrismaUsuariosRepository } from '../../database/prisma/repositories/PrismaUsuariosRepository';
-import { PrismaCentrosRepository } from '../../database/prisma/repositories/PrismaCentrosRepository';
+import { PrismaProjetosRepository } from '@/infra/database/prisma/repositories/PrismaProjetosRepository';
+import { PrismaUsuariosRepository } from '@/infra/database/prisma/repositories/PrismaUsuariosRepository';
+import { PrismaCentrosRepository } from '@/infra/database/prisma/repositories/PrismaCentrosRepository';
 import { TipoProjeto } from '@prisma/client';
 
 const criarProjetoBodySchema = z.object({

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { ResetarSenhaUseCase } from '@/application/usuarios/use-cases/ResetarSenhaUseCase';
-import { PrismaTokenVerificacaoRepository } from '../../database/prisma/repositories/PrismaTokenVerificacaoRepository';
-import { PrismaUsuariosRepository } from '../../database/prisma/repositories/PrismaUsuariosRepository';
+import { PrismaTokenVerificacaoRepository } from '@/infra/database/prisma/repositories/PrismaTokenVerificacaoRepository';
+import { PrismaUsuariosRepository } from '@/infra/database/prisma/repositories/PrismaUsuariosRepository';
 import { logger } from '@/infra/logger';
 
 const resetarSenhaBodySchema = z.object({

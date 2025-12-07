@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaUsuariosRepository } from '../../database/prisma/repositories/PrismaUsuariosRepository';
+import { PrismaUsuariosRepository } from '@/infra/database/prisma/repositories/PrismaUsuariosRepository';
 
 export class MeuPerfilController {
   async handle(request: Request, response: Response): Promise<Response> {

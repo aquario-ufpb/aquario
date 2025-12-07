@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { ListarCentrosController } from '../controllers/ListarCentrosController';
-import { ListarCursosPorCentroController } from '../controllers/ListarCursosPorCentroController';
+import { ListarCentrosController } from '../controllers/centros/ListarCentrosController';
+import { ListarCursosPorCentroController } from '../controllers/centros/ListarCursosPorCentroController';
 
 const centrosRouter = Router();
 

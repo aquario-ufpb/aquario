@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { ListarCursosPorCentroUseCase } from '@/application/cursos/use-cases/ListarCursosPorCentroUseCase';
-import { PrismaCursosRepository } from '../../database/prisma/repositories/PrismaCursosRepository';
+import { PrismaCursosRepository } from '@/infra/database/prisma/repositories/PrismaCursosRepository';
 
 const listarCursosPorCentroParamsSchema = z.object({
   id: z.string(),

@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { CriarVagaUseCase } from '@/application/vagas/use-cases/CriarVagaUseCase';
-import { PrismaVagasRepository } from '../../database/prisma/repositories/PrismaVagasRepository';
-import { PrismaUsuariosRepository } from '../../database/prisma/repositories/PrismaUsuariosRepository';
-import { PrismaCentrosRepository } from '../../database/prisma/repositories/PrismaCentrosRepository';
+import { PrismaVagasRepository } from '@/infra/database/prisma/repositories/PrismaVagasRepository';
+import { PrismaUsuariosRepository } from '@/infra/database/prisma/repositories/PrismaUsuariosRepository';
+import { PrismaCentrosRepository } from '@/infra/database/prisma/repositories/PrismaCentrosRepository';
 import { TipoVaga } from '@prisma/client';
 
 const criarVagaBodySchema = z.object({

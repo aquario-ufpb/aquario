@@ -1,20 +1,20 @@
 import { Router } from 'express';
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated';
 import { ensureAdmin } from '../middlewares/ensureAdmin';
-import { CriarGuiaController } from '../controllers/CriarGuiaController';
-import { ListarGuiasController } from '../controllers/ListarGuiasController';
-import { BuscarGuiaPorIdController } from '../controllers/BuscarGuiaPorIdController';
-import { BuscarGuiaPorSlugController } from '../controllers/BuscarGuiaPorSlugController';
-import { EditarGuiaController } from '../controllers/EditarGuiaController';
-import { DeletarGuiaController } from '../controllers/DeletarGuiaController';
-import { CriarSecaoGuiaController } from '../controllers/CriarSecaoGuiaController';
-import { ListarSecoesGuiaController } from '../controllers/ListarSecoesGuiaController';
-import { EditarSecaoGuiaController } from '../controllers/EditarSecaoGuiaController';
-import { DeletarSecaoGuiaController } from '../controllers/DeletarSecaoGuiaController';
-import { CriarSubSecaoGuiaController } from '../controllers/CriarSubSecaoGuiaController';
-import { ListarSubSecoesGuiaController } from '../controllers/ListarSubSecoesGuiaController';
-import { EditarSubSecaoGuiaController } from '../controllers/EditarSubSecaoGuiaController';
-import { DeletarSubSecaoGuiaController } from '../controllers/DeletarSubSecaoGuiaController';
+import { CriarGuiaController } from '../controllers/guias/CriarGuiaController';
+import { ListarGuiasController } from '../controllers/guias/ListarGuiasController';
+import { BuscarGuiaPorIdController } from '../controllers/guias/BuscarGuiaPorIdController';
+import { BuscarGuiaPorSlugController } from '../controllers/guias/BuscarGuiaPorSlugController';
+import { EditarGuiaController } from '../controllers/guias/EditarGuiaController';
+import { DeletarGuiaController } from '../controllers/guias/DeletarGuiaController';
+import { CriarSecaoGuiaController } from '../controllers/guias/CriarSecaoGuiaController';
+import { ListarSecoesGuiaController } from '../controllers/guias/ListarSecoesGuiaController';
+import { EditarSecaoGuiaController } from '../controllers/guias/EditarSecaoGuiaController';
+import { DeletarSecaoGuiaController } from '../controllers/guias/DeletarSecaoGuiaController';
+import { CriarSubSecaoGuiaController } from '../controllers/guias/CriarSubSecaoGuiaController';
+import { ListarSubSecoesGuiaController } from '../controllers/guias/ListarSubSecoesGuiaController';
+import { EditarSubSecaoGuiaController } from '../controllers/guias/EditarSubSecaoGuiaController';
+import { DeletarSubSecaoGuiaController } from '../controllers/guias/DeletarSubSecaoGuiaController';
 
 const guiasRouter = Router();
 
