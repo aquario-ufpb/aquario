@@ -18,6 +18,7 @@ function MapsPageInner() {
   // Track selected floor per building: buildingId -> floorId
   const [selectedFloors, setSelectedFloors] = useState<Record<string, string>>({});
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [highlightedRoomId, setHighlightedRoomId] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -65,10 +66,11 @@ function MapsPageInner() {
 
   const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
 
-  const handleRoomClick = (room: Room) => {
+  const handleRoomClick = (room: Room, buildingId: string) => {
     // Any explicit room click clears URL-based highlight state
     setHighlightedRoomId(null);
     setSelectedRoom(room);
+    setSelectedBuildingId(buildingId);
     setIsDialogOpen(true);
   };
 
@@ -172,7 +174,7 @@ function MapsPageInner() {
                   return selectedFloor ? (
                     <BlueprintViewer
                       floor={selectedFloor}
-                      onRoomClick={handleRoomClick}
+                      onRoomClick={room => handleRoomClick(room, building.id)}
                       isDark={isDark}
                       highlightedRoomId={highlightedRoomId}
                       onBackgroundClick={() => setHighlightedRoomId(null)}
@@ -188,6 +190,7 @@ function MapsPageInner() {
       {/* Room Details Dialog */}
       <RoomDetailsDialog
         room={selectedRoom}
+        buildingId={selectedBuildingId}
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         isDark={isDark}
