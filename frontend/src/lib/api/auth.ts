@@ -1,4 +1,5 @@
 import { API_URL, ENDPOINTS } from "../config/constants";
+import { apiClient } from "./api-client";
 
 export type LoginResponse = {
   token: string;
@@ -50,6 +51,10 @@ export type ResetPasswordRequest = {
 export type ResetPasswordResponse = {
   success: boolean;
   message: string;
+};
+
+export type RefreshTokenResponse = {
+  token: string;
 };
 
 export const authService = {
@@ -105,12 +110,12 @@ export const authService = {
   },
 
   resendVerification: async (token: string): Promise<ResendVerificationResponse> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.RESEND_VERIFICATION}`, {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.RESEND_VERIFICATION}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      token, // Still accept token for explicit override if needed
     });
 
     if (!response.ok) {
@@ -155,6 +160,23 @@ export const authService = {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Falha ao resetar senha");
+    }
+
+    return response.json();
+  },
+
+  refreshToken: async (currentToken: string): Promise<RefreshTokenResponse> => {
+    const response = await fetch(`${API_URL}${ENDPOINTS.REFRESH}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Falha ao renovar token");
     }
 
     return response.json();

@@ -9,6 +9,7 @@ import React, {
   ReactNode,
 } from "react";
 import { usuariosService, type User } from "@/lib/api/usuarios";
+import { tokenManager } from "@/lib/api/token-manager";
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -30,17 +31,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
+    tokenManager.clear();
     window.location.href = "/login";
+  }, []);
+
+  // Handle token refresh callback
+  const handleTokenRefresh = useCallback((newToken: string) => {
+    localStorage.setItem("token", newToken);
+    setToken(newToken);
+    tokenManager.setToken(newToken);
   }, []);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       setToken(storedToken);
+      tokenManager.setToken(storedToken);
     } else {
       setIsLoading(false);
     }
   }, []);
+
+  // Set refresh callback in token manager (separate effect to avoid dependency issues)
+  useEffect(() => {
+    tokenManager.setRefreshCallback(handleTokenRefresh);
+  }, [handleTokenRefresh]);
 
   useEffect(() => {
     if (token) {
@@ -60,16 +75,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       setIsLoading(false);
     }
-  }, [token, logout]);
+  }, [token, logout, handleTokenRefresh]);
 
   const login = (newToken: string) => {
     localStorage.setItem("token", newToken);
     setToken(newToken);
+    tokenManager.setToken(newToken);
   };
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated: !!user, user, token, login, logout, isLoading }}
+      value={{
+        isAuthenticated: !!user,
+        user,
+        token,
+        login,
+        logout,
+        isLoading,
+      }}
     >
       {children}
     </AuthContext.Provider>

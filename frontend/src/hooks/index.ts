@@ -6,3 +6,4 @@ export * from "./use-guias-page";
 export * from "./use-paas-calendar";
 export * from "./use-mapas";
 export * from "./use-usuarios";
+export * from "./use-require-auth";

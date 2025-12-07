@@ -15,6 +15,7 @@ export const ENDPOINTS = {
   RESEND_VERIFICATION: "/reenviar-verificacao",
   FORGOT_PASSWORD: "/esqueci-senha",
   RESET_PASSWORD: "/resetar-senha",
+  REFRESH: "/refresh",
   ME: "/me",
   USUARIOS: "/usuarios",
   // TODO: Uncomment when backend integration is implemented

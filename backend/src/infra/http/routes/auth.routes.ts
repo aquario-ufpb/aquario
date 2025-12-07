@@ -6,6 +6,7 @@ import { VerificarEmailController } from '../controllers/VerificarEmailControlle
 import { ReenviarVerificacaoController } from '../controllers/ReenviarVerificacaoController';
 import { EsqueciSenhaController } from '../controllers/EsqueciSenhaController';
 import { ResetarSenhaController } from '../controllers/ResetarSenhaController';
+import { RefreshTokenController } from '../controllers/RefreshTokenController';
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated';
 
 const authRouter = Router();
@@ -18,6 +19,7 @@ const verificarEmailController = new VerificarEmailController();
 const reenviarVerificacaoController = new ReenviarVerificacaoController();
 const esqueciSenhaController = new EsqueciSenhaController();
 const resetarSenhaController = new ResetarSenhaController();
+const refreshTokenController = new RefreshTokenController();
 
 // Public routes
 authRouter.post('/login', loginController.handle);
@@ -25,6 +27,7 @@ authRouter.post('/register', registerController.handle);
 authRouter.post('/verificar-email', verificarEmailController.handle);
 authRouter.post('/esqueci-senha', esqueciSenhaController.handle);
 authRouter.post('/resetar-senha', resetarSenhaController.handle);
+authRouter.post('/refresh', refreshTokenController.handle);
 
 // Protected routes
 authRouter.get('/me', ensureAuthenticated, meuPerfilController.handle);

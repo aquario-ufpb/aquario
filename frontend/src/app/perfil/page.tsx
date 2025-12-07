@@ -1,35 +1,14 @@
 "use client";
 
-import { useAuth } from "@/contexts/auth-context";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import Link from "next/link";
 
 export default function PerfilPage() {
-  const { user, isLoading: authLoading, token } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    // Don't redirect while still loading
-    if (authLoading) {
-      return;
-    }
-
-    // If there's a token but no user, the auth context's logout() is handling the redirect
-    // Don't duplicate the redirect to avoid race conditions
-    if (token && !user) {
-      return;
-    }
-
-    // Only redirect if there's no token and no user (truly not authenticated)
-    if (!token && !user) {
-      router.replace("/login");
-    }
-  }, [authLoading, token, user, router]);
+  const { user, isLoading: authLoading } = useRequireAuth();
 
   const getInitials = (name: string) => {
     const names = name.split(" ");

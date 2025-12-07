@@ -1,8 +1,7 @@
 "use client";
 
-import { useAuth } from "@/contexts/auth-context";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useState, useEffect } from "react";
 import { useUsuarios, useUpdateUserRole } from "@/hooks/use-usuarios";
 import type { User } from "@/lib/api/usuarios";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -19,40 +18,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 export default function AdminPage() {
-  const { user, isLoading: authLoading, isAuthenticated, token } = useAuth();
-  const router = useRouter();
+  const { user, isLoading: authLoading } = useRequireAuth({ requireRole: "MASTER_ADMIN" });
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   // React Query hooks
   const { data: users = [], isLoading, error: queryError, refetch } = useUsuarios();
   const updateRoleMutation = useUpdateUserRole();
-
-  useEffect(() => {
-    // Don't redirect while still loading
-    if (authLoading) {
-      return;
-    }
-
-    // If there's a token but no user, the auth context's logout() is handling the redirect
-    // Don't duplicate the redirect to avoid race conditions
-    if (token && !user) {
-      return;
-    }
-
-    // Only redirect if there's no token and no user (truly not authenticated)
-    if (!token && !user) {
-      router.replace("/login");
-      return;
-    }
-
-    // If we have a user, check their role
-    if (user) {
-      if (user.papelPlataforma !== "MASTER_ADMIN") {
-        router.replace("/");
-      }
-    }
-  }, [authLoading, isAuthenticated, user, token, router]);
 
   useEffect(() => {
     if (searchQuery.trim() === "") {

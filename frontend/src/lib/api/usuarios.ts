@@ -1,4 +1,5 @@
 import { API_URL, ENDPOINTS } from "../config/constants";
+import { apiClient } from "./api-client";
 
 export type User = {
   id: string;
@@ -25,11 +26,9 @@ export type UpdateUserRoleRequest = {
 
 export const usuariosService = {
   getCurrentUser: async (token: string): Promise<User> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.ME}`, {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.ME}`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      token, // Still accept token for explicit override if needed
     });
 
     if (!response.ok) {
@@ -40,11 +39,9 @@ export const usuariosService = {
   },
 
   listUsers: async (token: string): Promise<User[]> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.USUARIOS}`, {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      token, // Still accept token for explicit override if needed
     });
 
     if (!response.ok) {
@@ -59,14 +56,12 @@ export const usuariosService = {
     papelPlataforma: "USER" | "MASTER_ADMIN",
     token: string
   ): Promise<User> => {
-    // Note: This endpoint may need to be created in the backend
-    // For now, this is a placeholder that follows the expected pattern
-    const response = await fetch(`${API_URL}${ENDPOINTS.USUARIOS}/${userId}/role`, {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}/${userId}/role`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      token, // Still accept token for explicit override if needed
       body: JSON.stringify({ papelPlataforma }),
     });
 
