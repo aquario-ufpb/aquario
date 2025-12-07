@@ -18,13 +18,14 @@ import { RoomWeeklySchedule } from "./room-weekly-schedule";
 
 type RoomDetailsDialogProps = {
   room: Room | null;
+  buildingId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isDark: boolean;
 };
 
 export default function RoomDetailsDialog(props: RoomDetailsDialogProps) {
-  const { room, open, onOpenChange, isDark } = props;
+  const { room, buildingId, open, onOpenChange, isDark } = props;
   const [labEntidades, setLabEntidades] = useState<Entidade[]>([]);
   const [isLoadingLabs, setIsLoadingLabs] = useState(false);
 
@@ -201,6 +202,7 @@ export default function RoomDetailsDialog(props: RoomDetailsDialogProps) {
                     capacity={capacity}
                     classCount={uniqueClassCount}
                     isDark={isDark}
+                    buildingId={buildingId}
                   />
                   <RoomProfessorsSection
                     room={room}
@@ -223,13 +225,14 @@ export default function RoomDetailsDialog(props: RoomDetailsDialogProps) {
                   capacity={capacity}
                   classCount={uniqueClassCount}
                   isDark={isDark}
+                  buildingId={buildingId}
                 />
               )}
 
               <RoomDescriptionSection room={room} isDark={isDark} />
 
               {/* Weekly schedule for this room when we have matching classes */}
-              {classesForThisRoom.length > 0 && (
+              {buildingId !== "laser" && classesForThisRoom.length > 0 && (
                 <RoomWeeklySchedule classes={classesForThisRoom} isDark={isDark} />
               )}
             </>
@@ -262,9 +265,16 @@ type RoomSummaryColumnProps = {
   capacity: number | undefined;
   classCount: number;
   isDark: boolean;
+  buildingId: string | null;
 };
 
-function RoomSummaryColumn({ room, capacity, classCount, isDark }: RoomSummaryColumnProps) {
+function RoomSummaryColumn({
+  room,
+  capacity,
+  classCount,
+  isDark,
+  buildingId,
+}: RoomSummaryColumnProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Left column: tipo + capacidade */}
@@ -299,27 +309,29 @@ function RoomSummaryColumn({ room, capacity, classCount, isDark }: RoomSummaryCo
       </div>
 
       {/* Right column: turmas no SACI */}
-      <div className="space-y-3 md:text-right">
-        <div className="flex items-start gap-2 md:justify-end">
-          <Info
-            className="w-4 h-4 mt-1 flex-shrink-0"
-            style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
-          />
-          <div>
-            <p
-              className="text-xs mb-1 text-left"
-              style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
-            >
-              Turmas no SACI
-            </p>
-            <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
-              {classCount > 0
-                ? `${classCount} turma${classCount > 1 ? "s" : ""}`
-                : "Nenhuma turma registrada"}
-            </p>
+      {buildingId !== "laser" && (
+        <div className="space-y-3 md:text-right">
+          <div className="flex items-start gap-2 md:justify-end">
+            <Info
+              className="w-4 h-4 mt-1 flex-shrink-0"
+              style={{ color: isDark ? "#C8E6FA/60" : "#0e3a6c/60" }}
+            />
+            <div>
+              <p
+                className="text-xs mb-1 text-left"
+                style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}
+              >
+                Turmas no SACI
+              </p>
+              <p style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
+                {classCount > 0
+                  ? `${classCount} turma${classCount > 1 ? "s" : ""}`
+                  : "Nenhuma turma registrada"}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
