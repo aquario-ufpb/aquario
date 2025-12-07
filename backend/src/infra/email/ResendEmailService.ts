@@ -7,10 +7,16 @@ const log = logger.child('email:resend');
 
 export class ResendEmailService implements IEmailService {
   private resend: Resend;
-  private fromEmail = 'Aquário <onboarding@resend.dev>'; // Resend's test email (works without domain verification)
+  private fromEmail: string;
 
   constructor() {
     this.resend = new Resend(env.RESEND_API_KEY);
+    // Use EMAIL_FROM if provided, otherwise fall back to Resend's test email
+    this.fromEmail = env.EMAIL_FROM
+      ? `Aquário <${env.EMAIL_FROM}>`
+      : 'Aquário <onboarding@resend.dev>'; // Resend's test email (works without domain verification)
+
+    log.info('ResendEmailService inicializado', { fromEmail: this.fromEmail });
   }
 
   async sendVerificationEmail(to: string, token: string, nome: string): Promise<void> {

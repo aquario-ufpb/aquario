@@ -30,7 +30,12 @@ export function createEmailService(): IEmailService {
     return new MockEmailService();
   }
 
-  log.info('Usando ResendEmailService');
+  if (!env.EMAIL_FROM) {
+    log.warn('EMAIL_FROM não configurado, usando MockEmailService');
+    return new MockEmailService();
+  }
+
+  log.info('Usando ResendEmailService', { fromEmail: env.EMAIL_FROM });
   return new ResendEmailService();
 }
 

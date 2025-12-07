@@ -14,6 +14,7 @@ const envSchema = z.object({
     ),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL must be provided'),
   RESEND_API_KEY: z.string().default(''),
+  EMAIL_FROM: z.string().email().optional(), // Custom "from" email address (e.g., noreply@aquarioufpb.com)
   MASTER_ADMIN_EMAILS: z.string().default(''), // comma-separated list of emails
   FRONTEND_URL: z.string().url().default('http://localhost:3000'),
   EMAIL_MOCK_MODE: z
