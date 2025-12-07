@@ -37,4 +37,21 @@ export class PrismaMembroEntidadeRepository implements IMembroEntidadeRepository
       },
     }));
   }
+
+  async isUserAdminOfEntidade(usuarioId: string, entidadeId: string): Promise<boolean> {
+    log.debug('Verificando se usuário é admin da entidade', { usuarioId, entidadeId });
+
+    const membro = await prisma.membroEntidade.findUnique({
+      where: {
+        usuarioId_entidadeId: {
+          usuarioId,
+          entidadeId,
+        },
+      },
+    });
+
+    const isAdmin = membro?.papel === 'ADMIN';
+    log.debug('Resultado da verificação', { usuarioId, entidadeId, isAdmin });
+    return isAdmin;
+  }
 }

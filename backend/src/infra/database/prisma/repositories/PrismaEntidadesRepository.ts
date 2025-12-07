@@ -92,4 +92,31 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
       )
     );
   }
+
+  async update(id: string, data: Partial<Entidade['props']>): Promise<void> {
+    log.debug('Atualizando entidade', { id, fields: Object.keys(data) });
+
+    // Build update object with only provided fields (not undefined)
+    const updateData: Record<string, unknown> = {};
+    if (data.nome !== undefined) updateData.nome = data.nome;
+    if (data.subtitle !== undefined) updateData.subtitle = data.subtitle;
+    if (data.descricao !== undefined) updateData.descricao = data.descricao;
+    if (data.tipo !== undefined) updateData.tipo = data.tipo;
+    if (data.urlFoto !== undefined) updateData.urlFoto = data.urlFoto;
+    if (data.contato !== undefined) updateData.contato = data.contato;
+    if (data.instagram !== undefined) updateData.instagram = data.instagram;
+    if (data.linkedin !== undefined) updateData.linkedin = data.linkedin;
+    if (data.website !== undefined) updateData.website = data.website;
+    if (data.location !== undefined) updateData.location = data.location;
+    if (data.foundingDate !== undefined) updateData.foundingDate = data.foundingDate;
+    if (data.metadata !== undefined) updateData.metadata = data.metadata as unknown;
+    if (data.centroId !== undefined) updateData.centroId = data.centroId;
+
+    await prisma.entidade.update({
+      where: { id },
+      data: updateData,
+    });
+
+    log.info('Entidade atualizada com sucesso', { id });
+  }
 }

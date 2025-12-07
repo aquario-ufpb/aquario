@@ -3,22 +3,32 @@
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { entidadesService } from "@/lib/api/entidades";
-import { Entidade, TipoEntidade } from "@/lib/types";
+import { Entidade, TipoEntidade, getPeopleFromEntidade } from "@/lib/types";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Instagram, Linkedin, MapPin, Globe, ArrowLeft } from "lucide-react";
+import { Mail, Instagram, Linkedin, MapPin, Globe, ArrowLeft, Edit } from "lucide-react";
 import { trackEvent } from "@/analytics/posthog-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
+import { EditarEntidadeDialog } from "@/components/entidades/editar-entidade-dialog";
+import { isUserAdminOfEntidade } from "@/lib/types/membro.types";
 
 export default function EntidadeDetailPage({ params }: { params: { slug: string } }) {
+  const { user } = useAuth();
   const [entidade, setEntidade] = useState<Entidade | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [otherEntidades, setOtherEntidades] = useState<Entidade[]>([]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const router = useRouter();
+
+  // Check if user can edit this entidade
+  const canEdit =
+    user &&
+    (user.papelPlataforma === "MASTER_ADMIN" || isUserAdminOfEntidade(user.id, entidade?.membros));
 
   useEffect(() => {
     if (params.slug) {
@@ -155,6 +165,16 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
                       {entidade.tipo.replace("_", " ")}
                     </Badge>
                   </div>
+                  {canEdit && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditDialogOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Editar
+                    </Button>
+                  )}
                 </div>
 
                 {/* Stats */}
@@ -236,11 +256,11 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
       )}
 
       {/* People Section */}
-      {entidade.people.length > 0 && (
+      {getPeopleFromEntidade(entidade).length > 0 && (
         <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-4">
           <h2 className="text-2xl md:text-3xl font-semibold mb-8">Pessoas</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {entidade.people.map((person, index) => (
+            {getPeopleFromEntidade(entidade).map((person, index) => (
               <Card
                 key={index}
                 className="hover:bg-accent/20 transition-all duration-200 border-border/50"
@@ -329,6 +349,34 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
             ))}
           </div>
         </div>
+      )}
+
+      {/* Edit Dialog */}
+      {entidade && (
+        <EditarEntidadeDialog
+          entidade={entidade}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSuccess={newSlug => {
+            // If slug changed, redirect to new URL
+            if (newSlug && newSlug !== params.slug) {
+              router.push(`/entidade/${newSlug}`);
+            } else {
+              // Otherwise, just refetch entidade data
+              const fetchEntidade = async () => {
+                try {
+                  const data = await entidadesService.getBySlug(params.slug);
+                  if (data) {
+                    setEntidade(data);
+                  }
+                } catch (err) {
+                  console.error("Erro ao recarregar entidade:", err);
+                }
+              };
+              fetchEntidade();
+            }
+          }}
+        />
       )}
     </div>
   );

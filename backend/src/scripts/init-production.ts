@@ -1,6 +1,7 @@
 import { PrismaClient, TipoEntidade } from '@prisma/client';
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
+import { nomeToSlug } from '../shared/utils/slug';
 
 const prisma = new PrismaClient();
 
@@ -186,12 +187,18 @@ async function main() {
           }
         }
 
-        // Build metadata object (currently only contains order)
-        // Use Prisma's JsonValue type for metadata
-        const metadata: { order?: number } | undefined =
-          entityJson.order !== undefined && entityJson.order !== null
-            ? { order: entityJson.order }
-            : undefined;
+        // Generate slug from filename (e.g., "aria.json" -> "aria")
+        const filenameSlug = file.replace(/\.json$/, '');
+
+        // Build metadata object (contains order and slug)
+        const metadata: { order?: number; slug?: string } = {};
+        if (entityJson.order !== undefined && entityJson.order !== null) {
+          metadata.order = entityJson.order;
+        }
+        // Store slug in metadata (use filename as slug, or generate from name if different)
+        const generatedSlug = nomeToSlug(entityJson.name);
+        // Prefer filename slug if it's different from generated (custom slug), otherwise use generated
+        metadata.slug = filenameSlug !== generatedSlug ? filenameSlug : generatedSlug;
 
         // Extract image filename from imagePath (e.g., "./assets/ARIA.png" -> "ARIA.png")
         let urlFoto = null;
@@ -221,7 +228,7 @@ async function main() {
               website,
               location,
               foundingDate,
-              metadata: metadata || undefined,
+              metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
               centroId: centroInfo.id,
             },
             create: {
@@ -236,7 +243,7 @@ async function main() {
               website,
               location,
               foundingDate,
-              metadata: metadata || undefined,
+              metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
               centroId: centroInfo.id,
             },
           });
@@ -264,7 +271,7 @@ async function main() {
                 website,
                 location,
                 foundingDate,
-                metadata: metadata || undefined,
+                metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
                 centroId: centroInfo.id,
               },
             });

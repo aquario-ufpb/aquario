@@ -21,6 +21,7 @@ export const ENDPOINTS = {
   USUARIOS: "/usuarios",
   ENTIDADES: "/entidades",
   ENTIDADE_BY_SLUG: (slug: string) => `/entidades/slug/${slug}`,
+  ENTIDADE_BY_ID: (id: string) => `/entidades/${id}`,
 } as const;
 
 // External API URLs

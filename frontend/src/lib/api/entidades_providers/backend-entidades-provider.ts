@@ -1,4 +1,5 @@
 import { Entidade, TipoEntidade } from "../../types";
+import { PapelMembro } from "../../types/membro.types";
 import { EntidadesDataProvider } from "./entidades-provider.interface";
 import { API_URL, ENDPOINTS } from "../../config/constants";
 
@@ -27,7 +28,7 @@ type BackendEntidadeResponse = {
         nome: string;
       } | null;
     };
-    papel: string;
+    papel: PapelMembro;
   }>;
 };
 
@@ -72,16 +73,22 @@ export class BackendEntidadesProvider implements EntidadesDataProvider {
     return `/api/content-images/assets/entidades/${urlFoto}`;
   }
 
-  private mapBackendToFrontend(backend: BackendEntidadeResponse): Entidade {
-    const slug = this.nomeToSlug(backend.nome);
+  private getEntidadeSlug(
+    nome: string,
+    metadata: Record<string, unknown> | null | undefined
+  ): string {
+    if (metadata && typeof metadata === "object" && "slug" in metadata) {
+      const slug = metadata.slug;
+      if (typeof slug === "string" && slug.trim()) {
+        return slug.trim();
+      }
+    }
+    // Fallback to generating from nome
+    return this.nomeToSlug(nome);
+  }
 
-    // Map membros to people format
-    const people = (backend.membros || []).map(membro => ({
-      name: membro.usuario.nome,
-      email: "", // Backend doesn't expose email
-      role: membro.papel,
-      profession: membro.usuario.curso?.nome || "",
-    }));
+  private mapBackendToFrontend(backend: BackendEntidadeResponse, includeMembros = false): Entidade {
+    const slug = this.getEntidadeSlug(backend.nome, backend.metadata);
 
     // Extract order from metadata
     const order =
@@ -108,8 +115,9 @@ export class BackendEntidadesProvider implements EntidadesDataProvider {
       website: backend.website || null,
       location: backend.location || null,
       founding_date: founding_date,
-      people: people,
+      // Don't populate people - it will be derived from membros using getPeopleFromEntidade() helper
       order: order,
+      membros: includeMembros ? backend.membros : undefined,
     };
   }
 
@@ -131,7 +139,8 @@ export class BackendEntidadesProvider implements EntidadesDataProvider {
       throw new Error("Failed to fetch entidade");
     }
     const data: BackendEntidadeResponse = await response.json();
-    return this.mapBackendToFrontend(data);
+    // Include membros when fetching by slug (needed for permission checks)
+    return this.mapBackendToFrontend(data, true);
   }
 
   async getByTipo(tipo: TipoEntidade): Promise<Entidade[]> {

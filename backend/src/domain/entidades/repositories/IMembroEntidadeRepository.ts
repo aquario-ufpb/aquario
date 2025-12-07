@@ -11,4 +11,5 @@ export interface MembroComUsuario {
 
 export interface IMembroEntidadeRepository {
   findManyByEntidadeId(entidadeId: string): Promise<MembroComUsuario[]>;
+  isUserAdminOfEntidade(usuarioId: string, entidadeId: string): Promise<boolean>;
 }
