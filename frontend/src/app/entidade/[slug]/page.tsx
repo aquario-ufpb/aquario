@@ -13,7 +13,7 @@ import { trackEvent } from "@/analytics/posthog-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { EditarEntidadeDialog } from "@/components/entidades/editar-entidade-dialog";
+import { EditarEntidadeDialog } from "@/components/pages/entidades/editar-entidade-dialog";
 import { isUserAdminOfEntidade } from "@/lib/types/membro.types";
 
 export default function EntidadeDetailPage({ params }: { params: { slug: string } }) {
