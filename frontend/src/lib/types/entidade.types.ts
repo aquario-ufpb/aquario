@@ -34,6 +34,8 @@ export type Person = {
  * - `membros`: Only available when using backend provider.
  *              Contains full membership information including user IDs and roles.
  *              Used for permission checks (e.g., checking if user is ADMIN).
+ * - `centro`: Only available from backend provider.
+ *             Contains centro information (nome, sigla).
  */
 export type Entidade = {
   id: string;
@@ -52,6 +54,11 @@ export type Entidade = {
   people?: Person[]; // Only from local provider - use getPeopleFromEntidade() helper
   order?: number | null;
   membros?: Membro[]; // Backend only - full membership data for permissions
+  centro?: {
+    id: string;
+    nome: string;
+    sigla: string;
+  } | null; // Backend only - centro information
 };
 
 /**

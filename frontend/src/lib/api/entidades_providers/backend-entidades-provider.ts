@@ -18,6 +18,11 @@ type BackendEntidadeResponse = {
   foundingDate?: string | null; // ISO date string from backend
   metadata?: Record<string, unknown> | null;
   centroId: string;
+  centro?: {
+    id: string;
+    nome: string;
+    sigla: string;
+  } | null;
   membros?: Array<{
     id: string;
     usuario: {
@@ -118,6 +123,7 @@ export class BackendEntidadesProvider implements EntidadesDataProvider {
       // Don't populate people - it will be derived from membros using getPeopleFromEntidade() helper
       order: order,
       membros: includeMembros ? backend.membros : undefined,
+      centro: backend.centro || null,
     };
   }
 
