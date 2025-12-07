@@ -17,6 +17,15 @@ vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
 }));
 
+// Mock useBackend to return true for these tests
+vi.mock("../../../lib/config/env", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../../lib/config/env")>();
+  return {
+    ...actual,
+    useBackend: () => ({ isEnabled: true }),
+  };
+});
+
 // Mock Select component to avoid happy-dom pointer capture issues
 /* eslint-disable @typescript-eslint/no-explicit-any */
 vi.mock("@/components/ui/select", () => ({
@@ -59,6 +68,7 @@ const mockRouter = useRouter as any;
 
 describe("Registration Page", () => {
   const mockPush = vi.fn();
+  const mockReplace = vi.fn();
   const mockCentros = [{ id: "centro-1", nome: "Centro de Informática", sigla: "CI" }];
   const mockCursos = [{ id: "curso-1", nome: "Ciência da Computação", centroId: "centro-1" }];
 
@@ -66,6 +76,7 @@ describe("Registration Page", () => {
     vi.clearAllMocks();
     mockRouter.mockReturnValue({
       push: mockPush,
+      replace: mockReplace,
     });
     mockCentrosService.centrosService = {
       getAll: vi.fn().mockResolvedValue(mockCentros),

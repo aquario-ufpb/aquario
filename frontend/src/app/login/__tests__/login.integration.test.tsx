@@ -17,6 +17,15 @@ vi.mock("next/navigation", () => ({
   useSearchParams: vi.fn(),
 }));
 
+// Mock useBackend to return true for these tests
+vi.mock("../../../lib/config/env", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../../lib/config/env")>();
+  return {
+    ...actual,
+    useBackend: () => ({ isEnabled: true }),
+  };
+});
+
 // Mock auth service
 vi.mock("../../../lib/api/auth", () => ({
   authService: {
@@ -33,12 +42,14 @@ const mockSearchParams = useSearchParams as any;
 
 describe("Login Page", () => {
   const mockPush = vi.fn();
+  const mockReplace = vi.fn();
   const mockGet = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockRouter.mockReturnValue({
       push: mockPush,
+      replace: mockReplace,
     });
     mockGet.mockReturnValue(null);
     mockSearchParams.mockReturnValue({
