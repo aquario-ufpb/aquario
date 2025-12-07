@@ -35,29 +35,51 @@ declare const require: {
   };
 };
 
-// Import JSON files
-const contentContext = require.context("../../../../content/aquario-vagas", true, /\.json$/);
+// Use require.context at top level for webpack bundling
+// In test environments, this will be mocked or the provider will be replaced
+let contentContext: ReturnType<typeof require.context> | null = null;
+
+try {
+  // This will work in webpack/browser environments
+  // In Node.js/test environments, this will throw and we'll catch it
+  contentContext = require.context("../../../../content/aquario-vagas", true, /\.json$/);
+} catch (_e) {
+  // In test environments, require.context is not available
+  // The provider will have empty data and can be populated via mocks
+  contentContext = null;
+}
 
 export class LocalFileVagasProvider implements VagasDataProvider {
   private vagasData: Record<string, VagaJson> = {};
 
   constructor() {
-    contentContext.keys().forEach((key: string) => {
-      if (!key.includes("/centro-de-informatica/")) {
-        return;
+    // Only load files if require.context is available (webpack/browser environment)
+    // In test environments, this will be skipped and content can be injected via mocks
+    if (contentContext) {
+      try {
+        contentContext.keys().forEach((key: string) => {
+          if (!key.includes("/centro-de-informatica/")) {
+            return;
+          }
+
+          const content = (contentContext as NonNullable<typeof contentContext>)(key) as
+            | VagaJson
+            | { default: VagaJson };
+
+          const json: VagaJson = "default" in content ? content.default : content;
+
+          if (!json.id) {
+            console.warn("Arquivo JSON sem id:", key);
+            return;
+          }
+
+          this.vagasData[json.id] = json;
+        });
+      } catch (_e) {
+        // If require.context fails at runtime, just continue with empty data
+        console.warn("Failed to load vagas from require.context:", _e);
       }
-
-      const content = contentContext(key) as VagaJson | { default: VagaJson };
-
-      const json: VagaJson = "default" in content ? content.default : content;
-
-      if (!json.id) {
-        console.warn("Arquivo JSON sem id:", key);
-        return;
-      }
-
-      this.vagasData[json.id] = json;
-    });
+    }
   }
 
   getAll(): Promise<Vaga[]> {
@@ -139,6 +161,7 @@ export class LocalFileVagasProvider implements VagasDataProvider {
 
   private normalizeTipo(value: string): TipoVaga {
     const t = value.trim().toUpperCase();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (TipoVaga as any)[t] ?? "ESTAGIO";
   }
 

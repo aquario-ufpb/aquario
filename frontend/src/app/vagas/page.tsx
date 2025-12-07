@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import Checkbox from "@/components/pages/vagas/checkbox-filter";
 import VacancyCard, { Vaga } from "@/components/pages/vagas/vacancy-card";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { useAuth } from "@/contexts/auth-context";
-import { vagasService } from "@/lib/api/vagas";
+import { useVagas } from "@/hooks";
 
 function VagasCard({ vaga }: { vaga: Vaga }) {
   /*const handleClick = () => {
@@ -28,56 +28,43 @@ function VagasCard({ vaga }: { vaga: Vaga }) {
 }
 
 export default function VagasPage() {
-  const [vagas, setVagas] = useState<Vaga[]>([]);
+  const { data: vagas = [] } = useVagas();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
   const { user } = useAuth();
 
   const canPostJob = !!(
     user &&
-    (user.papel === "DOCENTE" ||
-      user.permissoes.includes("ADMIN") ||
-      user.papelPlataforma === "MASTER_ADMIN")
+    (user.permissoes.includes("ADMIN") || user.papelPlataforma === "MASTER_ADMIN")
   );
 
-  useEffect(() => {
-    const fetchVagas = async () => {
-      try {
-        const data = await vagasService.getAll();
-        setVagas(data);
-      } catch (error) {
-        console.error("Error fetching vagas:", error);
-      }
-    };
-
-    fetchVagas();
-  }, []);
-
   // Filters
-  const vagasFiltradas = vagas.filter(vaga => {
-    const q = searchQuery.toLowerCase();
-    const entidade = vaga.entidade.toLowerCase();
-    const tipo = vaga.tipoVaga.toLowerCase();
-    const areas = vaga.areas?.map(a => a.toLowerCase()) ?? [];
+  const vagasFiltradas = useMemo(() => {
+    return vagas.filter(vaga => {
+      const q = searchQuery.toLowerCase();
+      const entidade = vaga.entidade.toLowerCase();
+      const tipo = vaga.tipoVaga.toLowerCase();
+      const areas = vaga.areas?.map(a => a.toLowerCase()) ?? [];
 
-    // Text filters
-    const matchesSearch =
-      !searchQuery.trim() ||
-      vaga.titulo.toLowerCase().includes(q) ||
-      vaga.publicador.nome.toLowerCase().includes(q) ||
-      entidade.includes(q);
+      // Text filters
+      const matchesSearch =
+        !searchQuery.trim() ||
+        vaga.titulo.toLowerCase().includes(q) ||
+        vaga.publicador.nome.toLowerCase().includes(q) ||
+        entidade.includes(q);
 
-    // Checkbox filters
-    if (selectedCheckboxes.length === 0) {
-      return matchesSearch;
-    }
+      // Checkbox filters
+      if (selectedCheckboxes.length === 0) {
+        return matchesSearch;
+      }
 
-    const matchesCheckbox = selectedCheckboxes.some(selected => {
-      return selected === entidade || selected === tipo || areas.includes(selected);
+      const matchesCheckbox = selectedCheckboxes.some(selected => {
+        return selected === entidade || selected === tipo || areas.includes(selected);
+      });
+
+      return matchesSearch && matchesCheckbox;
     });
-
-    return matchesSearch && matchesCheckbox;
-  });
+  }, [vagas, searchQuery, selectedCheckboxes]);
 
   const handleCheckboxChange = (selected: string[]) => {
     setSelectedCheckboxes(selected.map(s => s.toLowerCase()));

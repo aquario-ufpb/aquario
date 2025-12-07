@@ -4,11 +4,16 @@ import { useState } from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context";
+import { useBackend } from "@/lib/config/env";
+import { User, LogOut, Settings } from "lucide-react";
 import * as React from "react";
 
 export default function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const { setTheme, theme, resolvedTheme } = useTheme();
+  const { isEnabled: backendEnabled } = useBackend();
+  const { isAuthenticated, user, logout, isLoading } = useAuth();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -20,6 +25,12 @@ export default function HamburgerMenu() {
   };
 
   const isDark = mounted && (resolvedTheme || theme) === "dark";
+
+  const getInitials = (name: string) => {
+    const names = name.split(" ");
+    const initials = names.map(n => n[0]).join("");
+    return initials.toUpperCase().slice(0, 2);
+  };
 
   return (
     <>
@@ -120,6 +131,73 @@ export default function HamburgerMenu() {
                     ENTIDADES
                   </Link>
                 </li>
+                {backendEnabled && !isLoading && (
+                  <>
+                    {isAuthenticated && user ? (
+                      <>
+                        <li className="pt-2 border-t border-border/50">
+                          <div className="flex items-center gap-2 py-2">
+                            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold">
+                              {getInitials(user.nome)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 truncate">
+                                {user.nome}
+                              </p>
+                              <p className="text-xs text-neutral-600 dark:text-neutral-400 truncate">
+                                {user.email}
+                              </p>
+                            </div>
+                          </div>
+                        </li>
+                        <li>
+                          <Link
+                            href="/perfil"
+                            onClick={() => setIsOpen(false)}
+                            className="flex items-center gap-2 text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-500 dark:hover:text-blue-400 transition-colors block py-2"
+                          >
+                            <User className="h-4 w-4" />
+                            <span>Perfil</span>
+                          </Link>
+                        </li>
+                        {user.papelPlataforma === "MASTER_ADMIN" && (
+                          <li>
+                            <Link
+                              href="/admin"
+                              onClick={() => setIsOpen(false)}
+                              className="flex items-center gap-2 text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-500 dark:hover:text-blue-400 transition-colors block py-2"
+                            >
+                              <Settings className="h-4 w-4" />
+                              <span>Administração</span>
+                            </Link>
+                          </li>
+                        )}
+                        <li>
+                          <button
+                            onClick={() => {
+                              logout();
+                              setIsOpen(false);
+                            }}
+                            className="flex items-center gap-2 w-full text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors py-2"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            <span>Sair</span>
+                          </button>
+                        </li>
+                      </>
+                    ) : (
+                      <li className="pt-2 border-t border-border/50">
+                        <Link
+                          href="/login"
+                          onClick={() => setIsOpen(false)}
+                          className="text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-500 dark:hover:text-blue-400 transition-colors block py-2"
+                        >
+                          Entrar
+                        </Link>
+                      </li>
+                    )}
+                  </>
+                )}
                 <li className="pt-2 border-t border-border/50">
                   {/* Theme Toggle */}
                   {mounted ? (

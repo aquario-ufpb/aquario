@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated';
-import { CriarProjetoController } from '../controllers/CriarProjetoController';
-import { ListarProjetosController } from '../controllers/ListarProjetosController';
-import { EditarProjetoController } from '../controllers/EditarProjetoController';
-import { DeletarProjetoController } from '../controllers/DeletarProjetoController';
-import { BuscarProjetoPorIdController } from '../controllers/BuscarProjetoPorIdController';
+import { CriarProjetoController } from '../controllers/projetos/CriarProjetoController';
+import { ListarProjetosController } from '../controllers/projetos/ListarProjetosController';
+import { EditarProjetoController } from '../controllers/projetos/EditarProjetoController';
+import { DeletarProjetoController } from '../controllers/projetos/DeletarProjetoController';
+import { BuscarProjetoPorIdController } from '../controllers/projetos/BuscarProjetoPorIdController';
 
 const projetosRouter = Router();
 

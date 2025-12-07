@@ -7,11 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum PapelUsuario {
-  DISCENTE
-  DOCENTE
-}
-
 enum PapelPlataforma {
   USER
   MASTER_ADMIN
@@ -33,8 +28,11 @@ enum StatusItemAchadoEPerdido {
 
 enum TipoEntidade {
   LABORATORIO
-  GRUPO_PESQUISA
+  GRUPO
   LIGA_ACADEMICA
+  EMPRESA
+  ATLETICA
+  CENTRO_ACADEMICO
   OUTRO
 }
 
@@ -52,6 +50,11 @@ enum StatusGuia {
   ATIVO
   INATIVO
   RASCUNHO
+}
+
+enum TipoToken {
+  VERIFICACAO_EMAIL
+  RESET_SENHA
 }
 
 model Campus {
@@ -94,28 +97,25 @@ model Usuario {
   email             String           @unique
   matricula         String?          @unique
   senhaHash         String
-  papel             PapelUsuario
   permissoes        String[]         @default([])
   papelPlataforma   PapelPlataforma  @default(USER)
   eVerificado       Boolean          @default(false)
-  bio               String?
   urlFotoPerfil     String?
-  periodo           Int?
   criadoEm          DateTime         @default(now())
   atualizadoEm      DateTime         @updatedAt
 
   centroId String
-  cursoId  String?
+  cursoId  String
 
-  centro Centro? @relation(fields: [centroId], references: [id])
-  curso  Curso?  @relation(fields: [cursoId], references: [id])
+  centro Centro @relation(fields: [centroId], references: [id])
+  curso  Curso  @relation(fields: [cursoId], references: [id])
 
   publicacoes           Publicacao[]
   vagasPublicadas       Vaga[]
   itensAchadosEPerdidos ItemAchadoEPerdido[]
   projetos              Projeto[]
   projetosMembro        Projeto[]            @relation("MembrosDoProjeto")
-  entidadesCriadas      Entidade[]           @relation("CriadorDeEntidade")
+  tokensVerificacao     TokenVerificacao[]
 }
 
 model Publicacao {
@@ -197,17 +197,22 @@ model ItemAchadoEPerdido {
 }
 
 model Entidade {
-  id        String       @id @default(uuid())
-  nome      String
-  descricao String?
-  tipo      TipoEntidade
-  urlFoto   String?
-  contato   String?
-  centroId  String
-  criadorId String
+  id           String       @id @default(uuid())
+  nome         String
+  subtitle     String?
+  descricao    String?
+  tipo         TipoEntidade
+  urlFoto      String?
+  contato      String?
+  instagram    String?
+  linkedin     String?
+  website      String?
+  location     String?
+  foundingDate  DateTime?
+  metadata     Json?        @default("{}")
+  centroId     String
 
   centro      Centro           @relation(fields: [centroId], references: [id])
-  criador     Usuario          @relation("CriadorDeEntidade", fields: [criadorId], references: [id])
   membros     MembroEntidade[]
   projetos    Projeto[]
   publicacoes Publicacao[]
@@ -286,4 +291,20 @@ model SubSecaoGuia {
   @@index([secaoId])
   @@index([ordem])
   @@index([status])
+}
+
+model TokenVerificacao {
+  id        String    @id @default(uuid())
+  usuarioId String
+  token     String    @unique
+  tipo      TipoToken
+  expiraEm  DateTime
+  usadoEm   DateTime?
+  criadoEm  DateTime  @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([usuarioId])
+  @@index([expiraEm])
 }

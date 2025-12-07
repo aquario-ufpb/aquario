@@ -5,7 +5,7 @@
   "description": "O backend do Aquário é construído seguindo os princípios do **Domain-Driven Design (DDD)**, organizado em uma arquitetura de camadas para garantir separação de responsabilidades, testabilidade e escalabilidade. A estrutura é modular, com cada funcionalidade (módulo) contida dentro de sua própria pasta nas camadas correspondentes.",
   "main": "index.js",
   "scripts": {
-    "test": "tsx --test \"src/**/*.spec.ts\"",
+    "test": "node --import tsx --test $(find src -name '*.spec.ts' -type f)",
     "dev": "tsx watch src/infra/http/server.ts",
     "start": "node dist/infra/http/server.js",
     "build": "tsc",
@@ -19,6 +19,7 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:seed": "tsx src/scripts/seed.ts",
+    "db:init-production": "tsx src/scripts/init-production.ts",
     "db:reset": "prisma migrate reset",
     "db:status": "prisma migrate status",
     "migrate": "./scripts/migrate.sh",
@@ -37,7 +38,10 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "resend": "^6.5.2",
     "tsyringe": "^4.10.0",
     "zod": "^4.1.8"
   },

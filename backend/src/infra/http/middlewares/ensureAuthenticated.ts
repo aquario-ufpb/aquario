@@ -6,7 +6,6 @@ import { logger } from '@/infra/logger';
 interface IPayload {
   sub: string;
   papelPlataforma?: 'USER' | 'MASTER_ADMIN';
-  papel?: string;
   permissoes?: string[];
 }
 

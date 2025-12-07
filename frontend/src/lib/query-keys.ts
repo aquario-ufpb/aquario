@@ -17,4 +17,18 @@ export const queryKeys = {
   mapas: {
     all: ["mapas"] as const,
   },
+  usuarios: {
+    all: ["usuarios"] as const,
+    current: ["usuarios", "current"] as const,
+    byId: (id: string) => ["usuarios", id] as const,
+  },
+  entidades: {
+    all: ["entidades"] as const,
+    bySlug: (slug: string) => ["entidades", "slug", slug] as const,
+    byTipo: (tipo: string) => ["entidades", "tipo", tipo] as const,
+  },
+  vagas: {
+    all: ["vagas"] as const,
+    byId: (id: string) => ["vagas", id] as const,
+  },
 } as const;

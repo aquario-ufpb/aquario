@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { GerarFeedController } from '../controllers/GerarFeedController';
+import { GerarFeedController } from '../controllers/feed/GerarFeedController';
 
 const feedRouter = Router();
 

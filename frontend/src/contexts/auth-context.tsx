@@ -1,31 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-
-type Centro = {
-  id: string;
-  nome: string;
-  sigla: string;
-};
-
-type Curso = {
-  id: string;
-  nome: string;
-};
-
-type User = {
-  id: string;
-  nome: string;
-  email: string;
-  papel: "DISCENTE" | "DOCENTE";
-  papelPlataforma: "USER" | "MASTER_ADMIN";
-  urlFotoPerfil?: string | null;
-  centro: Centro;
-  curso?: Curso | null;
-  periodo?: number | null;
-  bio?: string | null;
-  permissoes: string[];
-};
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
+import { usuariosService, type User } from "@/lib/api/usuarios";
+import { tokenManager } from "@/lib/api/token-manager";
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -43,30 +27,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+    tokenManager.clear();
+    window.location.href = "/login";
+  }, []);
+
+  // Handle token refresh callback
+  const handleTokenRefresh = useCallback((newToken: string) => {
+    localStorage.setItem("token", newToken);
+    setToken(newToken);
+    tokenManager.setToken(newToken);
+  }, []);
+
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       setToken(storedToken);
+      tokenManager.setToken(storedToken);
     } else {
       setIsLoading(false);
     }
   }, []);
 
+  // Set refresh callback in token manager (separate effect to avoid dependency issues)
+  useEffect(() => {
+    tokenManager.setRefreshCallback(handleTokenRefresh);
+  }, [handleTokenRefresh]);
+
   useEffect(() => {
     if (token) {
       const fetchUser = async () => {
         try {
-          const response = await fetch("http://localhost:3001/me", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-          } else {
-            logout();
-          }
+          const userData = await usuariosService.getCurrentUser(token);
+          setUser(userData);
         } catch (error) {
           console.error("Falha ao buscar usuário:", error);
           logout();
@@ -77,24 +73,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       fetchUser();
     } else {
       setUser(null);
+      setIsLoading(false);
     }
-  }, [token]);
+  }, [token, logout, handleTokenRefresh]);
 
   const login = (newToken: string) => {
     localStorage.setItem("token", newToken);
     setToken(newToken);
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
-    window.location.href = "/login";
+    tokenManager.setToken(newToken);
   };
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated: !!user, user, token, login, logout, isLoading }}
+      value={{
+        isAuthenticated: !!user,
+        user,
+        token,
+        login,
+        logout,
+        isLoading,
+      }}
     >
       {children}
     </AuthContext.Provider>

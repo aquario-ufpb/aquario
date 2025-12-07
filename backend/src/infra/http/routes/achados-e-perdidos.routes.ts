@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { CriarItemAchadoEPerdidoController } from '../controllers/CriarItemAchadoEPerdidoController';
-import { ListarItensAchadosEPerdidosController } from '../controllers/ListarItensAchadosEPerdidosController';
-import { BuscarItemAchadoEPerdidoPorIdController } from '../controllers/BuscarItemAchadoEPerdidoPorIdController';
-import { AtualizarStatusItemAchadoEPerdidoController } from '../controllers/AtualizarStatusItemAchadoEPerdidoController';
-import { DeletarItemAchadoEPerdidoController } from '../controllers/DeletarItemAchadoEPerdidoController';
+import { CriarItemAchadoEPerdidoController } from '../controllers/achados-e-perdidos/CriarItemAchadoEPerdidoController';
+import { ListarItensAchadosEPerdidosController } from '../controllers/achados-e-perdidos/ListarItensAchadosEPerdidosController';
+import { BuscarItemAchadoEPerdidoPorIdController } from '../controllers/achados-e-perdidos/BuscarItemAchadoEPerdidoPorIdController';
+import { AtualizarStatusItemAchadoEPerdidoController } from '../controllers/achados-e-perdidos/AtualizarStatusItemAchadoEPerdidoController';
+import { DeletarItemAchadoEPerdidoController } from '../controllers/achados-e-perdidos/DeletarItemAchadoEPerdidoController';
 import { ensureAuthenticated } from '../middlewares/ensureAuthenticated';
 
 const achadosEPerdidosRouter = Router();

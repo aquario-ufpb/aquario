@@ -2,6 +2,7 @@ import { Guia, Secao, SubSecao } from "../../types";
 import { GuiasDataProvider } from "./guias-provider.interface";
 
 // Import all markdown files from the content directory
+// Webpack needs require.context at the top level to bundle files
 declare const require: {
   context(
     path: string,
@@ -13,17 +14,38 @@ declare const require: {
   };
 };
 
-const contentContext = require.context("../../../../content/aquario-guias", true, /\.md$/);
+// Use require.context at top level for webpack bundling
+// In test environments, this will be mocked or the provider will be replaced
+let contentContext: ReturnType<typeof require.context> | null = null;
+
+try {
+  // This will work in webpack/browser environments
+  // In Node.js/test environments, this will throw and we'll catch it
+  contentContext = require.context("../../../../content/aquario-guias", true, /\.md$/);
+} catch (_e) {
+  // In test environments, require.context is not available
+  // The provider will have empty data and can be populated via mocks
+  contentContext = null;
+}
 
 export class LocalFileGuiasProvider implements GuiasDataProvider {
   private contentFiles: Record<string, string> = {};
 
   constructor() {
-    // Load all markdown files at initialization
-    contentContext.keys().forEach((key: string) => {
-      const content = contentContext(key);
-      this.contentFiles[key] = typeof content === "string" ? content : content.default;
-    });
+    // Only load files if require.context is available (webpack/browser environment)
+    // In test environments, this will be skipped and content can be injected via mocks
+    if (contentContext) {
+      try {
+        // Load all markdown files at initialization
+        contentContext.keys().forEach((key: string) => {
+          const content = (contentContext as NonNullable<typeof contentContext>)(key);
+          this.contentFiles[key] = typeof content === "string" ? content : content.default;
+        });
+      } catch (_e) {
+        // If require.context fails at runtime, just continue with empty data
+        console.warn("Failed to load guias from require.context:", _e);
+      }
+    }
   }
 
   getAll(): Promise<Guia[]> {

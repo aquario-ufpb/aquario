@@ -6,8 +6,9 @@ import NavWrapper from "@/components/shared/nav-wrapper";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { SearchProvider } from "@/contexts/search-context";
-import { ReactQueryProvider } from "@/components/providers/react-query-provider";
-import { PostHogProvider } from "@/components/providers/posthog-provider";
+import { ReactQueryProvider } from "@/providers/react-query-provider";
+import { PostHogProvider } from "@/providers/posthog-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -58,6 +59,7 @@ export default function RootLayout({
                     <NavWrapper />
                     <div className="pt-0">{children}</div>
                   </div>
+                  <Toaster />
                 </SearchProvider>
               </ThemeProvider>
             </AuthProvider>

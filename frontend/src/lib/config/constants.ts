@@ -8,9 +8,20 @@ export const ENDPOINTS = {
   GUIAS: (cursoId: string) => `/guias?cursoId=${cursoId}`,
   SECOES: (guiaId: string) => `/guias/${guiaId}/secoes?guiaId=${guiaId}`,
   SUBSECOES: (secaoId: string) => `/guias/secoes/${secaoId}/subsecoes?secaoId=${secaoId}`,
-  // TODO: Uncomment when backend integration is implemented
-  // ENTIDADES: "/entidades",
-  // ENTIDADE_BY_SLUG: (slug: string) => `/entidades/slug/${slug}`,
+  // Auth endpoints
+  LOGIN: "/login",
+  REGISTER: "/register",
+  VERIFY_EMAIL: "/verificar-email",
+  RESEND_VERIFICATION: "/reenviar-verificacao",
+  REQUEST_RESEND_VERIFICATION: "/solicitar-reenvio-verificacao",
+  FORGOT_PASSWORD: "/esqueci-senha",
+  RESET_PASSWORD: "/resetar-senha",
+  REFRESH: "/refresh",
+  ME: "/me",
+  USUARIOS: "/usuarios",
+  ENTIDADES: "/entidades",
+  ENTIDADE_BY_SLUG: (slug: string) => `/entidades/slug/${slug}`,
+  ENTIDADE_BY_ID: (id: string) => `/entidades/${id}`,
 } as const;
 
 // External API URLs

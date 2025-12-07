@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { entidadesService } from "@/lib/api/entidades";
+import { useEntidades } from "@/hooks";
 import { Entidade } from "@/lib/types";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -87,28 +87,12 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
 }
 
 export default function EntidadesPage() {
-  const [entidades, setEntidades] = useState<Entidade[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: entidades = [], isLoading } = useEntidades();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchEntidades = async () => {
-      try {
-        const data = await entidadesService.getAll();
-        setEntidades(data);
-      } catch (error) {
-        console.error("Error fetching entidades:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchEntidades();
-  }, []);
-
-  // Filter function
-  const filterEntidades = (entidades: Entidade[]) => {
+  // Filter and sort entidades using useMemo
+  const filteredEntidades = useMemo(() => {
     let filtered = entidades;
 
     // Apply search filter
@@ -144,7 +128,7 @@ export default function EntidadesPage() {
     }
 
     return filtered;
-  };
+  }, [entidades, searchQuery, activeFilter]);
 
   // Group entidades by tipo per requested sections
   // Sort by order (lower numbers first), then alphabetically by name
@@ -164,8 +148,6 @@ export default function EntidadesPage() {
     // If neither has order, sort alphabetically
     return a.name.localeCompare(b.name);
   };
-
-  const filteredEntidades = filterEntidades(entidades);
 
   const laboratorios = filteredEntidades.filter(e => e.tipo === "LABORATORIO").sort(sortEntidades);
 

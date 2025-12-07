@@ -6,48 +6,41 @@ import { BackgroundGradientAnimation } from "@/components/ui/background-gradient
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { useTheme } from "next-themes";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Github, Calendar, Map } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { entidadesService } from "@/lib/api/entidades";
-import { Entidade } from "@/lib/types";
+import { useEntidades } from "@/hooks";
 
 export default function Home() {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [entidades, setEntidades] = useState<Entidade[]>([]);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Use React Query hook
+  const { data: allEntidades = [] } = useEntidades();
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Fetch all entidades for preview (excluding EMPRESA)
-  useEffect(() => {
-    const fetchEntidades = async () => {
-      try {
-        const data = await entidadesService.getAll();
-        // Filter out EMPRESA type entidades
-        const filteredData = data.filter(entidade => entidade.tipo !== "EMPRESA");
-        // Randomize the order using Fisher-Yates shuffle
-        const shuffled = [...filteredData];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        setEntidades(shuffled);
-      } catch (error) {
-        console.error("Error fetching entidades:", error);
-      }
-    };
-
-    if (mounted) {
-      fetchEntidades();
+  // Filter and shuffle entidades for preview (excluding EMPRESA)
+  const entidades = useMemo(() => {
+    if (!mounted || allEntidades.length === 0) {
+      return [];
     }
-  }, [mounted]);
+    // Filter out EMPRESA type entidades
+    const filteredData = allEntidades.filter(entidade => entidade.tipo !== "EMPRESA");
+    // Randomize the order using Fisher-Yates shuffle
+    const shuffled = [...filteredData];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, [mounted, allEntidades]);
 
   // Auto-scroll functionality
   useEffect(() => {
