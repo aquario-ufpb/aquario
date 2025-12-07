@@ -5,12 +5,14 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
+import { useBackend } from "@/lib/config/env";
 import { User, LogOut, Settings } from "lucide-react";
 import * as React from "react";
 
 export default function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const { setTheme, theme, resolvedTheme } = useTheme();
+  const { isEnabled: backendEnabled } = useBackend();
   const { isAuthenticated, user, logout, isLoading } = useAuth();
   const [mounted, setMounted] = React.useState(false);
 
@@ -129,7 +131,7 @@ export default function HamburgerMenu() {
                     ENTIDADES
                   </Link>
                 </li>
-                {!isLoading && (
+                {backendEnabled && !isLoading && (
                   <>
                     {isAuthenticated && user ? (
                       <>

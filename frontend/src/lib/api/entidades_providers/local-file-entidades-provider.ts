@@ -23,8 +23,9 @@ type EntidadeJson = {
 };
 
 // Import all JSON files from the content directory
+// Webpack needs require.context at the top level to bundle files
 declare const require: {
-  context?(
+  context(
     path: string,
     deep?: boolean,
     filter?: RegExp
@@ -34,15 +35,19 @@ declare const require: {
   };
 };
 
-// Helper to safely get require.context (only available in webpack/browser environments)
-function getContentContext() {
-  if (typeof require !== "undefined" && require.context) {
-    return require.context("../../../../content/aquario-entidades", true, /\.json$/);
-  }
-  return null;
-}
+// Use require.context at top level for webpack bundling
+// In test environments, this will be mocked or the provider will be replaced
+let contentContext: ReturnType<typeof require.context> | null = null;
 
-const contentContext = getContentContext();
+try {
+  // This will work in webpack/browser environments
+  // In Node.js/test environments, this will throw and we'll catch it
+  contentContext = require.context("../../../../content/aquario-entidades", true, /\.json$/);
+} catch (_e) {
+  // In test environments, require.context is not available
+  // The provider will have empty data and can be populated via mocks
+  contentContext = null;
+}
 
 export class LocalFileEntidadesProvider implements EntidadesDataProvider {
   private entidadesData: Record<string, EntidadeJson> = {};
@@ -51,20 +56,27 @@ export class LocalFileEntidadesProvider implements EntidadesDataProvider {
     // Only load files if require.context is available (webpack/browser environment)
     // In test environments, this will be skipped and content can be injected via mocks
     if (contentContext) {
-      // Load all JSON files at initialization, filtering for centro-de-informatica only
-      contentContext.keys().forEach((key: string) => {
-        // Only process files from centro-de-informatica folder
-        if (!key.includes("/centro-de-informatica/")) {
-          return;
-        }
+      try {
+        // Load all JSON files at initialization, filtering for centro-de-informatica only
+        contentContext.keys().forEach((key: string) => {
+          // Only process files from centro-de-informatica folder
+          if (!key.includes("/centro-de-informatica/")) {
+            return;
+          }
 
-        const content = contentContext(key) as EntidadeJson | { default: EntidadeJson };
-        const jsonData: EntidadeJson =
-          "default" in content && content.default ? content.default : (content as EntidadeJson);
-        const filename = this.getFilenameFromKey(key);
-        const slug = this.filenameToSlug(filename);
-        this.entidadesData[slug] = jsonData;
-      });
+          const content = (contentContext as NonNullable<typeof contentContext>)(key) as
+            | EntidadeJson
+            | { default: EntidadeJson };
+          const jsonData: EntidadeJson =
+            "default" in content && content.default ? content.default : (content as EntidadeJson);
+          const filename = this.getFilenameFromKey(key);
+          const slug = this.filenameToSlug(filename);
+          this.entidadesData[slug] = jsonData;
+        });
+      } catch (e) {
+        // If require.context fails at runtime, just continue with empty data
+        console.warn("Failed to load entidades from require.context:", e);
+      }
     }
   }
 
