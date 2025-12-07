@@ -10,7 +10,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 
 export default function PerfilPage() {
-  const { user, isLoading: authLoading, isAuthenticated, token } = useAuth();
+  const { user, isLoading: authLoading, token } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
