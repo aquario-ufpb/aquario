@@ -3,7 +3,7 @@ import { GuiasDataProvider } from "./guias-provider.interface";
 
 // Import all markdown files from the content directory
 declare const require: {
-  context(
+  context?(
     path: string,
     deep?: boolean,
     filter?: RegExp
@@ -13,17 +13,29 @@ declare const require: {
   };
 };
 
-const contentContext = require.context("../../../../content/aquario-guias", true, /\.md$/);
+// Helper to safely get require.context (only available in webpack/browser environments)
+function getContentContext() {
+  if (typeof require !== "undefined" && require.context) {
+    return require.context("../../../../content/aquario-guias", true, /\.md$/);
+  }
+  return null;
+}
+
+const contentContext = getContentContext();
 
 export class LocalFileGuiasProvider implements GuiasDataProvider {
   private contentFiles: Record<string, string> = {};
 
   constructor() {
-    // Load all markdown files at initialization
-    contentContext.keys().forEach((key: string) => {
-      const content = contentContext(key);
-      this.contentFiles[key] = typeof content === "string" ? content : content.default;
-    });
+    // Only load files if require.context is available (webpack/browser environment)
+    // In test environments, this will be skipped and content can be injected via mocks
+    if (contentContext) {
+      // Load all markdown files at initialization
+      contentContext.keys().forEach((key: string) => {
+        const content = contentContext(key);
+        this.contentFiles[key] = typeof content === "string" ? content : content.default;
+      });
+    }
   }
 
   getAll(): Promise<Guia[]> {

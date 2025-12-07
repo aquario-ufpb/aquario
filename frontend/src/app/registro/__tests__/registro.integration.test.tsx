@@ -10,6 +10,7 @@ import Registro from "../page";
 import * as authService from "../../../lib/api/auth";
 import * as centrosService from "../../../lib/api/centros";
 import * as cursosService from "../../../lib/api/cursos";
+import { TestQueryProvider } from "../../../__tests__/utils/test-providers";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
@@ -75,7 +76,11 @@ describe("Registration Page", () => {
   });
 
   it("should render registration form", async () => {
-    render(<Registro />);
+    render(
+      <TestQueryProvider>
+        <Registro />
+      </TestQueryProvider>
+    );
 
     await waitFor(() => {
       expect(screen.getByLabelText(/nome completo/i)).toBeInTheDocument();
@@ -98,7 +103,11 @@ describe("Registration Page", () => {
   });
 
   it("should load centros on mount", async () => {
-    render(<Registro />);
+    render(
+      <TestQueryProvider>
+        <Registro />
+      </TestQueryProvider>
+    );
 
     await waitFor(() => {
       expect(mockCentrosService.centrosService.getAll).toHaveBeenCalled();
@@ -108,7 +117,11 @@ describe("Registration Page", () => {
   it.skip("should load cursos when centro is selected", async () => {
     // Skipped due to Radix UI Select compatibility issues with happy-dom
     // The select component uses pointer capture which isn't fully supported
-    render(<Registro />);
+    render(
+      <TestQueryProvider>
+        <Registro />
+      </TestQueryProvider>
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/centro/i)).toBeInTheDocument();
@@ -122,7 +135,11 @@ describe("Registration Page", () => {
       new Error("Este e-mail já está em uso.")
     );
 
-    render(<Registro />);
+    render(
+      <TestQueryProvider>
+        <Registro />
+      </TestQueryProvider>
+    );
 
     await waitFor(() => {
       expect(screen.getByLabelText(/nome completo/i)).toBeInTheDocument();
@@ -138,7 +155,11 @@ describe("Registration Page", () => {
       verificado: false,
     });
 
-    render(<Registro />);
+    render(
+      <TestQueryProvider>
+        <Registro />
+      </TestQueryProvider>
+    );
 
     await waitFor(() => {
       expect(screen.getByLabelText(/nome completo/i)).toBeInTheDocument();
