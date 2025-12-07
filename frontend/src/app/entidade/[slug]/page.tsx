@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { entidadesService } from "@/lib/api/entidades";
-import { Entidade, TipoEntidade, getPeopleFromEntidade } from "@/lib/types";
+import { useEntidadeBySlug, useEntidades } from "@/hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { TipoEntidade, getPeopleFromEntidade } from "@/lib/types";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,57 +20,38 @@ import { isUserAdminOfEntidade } from "@/lib/types/membro.types";
 
 export default function EntidadeDetailPage({ params }: { params: { slug: string } }) {
   const { user } = useAuth();
-  const [entidade, setEntidade] = useState<Entidade | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [otherEntidades, setOtherEntidades] = useState<Entidade[]>([]);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Use React Query hooks
+  const { data: entidade, isLoading, error: queryError } = useEntidadeBySlug(params.slug);
+  const { data: allEntidades = [] } = useEntidades();
+
+  // Compute other entidades of the same type
+  const otherEntidades = useMemo(() => {
+    if (!entidade) {
+      return [];
+    }
+    return allEntidades
+      .filter(e => e.tipo === entidade.tipo && e.slug !== entidade.slug)
+      .slice(0, 8); // Limit to 8 similar entities
+  }, [entidade, allEntidades]);
 
   // Check if user can edit this entidade
   const canEdit =
     user &&
     (user.papelPlataforma === "MASTER_ADMIN" || isUserAdminOfEntidade(user.id, entidade?.membros));
 
-  useEffect(() => {
-    if (params.slug) {
-      const fetchEntidade = async () => {
-        try {
-          const data = await entidadesService.getBySlug(params.slug);
-          if (!data) {
-            throw new Error("Entidade não encontrada");
-          }
-          setEntidade(data);
-
-          // Fetch other entities of the same type
-          const allEntidades = await entidadesService.getAll();
-          const filtered = allEntidades
-            .filter(e => e.tipo === data.tipo && e.slug !== data.slug)
-            .slice(0, 8); // Limit to 8 similar entities
-          setOtherEntidades(filtered);
-        } catch (err: unknown) {
-          if (err instanceof Error) {
-            setError(err.message);
-          } else {
-            setError("Ocorreu um erro desconhecido");
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchEntidade();
-    }
-  }, [params.slug]);
-
   if (isLoading) {
     return <Skeleton className="h-screen w-full" />;
   }
 
-  if (error || !entidade) {
+  if (queryError || !entidade) {
+    const errorMessage =
+      queryError instanceof Error ? queryError.message : "Entidade não encontrada.";
     return (
-      <div className="container mx-auto p-4 pt-12 text-center text-red-500">
-        {error || "Entidade não encontrada."}
-      </div>
+      <div className="container mx-auto p-4 pt-12 text-center text-red-500">{errorMessage}</div>
     );
   }
 
@@ -362,18 +345,8 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
             if (newSlug && newSlug !== params.slug) {
               router.push(`/entidade/${newSlug}`);
             } else {
-              // Otherwise, just refetch entidade data
-              const fetchEntidade = async () => {
-                try {
-                  const data = await entidadesService.getBySlug(params.slug);
-                  if (data) {
-                    setEntidade(data);
-                  }
-                } catch (err) {
-                  console.error("Erro ao recarregar entidade:", err);
-                }
-              };
-              fetchEntidade();
+              // Otherwise, invalidate and refetch entidade data
+              queryClient.invalidateQueries({ queryKey: queryKeys.entidades.bySlug(params.slug) });
             }
           }}
         />

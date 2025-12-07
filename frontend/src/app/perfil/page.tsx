@@ -6,9 +6,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useBackend } from "@/lib/config/env";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function PerfilPage() {
+  const { isEnabled: backendEnabled } = useBackend();
+  const router = useRouter();
   const { user, isLoading: authLoading } = useRequireAuth();
+
+  // Redirect to home if backend is disabled
+  useEffect(() => {
+    if (!backendEnabled) {
+      router.replace("/");
+    }
+  }, [backendEnabled, router]);
+
+  if (!backendEnabled) {
+    return null;
+  }
 
   const getInitials = (name: string) => {
     const names = name.split(" ");

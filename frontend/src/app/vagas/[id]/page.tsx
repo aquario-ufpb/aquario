@@ -1,69 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { vagasService } from "@/lib/api/vagas";
-import VacancyCard, { Vaga } from "@/components/pages/vagas/vacancy-card";
+import { useVagaById, useVagas } from "@/hooks";
+import VacancyCard from "@/components/pages/vagas/vacancy-card";
 import VagaProfileCard from "@/components/shared/vaga-profile-card";
 import Link from "next/link";
 
 export default function VagaPage({ params }: { params: { id: string } }) {
-  const [vaga, setVaga] = useState<Vaga | null>(null);
-  const [otherVagas, setOtherVagas] = useState<Vaga[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    // Only runs when the ID exists
-    if (!params.id) {
-      return;
+  // Use React Query hooks
+  const { data: vaga, isLoading, error: queryError } = useVagaById(params.id);
+  const { data: allVagas = [] } = useVagas();
+
+  // Compute similar vagas
+  const otherVagas = useMemo(() => {
+    if (!vaga) {
+      return [];
     }
-
-    const fetchVaga = async () => {
-      try {
-        const data = await vagasService.getById(params.id);
-
-        if (!data) {
-          throw new Error("Vaga não encontrada");
-        }
-
-        setVaga(data);
-
-        // Fetch all vacancies to build "similar vacancies"
-        const allVagas = await vagasService.getAll();
-
-        // Filters the same type of vacancies and excludes the current one
-        const similares = allVagas
-          .filter(v => v.tipoVaga === data.tipoVaga && v.id !== data.id)
-          .slice(0, 8); // Limit to 8
-
-        setOtherVagas(similares);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Ocorreu um erro desconhecido");
-        }
-      } finally {
-        setIsLoading(false); // Finalizes the loading in all cases
-      }
-    };
-
-    fetchVaga();
-  }, [params.id]); // Reloads when the ID changes
+    return allVagas.filter(v => v.tipoVaga === vaga.tipoVaga && v.id !== vaga.id).slice(0, 8); // Limit to 8
+  }, [vaga, allVagas]);
 
   if (isLoading) {
     return <Skeleton className="h-screen w-full" />;
   }
 
-  if (error || !vaga) {
+  if (queryError || !vaga) {
+    const errorMessage = queryError instanceof Error ? queryError.message : "Vaga não encontrada.";
     return (
-      <div className="container mx-auto p-4 pt-24 text-center text-red-500">
-        {error || "Vaga não encontrada."}
-      </div>
+      <div className="container mx-auto p-4 pt-24 text-center text-red-500">{errorMessage}</div>
     );
   }
 

@@ -1,15 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authService } from "@/lib/api/auth";
 import { useAuth } from "@/contexts/auth-context";
+import { useBackend } from "@/lib/config/env";
 
 function VerificarEmailForm() {
+  const { isEnabled: backendEnabled } = useBackend();
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,8 +21,18 @@ function VerificarEmailForm() {
   const searchParams = useSearchParams();
   const { token, user } = useAuth();
 
+  // Redirect to home if backend is disabled
+  useEffect(() => {
+    if (!backendEnabled) {
+      router.replace("/");
+    }
+  }, [backendEnabled, router]);
+
   const handleVerify = React.useCallback(
     async (verifyToken: string) => {
+      if (!backendEnabled) {
+        return;
+      }
       setIsLoading(true);
       setError(null);
 
@@ -42,15 +55,22 @@ function VerificarEmailForm() {
         setIsLoading(false);
       }
     },
-    [token]
+    [token, backendEnabled]
   );
 
   useEffect(() => {
+    if (!backendEnabled) {
+      return;
+    }
     const tokenParam = searchParams.get("token");
     if (tokenParam) {
       handleVerify(tokenParam);
     }
-  }, [searchParams, handleVerify]);
+  }, [searchParams, handleVerify, backendEnabled]);
+
+  if (!backendEnabled) {
+    return null;
+  }
 
   const handleResend = async () => {
     if (token) {

@@ -9,18 +9,30 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/api/auth";
+import { useBackend } from "@/lib/config/env";
 
 function LoginForm() {
+  const { isEnabled: backendEnabled } = useBackend();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
 
+  // Redirect to home if backend is disabled
   useEffect(() => {
+    if (!backendEnabled) {
+      router.replace("/");
+    }
+  }, [backendEnabled, router]);
+
+  useEffect(() => {
+    if (!backendEnabled) {
+      return;
+    }
     const registered = searchParams.get("registered");
     const verify = searchParams.get("verify");
     const reset = searchParams.get("reset");
@@ -32,7 +44,11 @@ function LoginForm() {
     } else if (reset === "true") {
       setSuccess("Senha redefinida com sucesso! Faça login com sua nova senha.");
     }
-  }, [searchParams]);
+  }, [searchParams, backendEnabled]);
+
+  if (!backendEnabled) {
+    return null;
+  }
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();

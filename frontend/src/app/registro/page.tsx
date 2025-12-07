@@ -15,64 +15,56 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { authService } from "@/lib/api/auth";
-import { centrosService } from "@/lib/api/centros";
-import { cursosService } from "@/lib/api/cursos";
-import type { Centro } from "@/lib/types/centro.types";
-import type { Curso } from "@/lib/types/curso.types";
+import { useCentros, useCursos } from "@/hooks";
+import { useBackend } from "@/lib/config/env";
 
 export default function Registro() {
+  const { isEnabled: backendEnabled } = useBackend();
+  const router = useRouter();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [centroId, setCentroId] = useState("");
   const [cursoId, setCursoId] = useState("");
 
-  const [centros, setCentros] = useState<Centro[]>([]);
-  const [cursos, setCursos] = useState<Curso[]>([]);
-
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingCentros, setIsLoadingCentros] = useState(true);
-  const [isLoadingCursos, setIsLoadingCursos] = useState(false);
-  const router = useRouter();
+
+  // Use React Query hooks
+  const { data: centros = [], isLoading: isLoadingCentros, error: centrosError } = useCentros();
+  const { data: cursos = [], isLoading: isLoadingCursos, error: cursosError } = useCursos(centroId);
+
+  // Redirect to home if backend is disabled
+  useEffect(() => {
+    if (!backendEnabled) {
+      router.replace("/");
+    }
+  }, [backendEnabled, router]);
+
+  // Handle errors from React Query
+  useEffect(() => {
+    if (centrosError) {
+      setError("Falha ao carregar centros. Tente novamente.");
+    }
+  }, [centrosError]);
 
   useEffect(() => {
-    const fetchCentros = async () => {
-      try {
-        setIsLoadingCentros(true);
-        const data = await centrosService.getAll();
-        setCentros(data);
-      } catch (err) {
-        console.error("Falha ao buscar centros:", err);
-        setError("Falha ao carregar centros. Tente novamente.");
-      } finally {
-        setIsLoadingCentros(false);
-      }
-    };
-    fetchCentros();
-  }, []);
+    if (cursosError) {
+      setError("Falha ao carregar cursos. Tente novamente.");
+    }
+  }, [cursosError]);
 
+  // Reset cursoId when centroId changes
   useEffect(() => {
     if (!centroId) {
-      setCursos([]);
       setCursoId("");
-      return;
     }
-    const fetchCursos = async () => {
-      try {
-        setIsLoadingCursos(true);
-        const data = await cursosService.getByCentro(centroId);
-        setCursos(data);
-      } catch (err) {
-        console.error("Falha ao buscar cursos:", err);
-        setError("Falha ao carregar cursos. Tente novamente.");
-      } finally {
-        setIsLoadingCursos(false);
-      }
-    };
-    fetchCursos();
   }, [centroId]);
+
+  if (!backendEnabled) {
+    return null;
+  }
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();

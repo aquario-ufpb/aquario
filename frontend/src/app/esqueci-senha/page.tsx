@@ -1,17 +1,32 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/api/auth";
+import { useBackend } from "@/lib/config/env";
 
 export default function EsqueciSenha() {
+  const { isEnabled: backendEnabled } = useBackend();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Redirect to home if backend is disabled
+  useEffect(() => {
+    if (!backendEnabled) {
+      router.replace("/");
+    }
+  }, [backendEnabled, router]);
+
+  if (!backendEnabled) {
+    return null;
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

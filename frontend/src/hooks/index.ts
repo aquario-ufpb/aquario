@@ -7,3 +7,5 @@ export * from "./use-paas-calendar";
 export * from "./use-mapas";
 export * from "./use-usuarios";
 export * from "./use-require-auth";
+export * from "./use-entidades";
+export * from "./use-vagas";

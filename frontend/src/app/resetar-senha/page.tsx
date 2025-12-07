@@ -8,25 +8,41 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/api/auth";
+import { useBackend } from "@/lib/config/env";
 
 function ResetarSenhaForm() {
+  const { isEnabled: backendEnabled } = useBackend();
+  const router = useRouter();
   const [token, setToken] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Redirect to home if backend is disabled
   useEffect(() => {
+    if (!backendEnabled) {
+      router.replace("/");
+    }
+  }, [backendEnabled, router]);
+
+  useEffect(() => {
+    if (!backendEnabled) {
+      return;
+    }
     const tokenParam = searchParams.get("token");
     if (tokenParam) {
       setToken(tokenParam);
     } else {
       setError("Token inválido ou ausente");
     }
-  }, [searchParams]);
+  }, [searchParams, backendEnabled]);
+
+  if (!backendEnabled) {
+    return null;
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

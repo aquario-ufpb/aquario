@@ -139,6 +139,7 @@ export class LocalFileVagasProvider implements VagasDataProvider {
 
   private normalizeTipo(value: string): TipoVaga {
     const t = value.trim().toUpperCase();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (TipoVaga as any)[t] ?? "ESTAGIO";
   }
 
