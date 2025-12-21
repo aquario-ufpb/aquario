@@ -31,7 +31,7 @@ jobs:
           echo "🔄 Downloading PAAS data from external API..."
 
           API_URL="https://sa.ci.ufpb.br/api/paas/center?id=CI"
-          OUTPUT_FILE="frontend/content/aquario-paas/saci.json"
+          OUTPUT_FILE="content/aquario-paas/saci.json"
 
           # Try to download with timeout (10 seconds)
           if curl --max-time 10 --fail --silent --show-error -o "$OUTPUT_FILE" "$API_URL"; then
@@ -47,7 +47,7 @@ jobs:
         id: check_changes
         if: steps.download_paas.outputs.downloaded == 'true'
         run: |
-          if git diff --quiet HEAD frontend/content/aquario-paas/saci.json 2>/dev/null; then
+          if git diff --quiet HEAD content/aquario-paas/saci.json 2>/dev/null; then
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "ℹ️ No changes detected - PAAS data is already up to date"
           else
@@ -60,7 +60,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_PAT || secrets.GITHUB_TOKEN }}
         run: |
-          git add frontend/content/aquario-paas/saci.json
+          git add content/aquario-paas/saci.json
           git commit -m "chore: update PAAS data from external API [skip ci]"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git push

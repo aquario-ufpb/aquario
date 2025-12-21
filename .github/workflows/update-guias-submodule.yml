@@ -30,18 +30,18 @@ jobs:
       - name: Update submodule
         run: |
           echo "🔄 Updating aquario-guias submodule..."
-          cd frontend/content/aquario-guias
+          cd content/aquario-guias
           git fetch origin
           git checkout origin/main
-          cd ../../..
-          git add frontend/content/aquario-guias
+          cd ../..
+          git add content/aquario-guias
 
           echo "✅ Submodule updated!"
           echo ""
           echo "Current submodule commit:"
-          cd frontend/content/aquario-guias
+          cd content/aquario-guias
           git log -1 --oneline
-          cd ../../..
+          cd ../..
 
       - name: Check for changes
         id: check_changes
@@ -59,7 +59,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_PAT || secrets.GITHUB_TOKEN }}
         run: |
-          git add frontend/content/aquario-guias
+          git add content/aquario-guias
           git commit -m "${{ github.event.inputs.commit_message }}"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git push

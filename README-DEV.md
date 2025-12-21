@@ -1,372 +1,164 @@
-# 🚀 Aquário - Guia de Desenvolvimento
+# Aquário - Developer Guide
 
-Este é o guia principal para desenvolvedores do projeto Aquário. Aqui você encontrará uma visão geral da arquitetura, padrões estabelecidos e links para documentação específica de cada módulo.
+Technical guide for developers working on the Aquário project.
 
-## 📋 Visão Geral do Projeto
-
-O Aquário é uma plataforma acadêmica desenvolvida para conectar estudantes, professores e pesquisadores do Centro de Informática da UFPB. A plataforma facilita a colaboração, compartilhamento de conhecimento e descoberta de oportunidades acadêmicas.
-
-### 🏗️ Arquitetura Geral
-
-```
-aquario/
-├── frontend/          # Next.js App (Port 3000)
-│   ├── README.md     # Visão geral do frontend
-│   └── README-DEV.md # Guia técnico do frontend
-├── backend/           # Node.js API (Port 3001)
-│   ├── README.md     # Visão geral do backend
-│   └── README-DEV.md # Guia técnico do backend
-└── README-DEV.md     # Este arquivo (guia principal)
-```
-
-## 🎯 Documentação por Módulo
-
-### Frontend (Next.js)
-
-- **📖 [README.md](frontend/README.md)** - Visão geral, tecnologias e convenções
-- **🔧 [README-DEV.md](frontend/README-DEV.md)** - Guia técnico completo para desenvolvimento
-
-### Backend (Node.js + Prisma)
-
-- **📖 [README.md](backend/README.md)** - Visão geral da arquitetura DDD
-- **🔧 [README-DEV.md](backend/README-DEV.md)** - Guia técnico completo para desenvolvimento
-
-## 🏛️ Arquitetura e Padrões
-
-### Frontend Architecture
-
-- **Framework**: Next.js 14 com App Router
-- **Linguagem**: TypeScript
-- **Styling**: Tailwind CSS + Shadcn/ui
-- **Estado**: React Context + useState/useReducer
-- **Testes**: Jest (unit) + Vitest (integration) + Playwright (E2E)
-
-### Backend Architecture
-
-- **Framework**: Node.js + Express
-- **Linguagem**: TypeScript
-- **Arquitetura**: Domain-Driven Design (DDD)
-- **Banco de Dados**: PostgreSQL + Prisma ORM
-- **Testes**: Jest + Supertest
-
-## 🏛️ Arquitetura e Padrões
-
-### Frontend Architecture
-
-- **Framework**: Next.js 14 com App Router
-- **Linguagem**: TypeScript
-- **Styling**: Tailwind CSS + Shadcn/ui
-- **Estado**: React Context + useState/useReducer
-- **Testes**: Jest (unit) + Vitest (integration) + Playwright (E2E)
-
-### Backend Architecture
-
-- **Framework**: Node.js + Express
-- **Linguagem**: TypeScript
-- **Arquitetura**: Domain-Driven Design (DDD)
-- **Banco de Dados**: PostgreSQL + Prisma ORM
-- **Testes**: Jest + Supertest
-
-### Padrões Estabelecidos
-
-**Importante**: Sempre seguir os padrões e convenções estabelecidos em cada módulo:
-
-- **Frontend**: Ver [README-DEV.md](frontend/README-DEV.md) para convenções de componentes, nomenclatura e estrutura
-- **Backend**: Ver [README-DEV.md](backend/README-DEV.md) para arquitetura DDD, convenções e padrões
-
-### Idioma do Código
-
-- **Código**: Inglês (variáveis, funções, comentários técnicos)
-- **Documentação**: Português brasileiro
-- **Commits**: Inglês
-- **Interface**: Português brasileiro
-
-## 🛠️ Ferramentas de Qualidade
-
-### Configurações Implementadas
-
-#### Frontend
-
-- **ESLint** - Análise estática de código
-- **Prettier** - Formatação automática
-- **TypeScript** - Verificação de tipos
-
-#### Backend
-
-- **ESLint** - Análise estática de código
-- **Prettier** - Formatação automática
-- **TypeScript** - Verificação de tipos
-- **Prisma** - Validação de schema
-
-### Testes Configurados
-
-#### Frontend
-
-- **Jest** - Testes unitários
-- **Vitest** - Testes de integração
-- **Playwright** - Testes end-to-end (E2E)
-- **Testing Library** - Utilitários para testes React
-
-#### Backend
-
-- **Jest** - Testes unitários e integração
-- **Supertest** - Testes de API
-
-## 🚀 Início Rápido para Desenvolvedores
-
-### Pré-requisitos Globais
-
-- **Node.js** 18+
-- **npm** 9+
-- **Git**
-- **Docker Desktop** (para backend)
-
-### Setup Completo
+## Quick Start
 
 ```bash
-# 1. Clonar repositório
-git clone <repository-url>
+# 1. Clone and setup
+git clone https://github.com/ralfferreira/aquario.git
 cd aquario
-
-# 2. Inicializar e atualizar submodules
 ./scripts/setup-submodules.sh
 
-# 3. Setup do Backend
-cd backend
+# 2. Install dependencies
 npm install
-npm run setup  # Docker + DB + Migrations + Seed + Dev Server
 
-# 4. Setup do Frontend (em outro terminal)
-cd frontend
-npm install
+# 3. Setup environment
+cp .env.example .env.local
+# Edit .env.local with your values
+
+# 4. Start development
 npm run dev
 ```
 
-### URLs de Desenvolvimento
+**Access:** http://localhost:3000
 
-- **Frontend**: http://localhost:3000
-- **Backend**: http://localhost:3001
-- **Prisma Studio**: http://localhost:5555 (quando rodando)
+## Project Structure
 
-## 📋 Comandos Principais
-
-### Desenvolvimento Diário
-
-```bash
-# Backend
-cd backend
-npm run dev:auto    # Setup automático + servidor dev
-
-# Frontend
-cd frontend
-npm run dev         # Servidor de desenvolvimento
+```
+aquario/
+├── src/
+│   ├── app/                    # Next.js App Router (pages + API routes)
+│   │   ├── api/               # Backend API routes
+│   │   └── (pages)/           # Frontend pages
+│   ├── components/            # React components
+│   └── lib/
+│       ├── server/            # Server-only code (DB, services)
+│       ├── client/            # Client-only code (hooks, API calls)
+│       └── shared/            # Shared types and utilities
+├── content/                   # Git submodules (guias, entidades, etc.)
+├── prisma/                    # Database schema and migrations
+└── tests/                     # E2E tests
 ```
 
-### Verificação de Qualidade
+## Development Modes
+
+### Mode 1: Full Stack (with Database)
+
+Requires Docker for PostgreSQL:
 
 ```bash
-# Frontend
-cd frontend
-npm run check-all   # Lint + Format + Type-check
-
-# Backend
-cd backend
-npm run migrate     # Validação + Migração + Geração de tipos
-```
-
-### Testes
-
-```bash
-# Frontend
-cd frontend
-npm run test:all    # Todos os testes (unit + integration + E2E)
-
-# Backend
-cd backend
-npm test            # Testes unitários e integração
-```
-
-## 🔄 Fluxo de Desenvolvimento
-
-### 1. **Nova Funcionalidade**
-
-```bash
-# 1. Criar branch
-git checkout -b feature/nova-funcionalidade
-
-# 2. Desenvolver (seguindo padrões estabelecidos)
-# - Frontend: Componentes em kebab-case
-# - Backend: Seguir DDD (domain → application → infrastructure)
-
-# 3. Testes
-npm run test:all    # Frontend
-npm test           # Backend
-
-# 4. Verificação de qualidade
-npm run check-all  # Frontend
-npm run migrate    # Backend (se houver mudanças no schema)
-
-# 5. Commit e PR
-git commit -m "feat: adiciona nova funcionalidade"
-git push origin feature/nova-funcionalidade
-```
-
-### 2. **Mudanças no Schema (Backend)**
-
-```bash
-cd backend
-
-# 1. Modificar prisma/schema.prisma
-# 2. Executar migração
-npm run migrate
-
-# 3. Atualizar seed se necessário
+# Start Docker, then:
+docker-compose up -d
+npm run db:migrate
 npm run db:seed
+npm run dev
 ```
 
-### 3. **Novos Componentes (Frontend)**
+### Mode 2: Frontend Only (no Database)
+
+For working on UI without database:
 
 ```bash
-cd frontend
-
-# 1. Criar componente seguindo convenções
-# - Arquivo: kebab-case (ex: user-profile.tsx)
-# - Componente: PascalCase (ex: UserProfile)
-# - Props: TypeScript tipadas
-
-# 2. Adicionar testes
-# 3. Verificar qualidade
-npm run check-all
+# In .env.local, set:
+DB_PROVIDER=memory
+NEXT_PUBLIC_GUIAS_DATA_PROVIDER=local
+NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER=local
 ```
 
-### 4. **Atualizar Submodules**
+Then `npm run dev` - data comes from git submodules.
 
-O projeto utiliza submodules Git para gerenciar conteúdo (guias e entidades). Para inicializar ou atualizar todos os submodules:
+## Commands
+
+| Command                    | Description                |
+| -------------------------- | -------------------------- |
+| `npm run dev`              | Start development server   |
+| `npm run build`            | Build for production       |
+| `npm run lint`             | Run ESLint                 |
+| `npm run format`           | Format with Prettier       |
+| `npm run type-check`       | TypeScript check           |
+| `npm run check-all`        | Lint + Format + Types      |
+| `npm run test`             | Unit tests (Jest)          |
+| `npm run test:integration` | Integration tests (Vitest) |
+| `npm run test:e2e`         | E2E tests (Playwright)     |
+| `npm run db:migrate`       | Run migrations             |
+| `npm run db:seed`          | Seed database              |
+| `npm run db:studio`        | Open Prisma Studio         |
+
+## Architecture
+
+### Server Code (`src/lib/server/`)
+
+- **`db/`** - Database layer with repository pattern
+  - `interfaces/` - Repository interfaces
+  - `implementations/prisma/` - PostgreSQL implementation
+  - `implementations/memory/` - In-memory implementation (for testing)
+- **`services/`** - Business services (email, etc.)
+- **`container/`** - Dependency injection container
+
+### Client Code (`src/lib/client/`)
+
+- **`api/`** - API client functions
+- **`hooks/`** - React Query hooks
+- **`storage/`** - Local storage utilities
+
+### Shared Code (`src/lib/shared/`)
+
+- **`types/`** - TypeScript types used by both server and client
+- **`config/`** - Configuration and constants
+- **`utils.ts`** - Shared utilities
+
+## Conventions
+
+### File Naming
+
+All files use **kebab-case**: `user-profile.tsx`, `use-auth.ts`
+
+### Code Language
+
+- **Code**: English (variables, functions, comments)
+- **UI Text**: Portuguese
+- **Commits**: English
+
+### Commit Messages
+
+```
+type: short description
+
+feat: add user authentication
+fix: resolve login validation error
+docs: update README
+refactor: simplify auth logic
+test: add user API tests
+chore: update dependencies
+```
+
+## Environment Variables
+
+See `.env.example` for all available variables. Key ones:
+
+| Variable                      | Description                    |
+| ----------------------------- | ------------------------------ |
+| `DATABASE_URL`                | PostgreSQL connection string   |
+| `DB_PROVIDER`                 | `prisma` (real DB) or `memory` |
+| `JWT_SECRET`                  | Auth secret (32+ chars)        |
+| `EMAIL_MOCK_MODE`             | Skip email verification in dev |
+| `NEXT_PUBLIC_*_DATA_PROVIDER` | `local` or `backend`           |
+
+## Git Submodules
+
+Content is managed via git submodules in `content/`:
 
 ```bash
-# Inicializa submodules (primeira vez) ou atualiza para a versão mais recente
+# Initialize/update all submodules
 ./scripts/setup-submodules.sh
+
+# Or manually
+git submodule update --init --recursive
 ```
 
-Este script:
+## Need Help?
 
-- ✅ Detecta automaticamente todos os submodules configurados
-- ✅ Inicializa submodules não inicializados (útil após `git clone`)
-- ✅ Atualiza submodules existentes para a versão mais recente
-- ✅ Funciona para todos os submodules do projeto
-
-## 📝 Padrões de Commit
-
-### Convenção
-
-```
-<tipo>: <descrição>
-
-[corpo opcional]
-
-[rodapé opcional]
-```
-
-### Tipos Aceitos
-
-- `feat:` - Nova funcionalidade
-- `fix:` - Correção de bug
-- `docs:` - Documentação
-- `style:` - Formatação, sem mudança de código
-- `refactor:` - Refatoração de código
-- `test:` - Adição de testes
-- `chore:` - Mudanças em build, dependências, etc.
-
-### Exemplos
-
-```bash
-feat: adiciona sistema de busca de guias
-fix: corrige erro de validação no formulário de login
-docs: atualiza README com novas instruções
-refactor: melhora performance do componente UserCard
-test: adiciona testes para API de guias
-```
-
-## 🔍 Pull Request Template
-
-### Checklist Obrigatório
-
-- [ ] **Código segue padrões estabelecidos**
-  - [ ] Convenções de nomenclatura respeitadas
-  - [ ] Arquitetura DDD seguida (backend)
-  - [ ] Componentes bem estruturados (frontend)
-- [ ] **Qualidade de código**
-  - [ ] Linting passa (`npm run check-all`)
-  - [ ] TypeScript sem erros
-  - [ ] Prettier aplicado
-- [ ] **Testes**
-  - [ ] Testes passam (`npm run test:all`)
-  - [ ] Cobertura adequada
-  - [ ] Novos testes para nova funcionalidade
-- [ ] **Documentação**
-  - [ ] README atualizado se necessário
-  - [ ] Comentários em código complexo
-- [ ] **Funcionalidade**
-  - [ ] Responsivo em diferentes telas
-  - [ ] Modo escuro/claro funcionando
-  - [ ] Integração frontend/backend testada
-
-### Template de PR
-
-Para todo Pull Request, temos um template que será automaticamente aplicado. Pedimos que o utilize semrpe que possível.
-
-## 🎯 Princípios Fundamentais
-
-### 1. **Consistência**
-
-- Sempre seguir os padrões estabelecidos
-- Manter convenções de nomenclatura
-- Usar as ferramentas de qualidade configuradas
-
-### 2. **Qualidade**
-
-- Testes são obrigatórios para nova funcionalidade
-- Linting e formatação devem passar
-- TypeScript sem erros
-
-### 3. **Documentação**
-
-- Código auto-documentado quando possível
-- READMEs atualizados
-- Comentários em lógica complexa
-
-### 4. **Colaboração**
-
-- Commits claros e descritivos
-- PRs bem documentados
-- Code review respeitoso
-
-## 🆘 Suporte e Recursos
-
-### Documentação Detalhada
-
-- **Frontend**: [README-DEV.md](frontend/README-DEV.md)
-- **Backend**: [README-DEV.md](backend/README-DEV.md)
-
----
-
-## 🚀 Comandos de Referência Rápida
-
-```bash
-# Setup completo
-./scripts/setup-submodules.sh  # Inicializar/atualizar submodules
-cd backend && npm run setup
-cd frontend && npm run dev
-
-# Verificação de qualidade
-cd frontend && npm run check-all
-cd backend && npm run migrate
-
-# Testes
-cd frontend && npm run test:all
-cd backend && npm test
-```
-
-**Bem-vindo ao desenvolvimento do Aquário! 🌊**
-
-_Lembre-se: sempre seguir os padrões estabelecidos e manter a qualidade do código._
+- Check [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines
+- Check [TESTING-GUIDE.md](TESTING-GUIDE.md) for testing patterns
+- Open an issue or email [ralf.ferreira@academico.ufpb.br](mailto:ralf.ferreira@academico.ufpb.br)

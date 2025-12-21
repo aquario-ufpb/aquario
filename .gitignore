@@ -102,3 +102,14 @@ Dockerfile*
 
 # Misc
 *.tsbuildinfo
+next-env.d.ts
+
+# Yarn
+.yarn/install-state.gz
+
+# Vercel
+.vercel
+
+# Playwright
+playwright-report/
+test-results/
