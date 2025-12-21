@@ -7,9 +7,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import Registro from "../page";
-import * as authService from "@/lib/client/api/auth";
-import * as centrosService from "@/lib/client/api/centros";
-import * as cursosService from "@/lib/client/api/cursos";
 import { TestQueryProvider } from "@/__tests__/utils/test-providers";
 
 // Mock next/navigation
@@ -38,33 +35,35 @@ vi.mock("@/components/ui/select", () => ({
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 // Mock services
-vi.mock("../../../lib/api/auth", () => ({
+vi.mock("@/lib/client/api/auth", () => ({
   authService: {
     register: vi.fn(),
   },
 }));
-vi.mock("../../../lib/api/centros", () => ({
+vi.mock("@/lib/client/api/centros", () => ({
   centrosService: {
     getAll: vi.fn(),
   },
 }));
-vi.mock("../../../lib/api/cursos", () => ({
+vi.mock("@/lib/client/api/cursos", () => ({
   cursosService: {
     getByCentro: vi.fn(),
   },
 }));
 
-// Note: Tests involving Select component interactions are skipped due to Radix UI
-// pointer capture compatibility issues with happy-dom. These should be tested with E2E tests.
+// Import after mocking
+import { authService } from "@/lib/client/api/auth";
+import { centrosService } from "@/lib/client/api/centros";
+import { cursosService } from "@/lib/client/api/cursos";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockAuthService = authService as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockCentrosService = centrosService as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockCursosService = cursosService as any;
+const mockRegister = vi.mocked(authService.register);
+const mockGetAllCentros = vi.mocked(centrosService.getAll);
+const mockGetByCentro = vi.mocked(cursosService.getByCentro);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockRouter = useRouter as any;
+
+// Note: Tests involving Select component interactions are skipped due to Radix UI
+// pointer capture compatibility issues with happy-dom. These should be tested with E2E tests.
 
 describe("Registration Page", () => {
   const mockPush = vi.fn();
@@ -78,12 +77,8 @@ describe("Registration Page", () => {
       push: mockPush,
       replace: mockReplace,
     });
-    mockCentrosService.centrosService = {
-      getAll: vi.fn().mockResolvedValue(mockCentros),
-    };
-    mockCursosService.cursosService = {
-      getByCentro: vi.fn().mockResolvedValue(mockCursos),
-    };
+    mockGetAllCentros.mockResolvedValue(mockCentros);
+    mockGetByCentro.mockResolvedValue(mockCursos);
   });
 
   it("should render registration form", async () => {
@@ -121,7 +116,7 @@ describe("Registration Page", () => {
     );
 
     await waitFor(() => {
-      expect(mockCentrosService.centrosService.getAll).toHaveBeenCalled();
+      expect(mockGetAllCentros).toHaveBeenCalled();
     });
   });
 
@@ -142,9 +137,7 @@ describe("Registration Page", () => {
   it.skip("should show error on failed registration", async () => {
     // Skipped due to Radix UI Select compatibility issues with happy-dom
     // The select component uses pointer capture which isn't fully supported
-    mockAuthService.authService.register.mockRejectedValue(
-      new Error("Este e-mail já está em uso.")
-    );
+    mockRegister.mockRejectedValue(new Error("Este e-mail já está em uso."));
 
     render(
       <TestQueryProvider>
@@ -160,7 +153,7 @@ describe("Registration Page", () => {
   it.skip("should redirect to login after successful registration", async () => {
     // Skipped due to Radix UI Select compatibility issues with happy-dom
     // The select component uses pointer capture which isn't fully supported
-    mockAuthService.authService.register.mockResolvedValue({
+    mockRegister.mockResolvedValue({
       message: "Usuário registrado com sucesso.",
       usuarioId: "user-1",
       verificado: false,

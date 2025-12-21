@@ -6,14 +6,19 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { AuthProvider, useAuth } from "../auth-context";
-import * as usuariosService from "@/lib/client/api/usuarios";
 import React from "react";
 
 // Mock the usuarios service
-vi.mock("../../lib/api/usuarios");
+vi.mock("@/lib/client/api/usuarios", () => ({
+  usuariosService: {
+    getCurrentUser: vi.fn(),
+  },
+}));
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockUsuariosService = usuariosService as any;
+// Import after mocking
+import { usuariosService } from "@/lib/client/api/usuarios";
+
+const mockGetCurrentUser = vi.mocked(usuariosService.getCurrentUser);
 
 const mockUser = {
   id: "user-1",
@@ -38,9 +43,6 @@ describe("AuthContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    mockUsuariosService.usuariosService = {
-      getCurrentUser: vi.fn(),
-    };
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -61,7 +63,7 @@ describe("AuthContext", () => {
 
   it("should fetch user when token exists in localStorage", async () => {
     localStorage.setItem("token", "test-token");
-    mockUsuariosService.usuariosService.getCurrentUser.mockResolvedValue(mockUser);
+    mockGetCurrentUser.mockResolvedValue(mockUser);
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -72,12 +74,12 @@ describe("AuthContext", () => {
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual(mockUser);
     expect(result.current.token).toBe("test-token");
-    expect(mockUsuariosService.usuariosService.getCurrentUser).toHaveBeenCalledWith("test-token");
+    expect(mockGetCurrentUser).toHaveBeenCalledWith("test-token");
   });
 
   it("should logout and clear user when token is invalid", async () => {
     localStorage.setItem("token", "invalid-token");
-    mockUsuariosService.usuariosService.getCurrentUser.mockRejectedValue(new Error("Unauthorized"));
+    mockGetCurrentUser.mockRejectedValue(new Error("Unauthorized"));
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -97,7 +99,7 @@ describe("AuthContext", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    mockUsuariosService.usuariosService.getCurrentUser.mockResolvedValue(mockUser);
+    mockGetCurrentUser.mockResolvedValue(mockUser);
 
     result.current.login("new-token");
 
@@ -106,12 +108,12 @@ describe("AuthContext", () => {
     });
 
     expect(localStorage.getItem("token")).toBe("new-token");
-    expect(mockUsuariosService.usuariosService.getCurrentUser).toHaveBeenCalledWith("new-token");
+    expect(mockGetCurrentUser).toHaveBeenCalledWith("new-token");
   });
 
   it("should logout and clear all state", async () => {
     localStorage.setItem("token", "test-token");
-    mockUsuariosService.usuariosService.getCurrentUser.mockResolvedValue(mockUser);
+    mockGetCurrentUser.mockResolvedValue(mockUser);
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 

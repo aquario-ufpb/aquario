@@ -22,7 +22,7 @@ if (typeof global.Map === "undefined") {
 });
 
 // Mock the LocalFileGuiasProvider to avoid require.context issues
-vi.mock("./src/lib/api/guias_providers/local-file-guias-provider", () => {
+vi.mock("@/lib/client/api/guias_providers/local-file-guias-provider", () => {
   return {
     LocalFileGuiasProvider: class MockLocalFileGuiasProvider {
       getByCurso() {
@@ -45,7 +45,7 @@ vi.mock("./src/lib/api/guias_providers/local-file-guias-provider", () => {
 });
 
 // Mock the LocalFilePaasProvider to avoid require.context issues
-vi.mock("./src/lib/api/paas_providers/local-file-paas-provider", () => {
+vi.mock("@/lib/client/api/paas_providers/local-file-paas-provider", () => {
   return {
     LocalFilePaasProvider: class MockLocalFilePaasProvider {
       getCenter() {
@@ -68,6 +68,48 @@ vi.mock("./src/lib/api/paas_providers/local-file-paas-provider", () => {
             solution: [],
           },
         });
+      }
+    },
+  };
+});
+
+// Mock the LocalFileEntidadesProvider to avoid require.context issues
+vi.mock("@/lib/client/api/entidades_providers/local-file-entidades-provider", () => {
+  return {
+    LocalFileEntidadesProvider: class MockLocalFileEntidadesProvider {
+      getAll() {
+        return Promise.resolve([]);
+      }
+      getBySlug() {
+        return Promise.resolve(null);
+      }
+    },
+  };
+});
+
+// Mock the LocalFileVagasProvider to avoid require.context issues
+vi.mock("@/lib/client/api/vagas_providers/local-file-vagas-provider", () => {
+  return {
+    LocalFileVagasProvider: class MockLocalFileVagasProvider {
+      getAll() {
+        return Promise.resolve([]);
+      }
+    },
+  };
+});
+
+// Mock the LocalFileMapasProvider to avoid content submodule issues
+vi.mock("@/lib/client/api/mapas_providers/local-file-mapas-provider", () => {
+  return {
+    LocalFileMapasProvider: class MockLocalFileMapasProvider {
+      getBuildings() {
+        return Promise.resolve([]);
+      }
+      getFloors() {
+        return Promise.resolve([]);
+      }
+      getFloor() {
+        return Promise.resolve(null);
       }
     },
   };

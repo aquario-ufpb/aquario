@@ -8,7 +8,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useRouter, useSearchParams } from "next/navigation";
 import Login from "../page";
-import * as authService from "@/lib/client/api/auth";
 import { AuthProvider } from "@/contexts/auth-context";
 
 // Mock next/navigation
@@ -27,14 +26,16 @@ vi.mock("@/lib/shared/config/env", async importOriginal => {
 });
 
 // Mock auth service
-vi.mock("../../../lib/api/auth", () => ({
+vi.mock("@/lib/client/api/auth", () => ({
   authService: {
     login: vi.fn(),
   },
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockAuthService = authService as any;
+// Import after mocking
+import { authService } from "@/lib/client/api/auth";
+
+const mockLogin = vi.mocked(authService.login);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockRouter = useRouter as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,7 +80,7 @@ describe("Login Page", () => {
   });
 
   it("should show error on failed login", async () => {
-    mockAuthService.authService.login.mockRejectedValue(new Error("E-mail ou senha inválidos."));
+    mockLogin.mockRejectedValue(new Error("E-mail ou senha inválidos."));
 
     await renderLogin();
 
@@ -97,7 +98,7 @@ describe("Login Page", () => {
   });
 
   it("should redirect to home on successful login", async () => {
-    mockAuthService.authService.login.mockResolvedValue({ token: "test-token" });
+    mockLogin.mockResolvedValue({ token: "test-token" });
 
     await renderLogin();
 

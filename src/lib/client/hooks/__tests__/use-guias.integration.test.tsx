@@ -7,13 +7,22 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { waitFor } from "@testing-library/react";
 import { renderHookWithProviders } from "@/__tests__/utils/test-providers";
 import { useGuias, useSecoes, useSubSecoes } from "../use-guias";
-import * as guiasService from "@/lib/client/api/guias";
 
 // Mock the guias service
-vi.mock("../../lib/api/guias");
+vi.mock("@/lib/client/api/guias", () => ({
+  guiasService: {
+    getAll: vi.fn(),
+    getSecoes: vi.fn(),
+    getSubSecoes: vi.fn(),
+  },
+}));
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockGuiasService = guiasService as any;
+// Import after mocking
+import { guiasService } from "@/lib/client/api/guias";
+
+const mockGetAll = vi.mocked(guiasService.getAll);
+const mockGetSecoes = vi.mocked(guiasService.getSecoes);
+const mockGetSubSecoes = vi.mocked(guiasService.getSubSecoes);
 
 describe("useGuias Hook", () => {
   const mockGuias = [
@@ -42,9 +51,7 @@ describe("useGuias Hook", () => {
   });
 
   it("should fetch all guias", async () => {
-    mockGuiasService.guiasService = {
-      getAll: vi.fn().mockResolvedValue(mockGuias),
-    };
+    mockGetAll.mockResolvedValue(mockGuias);
 
     const { result } = renderHookWithProviders(() => useGuias());
 
@@ -59,14 +66,12 @@ describe("useGuias Hook", () => {
 
     expect(result.current.data).toEqual(mockGuias);
     expect(result.current.isSuccess).toBe(true);
-    expect(mockGuiasService.guiasService.getAll).toHaveBeenCalled();
+    expect(mockGetAll).toHaveBeenCalled();
   });
 
   it("should handle errors gracefully", async () => {
     const error = new Error("Failed to fetch guias");
-    mockGuiasService.guiasService = {
-      getAll: vi.fn().mockRejectedValue(error),
-    };
+    mockGetAll.mockRejectedValue(error);
 
     const { result } = renderHookWithProviders(() => useGuias());
 
@@ -79,9 +84,7 @@ describe("useGuias Hook", () => {
   });
 
   it("should cache results with React Query", async () => {
-    mockGuiasService.guiasService = {
-      getAll: vi.fn().mockResolvedValue(mockGuias),
-    };
+    mockGetAll.mockResolvedValue(mockGuias);
 
     const { result: result1, rerender } = renderHookWithProviders(() => useGuias());
 
@@ -97,7 +100,7 @@ describe("useGuias Hook", () => {
     expect(result1.current.data).toEqual(mockGuias);
 
     // Service should only be called once due to caching
-    expect(mockGuiasService.guiasService.getAll).toHaveBeenCalledTimes(1);
+    expect(mockGetAll).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -128,9 +131,7 @@ describe("useSecoes Hook", () => {
   });
 
   it("should fetch secoes for a given guia", async () => {
-    mockGuiasService.guiasService = {
-      getSecoes: vi.fn().mockResolvedValue(mockSecoes),
-    };
+    mockGetSecoes.mockResolvedValue(mockSecoes);
 
     const { result } = renderHookWithProviders(() => useSecoes("bem-vindo"));
 
@@ -141,21 +142,17 @@ describe("useSecoes Hook", () => {
     });
 
     expect(result.current.data).toEqual(mockSecoes);
-    expect(mockGuiasService.guiasService.getSecoes).toHaveBeenCalledWith("bem-vindo");
+    expect(mockGetSecoes).toHaveBeenCalledWith("bem-vindo");
   });
 
   it("should not fetch when guiaSlug is empty", async () => {
-    mockGuiasService.guiasService = {
-      getSecoes: vi.fn(),
-    };
-
     const { result } = renderHookWithProviders(() => useSecoes(""));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(mockGuiasService.guiasService.getSecoes).not.toHaveBeenCalled();
+    expect(mockGetSecoes).not.toHaveBeenCalled();
   });
 });
 
@@ -186,9 +183,7 @@ describe("useSubSecoes Hook", () => {
   });
 
   it("should fetch subsecoes for a given secao", async () => {
-    mockGuiasService.guiasService = {
-      getSubSecoes: vi.fn().mockResolvedValue(mockSubSecoes),
-    };
+    mockGetSubSecoes.mockResolvedValue(mockSubSecoes);
 
     const { result } = renderHookWithProviders(() => useSubSecoes("principais-cadeiras"));
 
@@ -199,28 +194,22 @@ describe("useSubSecoes Hook", () => {
     });
 
     expect(result.current.data).toEqual(mockSubSecoes);
-    expect(mockGuiasService.guiasService.getSubSecoes).toHaveBeenCalledWith("principais-cadeiras");
+    expect(mockGetSubSecoes).toHaveBeenCalledWith("principais-cadeiras");
   });
 
   it("should not fetch when secaoSlug is empty", async () => {
-    mockGuiasService.guiasService = {
-      getSubSecoes: vi.fn(),
-    };
-
     const { result } = renderHookWithProviders(() => useSubSecoes(""));
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(mockGuiasService.guiasService.getSubSecoes).not.toHaveBeenCalled();
+    expect(mockGetSubSecoes).not.toHaveBeenCalled();
   });
 
   it("should handle errors", async () => {
     const error = new Error("Failed to fetch subsecoes");
-    mockGuiasService.guiasService = {
-      getSubSecoes: vi.fn().mockRejectedValue(error),
-    };
+    mockGetSubSecoes.mockRejectedValue(error);
 
     const { result } = renderHookWithProviders(() => useSubSecoes("principais-cadeiras"));
 

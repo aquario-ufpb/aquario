@@ -7,13 +7,22 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { waitFor } from "@testing-library/react";
 import { renderHookWithProviders } from "@/__tests__/utils/test-providers";
 import { useGuiasPage } from "../use-guias-page";
-import * as guiasService from "@/lib/client/api/guias";
 
 // Mock the guias service
-vi.mock("../../lib/api/guias");
+vi.mock("@/lib/client/api/guias", () => ({
+  guiasService: {
+    getAll: vi.fn(),
+    getSecoes: vi.fn(),
+    getSubSecoes: vi.fn(),
+  },
+}));
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockGuiasService = guiasService as any;
+// Import after mocking
+import { guiasService } from "@/lib/client/api/guias";
+
+const mockGetAll = vi.mocked(guiasService.getAll);
+const mockGetSecoes = vi.mocked(guiasService.getSecoes);
+const mockGetSubSecoes = vi.mocked(guiasService.getSubSecoes);
 
 describe("useGuiasPage Hook", () => {
   const mockGuias = [
@@ -88,24 +97,15 @@ describe("useGuiasPage Hook", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Setup complete mock responses
-    mockGuiasService.guiasService = {
-      getAll: vi.fn(),
-      getSecoes: vi.fn(),
-      getSubSecoes: vi.fn(),
-    };
   });
 
   it("should build complete guia tree with all data", async () => {
     // Mock service responses
-    mockGuiasService.guiasService.getAll.mockResolvedValue(mockGuias);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockGuiasService.guiasService.getSecoes.mockImplementation((guiaSlug: string) => {
+    mockGetAll.mockResolvedValue(mockGuias);
+    mockGetSecoes.mockImplementation((guiaSlug: string) => {
       return Promise.resolve(mockSecoes[guiaSlug as keyof typeof mockSecoes] || []);
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockGuiasService.guiasService.getSubSecoes.mockImplementation((secaoSlug: string) => {
+    mockGetSubSecoes.mockImplementation((secaoSlug: string) => {
       return Promise.resolve(mockSubSecoes[secaoSlug as keyof typeof mockSubSecoes] || []);
     });
 
@@ -146,9 +146,9 @@ describe("useGuiasPage Hook", () => {
   });
 
   it("should find correct curso from hardcoded list", async () => {
-    mockGuiasService.guiasService.getAll.mockResolvedValue([]);
-    mockGuiasService.guiasService.getSecoes.mockResolvedValue([]);
-    mockGuiasService.guiasService.getSubSecoes.mockResolvedValue([]);
+    mockGetAll.mockResolvedValue([]);
+    mockGetSecoes.mockResolvedValue([]);
+    mockGetSubSecoes.mockResolvedValue([]);
 
     const { result } = renderHookWithProviders(() => useGuiasPage());
 
@@ -167,9 +167,9 @@ describe("useGuiasPage Hook", () => {
       resolveGuias = resolve;
     });
 
-    mockGuiasService.guiasService.getAll.mockReturnValue(guiasPromise);
-    mockGuiasService.guiasService.getSecoes.mockResolvedValue([]);
-    mockGuiasService.guiasService.getSubSecoes.mockResolvedValue([]);
+    mockGetAll.mockReturnValue(guiasPromise);
+    mockGetSecoes.mockResolvedValue([]);
+    mockGetSubSecoes.mockResolvedValue([]);
 
     const { result } = renderHookWithProviders(() => useGuiasPage());
 
@@ -187,7 +187,7 @@ describe("useGuiasPage Hook", () => {
 
   it("should handle errors gracefully", async () => {
     const error = new Error("Failed to fetch guias");
-    mockGuiasService.guiasService.getAll.mockRejectedValue(error);
+    mockGetAll.mockRejectedValue(error);
 
     const { result } = renderHookWithProviders(() => useGuiasPage());
 
@@ -202,13 +202,11 @@ describe("useGuiasPage Hook", () => {
   });
 
   it("should provide secoesData and subSecoesData", async () => {
-    mockGuiasService.guiasService.getAll.mockResolvedValue(mockGuias);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockGuiasService.guiasService.getSecoes.mockImplementation((guiaSlug: string) => {
+    mockGetAll.mockResolvedValue(mockGuias);
+    mockGetSecoes.mockImplementation((guiaSlug: string) => {
       return Promise.resolve(mockSecoes[guiaSlug as keyof typeof mockSecoes] || []);
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockGuiasService.guiasService.getSubSecoes.mockImplementation((secaoSlug: string) => {
+    mockGetSubSecoes.mockImplementation((secaoSlug: string) => {
       return Promise.resolve(mockSubSecoes[secaoSlug as keyof typeof mockSubSecoes] || []);
     });
 
@@ -228,9 +226,9 @@ describe("useGuiasPage Hook", () => {
   });
 
   it("should handle empty guias list", async () => {
-    mockGuiasService.guiasService.getAll.mockResolvedValue([]);
-    mockGuiasService.guiasService.getSecoes.mockResolvedValue([]);
-    mockGuiasService.guiasService.getSubSecoes.mockResolvedValue([]);
+    mockGetAll.mockResolvedValue([]);
+    mockGetSecoes.mockResolvedValue([]);
+    mockGetSubSecoes.mockResolvedValue([]);
 
     const { result } = renderHookWithProviders(() => useGuiasPage());
 
