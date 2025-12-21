@@ -2,16 +2,20 @@ import { Resend } from "resend";
 import type { IEmailService } from "./email-service.interface";
 
 export class ResendEmailService implements IEmailService {
-  private resend: Resend;
+  private resend: Resend | null = null;
   private fromEmail: string;
   private frontendUrl: string;
 
   constructor() {
     const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
+
+    // Only create Resend client if API key is available
+    // This prevents build-time errors when the key isn't set
+    if (apiKey) {
+      this.resend = new Resend(apiKey);
+    } else {
       console.warn("RESEND_API_KEY not set - emails will fail");
     }
-    this.resend = new Resend(apiKey);
 
     // Use EMAIL_FROM if provided, otherwise fall back to Resend's test email
     this.fromEmail = process.env.EMAIL_FROM
@@ -22,6 +26,11 @@ export class ResendEmailService implements IEmailService {
   }
 
   async sendVerificationEmail(to: string, token: string, nome: string): Promise<void> {
+    if (!this.resend) {
+      console.error("Cannot send verification email: RESEND_API_KEY not configured");
+      throw new Error("Serviço de email não configurado.");
+    }
+
     const verificationUrl = `${this.frontendUrl}/verificar-email?token=${token}`;
 
     try {
@@ -38,6 +47,11 @@ export class ResendEmailService implements IEmailService {
   }
 
   async sendPasswordResetEmail(to: string, token: string, nome: string): Promise<void> {
+    if (!this.resend) {
+      console.error("Cannot send password reset email: RESEND_API_KEY not configured");
+      throw new Error("Serviço de email não configurado.");
+    }
+
     const resetUrl = `${this.frontendUrl}/resetar-senha?token=${token}`;
 
     try {
