@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { signToken } from "@/lib/server/services/jwt/jwt";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 

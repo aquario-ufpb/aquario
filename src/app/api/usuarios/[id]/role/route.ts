@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";

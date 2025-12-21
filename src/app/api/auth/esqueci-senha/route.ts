@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { forgotPassword } from "@/lib/server/services/auth/forgot-password";

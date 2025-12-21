@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
 import { resendVerificationByUser } from "@/lib/server/services/auth/resend-verification";
 import { withAuth } from "@/lib/server/services/auth/middleware";
