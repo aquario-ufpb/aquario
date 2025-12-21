@@ -5,22 +5,30 @@
  * Data providers can still switch between backend (API routes) and local files.
  */
 
-// Database provider: "prisma" (default) or "memory" (for testing without DB)
-export const DB_PROVIDER = process.env.DB_PROVIDER || "prisma";
+/**
+ * USE_BACKEND controls whether backend features (auth, database) are enabled.
+ * When false, the app runs in "local mode" with data from git submodules.
+ */
+export const USE_BACKEND = process.env.NEXT_PUBLIC_USE_BACKEND === "true";
 
 /**
- * Use USE_BACKEND === "true" to check if using real backend or local files.
+ * Database provider: "prisma" (real DB) or "memory" (in-memory for testing)
+ * Automatically uses "memory" when USE_BACKEND is false.
  */
-export const USE_BACKEND = process.env.USE_BACKEND === "true";
+export const DB_PROVIDER = USE_BACKEND ? process.env.DB_PROVIDER || "prisma" : "memory";
 
 // Data Provider Configuration
 // Determines whether to fetch data from API routes (backend) or local files
-const getProvider = (envVar: string | undefined, defaultProvider: string): string => {
-  return envVar || defaultProvider;
+// When USE_BACKEND is false, always use local providers
+const getProvider = (envVar: string | undefined): string => {
+  if (!USE_BACKEND) {
+    return "local";
+  }
+  return envVar || "backend";
 };
 
 export const GUIDAS_DATA_PROVIDER_CONFIG = {
-  PROVIDER: getProvider(process.env.NEXT_PUBLIC_GUIAS_DATA_PROVIDER, "backend"),
+  PROVIDER: getProvider(process.env.NEXT_PUBLIC_GUIAS_DATA_PROVIDER),
   PROVIDERS: {
     BACKEND: "backend",
     LOCAL: "local",
@@ -28,7 +36,7 @@ export const GUIDAS_DATA_PROVIDER_CONFIG = {
 } as const;
 
 export const ENTIDADES_DATA_PROVIDER_CONFIG = {
-  PROVIDER: getProvider(process.env.NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER, "backend"),
+  PROVIDER: getProvider(process.env.NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER),
   PROVIDERS: {
     BACKEND: "backend",
     LOCAL: "local",
