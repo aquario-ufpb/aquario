@@ -68,7 +68,9 @@ const mockRouter = useRouter as any;
 describe("Registration Page", () => {
   const mockPush = vi.fn();
   const mockReplace = vi.fn();
-  const mockCentros = [{ id: "centro-1", nome: "Centro de Informática", sigla: "CI" }];
+  const mockCentros = [
+    { id: "centro-1", nome: "Centro de Informática", sigla: "CI", campusId: "campus-1" },
+  ];
   const mockCursos = [{ id: "curso-1", nome: "Ciência da Computação", centroId: "centro-1" }];
 
   beforeEach(() => {

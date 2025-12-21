@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { waitFor } from "@testing-library/react";
 import { renderHookWithProviders } from "@/__tests__/utils/test-providers";
 import { useGuiasPage } from "../use-guias-page";
+import type { Guia } from "@/lib/shared/types";
 
 // Mock the guias service
 vi.mock("@/lib/client/api/guias", () => ({
@@ -163,7 +164,7 @@ describe("useGuiasPage Hook", () => {
     // Make service calls take time
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let resolveGuias: any;
-    const guiasPromise = new Promise(resolve => {
+    const guiasPromise = new Promise<Guia[]>(resolve => {
       resolveGuias = resolve;
     });
 
