@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/server/db/prisma";
 import type { ITokenVerificacaoRepository } from "@/lib/server/db/interfaces/token-verificacao-repository.interface";
-import type { TokenVerificacao, TokenVerificacaoCreateInput, TipoToken } from "@/lib/server/db/interfaces/types";
+import type {
+  TokenVerificacao,
+  TokenVerificacaoCreateInput,
+  TipoToken,
+} from "@/lib/server/db/interfaces/types";
 
 export class PrismaTokenVerificacaoRepository implements ITokenVerificacaoRepository {
   async create(data: TokenVerificacaoCreateInput): Promise<TokenVerificacao> {
@@ -59,4 +63,3 @@ export class PrismaTokenVerificacaoRepository implements ITokenVerificacaoReposi
     });
   }
 }
-

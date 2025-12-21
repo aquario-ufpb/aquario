@@ -1,6 +1,6 @@
 import type { GuiaWithRelations, SecaoGuiaWithRelations, SubSecaoGuia } from "./types";
 
-export interface IGuiasRepository {
+export type IGuiasRepository = {
   /**
    * List all guias
    */
@@ -20,9 +20,9 @@ export interface IGuiasRepository {
    * Find guias by curso ID
    */
   findByCursoId(cursoId: string): Promise<GuiaWithRelations[]>;
-}
+};
 
-export interface ISecoesGuiaRepository {
+export type ISecoesGuiaRepository = {
   /**
    * Find all secoes for a guia
    */
@@ -32,9 +32,9 @@ export interface ISecoesGuiaRepository {
    * Find a secao by ID
    */
   findById(id: string): Promise<SecaoGuiaWithRelations | null>;
-}
+};
 
-export interface ISubSecoesGuiaRepository {
+export type ISubSecoesGuiaRepository = {
   /**
    * Find all subsecoes for a secao
    */
@@ -44,5 +44,4 @@ export interface ISubSecoesGuiaRepository {
    * Find a subsecao by ID
    */
   findById(id: string): Promise<SubSecaoGuia | null>;
-}
-
+};

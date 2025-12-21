@@ -1,6 +1,6 @@
 import type { EntidadeWithRelations, EntidadeUpdateInput } from "./types";
 
-export interface IEntidadesRepository {
+export type IEntidadesRepository = {
   /**
    * List all entidades with centro
    */
@@ -20,5 +20,4 @@ export interface IEntidadesRepository {
    * Update an entidade
    */
   update(id: string, data: EntidadeUpdateInput): Promise<void>;
-}
-
+};

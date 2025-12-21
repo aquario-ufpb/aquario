@@ -1,6 +1,6 @@
 import type { Curso } from "./types";
 
-export interface ICursosRepository {
+export type ICursosRepository = {
   /**
    * Find a curso by ID
    */
@@ -10,5 +10,4 @@ export interface ICursosRepository {
    * Find all cursos by centro ID
    */
   findByCentroId(centroId: string): Promise<Curso[]>;
-}
-
+};

@@ -100,4 +100,3 @@ export type EntidadeUpdateInput = {
   foundingDate?: Date | null;
   metadata?: Prisma.JsonValue;
 };
-

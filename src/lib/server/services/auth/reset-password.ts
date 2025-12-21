@@ -75,4 +75,3 @@ export async function resetPassword(
     message: "Senha redefinida com sucesso! Você já pode fazer login.",
   };
 }
-

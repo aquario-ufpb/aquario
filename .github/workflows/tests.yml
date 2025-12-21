@@ -217,4 +217,3 @@ jobs:
           needs.integration-tests.result != 'success' ||
           needs.e2e-tests.result != 'success'
         run: exit 1
-

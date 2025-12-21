@@ -52,15 +52,17 @@ export async function withAuth(
  * Middleware wrapper for admin-only routes
  * Requires user to be authenticated and have MASTER_ADMIN role
  */
-export async function withAdmin(
+export function withAdmin(
   request: Request,
   handler: (req: Request, usuario: UsuarioWithRelations) => Promise<Response>
 ): Promise<Response> {
-  return withAuth(request, async (req, usuario) => {
+  return withAuth(request, (req, usuario) => {
     if (usuario.papelPlataforma !== "MASTER_ADMIN") {
-      return NextResponse.json(
-        { error: "Acesso negado. Permissão de administrador necessária." },
-        { status: 403 }
+      return Promise.resolve(
+        NextResponse.json(
+          { error: "Acesso negado. Permissão de administrador necessária." },
+          { status: 403 }
+        )
       );
     }
 
@@ -86,6 +88,5 @@ export async function getOptionalUser(request: Request): Promise<UsuarioWithRela
   }
 
   const { usuariosRepository } = getContainer();
-  return usuariosRepository.findById(payload.sub);
+  return await usuariosRepository.findById(payload.sub);
 }
-

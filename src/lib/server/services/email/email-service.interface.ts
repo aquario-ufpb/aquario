@@ -4,7 +4,7 @@
  * Defines the contract for sending emails. Implementations can use
  * different providers (Resend, SendGrid, etc.) or mock for testing.
  */
-export interface IEmailService {
+export type IEmailService = {
   /**
    * Send email verification link to user
    * @param to - Recipient email address
@@ -20,5 +20,4 @@ export interface IEmailService {
    * @param nome - User's name for personalization
    */
   sendPasswordResetEmail(to: string, token: string, nome: string): Promise<void>;
-}
-
+};

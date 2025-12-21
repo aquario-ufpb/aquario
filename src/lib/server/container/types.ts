@@ -35,4 +35,3 @@ export type Container = {
  * Database provider type
  */
 export type DbProvider = "prisma" | "memory";
-

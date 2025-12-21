@@ -20,14 +20,14 @@ export class InMemoryCursosRepository implements ICursosRepository {
     },
   ];
 
-  async findById(id: string): Promise<Curso | null> {
-    return this.cursos.find((c) => c.id === id) ?? null;
+  findById(id: string): Promise<Curso | null> {
+    return Promise.resolve(this.cursos.find(c => c.id === id) ?? null);
   }
 
-  async findByCentroId(centroId: string): Promise<Curso[]> {
-    return this.cursos
-      .filter((c) => c.centroId === centroId)
-      .sort((a, b) => a.nome.localeCompare(b.nome));
+  findByCentroId(centroId: string): Promise<Curso[]> {
+    return Promise.resolve(
+      this.cursos.filter(c => c.centroId === centroId).sort((a, b) => a.nome.localeCompare(b.nome))
+    );
   }
 
   // Helper for testing
@@ -39,4 +39,3 @@ export class InMemoryCursosRepository implements ICursosRepository {
     this.cursos = [];
   }
 }
-

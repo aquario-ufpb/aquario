@@ -148,4 +148,3 @@ export async function resendVerificationByEmail(
 
   return successResponse;
 }
-

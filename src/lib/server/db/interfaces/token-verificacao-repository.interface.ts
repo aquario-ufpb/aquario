@@ -1,6 +1,6 @@
 import type { TokenVerificacao, TokenVerificacaoCreateInput, TipoToken } from "./types";
 
-export interface ITokenVerificacaoRepository {
+export type ITokenVerificacaoRepository = {
   /**
    * Create a new verification token
    */
@@ -14,7 +14,10 @@ export interface ITokenVerificacaoRepository {
   /**
    * Find the latest token for a user of a specific type
    */
-  findLatestByUsuarioIdAndTipo(usuarioId: string, tipo: TipoToken): Promise<TokenVerificacao | null>;
+  findLatestByUsuarioIdAndTipo(
+    usuarioId: string,
+    tipo: TipoToken
+  ): Promise<TokenVerificacao | null>;
 
   /**
    * Mark a token as used
@@ -30,5 +33,4 @@ export interface ITokenVerificacaoRepository {
    * Delete all tokens for a user of a specific type
    */
   deleteByUsuarioIdAndTipo(usuarioId: string, tipo: TipoToken): Promise<void>;
-}
-
+};

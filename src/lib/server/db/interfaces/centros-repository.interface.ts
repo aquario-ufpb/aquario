@@ -1,6 +1,6 @@
 import type { Centro } from "./types";
 
-export interface ICentrosRepository {
+export type ICentrosRepository = {
   /**
    * Find a centro by ID
    */
@@ -10,5 +10,4 @@ export interface ICentrosRepository {
    * List all centros
    */
   findMany(): Promise<Centro[]>;
-}
-
+};

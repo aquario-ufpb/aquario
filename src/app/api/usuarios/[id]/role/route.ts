@@ -11,7 +11,7 @@ const updateRoleSchema = z.object({
   papelPlataforma: z.enum(["USER", "MASTER_ADMIN"]),
 });
 
-export async function PATCH(request: Request, context: RouteContext) {
+export function PATCH(request: Request, context: RouteContext) {
   return withAdmin(request, async (req, currentUser) => {
     const { id } = await context.params;
 
@@ -38,24 +38,30 @@ export async function PATCH(request: Request, context: RouteContext) {
 
       // Return updated user
       const updatedUser = await usuariosRepository.findById(id);
+      if (!updatedUser) {
+        return NextResponse.json(
+          { message: "Erro ao buscar usuário atualizado." },
+          { status: 500 }
+        );
+      }
 
       return NextResponse.json({
-        id: updatedUser!.id,
-        nome: updatedUser!.nome,
-        email: updatedUser!.email,
-        papelPlataforma: updatedUser!.papelPlataforma,
-        eVerificado: updatedUser!.eVerificado,
-        urlFotoPerfil: updatedUser!.urlFotoPerfil,
+        id: updatedUser.id,
+        nome: updatedUser.nome,
+        email: updatedUser.email,
+        papelPlataforma: updatedUser.papelPlataforma,
+        eVerificado: updatedUser.eVerificado,
+        urlFotoPerfil: updatedUser.urlFotoPerfil,
         centro: {
-          id: updatedUser!.centro.id,
-          nome: updatedUser!.centro.nome,
-          sigla: updatedUser!.centro.sigla,
+          id: updatedUser.centro.id,
+          nome: updatedUser.centro.nome,
+          sigla: updatedUser.centro.sigla,
         },
         curso: {
-          id: updatedUser!.curso.id,
-          nome: updatedUser!.curso.nome,
+          id: updatedUser.curso.id,
+          nome: updatedUser.curso.nome,
         },
-        permissoes: updatedUser!.permissoes,
+        permissoes: updatedUser.permissoes,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -70,4 +76,3 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
   });
 }
-

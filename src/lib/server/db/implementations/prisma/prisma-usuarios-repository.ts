@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/server/db/prisma";
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
-import type { UsuarioWithRelations, UsuarioCreateInput, PapelPlataforma } from "@/lib/server/db/interfaces/types";
+import type {
+  UsuarioWithRelations,
+  UsuarioCreateInput,
+  PapelPlataforma,
+} from "@/lib/server/db/interfaces/types";
 
 export class PrismaUsuariosRepository implements IUsuariosRepository {
   async create(data: UsuarioCreateInput): Promise<UsuarioWithRelations> {
@@ -93,4 +97,3 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     });
   }
 }
-

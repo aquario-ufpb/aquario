@@ -6,7 +6,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function DELETE(request: Request, context: RouteContext) {
+export function DELETE(request: Request, context: RouteContext) {
   return withAdmin(request, async (_req, currentUser) => {
     const { id } = await context.params;
 
@@ -30,4 +30,3 @@ export async function DELETE(request: Request, context: RouteContext) {
     return NextResponse.json({ message: "Usuário deletado com sucesso." });
   });
 }
-

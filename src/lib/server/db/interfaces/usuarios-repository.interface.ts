@@ -1,6 +1,6 @@
 import type { UsuarioWithRelations, UsuarioCreateInput, PapelPlataforma } from "./types";
 
-export interface IUsuariosRepository {
+export type IUsuariosRepository = {
   /**
    * Create a new user
    */
@@ -40,5 +40,4 @@ export interface IUsuariosRepository {
    * Delete a user
    */
   delete(id: string): Promise<void>;
-}
-
+};

@@ -32,7 +32,7 @@ const updateEntidadeSchema = z.object({
   slug: z.string().optional(),
 });
 
-export async function PUT(request: Request, context: RouteContext) {
+export function PUT(request: Request, context: RouteContext) {
   return withAuth(request, async (req, usuario) => {
     const { id } = await context.params;
 
@@ -50,7 +50,7 @@ export async function PUT(request: Request, context: RouteContext) {
       // Check if user has permission to edit (admin or member of entidade)
       const isAdmin = usuario.papelPlataforma === "MASTER_ADMIN";
       const isMember = entidade.membros?.some(
-        (m) => m.usuario.id === usuario.id && m.papel === "ADMIN"
+        m => m.usuario.id === usuario.id && m.papel === "ADMIN"
       );
 
       if (!isAdmin && !isMember) {
@@ -62,16 +62,36 @@ export async function PUT(request: Request, context: RouteContext) {
 
       // Build update data
       const updateData: Record<string, unknown> = {};
-      if (data.nome !== undefined) updateData.nome = data.nome;
-      if (data.subtitle !== undefined) updateData.subtitle = data.subtitle;
-      if (data.descricao !== undefined) updateData.descricao = data.descricao;
-      if (data.tipo !== undefined) updateData.tipo = data.tipo;
-      if (data.urlFoto !== undefined) updateData.urlFoto = data.urlFoto;
-      if (data.contato !== undefined) updateData.contato = data.contato;
-      if (data.instagram !== undefined) updateData.instagram = data.instagram;
-      if (data.linkedin !== undefined) updateData.linkedin = data.linkedin;
-      if (data.website !== undefined) updateData.website = data.website;
-      if (data.location !== undefined) updateData.location = data.location;
+      if (data.nome !== undefined) {
+        updateData.nome = data.nome;
+      }
+      if (data.subtitle !== undefined) {
+        updateData.subtitle = data.subtitle;
+      }
+      if (data.descricao !== undefined) {
+        updateData.descricao = data.descricao;
+      }
+      if (data.tipo !== undefined) {
+        updateData.tipo = data.tipo;
+      }
+      if (data.urlFoto !== undefined) {
+        updateData.urlFoto = data.urlFoto;
+      }
+      if (data.contato !== undefined) {
+        updateData.contato = data.contato;
+      }
+      if (data.instagram !== undefined) {
+        updateData.instagram = data.instagram;
+      }
+      if (data.linkedin !== undefined) {
+        updateData.linkedin = data.linkedin;
+      }
+      if (data.website !== undefined) {
+        updateData.website = data.website;
+      }
+      if (data.location !== undefined) {
+        updateData.location = data.location;
+      }
       if (data.foundingDate !== undefined) {
         updateData.foundingDate = data.foundingDate ? new Date(data.foundingDate) : null;
       }
@@ -97,4 +117,3 @@ export async function PUT(request: Request, context: RouteContext) {
     }
   });
 }
-

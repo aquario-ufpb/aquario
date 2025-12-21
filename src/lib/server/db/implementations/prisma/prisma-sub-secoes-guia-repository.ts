@@ -22,4 +22,3 @@ export class PrismaSubSecoesGuiaRepository implements ISubSecoesGuiaRepository {
     return subSecao;
   }
 }
-

@@ -46,14 +46,30 @@ function createContainer(): Container {
  */
 function createPrismaContainer(): Container {
   // Dynamic imports to avoid loading all implementations at startup
-  const { PrismaUsuariosRepository } = require("@/lib/server/db/implementations/prisma/prisma-usuarios-repository");
-  const { PrismaCentrosRepository } = require("@/lib/server/db/implementations/prisma/prisma-centros-repository");
-  const { PrismaCursosRepository } = require("@/lib/server/db/implementations/prisma/prisma-cursos-repository");
-  const { PrismaTokenVerificacaoRepository } = require("@/lib/server/db/implementations/prisma/prisma-token-verificacao-repository");
-  const { PrismaEntidadesRepository } = require("@/lib/server/db/implementations/prisma/prisma-entidades-repository");
-  const { PrismaGuiasRepository } = require("@/lib/server/db/implementations/prisma/prisma-guias-repository");
-  const { PrismaSecoesGuiaRepository } = require("@/lib/server/db/implementations/prisma/prisma-secoes-guia-repository");
-  const { PrismaSubSecoesGuiaRepository } = require("@/lib/server/db/implementations/prisma/prisma-sub-secoes-guia-repository");
+  const {
+    PrismaUsuariosRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-usuarios-repository");
+  const {
+    PrismaCentrosRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-centros-repository");
+  const {
+    PrismaCursosRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-cursos-repository");
+  const {
+    PrismaTokenVerificacaoRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-token-verificacao-repository");
+  const {
+    PrismaEntidadesRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-entidades-repository");
+  const {
+    PrismaGuiasRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-guias-repository");
+  const {
+    PrismaSecoesGuiaRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-secoes-guia-repository");
+  const {
+    PrismaSubSecoesGuiaRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-sub-secoes-guia-repository");
   const { ResendEmailService } = require("@/lib/server/services/email/resend-email-service");
 
   return {
@@ -73,14 +89,30 @@ function createPrismaContainer(): Container {
  * Create container with in-memory implementations (for testing)
  */
 function createMemoryContainer(): Container {
-  const { InMemoryUsuariosRepository } = require("@/lib/server/db/implementations/memory/in-memory-usuarios-repository");
-  const { InMemoryCentrosRepository } = require("@/lib/server/db/implementations/memory/in-memory-centros-repository");
-  const { InMemoryCursosRepository } = require("@/lib/server/db/implementations/memory/in-memory-cursos-repository");
-  const { InMemoryTokenVerificacaoRepository } = require("@/lib/server/db/implementations/memory/in-memory-token-verificacao-repository");
-  const { InMemoryEntidadesRepository } = require("@/lib/server/db/implementations/memory/in-memory-entidades-repository");
-  const { InMemoryGuiasRepository } = require("@/lib/server/db/implementations/memory/in-memory-guias-repository");
-  const { InMemorySecoesGuiaRepository } = require("@/lib/server/db/implementations/memory/in-memory-secoes-guia-repository");
-  const { InMemorySubSecoesGuiaRepository } = require("@/lib/server/db/implementations/memory/in-memory-sub-secoes-guia-repository");
+  const {
+    InMemoryUsuariosRepository,
+  } = require("@/lib/server/db/implementations/memory/in-memory-usuarios-repository");
+  const {
+    InMemoryCentrosRepository,
+  } = require("@/lib/server/db/implementations/memory/in-memory-centros-repository");
+  const {
+    InMemoryCursosRepository,
+  } = require("@/lib/server/db/implementations/memory/in-memory-cursos-repository");
+  const {
+    InMemoryTokenVerificacaoRepository,
+  } = require("@/lib/server/db/implementations/memory/in-memory-token-verificacao-repository");
+  const {
+    InMemoryEntidadesRepository,
+  } = require("@/lib/server/db/implementations/memory/in-memory-entidades-repository");
+  const {
+    InMemoryGuiasRepository,
+  } = require("@/lib/server/db/implementations/memory/in-memory-guias-repository");
+  const {
+    InMemorySecoesGuiaRepository,
+  } = require("@/lib/server/db/implementations/memory/in-memory-secoes-guia-repository");
+  const {
+    InMemorySubSecoesGuiaRepository,
+  } = require("@/lib/server/db/implementations/memory/in-memory-sub-secoes-guia-repository");
   const { MockEmailService } = require("@/lib/server/services/email/mock-email-service");
 
   return {

@@ -1,5 +1,11 @@
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
-import type { UsuarioWithRelations, UsuarioCreateInput, PapelPlataforma, Centro, Curso } from "@/lib/server/db/interfaces/types";
+import type {
+  UsuarioWithRelations,
+  UsuarioCreateInput,
+  PapelPlataforma,
+  Centro,
+  Curso,
+} from "@/lib/server/db/interfaces/types";
 import { randomUUID } from "crypto";
 
 export class InMemoryUsuariosRepository implements IUsuariosRepository {
@@ -20,7 +26,7 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     centroId: "centro-1",
   };
 
-  async create(data: UsuarioCreateInput): Promise<UsuarioWithRelations> {
+  create(data: UsuarioCreateInput): Promise<UsuarioWithRelations> {
     const usuario: UsuarioWithRelations = {
       id: randomUUID(),
       nome: data.nome,
@@ -40,51 +46,55 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     };
 
     this.usuarios.push(usuario);
-    return usuario;
+    return Promise.resolve(usuario);
   }
 
-  async findById(id: string): Promise<UsuarioWithRelations | null> {
-    return this.usuarios.find((u) => u.id === id) ?? null;
+  findById(id: string): Promise<UsuarioWithRelations | null> {
+    return Promise.resolve(this.usuarios.find(u => u.id === id) ?? null);
   }
 
-  async findByEmail(email: string): Promise<UsuarioWithRelations | null> {
+  findByEmail(email: string): Promise<UsuarioWithRelations | null> {
     const normalizedEmail = email.toLowerCase().trim();
-    return this.usuarios.find((u) => u.email === normalizedEmail) ?? null;
+    return Promise.resolve(this.usuarios.find(u => u.email === normalizedEmail) ?? null);
   }
 
-  async findMany(): Promise<UsuarioWithRelations[]> {
-    return [...this.usuarios].sort((a, b) => a.nome.localeCompare(b.nome));
+  findMany(): Promise<UsuarioWithRelations[]> {
+    return Promise.resolve([...this.usuarios].sort((a, b) => a.nome.localeCompare(b.nome)));
   }
 
-  async markAsVerified(id: string): Promise<void> {
-    const usuario = this.usuarios.find((u) => u.id === id);
+  markAsVerified(id: string): Promise<void> {
+    const usuario = this.usuarios.find(u => u.id === id);
     if (usuario) {
       usuario.eVerificado = true;
       usuario.atualizadoEm = new Date();
     }
+    return Promise.resolve();
   }
 
-  async updatePassword(id: string, senhaHash: string): Promise<void> {
-    const usuario = this.usuarios.find((u) => u.id === id);
+  updatePassword(id: string, senhaHash: string): Promise<void> {
+    const usuario = this.usuarios.find(u => u.id === id);
     if (usuario) {
       usuario.senhaHash = senhaHash;
       usuario.atualizadoEm = new Date();
     }
+    return Promise.resolve();
   }
 
-  async updatePapelPlataforma(id: string, papelPlataforma: PapelPlataforma): Promise<void> {
-    const usuario = this.usuarios.find((u) => u.id === id);
+  updatePapelPlataforma(id: string, papelPlataforma: PapelPlataforma): Promise<void> {
+    const usuario = this.usuarios.find(u => u.id === id);
     if (usuario) {
       usuario.papelPlataforma = papelPlataforma;
       usuario.atualizadoEm = new Date();
     }
+    return Promise.resolve();
   }
 
-  async delete(id: string): Promise<void> {
-    const index = this.usuarios.findIndex((u) => u.id === id);
+  delete(id: string): Promise<void> {
+    const index = this.usuarios.findIndex(u => u.id === id);
     if (index !== -1) {
       this.usuarios.splice(index, 1);
     }
+    return Promise.resolve();
   }
 
   // Helper for testing
@@ -92,4 +102,3 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     this.usuarios = [];
   }
 }
-

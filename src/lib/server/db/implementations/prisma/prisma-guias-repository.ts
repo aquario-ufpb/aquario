@@ -58,4 +58,3 @@ export class PrismaGuiasRepository implements IGuiasRepository {
     return guias;
   }
 }
-

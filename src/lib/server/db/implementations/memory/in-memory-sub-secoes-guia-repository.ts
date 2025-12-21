@@ -4,14 +4,14 @@ import type { SubSecaoGuia } from "@/lib/server/db/interfaces/types";
 export class InMemorySubSecoesGuiaRepository implements ISubSecoesGuiaRepository {
   private subSecoes: SubSecaoGuia[] = [];
 
-  async findBySecaoId(secaoId: string): Promise<SubSecaoGuia[]> {
-    return this.subSecoes
-      .filter((s) => s.secaoId === secaoId)
-      .sort((a, b) => a.ordem - b.ordem);
+  findBySecaoId(secaoId: string): Promise<SubSecaoGuia[]> {
+    return Promise.resolve(
+      this.subSecoes.filter(s => s.secaoId === secaoId).sort((a, b) => a.ordem - b.ordem)
+    );
   }
 
-  async findById(id: string): Promise<SubSecaoGuia | null> {
-    return this.subSecoes.find((s) => s.id === id) ?? null;
+  findById(id: string): Promise<SubSecaoGuia | null> {
+    return Promise.resolve(this.subSecoes.find(s => s.id === id) ?? null);
   }
 
   // Helper for testing
@@ -23,4 +23,3 @@ export class InMemorySubSecoesGuiaRepository implements ISubSecoesGuiaRepository
     this.subSecoes = [];
   }
 }
-

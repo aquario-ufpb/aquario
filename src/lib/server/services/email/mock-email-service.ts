@@ -15,7 +15,7 @@ export class MockEmailService implements IEmailService {
     sentAt: Date;
   }> = [];
 
-  async sendVerificationEmail(to: string, token: string, nome: string): Promise<void> {
+  sendVerificationEmail(to: string, token: string, nome: string): Promise<void> {
     console.log(`[MockEmailService] Sending verification email to ${to}`);
     console.log(`  Token: ${token}`);
     console.log(`  Nome: ${nome}`);
@@ -27,9 +27,11 @@ export class MockEmailService implements IEmailService {
       nome,
       sentAt: new Date(),
     });
+
+    return Promise.resolve();
   }
 
-  async sendPasswordResetEmail(to: string, token: string, nome: string): Promise<void> {
+  sendPasswordResetEmail(to: string, token: string, nome: string): Promise<void> {
     console.log(`[MockEmailService] Sending password reset email to ${to}`);
     console.log(`  Token: ${token}`);
     console.log(`  Nome: ${nome}`);
@@ -41,6 +43,8 @@ export class MockEmailService implements IEmailService {
       nome,
       sentAt: new Date(),
     });
+
+    return Promise.resolve();
   }
 
   // Helper for testing
@@ -52,4 +56,3 @@ export class MockEmailService implements IEmailService {
     return this.sentEmails[this.sentEmails.length - 1] ?? null;
   }
 }
-

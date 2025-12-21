@@ -29,13 +29,9 @@ export async function POST(request: Request) {
 
     // Map internal errors to user-friendly messages
     if (message === "EMAIL_NAO_ENCONTRADO" || message === "SENHA_INVALIDA") {
-      return NextResponse.json(
-        { message: "Email ou senha incorretos" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "Email ou senha incorretos" }, { status: 401 });
     }
 
     return NextResponse.json({ message }, { status: 401 });
   }
 }
-

@@ -69,4 +69,3 @@ export async function verifyEmail(
     message: "Email verificado com sucesso! Você já pode fazer login.",
   };
 }
-

@@ -19,12 +19,12 @@ export class InMemoryCentrosRepository implements ICentrosRepository {
     },
   ];
 
-  async findById(id: string): Promise<Centro | null> {
-    return this.centros.find((c) => c.id === id) ?? null;
+  findById(id: string): Promise<Centro | null> {
+    return Promise.resolve(this.centros.find(c => c.id === id) ?? null);
   }
 
-  async findMany(): Promise<Centro[]> {
-    return [...this.centros].sort((a, b) => a.sigla.localeCompare(b.sigla));
+  findMany(): Promise<Centro[]> {
+    return Promise.resolve([...this.centros].sort((a, b) => a.sigla.localeCompare(b.sigla)));
   }
 
   // Helper for testing
@@ -36,4 +36,3 @@ export class InMemoryCentrosRepository implements ICentrosRepository {
     this.centros = [];
   }
 }
-

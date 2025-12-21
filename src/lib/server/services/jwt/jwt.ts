@@ -51,4 +51,3 @@ export function decodeToken(token: string): JwtPayload | null {
     return null;
   }
 }
-

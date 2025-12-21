@@ -35,7 +35,7 @@ function getMasterAdminEmails(): string[] {
   const emails = process.env.MASTER_ADMIN_EMAILS || "";
   return emails
     .split(",")
-    .map((e) => e.trim().toLowerCase())
+    .map(e => e.trim().toLowerCase())
     .filter(Boolean);
 }
 
@@ -44,9 +44,7 @@ function isMasterAdminEmail(email: string): boolean {
 }
 
 function isAllowedEmailDomain(email: string): boolean {
-  return ALLOWED_EMAIL_DOMAINS.some((domain) =>
-    email.toLowerCase().endsWith(domain)
-  );
+  return ALLOWED_EMAIL_DOMAINS.some(domain => email.toLowerCase().endsWith(domain));
 }
 
 function generateToken(): string {
@@ -142,4 +140,3 @@ export async function register(
 
   return { usuarioId: usuario.id, autoVerificado: false };
 }
-

@@ -21,4 +21,3 @@ export class PrismaCentrosRepository implements ICentrosRepository {
     return centros;
   }
 }
-

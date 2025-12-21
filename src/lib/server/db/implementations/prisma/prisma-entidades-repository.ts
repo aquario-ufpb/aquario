@@ -80,7 +80,7 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
     });
 
     // Find by generated slug from name
-    const entidade = allEntidades.find((e) => {
+    const entidade = allEntidades.find(e => {
       const generatedSlug = this.nomeToSlug(e.nome);
       return generatedSlug === slug;
     });
@@ -91,18 +91,42 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
   async update(id: string, data: EntidadeUpdateInput): Promise<void> {
     const updateData: Record<string, unknown> = {};
 
-    if (data.nome !== undefined) updateData.nome = data.nome;
-    if (data.subtitle !== undefined) updateData.subtitle = data.subtitle;
-    if (data.descricao !== undefined) updateData.descricao = data.descricao;
-    if (data.tipo !== undefined) updateData.tipo = data.tipo;
-    if (data.urlFoto !== undefined) updateData.urlFoto = data.urlFoto;
-    if (data.contato !== undefined) updateData.contato = data.contato;
-    if (data.instagram !== undefined) updateData.instagram = data.instagram;
-    if (data.linkedin !== undefined) updateData.linkedin = data.linkedin;
-    if (data.website !== undefined) updateData.website = data.website;
-    if (data.location !== undefined) updateData.location = data.location;
-    if (data.foundingDate !== undefined) updateData.foundingDate = data.foundingDate;
-    if (data.metadata !== undefined) updateData.metadata = data.metadata;
+    if (data.nome !== undefined) {
+      updateData.nome = data.nome;
+    }
+    if (data.subtitle !== undefined) {
+      updateData.subtitle = data.subtitle;
+    }
+    if (data.descricao !== undefined) {
+      updateData.descricao = data.descricao;
+    }
+    if (data.tipo !== undefined) {
+      updateData.tipo = data.tipo;
+    }
+    if (data.urlFoto !== undefined) {
+      updateData.urlFoto = data.urlFoto;
+    }
+    if (data.contato !== undefined) {
+      updateData.contato = data.contato;
+    }
+    if (data.instagram !== undefined) {
+      updateData.instagram = data.instagram;
+    }
+    if (data.linkedin !== undefined) {
+      updateData.linkedin = data.linkedin;
+    }
+    if (data.website !== undefined) {
+      updateData.website = data.website;
+    }
+    if (data.location !== undefined) {
+      updateData.location = data.location;
+    }
+    if (data.foundingDate !== undefined) {
+      updateData.foundingDate = data.foundingDate;
+    }
+    if (data.metadata !== undefined) {
+      updateData.metadata = data.metadata;
+    }
 
     await prisma.entidade.update({
       where: { id },
@@ -121,4 +145,3 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
       .trim();
   }
 }
-

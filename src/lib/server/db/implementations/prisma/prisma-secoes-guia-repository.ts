@@ -32,4 +32,3 @@ export class PrismaSecoesGuiaRepository implements ISecoesGuiaRepository {
     return secao;
   }
 }
-

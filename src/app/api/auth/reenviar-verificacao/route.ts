@@ -3,7 +3,7 @@ import { getContainer } from "@/lib/server/container";
 import { resendVerificationByUser } from "@/lib/server/services/auth/resend-verification";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 
-export async function POST(request: Request) {
+export function POST(request: Request) {
   return withAuth(request, async (_req, usuario) => {
     try {
       const container = getContainer();
@@ -23,4 +23,3 @@ export async function POST(request: Request) {
     }
   });
 }
-

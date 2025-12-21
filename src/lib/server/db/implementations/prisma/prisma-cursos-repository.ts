@@ -22,4 +22,3 @@ export class PrismaCursosRepository implements ICursosRepository {
     return cursos;
   }
 }
-

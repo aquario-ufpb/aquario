@@ -9,10 +9,9 @@
 export const DB_PROVIDER = process.env.DB_PROVIDER || "prisma";
 
 /**
- * @deprecated Backend is now always available in the monorepo.
- * Use DB_PROVIDER === "prisma" to check if using real database.
+ * Use USE_BACKEND === "true" to check if using real backend or local files.
  */
-export const USE_BACKEND = DB_PROVIDER === "prisma";
+export const USE_BACKEND = process.env.USE_BACKEND === "true";
 
 // Data Provider Configuration
 // Determines whether to fetch data from API routes (backend) or local files
@@ -52,10 +51,10 @@ export function useDatabase() {
  * Since the backend is now integrated into Next.js API routes,
  * this always returns true when using the real database.
  *
- * @deprecated The backend is now always available. Use useDatabase() to check if DB is enabled.
+ * Use USE_BACKEND === "true" to check if using real backend or local files.
  */
 export function useBackend() {
   return {
-    isEnabled: DB_PROVIDER === "prisma",
+    isEnabled: USE_BACKEND,
   };
 }
