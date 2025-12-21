@@ -1,6 +1,100 @@
 import { PrismaClient } from "@prisma/client";
+import * as fs from "fs";
+import * as path from "path";
 
 const prisma = new PrismaClient();
+
+// Prisma enum values (must match schema.prisma TipoEntidade)
+type TipoEntidade =
+  | "LABORATORIO"
+  | "GRUPO"
+  | "LIGA_ACADEMICA"
+  | "EMPRESA"
+  | "ATLETICA"
+  | "CENTRO_ACADEMICO"
+  | "OUTRO";
+
+// Map JSON tipos to Prisma enum
+const tipoMapping: Record<string, TipoEntidade> = {
+  LABORATORIO: "LABORATORIO",
+  GRUPO_ESTUDANTIL: "GRUPO",
+  GRUPO: "GRUPO",
+  LIGA_ACADEMICA: "LIGA_ACADEMICA",
+  LIGA: "LIGA_ACADEMICA",
+  EMPRESA: "EMPRESA",
+  ATLETICA: "ATLETICA",
+  CENTRO_ACADEMICO: "CENTRO_ACADEMICO",
+  CA: "CENTRO_ACADEMICO",
+  OUTRO: "OUTRO",
+};
+
+type EntidadeJson = {
+  name: string;
+  subtitle?: string;
+  description?: string;
+  tipo: string;
+  imagePath?: string;
+  contato_email?: string;
+  instagram?: string;
+  linkedin?: string;
+  website?: string;
+  location?: string;
+  foundingDate?: string;
+};
+
+async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
+  const entidadesDir = path.join(process.cwd(), "content/aquario-entidades/centro-de-informatica");
+
+  if (!fs.existsSync(entidadesDir)) {
+    console.log("⚠️  Submodule aquario-entidades not found, skipping...");
+    return 0;
+  }
+
+  const files = fs.readdirSync(entidadesDir).filter(f => f.endsWith(".json"));
+  let count = 0;
+
+  for (const file of files) {
+    try {
+      const filePath = path.join(entidadesDir, file);
+      const content = fs.readFileSync(filePath, "utf-8");
+      const data: EntidadeJson = JSON.parse(content);
+
+      const tipo = tipoMapping[data.tipo] || "OUTRO";
+
+      await prisma.entidade.upsert({
+        where: { nome_tipo: { nome: data.name, tipo } },
+        update: {
+          subtitle: data.subtitle || null,
+          descricao: data.description || null,
+          contato: data.contato_email || null,
+          instagram: data.instagram || null,
+          linkedin: data.linkedin || null,
+          website: data.website || null,
+          location: data.location || null,
+          foundingDate: data.foundingDate ? new Date(data.foundingDate) : null,
+        },
+        create: {
+          nome: data.name,
+          subtitle: data.subtitle || null,
+          descricao: data.description || null,
+          tipo,
+          contato: data.contato_email || null,
+          instagram: data.instagram || null,
+          linkedin: data.linkedin || null,
+          website: data.website || null,
+          location: data.location || null,
+          foundingDate: data.foundingDate ? new Date(data.foundingDate) : null,
+          centroId,
+        },
+      });
+      count++;
+    } catch (error) {
+      console.error(`  ⚠️  Error loading ${file}:`, error);
+    }
+  }
+
+  return count;
+}
 
 async function main() {
   console.log("🌱 Starting database seed...\n");
@@ -9,7 +103,6 @@ async function main() {
   // REFERENCE DATA (Campus, Centro, Cursos)
   // ============================================================================
 
-  // Create Campus
   const campusI = await prisma.campus.upsert({
     where: { nome: "Campus I - João Pessoa" },
     update: {},
@@ -18,7 +111,6 @@ async function main() {
 
   console.log("✅ Campus created");
 
-  // Create Centro de Informática
   const ci = await prisma.centro.upsert({
     where: { sigla: "CI" },
     update: {},
@@ -32,98 +124,54 @@ async function main() {
 
   console.log("✅ Centro de Informática created");
 
-  // Create Cursos
   const cc = await prisma.curso.upsert({
     where: { nome: "Ciência da Computação" },
     update: {},
-    create: {
-      nome: "Ciência da Computação",
-      centroId: ci.id,
-    },
+    create: { nome: "Ciência da Computação", centroId: ci.id },
   });
 
   const ec = await prisma.curso.upsert({
     where: { nome: "Engenharia da Computação" },
     update: {},
-    create: {
-      nome: "Engenharia da Computação",
-      centroId: ci.id,
-    },
+    create: { nome: "Engenharia da Computação", centroId: ci.id },
   });
 
   const cdia = await prisma.curso.upsert({
     where: { nome: "Ciência de Dados e Inteligência Artificial" },
     update: {},
-    create: {
-      nome: "Ciência de Dados e Inteligência Artificial",
-      centroId: ci.id,
-    },
+    create: { nome: "Ciência de Dados e Inteligência Artificial", centroId: ci.id },
   });
 
   const si = await prisma.curso.upsert({
     where: { nome: "Sistemas de Informação" },
     update: {},
-    create: {
-      nome: "Sistemas de Informação",
-      centroId: ci.id,
-    },
+    create: { nome: "Sistemas de Informação", centroId: ci.id },
   });
 
   const mat = await prisma.curso.upsert({
     where: { nome: "Matemática Computacional" },
     update: {},
-    create: {
-      nome: "Matemática Computacional",
-      centroId: ci.id,
-    },
+    create: { nome: "Matemática Computacional", centroId: ci.id },
   });
 
   console.log("✅ Cursos created (CC, EC, CDIA, SI, Mat. Computacional)");
 
   // ============================================================================
-  // EXAMPLE ENTIDADES (Labs)
+  // ENTIDADES (from aquario-entidades submodule)
   // ============================================================================
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const lasid = await prisma.entidade.upsert({
-    where: { nome_tipo: { nome: "LASID", tipo: "LABORATORIO" } },
-    update: {},
-    create: {
-      nome: "LASID",
-      subtitle: "Laboratório de Sistemas Distribuídos",
-      descricao: "Pesquisa em sistemas distribuídos, cloud computing e IoT",
-      tipo: "LABORATORIO",
-      centroId: ci.id,
-      location: "CI - Bloco A",
-    },
-  });
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const lia = await prisma.entidade.upsert({
-    where: { nome_tipo: { nome: "LIA", tipo: "LABORATORIO" } },
-    update: {},
-    create: {
-      nome: "LIA",
-      subtitle: "Laboratório de Inteligência Artificial",
-      descricao: "Pesquisa em IA, Machine Learning e Deep Learning",
-      tipo: "LABORATORIO",
-      centroId: ci.id,
-      location: "CI - Bloco B",
-    },
-  });
-
-  console.log("✅ Example entidades created (LASID, LIA)");
+  const entidadeCount = await loadEntidadesFromSubmodule(ci.id);
+  console.log(`✅ Entidades loaded from submodule: ${entidadeCount}`);
 
   // ============================================================================
   // EXAMPLE GUIAS
   // ============================================================================
 
-  // Delete existing test guides (for clean re-seed)
+  // Clean existing guides for re-seed
   await prisma.subSecaoGuia.deleteMany();
   await prisma.secaoGuia.deleteMany();
   await prisma.guia.deleteMany();
 
-  // CC Guide
   const guiaCC = await prisma.guia.create({
     data: {
       titulo: "Guia de Introdução à Programação",
@@ -141,7 +189,7 @@ async function main() {
       titulo: "Conceitos Básicos",
       slug: "conceitos-basicos",
       ordem: 1,
-      conteudo: "# Conceitos Básicos\n\nEste capítulo aborda os fundamentos da programação...",
+      conteudo: "# Conceitos Básicos\n\nEste capítulo aborda os fundamentos...",
       status: "ATIVO",
     },
   });
@@ -157,7 +205,6 @@ async function main() {
     },
   });
 
-  // EC Guide
   const guiaEC = await prisma.guia.create({
     data: {
       titulo: "Sistemas Digitais",
@@ -180,7 +227,6 @@ async function main() {
     },
   });
 
-  // CDIA Guide
   const guiaCDIA = await prisma.guia.create({
     data: {
       titulo: "Introdução à Ciência de Dados",
@@ -210,26 +256,26 @@ async function main() {
   // ============================================================================
 
   console.log(`
-╔══════════════════════════════════════════════════════════════╗
-║                    🌱 Seed Complete!                         ║
-╠══════════════════════════════════════════════════════════════╣
-║  Reference Data:                                             ║
-║    - Campus: ${campusI.id.slice(0, 8)}...                              ║
-║    - Centro (CI): ${ci.id.slice(0, 8)}...                          ║
-║    - Cursos: CC, EC, CDIA, SI, Mat. Comp.                    ║
-║                                                              ║
-║  Test Data:                                                  ║
-║    - Entidades: LASID, LIA                                   ║
-║    - Guias: 3 example guides with sections                   ║
-╚══════════════════════════════════════════════════════════════╝
+╔════════════════════════════════════════════════════════════════╗
+║                      🌱 Seed Complete!                         ║
+╠════════════════════════════════════════════════════════════════╣
+║  Reference Data:                                               ║
+║    - Campus: ${campusI.id.slice(0, 8)}...                                ║
+║    - Centro (CI): ${ci.id.slice(0, 8)}...                            ║
+║    - Cursos: CC, EC, CDIA, SI, Mat. Comp.                      ║
+║                                                                ║
+║  Content Data:                                                 ║
+║    - Entidades: ${String(entidadeCount).padEnd(3)} (from aquario-entidades)             ║
+║    - Guias: 3 example guides with sections                     ║
+╚════════════════════════════════════════════════════════════════╝
 
 IDs for testing:
-  centroId: ${ci.id}
-  cursoCC:  ${cc.id}
-  cursoEC:  ${ec.id}
+  centroId:  ${ci.id}
+  cursoCC:   ${cc.id}
+  cursoEC:   ${ec.id}
   cursoCDIA: ${cdia.id}
-  cursoSI:  ${si.id}
-  cursoMat: ${mat.id}
+  cursoSI:   ${si.id}
+  cursoMat:  ${mat.id}
 `);
 }
 
