@@ -42,6 +42,34 @@ type EntidadeJson = {
   foundingDate?: string;
 };
 
+/**
+ * Converts local imagePath (e.g., "./assets/Aquario.png") to API URL
+ * The content-images API serves these at /api/content-images/entidades/assets/{filename}
+ */
+function convertImagePathToUrl(imagePath: string | undefined): string | null {
+  if (!imagePath) {
+    return null;
+  }
+
+  // Handle paths like "./assets/Aquario.png" or "assets/Aquario.png"
+  const normalized = imagePath.replace(/^\.\//, "");
+  if (normalized.startsWith("assets/")) {
+    return `/api/content-images/entidades/${normalized}`;
+  }
+
+  // If it's already an absolute URL, keep it
+  if (
+    imagePath.startsWith("http://") ||
+    imagePath.startsWith("https://") ||
+    imagePath.startsWith("/")
+  ) {
+    return imagePath;
+  }
+
+  // Default: assume it's in the assets folder
+  return `/api/content-images/entidades/assets/${normalized}`;
+}
+
 async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
   const entidadesDir = path.join(process.cwd(), "content/aquario-entidades/centro-de-informatica");
 
@@ -60,12 +88,14 @@ async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
       const data: EntidadeJson = JSON.parse(content);
 
       const tipo = tipoMapping[data.tipo] || "OUTRO";
+      const urlFoto = convertImagePathToUrl(data.imagePath);
 
       await prisma.entidade.upsert({
         where: { nome_tipo: { nome: data.name, tipo } },
         update: {
           subtitle: data.subtitle || null,
           descricao: data.description || null,
+          urlFoto,
           contato: data.contato_email || null,
           instagram: data.instagram || null,
           linkedin: data.linkedin || null,
@@ -78,6 +108,7 @@ async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
           subtitle: data.subtitle || null,
           descricao: data.description || null,
           tipo,
+          urlFoto,
           contato: data.contato_email || null,
           instagram: data.instagram || null,
           linkedin: data.linkedin || null,
