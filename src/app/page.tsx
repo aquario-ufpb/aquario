@@ -11,11 +11,9 @@ import { Github, Calendar, Map } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEntidades } from "@/lib/client/hooks";
-import { useBackend } from "@/lib/shared/config/env";
 
 export default function Home() {
   const { theme, resolvedTheme } = useTheme();
-  const { isEnabled: backendEnabled } = useBackend();
   const [mounted, setMounted] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -25,7 +23,6 @@ export default function Home() {
 
   // Prevent hydration mismatch
   useEffect(() => {
-    console.log("Backend enabled:", backendEnabled);
     setMounted(true);
   }, []);
 
