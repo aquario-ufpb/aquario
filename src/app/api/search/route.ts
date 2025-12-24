@@ -24,7 +24,7 @@ const STATIC_PAGES = [
   {
     id: "calendario",
     title: "Calendário",
-    description: "Visualize de horários e eventos",
+    description: "Visualização de horários e eventos",
     url: "/calendario",
     keywords: ["calendario", "horario", "horarios", "evento", "eventos", "agenda"],
   },
@@ -86,6 +86,7 @@ export async function GET(request: Request) {
 
   try {
     // Search Entidades
+    // TODO: Optimize with database-level search (LIKE/ILIKE) to avoid loading all records
     const entidades = await entidadesRepository.findMany();
     entidades.forEach(entidade => {
       if (
@@ -105,6 +106,7 @@ export async function GET(request: Request) {
     });
 
     // Search Guias, Secoes, and SubSecoes
+    // TODO: Optimize N+1 query pattern by fetching related data in fewer queries
     const guias = await guiasRepository.findMany();
     for (const guia of guias) {
       // Search in Guia title and description
