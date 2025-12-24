@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2024-12-24
+
+### Changed
+- Default to in-memory database provider when `DATABASE_URL` is not set, allowing developers to run the app without any database setup
+
 ## [1.0.0] - 2024-12-24
 
 ### Added
@@ -75,6 +80,7 @@ npm run release:minor
 npm run release:major
 ```
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/aquario-ufpb/aquario/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/aquario-ufpb/aquario/releases/tag/v1.0.0
 
