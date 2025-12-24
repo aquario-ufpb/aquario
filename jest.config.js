@@ -22,9 +22,9 @@ const customJestConfig = {
   moduleNameMapper: {
     // Mock the content submodule imports for tests (both alias and relative path forms)
     "^@/content/aquario-mapas/centro-de-informatica/professores$":
-      "<rootDir>/src/lib/mapas/__mocks__/professors.ts",
+      "<rootDir>/src/lib/client/mapas/__mocks__/professors.ts",
     "\\.\\./\\.\\./content/aquario-mapas/centro-de-informatica/professores$":
-      "<rootDir>/src/lib/mapas/__mocks__/professors.ts",
+      "<rootDir>/src/lib/client/mapas/__mocks__/professors.ts",
     "^@/content/(.*)$": "<rootDir>/content/$1",
     "^@/(.*)$": "<rootDir>/src/$1",
   },

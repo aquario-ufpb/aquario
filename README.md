@@ -1,6 +1,6 @@
 # Aquário
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > **👨‍💻 Developers**: See [README-DEV.md](README-DEV.md) for technical setup | [CHANGELOG](CHANGELOG.md)
