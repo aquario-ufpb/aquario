@@ -1,36 +1,23 @@
 import { Resend } from "resend";
 import type { IEmailService } from "./email-service.interface";
+import { RESEND_API_KEY, EMAIL_FROM, APP_URL } from "@/lib/server/config/env";
 
 export class ResendEmailService implements IEmailService {
-  private resend: Resend | null = null;
+  private resend: Resend;
   private fromEmail: string;
   private frontendUrl: string;
 
   constructor() {
-    const apiKey = process.env.RESEND_API_KEY;
-
-    // Only create Resend client if API key is available
-    // This prevents build-time errors when the key isn't set
-    if (apiKey) {
-      this.resend = new Resend(apiKey);
-    } else {
-      console.warn("RESEND_API_KEY not set - emails will fail");
+    if (!RESEND_API_KEY) {
+      throw new Error("ResendEmailService requires RESEND_API_KEY to be set");
     }
 
-    // Use EMAIL_FROM if provided, otherwise fall back to Resend's test email
-    this.fromEmail = process.env.EMAIL_FROM
-      ? `Aquário <${process.env.EMAIL_FROM}>`
-      : "Aquário <onboarding@resend.dev>";
-
-    this.frontendUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    this.resend = new Resend(RESEND_API_KEY);
+    this.fromEmail = EMAIL_FROM;
+    this.frontendUrl = APP_URL;
   }
 
   async sendVerificationEmail(to: string, token: string, nome: string): Promise<void> {
-    if (!this.resend) {
-      console.error("Cannot send verification email: RESEND_API_KEY not configured");
-      throw new Error("Serviço de email não configurado.");
-    }
-
     const verificationUrl = `${this.frontendUrl}/verificar-email?token=${token}`;
 
     try {
@@ -47,11 +34,6 @@ export class ResendEmailService implements IEmailService {
   }
 
   async sendPasswordResetEmail(to: string, token: string, nome: string): Promise<void> {
-    if (!this.resend) {
-      console.error("Cannot send password reset email: RESEND_API_KEY not configured");
-      throw new Error("Serviço de email não configurado.");
-    }
-
     const resetUrl = `${this.frontendUrl}/resetar-senha?token=${token}`;
 
     try {

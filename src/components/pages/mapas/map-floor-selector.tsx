@@ -3,7 +3,7 @@
 import React from "react";
 import { Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Building, Floor } from "@/lib/mapas/types";
+import type { Building, Floor } from "@/lib/client/mapas/types";
 
 type MapFloorSelectorProps = {
   building: Building;

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/client/utils";
 import { Search, X } from "lucide-react";
 import { Command, CommandList, CommandGroup, CommandItem } from "@/components/ui/command";
 

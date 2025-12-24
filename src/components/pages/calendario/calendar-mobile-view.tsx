@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { DAYS, DAY_NUMBERS, CALENDAR_TIME_SLOTS } from "@/lib/calendario/constants";
+import { DAYS, DAY_NUMBERS, CALENDAR_TIME_SLOTS } from "@/lib/client/calendario/constants";
 import type { ClassWithRoom } from "./types";
 import { processDaySlots, type MergedSlot } from "./calendar-utils";
 import { AlertTriangle } from "lucide-react";

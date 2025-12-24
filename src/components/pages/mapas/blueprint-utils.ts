@@ -1,13 +1,13 @@
 "use client";
 
-import type { Floor, Room, RoomShape, EntidadeSlug } from "@/lib/mapas/types";
+import type { Floor, Room, RoomShape, EntidadeSlug } from "@/lib/client/mapas/types";
 import type { Entidade } from "@/lib/shared/types/entidade.types";
 import {
   formatLabsForDisplay,
   formatProfessorsForDisplay,
   isLabResearch,
   isProfessorOffice,
-} from "@/lib/mapas/utils";
+} from "@/lib/client/mapas/utils";
 
 // Check if two rectangles share an edge
 export function sharesEdge(shape1: RoomShape, shape2: RoomShape): boolean {

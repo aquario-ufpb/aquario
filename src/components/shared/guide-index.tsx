@@ -7,7 +7,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Inter } from "next/font/google";
 import { ChevronRight, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/client/utils";
 
 type SubSectionNode = {
   titulo: string;

@@ -1,7 +1,7 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import { RoomShapeEdges } from "../room-shape-edges";
-import type { RoomShape } from "@/lib/mapas/types";
+import type { RoomShape } from "@/lib/client/mapas/types";
 
 const makeShape = (x: number, y: number, width: number, height: number): RoomShape => ({
   position: { x, y },

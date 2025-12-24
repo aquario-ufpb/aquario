@@ -13,14 +13,14 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import type { Room, EntidadeSlug } from "@/lib/mapas/types";
+import type { Room, EntidadeSlug } from "@/lib/client/mapas/types";
 import type { Entidade } from "@/lib/shared/types/entidade.types";
 import {
   formatLabsForDisplay,
   formatProfessorsForDisplay,
   isLabResearch,
   isProfessorOffice,
-} from "@/lib/mapas/utils";
+} from "@/lib/client/mapas/utils";
 
 type RoomLabelProps = {
   room: Room;

@@ -2,14 +2,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, MapPin, Users, BookOpen, AlertTriangle, Calendar } from "lucide-react";
-import { formatHorario } from "@/lib/calendario/utils";
+import { formatHorario } from "@/lib/client/calendario/utils";
 import type { ClassWithRoom } from "./types";
 import { useMemo, useState } from "react";
 import { useMapas } from "@/lib/client/hooks/use-mapas";
-import type { Building, Floor, Room as MapRoom } from "@/lib/mapas/types";
+import type { Building, Floor, Room as MapRoom } from "@/lib/client/mapas/types";
 import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
 import { MapFloorSelector } from "@/components/pages/mapas/map-floor-selector";
-import { generateGoogleCalendarLinks } from "@/lib/calendario/google-calendar";
+import { generateGoogleCalendarLinks } from "@/lib/client/calendario/google-calendar";
 
 type ClassDetailsDialogProps = {
   classes: ClassWithRoom[];

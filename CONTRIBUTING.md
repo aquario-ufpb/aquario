@@ -57,7 +57,11 @@ npm run dev
 ```bash
 # Set in .env.local:
 DB_PROVIDER=memory
+NEXT_PUBLIC_GUIAS_DATA_PROVIDER=local
+NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER=local
 ```
+
+> 💡 **Tip:** Email is automatically mocked when `RESEND_API_KEY` is not set. Users are auto-verified in dev mode.
 
 ## Code Standards
 
@@ -74,11 +78,11 @@ All files use **kebab-case**:
 
 ### Language Convention
 
-| Context | Language |
-| ------- | -------- |
-| Code    | English  |
+| Context | Language   |
+| ------- | ---------- |
+| Code    | English    |
 | UI Text | Portuguese |
-| Commits | English  |
+| Commits | English    |
 
 ### Commit Format
 

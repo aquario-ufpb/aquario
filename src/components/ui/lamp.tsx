@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/client/utils";
 import { useTheme } from "next-themes";
 
 export const LampContainer = ({

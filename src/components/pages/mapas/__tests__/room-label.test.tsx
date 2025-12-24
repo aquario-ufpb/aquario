@@ -1,7 +1,7 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import { RoomLabel } from "../room-label";
-import type { Room, EntidadeSlug } from "@/lib/mapas/types";
+import type { Room, EntidadeSlug } from "@/lib/client/mapas/types";
 import type { Entidade } from "@/lib/shared/types/entidade.types";
 
 const makeRoom = (overrides: Partial<Room> = {}): Room =>

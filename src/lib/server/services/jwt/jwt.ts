@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { JWT_SECRET, JWT_EXPIRES_IN } from "@/lib/server/config/env";
 
 export type JwtPayload = {
   sub: string; // User ID
@@ -7,15 +8,10 @@ export type JwtPayload = {
 };
 
 const getSecret = (): string => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
+  if (!JWT_SECRET) {
     throw new Error("JWT_SECRET environment variable is not set");
   }
-  return secret;
-};
-
-const getExpiresIn = (): string => {
-  return process.env.JWT_EXPIRES_IN || "7d";
+  return JWT_SECRET;
 };
 
 /**
@@ -23,7 +19,7 @@ const getExpiresIn = (): string => {
  */
 export function signToken(userId: string): string {
   return jwt.sign({ sub: userId }, getSecret(), {
-    expiresIn: getExpiresIn(),
+    expiresIn: JWT_EXPIRES_IN,
   });
 }
 

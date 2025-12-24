@@ -5,7 +5,6 @@ import "./globals.css";
 import NavWrapper from "@/components/shared/nav-wrapper";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/components/shared/theme-provider";
-import { SearchProvider } from "@/contexts/search-context";
 import { ReactQueryProvider } from "@/providers/react-query-provider";
 import { PostHogProvider } from "@/providers/posthog-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -54,13 +53,11 @@ export default function RootLayout({
                 enableSystem
                 disableTransitionOnChange
               >
-                <SearchProvider>
-                  <div className="flex flex-1 flex-col bg-white dark:bg-transparent">
-                    <NavWrapper />
-                    <div className="pt-0">{children}</div>
-                  </div>
-                  <Toaster />
-                </SearchProvider>
+                <div className="flex flex-1 flex-col bg-white dark:bg-transparent">
+                  <NavWrapper />
+                  <div className="pt-0">{children}</div>
+                </div>
+                <Toaster />
               </ThemeProvider>
             </AuthProvider>
           </ReactQueryProvider>

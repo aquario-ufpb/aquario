@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Floor } from "@/lib/mapas/types";
+import type { Floor } from "@/lib/client/mapas/types";
 import { getBlueprintScale } from "./blueprint-utils";
 
 export function useBlueprintScale(

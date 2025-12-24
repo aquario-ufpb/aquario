@@ -3,8 +3,8 @@
 import { useTheme } from "next-themes";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { usePaasCalendar } from "@/lib/client/hooks";
-import { DAY_NUMBERS, CALENDAR_TIME_SLOTS, CLASS_COLORS } from "@/lib/calendario/constants";
-import { parseHorarioToSlots } from "@/lib/calendario/utils";
+import { DAY_NUMBERS, CALENDAR_TIME_SLOTS, CLASS_COLORS } from "@/lib/client/calendario/constants";
+import { parseHorarioToSlots } from "@/lib/client/calendario/utils";
 import { getStorage, setStorage, removeStorage } from "@/lib/client/storage";
 import type { PaasRoom } from "@/lib/shared/types";
 import CalendarioHeader from "@/components/pages/calendario/header";

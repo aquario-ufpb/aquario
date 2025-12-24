@@ -1,7 +1,5 @@
 import { PostHog } from "posthog-node";
-
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY as string;
-const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST as string;
+import { POSTHOG_KEY, POSTHOG_HOST } from "@/lib/shared/config/env";
 
 /**
  * Server-side PostHog client

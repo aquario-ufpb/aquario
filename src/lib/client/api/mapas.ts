@@ -1,4 +1,4 @@
-import type { MapsData } from "@/lib/mapas/types";
+import type { MapsData } from "@/lib/client/mapas/types";
 import { LocalFileMapasProvider } from "./mapas_providers/local-file-mapas-provider";
 
 const provider = new LocalFileMapasProvider();

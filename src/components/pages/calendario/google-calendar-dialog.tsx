@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Calendar, Copy, Check } from "lucide-react";
 import { useState } from "react";
-import type { GoogleCalendarEvent } from "@/lib/calendario/google-calendar";
+import type { GoogleCalendarEvent } from "@/lib/client/calendario/google-calendar";
 
 type GoogleCalendarDialogProps = {
   events: GoogleCalendarEvent[];

@@ -1,7 +1,7 @@
 import React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { RoomGroup } from "../room-group";
-import type { Room } from "@/lib/mapas/types";
+import type { Room } from "@/lib/client/mapas/types";
 
 const makeRoom = (overrides: Partial<Room> = {}): Room =>
   ({

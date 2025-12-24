@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { RoomShape } from "@/lib/mapas/types";
+import type { RoomShape } from "@/lib/client/mapas/types";
 import { getNonSharedSegments, getSharedSegments } from "./blueprint-utils";
 
 type RoomShapeEdgesProps = {

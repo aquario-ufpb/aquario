@@ -1,4 +1,5 @@
 import type { Container, DbProvider } from "./types";
+import { DB_PROVIDER, EMAIL_ENABLED } from "@/lib/server/config/env";
 
 // Lazy import implementations to avoid circular dependencies
 // and to allow tree-shaking in production
@@ -32,13 +33,29 @@ export function resetContainer(): void {
  * Create a new container instance based on environment
  */
 function createContainer(): Container {
-  const provider = (process.env.DB_PROVIDER as DbProvider) || "prisma";
+  const provider = DB_PROVIDER as DbProvider;
 
   if (provider === "memory") {
     return createMemoryContainer();
   }
 
   return createPrismaContainer();
+}
+
+/**
+ * Get the appropriate email service based on environment
+ * Uses Resend if API key is configured, otherwise falls back to mock
+ */
+function getEmailService() {
+  if (EMAIL_ENABLED) {
+    const { ResendEmailService } = require("@/lib/server/services/email/resend-email-service");
+    return new ResendEmailService();
+  }
+
+  // No API key = mock mode (for local development)
+  const { MockEmailService } = require("@/lib/server/services/email/mock-email-service");
+  console.log("[Email] No RESEND_API_KEY found - using mock email service");
+  return new MockEmailService();
 }
 
 /**
@@ -70,7 +87,6 @@ function createPrismaContainer(): Container {
   const {
     PrismaSubSecoesGuiaRepository,
   } = require("@/lib/server/db/implementations/prisma/prisma-sub-secoes-guia-repository");
-  const { ResendEmailService } = require("@/lib/server/services/email/resend-email-service");
 
   return {
     usuariosRepository: new PrismaUsuariosRepository(),
@@ -81,7 +97,7 @@ function createPrismaContainer(): Container {
     guiasRepository: new PrismaGuiasRepository(),
     secoesGuiaRepository: new PrismaSecoesGuiaRepository(),
     subSecoesGuiaRepository: new PrismaSubSecoesGuiaRepository(),
-    emailService: new ResendEmailService(),
+    emailService: getEmailService(),
   };
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { Room, EntidadeSlug } from "@/lib/mapas/types";
+import type { Room, EntidadeSlug } from "@/lib/client/mapas/types";
 import type { Entidade } from "@/lib/shared/types/entidade.types";
 import { getRoomCenter, getRoomColors, getTextDimensions } from "./blueprint-utils";
 import { RoomShapeEdges } from "./room-shape-edges";

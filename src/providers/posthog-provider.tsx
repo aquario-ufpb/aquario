@@ -3,15 +3,12 @@
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
 import { useEffect } from "react";
-
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY as string;
-const enableVerbose = process.env.NEXT_PUBLIC_POSTHOG_VERBOSE === "true";
-const isDev = process.env.NODE_ENV === "development";
+import { POSTHOG_KEY, POSTHOG_VERBOSE, IS_DEV, IS_PROD } from "@/lib/shared/config/env";
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Only initialize PostHog in production (not in dev mode)
-    if (!isDev && POSTHOG_KEY) {
+    // Only initialize PostHog in production with a valid key
+    if (IS_PROD && POSTHOG_KEY) {
       posthog.init(POSTHOG_KEY, {
         api_host: "/ingest",
         ui_host: "https://us.posthog.com",
@@ -20,7 +17,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         debug: false,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         loaded: (client: any) => {
-          if (enableVerbose) {
+          if (POSTHOG_VERBOSE) {
             client.debug();
           }
         },
@@ -28,8 +25,8 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Only wrap with PostHogProvider if not in dev mode
-  if (isDev || !POSTHOG_KEY) {
+  // Only wrap with PostHogProvider if in production with a key
+  if (IS_DEV || !POSTHOG_KEY) {
     return <>{children}</>;
   }
 

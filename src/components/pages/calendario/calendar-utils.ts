@@ -1,5 +1,5 @@
-import { CALENDAR_TIME_SLOTS } from "@/lib/calendario/constants";
-import { parseHorarioToSlots } from "@/lib/calendario/utils";
+import { CALENDAR_TIME_SLOTS } from "@/lib/client/calendario/constants";
+import { parseHorarioToSlots } from "@/lib/client/calendario/utils";
 import type { ClassWithRoom } from "./types";
 
 export type MergedSlot = {

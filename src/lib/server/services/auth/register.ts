@@ -5,6 +5,7 @@ import type { ICentrosRepository } from "@/lib/server/db/interfaces/centros-repo
 import type { ICursosRepository } from "@/lib/server/db/interfaces/cursos-repository.interface";
 import type { ITokenVerificacaoRepository } from "@/lib/server/db/interfaces/token-verificacao-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
+import { MASTER_ADMIN_EMAILS, EMAIL_ENABLED } from "@/lib/server/config/env";
 
 // Allowed email domains for registration
 const ALLOWED_EMAIL_DOMAINS = ["@academico.ufpb.br"];
@@ -31,16 +32,8 @@ export type RegisterDependencies = {
   emailService: IEmailService;
 };
 
-function getMasterAdminEmails(): string[] {
-  const emails = process.env.MASTER_ADMIN_EMAILS || "";
-  return emails
-    .split(",")
-    .map(e => e.trim().toLowerCase())
-    .filter(Boolean);
-}
-
 function isMasterAdminEmail(email: string): boolean {
-  return getMasterAdminEmails().includes(email.toLowerCase());
+  return MASTER_ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
 function isAllowedEmailDomain(email: string): boolean {
@@ -51,8 +44,12 @@ function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
+/**
+ * Auto-verify users when email service is not configured (no RESEND_API_KEY)
+ * This allows local development without setting up email
+ */
 function shouldAutoVerify(): boolean {
-  return process.env.EMAIL_MOCK_MODE === "true";
+  return !EMAIL_ENABLED;
 }
 
 /**

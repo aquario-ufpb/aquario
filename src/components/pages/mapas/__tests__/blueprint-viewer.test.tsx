@@ -14,7 +14,7 @@ jest.mock("@/lib/client/api/entidades_providers/local-file-entidades-provider", 
 
 import { render } from "@testing-library/react";
 import BlueprintViewer from "../blueprint-viewer";
-import type { Floor, RoomShape, Room } from "@/lib/mapas/types";
+import type { Floor, RoomShape, Room } from "@/lib/client/mapas/types";
 
 // Helper to create a test floor
 const createTestFloor = (rooms: Floor["rooms"]): Floor => ({

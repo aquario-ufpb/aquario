@@ -3,7 +3,7 @@
  * Used in tests to avoid loading actual content submodule files
  */
 
-import type { Professor } from "@/lib/mapas/types";
+import type { Professor } from "@/lib/client/mapas/types";
 
 export const professors: Professor[] = [
   {

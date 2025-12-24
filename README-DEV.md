@@ -25,31 +25,81 @@ npm run dev
 
 ---
 
+## Environments
+
+This is an open-source project with different environment configurations:
+
+| Environment | Who             | Database               | Email          | Analytics |
+| ----------- | --------------- | ---------------------- | -------------- | --------- |
+| **Dev**     | Anyone          | Local Docker or Memory | Mock (console) | Disabled  |
+| **Staging** | Project members | Neon (cloud)           | Resend         | Enabled   |
+| **Prod**    | Production      | Neon (cloud)           | Resend         | Enabled   |
+
+### Smart Defaults
+
+The app automatically configures itself based on what's present:
+
+| If this is set...                      | Behavior                                    |
+| -------------------------------------- | ------------------------------------------- |
+| `DATABASE_URL`                         | Uses PostgreSQL via Prisma                  |
+| No `DATABASE_URL`                      | Uses in-memory database                     |
+| `RESEND_API_KEY`                       | Sends real emails via Resend                |
+| No `RESEND_API_KEY`                    | Logs emails to console, auto-verifies users |
+| `NEXT_PUBLIC_POSTHOG_KEY` + production | Tracks analytics                            |
+| No PostHog key or dev mode             | Analytics disabled                          |
+
+---
+
 ## Development Modes
 
-### Full Stack (with Database)
+### Option 1: Full Stack (Recommended)
 
-Requires Docker for PostgreSQL:
+Uses Docker for a local PostgreSQL database:
 
 ```bash
+# Start database
 docker-compose up -d
+
+# Setup database
 npm run db:migrate
 npm run db:seed
+
+# Start app
 npm run dev
 ```
 
-### Frontend Only (no Database)
+Your `.env.local`:
 
-For working on UI without database setup:
+```bash
+DATABASE_URL="postgresql://postgres:password@localhost:5432/aquario"
+JWT_SECRET="your-secret-key-at-least-32-characters-long"
+# Leave RESEND_API_KEY empty for mock emails
+```
+
+### Option 2: Frontend Only
+
+For UI work without any database setup:
 
 ```bash
 # In .env.local:
 DB_PROVIDER=memory
 NEXT_PUBLIC_GUIAS_DATA_PROVIDER=local
 NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER=local
+JWT_SECRET="any-32-character-secret-for-dev"
 ```
 
-Then run `npm run dev` — data comes from git submodules.
+Then just `npm run dev` — data comes from git submodules.
+
+### Option 3: Connected to Staging
+
+For project members who need to test with real services:
+
+```bash
+# In .env.local:
+DATABASE_URL="postgresql://...@neon.tech/aquario"
+RESEND_API_KEY="re_xxx"
+JWT_SECRET="staging-secret"
+```
 
 ---
 
@@ -76,8 +126,7 @@ aquario/
 │       └── shared/            # Shared types and utilities
 ├── content/                   # Git submodules (guias, entidades, etc.)
 ├── prisma/                    # Database schema and migrations
-├── tests/                     # E2E tests
-└── docs/                      # Additional documentation
+└── tests/                     # E2E tests
 ```
 
 ---
@@ -86,52 +135,91 @@ aquario/
 
 ### Development
 
-| Command | Description |
-| ------- | ----------- |
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
+| Command         | Description              |
+| --------------- | ------------------------ |
+| `npm run dev`   | Start development server |
+| `npm run build` | Build for production     |
+| `npm run start` | Start production server  |
 
 ### Database
 
-| Command | Description |
-| ------- | ----------- |
-| `npm run db:migrate` | Run migrations |
-| `npm run db:seed` | Seed database |
-| `npm run db:studio` | Open Prisma Studio |
-| `npm run db:reset` | Reset database |
+| Command              | Description        |
+| -------------------- | ------------------ |
+| `npm run db:migrate` | Run migrations     |
+| `npm run db:seed`    | Seed database      |
+| `npm run db:studio`  | Open Prisma Studio |
+| `npm run db:reset`   | Reset database     |
 
 ### Code Quality
 
-| Command | Description |
-| ------- | ----------- |
-| `npm run lint` | Run ESLint |
-| `npm run lint:fix` | Auto-fix lint issues |
-| `npm run format` | Format with Prettier |
-| `npm run format:check` | Check formatting |
-| `npm run type-check` | TypeScript check |
-| `npm run check-all` | **Run all checks** (lint + format + types) |
+| Command                | Description                                |
+| ---------------------- | ------------------------------------------ |
+| `npm run lint`         | Run ESLint                                 |
+| `npm run lint:fix`     | Auto-fix lint issues                       |
+| `npm run format`       | Format with Prettier                       |
+| `npm run format:check` | Check formatting                           |
+| `npm run type-check`   | TypeScript check                           |
+| `npm run check-all`    | **Run all checks** (lint + format + types) |
 
 ### Testing
 
-| Command | Description |
-| ------- | ----------- |
-| `npm run test` | Unit tests (Jest) |
-| `npm run test:watch` | Unit tests in watch mode |
-| `npm run test:coverage` | Unit tests with coverage |
-| `npm run test:integration` | Integration tests (Vitest) |
-| `npm run test:integration:ui` | Integration tests with UI |
-| `npm run test:e2e` | E2E tests (Playwright) |
-| `npm run test:e2e:ui` | E2E tests with UI |
-| `npm run test:all` | Run all test suites |
+| Command                       | Description                |
+| ----------------------------- | -------------------------- |
+| `npm run test`                | Unit tests (Jest)          |
+| `npm run test:watch`          | Unit tests in watch mode   |
+| `npm run test:coverage`       | Unit tests with coverage   |
+| `npm run test:integration`    | Integration tests (Vitest) |
+| `npm run test:integration:ui` | Integration tests with UI  |
+| `npm run test:e2e`            | E2E tests (Playwright)     |
+| `npm run test:e2e:ui`         | E2E tests with UI          |
+| `npm run test:all`            | Run all test suites        |
 
 ### Versioning
 
-| Command | Description |
-| ------- | ----------- |
+| Command                 | Description                        |
+| ----------------------- | ---------------------------------- |
 | `npm run release:patch` | Bump patch version (1.0.0 → 1.0.1) |
 | `npm run release:minor` | Bump minor version (1.0.0 → 1.1.0) |
 | `npm run release:major` | Bump major version (1.0.0 → 2.0.0) |
+
+---
+
+## Environment Variables
+
+See `.env.example` for the complete list with detailed comments.
+
+### Required Variables
+
+| Variable     | Description                                          |
+| ------------ | ---------------------------------------------------- |
+| `JWT_SECRET` | Auth secret (32+ chars) — **required for all modes** |
+
+### Database
+
+| Variable       | Description                     |
+| -------------- | ------------------------------- |
+| `DATABASE_URL` | PostgreSQL connection string    |
+| `DB_PROVIDER`  | Force `prisma` or `memory` mode |
+
+### Email
+
+| Variable         | Description                        |
+| ---------------- | ---------------------------------- |
+| `RESEND_API_KEY` | Resend API key (empty = mock mode) |
+| `EMAIL_FROM`     | Sender email address               |
+
+### Data Providers
+
+| Variable                              | Description                             |
+| ------------------------------------- | --------------------------------------- |
+| `NEXT_PUBLIC_GUIAS_DATA_PROVIDER`     | `local` (submodules) or `backend` (API) |
+| `NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER` | `local` (submodules) or `backend` (API) |
+
+### Analytics
+
+| Variable                  | Description                            |
+| ------------------------- | -------------------------------------- |
+| `NEXT_PUBLIC_POSTHOG_KEY` | PostHog project key (empty = disabled) |
 
 ---
 
@@ -139,11 +227,11 @@ aquario/
 
 ### Test Types
 
-| Type | Framework | Purpose | Location |
-| ---- | --------- | ------- | -------- |
-| **Unit** | Jest | Pure functions, utilities | `src/**/__tests__/*.test.ts` |
-| **Integration** | Vitest | React hooks, components | `src/**/__tests__/*.integration.test.tsx` |
-| **E2E** | Playwright | Full user flows | `tests/e2e/*.e2e.test.ts` |
+| Type            | Framework  | Purpose                   | Location                                  |
+| --------------- | ---------- | ------------------------- | ----------------------------------------- |
+| **Unit**        | Jest       | Pure functions, utilities | `src/**/__tests__/*.test.ts`              |
+| **Integration** | Vitest     | React hooks, components   | `src/**/__tests__/*.integration.test.tsx` |
+| **E2E**         | Playwright | Full user flows           | `tests/e2e/*.e2e.test.ts`                 |
 
 ### Writing Tests
 
@@ -151,9 +239,9 @@ aquario/
 
 ```typescript
 // src/lib/shared/__tests__/my-utils.test.ts
-describe('myFunction', () => {
-  it('should return expected result', () => {
-    expect(myFunction('input')).toBe('expected');
+describe("myFunction", () => {
+  it("should return expected result", () => {
+    expect(myFunction("input")).toBe("expected");
   });
 });
 ```
@@ -162,11 +250,11 @@ describe('myFunction', () => {
 
 ```typescript
 // src/lib/client/hooks/__tests__/use-data.integration.test.tsx
-import { renderHook, waitFor } from '@testing-library/react';
-import { createTestQueryWrapper } from '@/__tests__/utils/test-providers';
+import { renderHook, waitFor } from "@testing-library/react";
+import { createTestQueryWrapper } from "@/__tests__/utils/test-providers";
 
-describe('useData', () => {
-  it('should fetch data successfully', async () => {
+describe("useData", () => {
+  it("should fetch data successfully", async () => {
     const { result } = renderHook(() => useData(), {
       wrapper: createTestQueryWrapper(),
     });
@@ -179,12 +267,12 @@ describe('useData', () => {
 
 ```typescript
 // tests/e2e/feature.e2e.test.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test('should complete user flow', async ({ page }) => {
-  await page.goto('/feature');
+test("should complete user flow", async ({ page }) => {
+  await page.goto("/feature");
   await page.click('button:has-text("Submit")');
-  await expect(page.locator('.success')).toBeVisible();
+  await expect(page.locator(".success")).toBeVisible();
 });
 ```
 
@@ -224,6 +312,7 @@ All files use **kebab-case**:
 ### VS Code Setup
 
 Recommended extensions:
+
 - Prettier - Code formatter
 - ESLint
 
@@ -238,20 +327,6 @@ Settings (`.vscode/settings.json`):
   }
 }
 ```
-
----
-
-## Environment Variables
-
-See `.env.example` for all variables. Key ones:
-
-| Variable | Description |
-| -------- | ----------- |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `DB_PROVIDER` | `prisma` (real DB) or `memory` |
-| `JWT_SECRET` | Auth secret (32+ chars) |
-| `EMAIL_MOCK_MODE` | Skip email verification in dev |
-| `NEXT_PUBLIC_*_DATA_PROVIDER` | `local` or `backend` |
 
 ---
 
@@ -271,12 +346,12 @@ git submodule update --init --recursive
 
 ## Releasing New Versions
 
-1. Update `CHANGELOG.md` with your changes
+1. Update `CHANGELOG.md` with your changes under `[Unreleased]`
 2. Run the appropriate release command:
    ```bash
-   npm run release:patch  # Bug fixes
-   npm run release:minor  # New features
-   npm run release:major  # Breaking changes
+   npm run release:patch  # Bug fixes (1.0.0 → 1.0.1)
+   npm run release:minor  # New features (1.0.0 → 1.1.0)
+   npm run release:major  # Breaking changes (1.0.0 → 2.0.0)
    ```
 3. Push the tag: `git push origin --tags`
 4. Create a GitHub Release from the tag

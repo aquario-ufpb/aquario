@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/client/utils";
 
 export default function NovoProjetoPage() {
   const { token, user, isLoading: isAuthLoading } = useAuth();

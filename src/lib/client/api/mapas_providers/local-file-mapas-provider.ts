@@ -1,6 +1,6 @@
 import type { MapasDataProvider } from "./mapas-provider.interface";
-import type { MapsData, Building } from "@/lib/mapas/types";
-import { loadFloorData } from "@/lib/mapas/data-loader";
+import type { MapsData, Building } from "@/lib/client/mapas/types";
+import { loadFloorData } from "@/lib/client/mapas/data-loader";
 
 // Import layouts from aquario-mapas
 import { floorSubsolo as ciFloorSubsoloLayout } from "@/content/aquario-mapas/centro-de-informatica/mapas/ci/floor-subsolo";

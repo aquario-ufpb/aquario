@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import type { ClassWithRoom } from "@/components/pages/calendario/types";
-import { CALENDAR_TIME_SLOTS, CLASS_COLORS, DAY_NAMES } from "@/lib/calendario/constants";
+import { CALENDAR_TIME_SLOTS, CLASS_COLORS, DAY_NAMES } from "@/lib/client/calendario/constants";
 import { CalendarGridTable } from "@/components/pages/calendario/calendar-grid-table";
 import { CalendarMobileView } from "@/components/pages/calendario/calendar-mobile-view";
 import ClassDetailsDialog from "@/components/pages/calendario/class-details-dialog";

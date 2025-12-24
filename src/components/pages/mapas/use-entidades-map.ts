@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Floor, EntidadeSlug } from "@/lib/mapas/types";
+import type { Floor, EntidadeSlug } from "@/lib/client/mapas/types";
 import type { Entidade } from "@/lib/shared/types/entidade.types";
 import { entidadesService } from "@/lib/client/api/entidades";
-import { isLabResearch } from "@/lib/mapas/utils";
+import { isLabResearch } from "@/lib/client/mapas/utils";
 
 export function useEntidadesMap(rooms: Floor["rooms"]) {
   const [entidadesMap, setEntidadesMap] = useState<Map<EntidadeSlug, Entidade>>(new Map());

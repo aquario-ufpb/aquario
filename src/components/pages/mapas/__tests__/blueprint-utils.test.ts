@@ -7,7 +7,7 @@ import {
   getSharedSegments,
   sharesEdge,
 } from "../blueprint-utils";
-import type { Floor, Room, RoomShape } from "@/lib/mapas/types";
+import type { Floor, Room, RoomShape } from "@/lib/client/mapas/types";
 
 const makeShape = (x: number, y: number, width: number, height: number): RoomShape => ({
   position: { x, y },

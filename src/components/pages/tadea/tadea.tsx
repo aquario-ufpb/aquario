@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Pencil } from "lucide-react";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/client/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 

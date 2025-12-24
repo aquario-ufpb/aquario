@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import type { Floor, Room } from "@/lib/mapas/types";
+import type { Floor, Room } from "@/lib/client/mapas/types";
 import { RoomGroup } from "./room-group";
 import { useBlueprintScale } from "./use-blueprint-scale";
 import { useEntidadesMap } from "./use-entidades-map";

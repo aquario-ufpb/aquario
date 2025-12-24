@@ -8,7 +8,7 @@ import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
 import RoomDetailsDialog from "@/components/pages/mapas/room-details-dialog";
 import { MapFloorSelector } from "@/components/pages/mapas/map-floor-selector";
 import { useMapas } from "@/lib/client/hooks/use-mapas";
-import type { Room } from "@/lib/mapas/types";
+import type { Room } from "@/lib/client/mapas/types";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 
 function MapsPageInner() {

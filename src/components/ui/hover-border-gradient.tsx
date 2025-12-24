@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useTheme } from "next-themes";
-import { cn } from "@/lib/shared/utils";
+import { cn } from "@/lib/client/utils";
 
 type Direction = "TOP" | "LEFT" | "BOTTOM" | "RIGHT";
 
