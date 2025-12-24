@@ -1,109 +1,78 @@
 # Aquário
 
-> **👨‍💻 Desenvolvedores**: Para guia técnico completo, veja [README-DEV.md](README-DEV.md)
+> **👨‍💻 Developers**: See [README-DEV.md](README-DEV.md) for technical setup
 
 ![Logo](assets/logo.png)
 
-## Visão Geral
+## About
 
-O **Aquário** é um projeto open source focado em centralizar informações relevantes para os alunos do Centro de Informática (CI). A plataforma visa resolver problemas como a falta de informação e o excesso de locais para buscar informações, facilitando o acesso e a comunicação entre alunos, professores e laboratórios.
+**Aquário** is an open-source platform for students, professors, and labs at the Centro de Informática (CI) of UFPB. It centralizes academic information and facilitates communication within the community.
 
-## Funcionalidades
+## Features
 
-### 1. Blog/Notícias/Posts
+### 📚 Guides (Guias)
 
-- **Usuários com contas cadastradas** podem compartilhar posts e publicações.
-- **Tipos de Publicações**:
-  - Informações específicas de centros acadêmicos.
-  - Projetos pessoais e de laboratórios.
-  - Dicas de alunos veteranos.
-  - Dicas de professores.
+Course-specific guides for students - curricular structure, tips, and resources.
 
-### 2. Laboratórios e Seus Projetos
+### 🔬 Entities (Entidades)
 
-- **Banco de Dados de Laboratórios**:
-  - Cada laboratório possui uma conta verificada.
-  - Publicações de projetos com informações como membros, linguagens de programação, detalhes públicos e casos de uso de soluções.
+Directory of labs, research groups, and student organizations at CI.
 
-### 3. Vagas de Estágio/Emprego
+### 📍 Maps
 
-- **Publicações de Vagas**:
-  - Contas verificadas de laboratório e professores podem publicar vagas, abrangendo estágio, monitoria, projetos voluntários, iniciação científica e etc.
-- **Benefícios**:
-  - Redução da superlotação de e-mails.
-  - Melhor organização das informações de vagas.
+Interactive maps of campus buildings and rooms.
 
-### 4. Achados e Perdidos
+### 💼 Opportunities (Vagas)
 
-- **Scraping do E-mail Acadêmico** para adicionar itens automaticamente.
-- **Adições Manuais** de itens encontrados ou perdidos (Tadea terá seu perfil oficial)
+Job listings, internships, research positions, and volunteer opportunities.
 
-### 5. FAQ
+## Tech Stack
 
-- **Guias** sobre diversos assuntos para alunos dos períodos inicias.
-- **As Dúvidas e Respostas** mais buscadas por alunos acerca dos cursos, centros, processos e diversos outros assuntos.
-- **Documentos** mais importantes e utilizados pelos alunos.
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Database**: PostgreSQL + Prisma
+- **Testing**: Jest + Vitest + Playwright
 
-## Objetivo
+## Quick Start
 
-O objetivo do projeto Aquário é centralizar as informações do CI e oferecer uma solução eficiente para problemas de comunicação e disseminação de informações, facilitando o acesso e o compartilhamento de informações importantes entre todos os membros da comunidade acadêmica.
+```bash
+git clone https://github.com/ralfferreira/aquario.git
+cd aquario
+npm install
+cp .env.example .env.local
+npm run dev
+```
 
-## Modelo de Dados
+See [README-DEV.md](README-DEV.md) for complete setup instructions.
 
-Abaixo está o diagrama de classes UML que representa a estrutura de dados do projeto.
+## Contributing
 
-![Diagrama UML](assets/uml.svg)
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Design
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Make your changes
+4. Submit a Pull Request
 
-O design, ainda em desenvolvimento, está no link do figma: https://www.figma.com/design/9got8rICitaYaapG3n1COx/Aquario?node-id=9-92&t=J3rS2QW7M6zhEWLI-1
-
-## Contribuidores
-
-Agradecemos a todos os contribuidores que ajudaram a tornar este projeto possível!
+## Contributors
 
 ![Contributors](https://contrib.rocks/image?repo=ralfferreira/aquario&anon=1)
 
 <div align="top">
-  <img src="https://github.com/trindadetiago/aquario-stats/blob/main/images/top3-contributors.png?raw=true" alt="Top 3 Contribuidores" width="49%" style="height:full; vertical-align: top;">
-  <img src="https://github.com/trindadetiago/aquario-stats/blob/main/images/complete-ranking.png?raw=true" alt="Ranking Completo" width="49%" style="height:full; vertical-align: top;">
+  <img src="https://github.com/trindadetiago/aquario-stats/blob/main/images/top3-contributors.png?raw=true" alt="Top 3 Contributors" width="49%">
+  <img src="https://github.com/trindadetiago/aquario-stats/blob/main/images/complete-ranking.png?raw=true" alt="Complete Ranking" width="49%">
 </div>
 
-Update it here: https://github.com/trindadetiago/aquario-stats
+## License
 
-## Como Contribuir
+This project is licensed under the [MIT License](LICENSE).
 
-O **Aquário** é um projeto open source e as contribuições são muito bem-vindas! Veja como você pode contribuir:
+The source code can be freely copied, modified, and redistributed, as long as the copyright notice and license text are maintained.
 
-1. **Fork este repositório** e clone o fork para o seu ambiente local.
-2. **Crie uma nova branch** para a sua feature ou correção de bug:
-   ```sh
-   git checkout -b minha-feature
-   ```
-3. **Faça as modificações** necessárias no código.
-4. **Faça commit das suas alterações** (importante seguir o nosso padrão de commits)
-   ```sh
-   git commit -m "Minhas alterações"
-   ```
-5. **Envie as suas alterações** para o seu fork no GitHub:
-   ```sh
-   git push origin minha-feature
-   ```
-6. **Abra um Pull Request** neste repositório, descrevendo detalhadamente as suas alterações.
+However, the **"Aquário" name**, **logo**, and other **brand elements are NOT covered** by this license. You may create forks or reuse the code under MIT terms, but **you may not use the "Aquário" name** or present derivative works as if they were the original project.
 
-## Licença
+## Contact
 
-Este projeto está licenciado sob a [Licença MIT](LICENSE).
-
-O **código-fonte** pode ser copiado, modificado e redistribuído livremente, desde que o aviso de direitos autorais e o texto da licença sejam mantidos.
-
-No entanto, o **nome "Aquário"**, seu **logotipo** e demais elementos de **identidade visual e de marca** **não estão cobertos** por esta licença.  
-Você pode criar forks ou reutilizar o código conforme os termos da Licença MIT, mas **não é permitido usar o nome "Aquário"** ou apresentar trabalhos derivados como se fossem o projeto original.
-
-## Contato
-
-Se você tiver alguma dúvida, sugestão ou feedback, sinta-se à vontade para abrir uma [issue](https://github.com/ralfferreira/aquario/issues) ou enviar um e-mail para [ralf.ferreira@academico.ufpb.br](mailto:ralf.ferreira@academico.ufpb.br).
-
----
-
-Esperamos que você goste de usar o Aquário e que ele facilite a sua vida acadêmica. Contribua e ajude a melhorar esta plataforma!
+- **Issues**: [GitHub Issues](https://github.com/aquario-ufpb/aquario/issues)
+- **Email**: [aquarioufpb@gmail.com](mailto:aquarioufpb@gmail.com)

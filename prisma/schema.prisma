@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum PapelPlataforma {
+  USER
+  MASTER_ADMIN
+}
+
+enum TipoToken {
+  VERIFICACAO_EMAIL
+  RESET_SENHA
+}
+
+enum TipoEntidade {
+  LABORATORIO
+  GRUPO
+  LIGA_ACADEMICA
+  EMPRESA
+  ATLETICA
+  CENTRO_ACADEMICO
+  OUTRO
+}
+
+enum PapelMembro {
+  ADMIN
+  MEMBRO
+}
+
+enum StatusGuia {
+  ATIVO
+  INATIVO
+  RASCUNHO
+}
+
+// ============================================================================
+// CAMPUS & CENTRO & CURSO (Core organizational structure)
+// ============================================================================
+
+model Campus {
+  id      String   @id @default(uuid())
+  nome    String   @unique
+  centros Centro[]
+}
+
+model Centro {
+  id        String  @id @default(uuid())
+  nome      String  @unique
+  sigla     String  @unique
+  descricao String?
+
+  campusId String
+  campus   Campus @relation(fields: [campusId], references: [id])
+
+  cursos    Curso[]
+  usuarios  Usuario[]
+  entidades Entidade[]
+}
+
+model Curso {
+  id       String @id @default(uuid())
+  nome     String @unique
+  centroId String
+
+  centro   Centro    @relation(fields: [centroId], references: [id])
+  usuarios Usuario[]
+  guias    Guia[]
+}
+
+// ============================================================================
+// USUARIO & AUTH
+// ============================================================================
+
+model Usuario {
+  id                String           @id @default(uuid())
+  nome              String
+  email             String           @unique
+  matricula         String?          @unique
+  senhaHash         String
+  permissoes        String[]         @default([])
+  papelPlataforma   PapelPlataforma  @default(USER)
+  eVerificado       Boolean          @default(false)
+  urlFotoPerfil     String?
+  criadoEm          DateTime         @default(now())
+  atualizadoEm      DateTime         @updatedAt
+
+  centroId String
+  cursoId  String
+
+  centro Centro @relation(fields: [centroId], references: [id])
+  curso  Curso  @relation(fields: [cursoId], references: [id])
+
+  membroDeEntidades MembroEntidade[]
+  tokensVerificacao TokenVerificacao[]
+}
+
+model TokenVerificacao {
+  id        String    @id @default(uuid())
+  usuarioId String
+  token     String    @unique
+  tipo      TipoToken
+  expiraEm  DateTime
+  usadoEm   DateTime?
+  criadoEm  DateTime  @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([usuarioId])
+  @@index([expiraEm])
+}
+
+// ============================================================================
+// ENTIDADES
+// ============================================================================
+
+model Entidade {
+  id           String       @id @default(uuid())
+  nome         String
+  subtitle     String?
+  descricao    String?
+  tipo         TipoEntidade
+  urlFoto      String?
+  contato      String?
+  instagram    String?
+  linkedin     String?
+  website      String?
+  location     String?
+  foundingDate DateTime?
+  metadata     Json?        @default("{}")
+  centroId     String
+
+  centro  Centro           @relation(fields: [centroId], references: [id])
+  membros MembroEntidade[]
+
+  @@unique([nome, tipo])
+}
+
+model MembroEntidade {
+  id         String      @id @default(uuid())
+  usuarioId  String
+  entidadeId String
+  papel      PapelMembro
+
+  usuario  Usuario  @relation(fields: [usuarioId], references: [id])
+  entidade Entidade @relation(fields: [entidadeId], references: [id])
+
+  @@unique([usuarioId, entidadeId])
+}
+
+// ============================================================================
+// GUIAS
+// ============================================================================
+
+model Guia {
+  id           String     @id @default(uuid())
+  titulo       String
+  slug         String     @unique
+  descricao    String?
+  status       StatusGuia @default(RASCUNHO)
+  cursoId      String?
+  tags         String[]   @default([])
+  criadoEm     DateTime   @default(now())
+  atualizadoEm DateTime   @updatedAt
+
+  curso  Curso?      @relation(fields: [cursoId], references: [id])
+  secoes SecaoGuia[]
+
+  @@index([cursoId])
+  @@index([slug])
+  @@index([status])
+  @@index([criadoEm])
+}
+
+model SecaoGuia {
+  id           String     @id @default(uuid())
+  guiaId       String
+  titulo       String
+  slug         String
+  ordem        Int
+  conteudo     String?
+  status       StatusGuia @default(RASCUNHO)
+  criadoEm     DateTime   @default(now())
+  atualizadoEm DateTime   @updatedAt
+
+  guia      Guia           @relation(fields: [guiaId], references: [id], onDelete: Cascade)
+  subsecoes SubSecaoGuia[]
+
+  @@index([guiaId])
+  @@index([ordem])
+  @@index([status])
+}
+
+model SubSecaoGuia {
+  id           String     @id @default(uuid())
+  secaoId      String
+  titulo       String
+  slug         String
+  ordem        Int
+  conteudo     String?
+  status       StatusGuia @default(RASCUNHO)
+  criadoEm     DateTime   @default(now())
+  atualizadoEm DateTime   @updatedAt
+
+  secao SecaoGuia @relation(fields: [secaoId], references: [id], onDelete: Cascade)
+
+  @@index([secaoId])
+  @@index([ordem])
+  @@index([status])
+}
+

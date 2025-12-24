@@ -1,12 +1,12 @@
-[submodule "frontend/content/aquario-guias"]
-	path = frontend/content/aquario-guias
+[submodule "content/aquario-guias"]
+	path = content/aquario-guias
 	url = https://github.com/aquario-ufpb/aquario-guias.git
-[submodule "frontend/content/aquario-entidades"]
-	path = frontend/content/aquario-entidades
+[submodule "content/aquario-entidades"]
+	path = content/aquario-entidades
 	url = https://github.com/aquario-ufpb/aquario-entidades.git
-[submodule "frontend/content/aquario-mapas"]
-	path = frontend/content/aquario-mapas
+[submodule "content/aquario-mapas"]
+	path = content/aquario-mapas
 	url = https://github.com/aquario-ufpb/aquario-mapas.git
-[submodule "frontend/content/aquario-vagas"]
-	path = frontend/content/aquario-vagas
+[submodule "content/aquario-vagas"]
+	path = content/aquario-vagas
 	url = https://github.com/aquario-ufpb/aquario-vagas
