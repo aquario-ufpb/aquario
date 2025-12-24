@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth-context";
 
 import LinkHover from "@/components/shared/link-hover";
 import { ModeToggle } from "@/components/shared/mode-toggle";
+import { GlobalSearch } from "@/components/shared/global-search";
 import Link from "next/link";
 import { useBackend } from "@/lib/shared/config/env";
 import {
@@ -255,8 +256,11 @@ export default function NavBar() {
 
   return (
     <nav className="fixed top-4 z-50 w-full flex justify-center">
-      <div className="grid grid-cols-2 lg:grid-cols-2 items-center h-[60px] px-6 gap-4 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg w-full max-w-4xl">
+      <div className="grid grid-cols-3 lg:grid-cols-3 items-center h-[60px] px-6 gap-4 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg w-full max-w-5xl">
         <NavLogo />
+        <div className="flex items-center justify-center">
+          <GlobalSearch />
+        </div>
         <div className="flex items-center justify-end gap-4">
           <NavLinks isDark={isDark} />
           <AuthSection />
