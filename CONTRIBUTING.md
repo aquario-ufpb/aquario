@@ -4,14 +4,15 @@ Thank you for your interest in contributing! 🎉
 
 ## Who Can Contribute?
 
-**Anyone from CI-UFPB is welcome!** Whether you're a student, professor, or lab member - all contributions are valued regardless of experience level.
+**Anyone from CI-UFPB is welcome!** Whether you're a student, professor, or lab member — all contributions are valued regardless of experience level.
 
 ## Ways to Contribute
 
-- 🐛 **Report bugs** - Open an issue with steps to reproduce
-- 💡 **Suggest features** - Open an issue with your idea
-- 🔧 **Submit code** - Fix bugs or implement features
-- 📝 **Improve docs** - Fix typos or add examples
+- 🐛 **Report bugs** — Open an issue with steps to reproduce
+- 💡 **Suggest features** — Open an issue with your idea
+- 🔧 **Submit code** — Fix bugs or implement features
+- 📝 **Improve docs** — Fix typos or add examples
+- 📚 **Add content** — Contribute to guides, entity profiles, etc.
 
 ## Getting Started
 
@@ -28,7 +29,7 @@ cp .env.example .env.local
 # 3. Create a branch
 git checkout -b feature/my-feature
 
-# 4. Make changes and test
+# 4. Make changes and verify
 npm run dev
 npm run check-all
 
@@ -39,33 +40,52 @@ git push origin feature/my-feature
 # 6. Open a Pull Request
 ```
 
-## Development Setup
+> 📖 See [README-DEV.md](README-DEV.md) for detailed setup and architecture docs.
 
-See [README-DEV.md](README-DEV.md) for detailed setup instructions.
+## Development Modes
 
-**Quick mode without database:**
+**Full Stack (with Database):**
+
+```bash
+docker-compose up -d
+npm run db:migrate
+npm run dev
+```
+
+**Frontend Only (no Database):**
 
 ```bash
 # Set in .env.local:
 DB_PROVIDER=memory
 ```
 
-## Code Style
+## Code Standards
 
 ### File Naming
 
-All files use **kebab-case**: `user-profile.tsx`, `auth-service.ts`
+All files use **kebab-case**:
 
-### Language
+```
+✅ user-profile.tsx
+✅ use-auth.ts
+❌ UserProfile.tsx
+❌ useAuth.ts
+```
 
-- **Code**: English
-- **UI**: Portuguese
-- **Commits**: English
+### Language Convention
+
+| Context | Language |
+| ------- | -------- |
+| Code    | English  |
+| UI Text | Portuguese |
+| Commits | English  |
 
 ### Commit Format
 
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+
 ```
-type: description
+type: short description
 
 feat: add search functionality
 fix: resolve login error
@@ -87,29 +107,34 @@ docs/update-readme
 
 ## Pull Request Checklist
 
-Before submitting:
+Before submitting your PR, ensure:
 
-- [ ] Code follows project style (`npm run check-all` passes)
+- [ ] `npm run check-all` passes (lint, format, types)
 - [ ] Tests pass (`npm run test`)
-- [ ] No console.logs left in code
-- [ ] Tested manually
+- [ ] No `console.log` statements left in code
+- [ ] Tested manually in browser
+- [ ] Updated CHANGELOG.md if applicable
 
 ## Project Structure
 
 ```
-src/
-├── app/              # Pages and API routes
-├── components/       # React components
-└── lib/
-    ├── server/       # Backend code (DB, services)
-    ├── client/       # Frontend code (hooks, API)
-    └── shared/       # Shared types and utils
+aquario/
+├── src/
+│   ├── app/           # Next.js pages and API routes
+│   ├── components/    # React components
+│   └── lib/
+│       ├── server/    # Backend code (DB, services)
+│       ├── client/    # Frontend code (hooks, API)
+│       └── shared/    # Shared types and utils
+├── content/           # Git submodules (guias, entidades, etc.)
+├── prisma/            # Database schema
+└── tests/             # E2E tests
 ```
 
 ## Questions?
 
-- Open an issue on GitHub
-- Email: [ralf.ferreira@academico.ufpb.br](mailto:ralf.ferreira@academico.ufpb.br)
+- 💬 Open an issue on GitHub
+- 📧 Email: [aquarioufpb@gmail.com](mailto:aquarioufpb@gmail.com)
 
 ---
 
