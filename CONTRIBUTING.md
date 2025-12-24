@@ -16,6 +16,9 @@ Thank you for your interest in contributing! 🎉
 
 ## Getting Started
 
+**Prerequisites:**
+- Node.js 18+ and npm installed ([Download Node.js](https://nodejs.org/))
+
 ```bash
 # 1. Fork and clone
 git clone https://github.com/YOUR-USERNAME/aquario.git

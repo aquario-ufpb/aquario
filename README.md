@@ -39,6 +39,9 @@ Job listings, internships, research positions, and volunteer opportunities.
 
 ## Quick Start
 
+**Prerequisites:**
+- Node.js 18+ and npm installed ([Download Node.js](https://nodejs.org/))
+
 ```bash
 git clone https://github.com/aquario-ufpb/aquario.git
 cd aquario

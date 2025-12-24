@@ -73,6 +73,7 @@ console.log("This will set up:");
 console.log("  • Git submodules (content repositories)");
 console.log("  • Docker database (if needed)");
 console.log("  • Database migrations (if DATABASE_URL is set)");
+console.log("  • Database seeding (if database is empty)");
 console.log("");
 
 // =============================================================================
@@ -282,6 +283,7 @@ if (!hasDatabaseUrl) {
 
   // Run migrations
   console.log("   🔄 Applying migrations...");
+  let migrationsApplied = false;
   try {
     const output = execSync("npx prisma migrate deploy", {
       cwd: PROJECT_ROOT,
@@ -289,7 +291,8 @@ if (!hasDatabaseUrl) {
       stdio: "pipe",
     });
     console.log(output);
-    console.log("   ✅ Migrations applied successfully\n");
+    console.log("   ✅ Migrations applied successfully");
+    migrationsApplied = true;
   } catch (error) {
     // Capture both stdout and stderr (Prisma outputs errors to stderr)
     const stdout = (error.stdout || "").toString();
@@ -326,6 +329,32 @@ if (!hasDatabaseUrl) {
       console.log("\n   💡 Run 'npm run db:migrate' manually to see full error details");
     }
     console.log("");
+  }
+
+  // Seed database if migrations were successful
+  if (migrationsApplied) {
+    console.log("🌱 Step 4: Seeding database...");
+    try {
+      // Try to seed - the seed script uses upsert, so it's safe to run multiple times
+      console.log("   🔍 Running seed (safe to run multiple times)...");
+      const seedOutput = execSync("npm run db:seed", {
+        cwd: PROJECT_ROOT,
+        encoding: "utf8",
+        stdio: "pipe",
+      });
+      console.log(seedOutput);
+      console.log("   ✅ Database seeded successfully\n");
+    } catch (seedError) {
+      const seedErrStr = ((seedError.stdout || "") + (seedError.stderr || "")).toString();
+      // Check if it's just a "already exists" type error (seed uses upsert, so this is unlikely)
+      if (seedErrStr.includes("already exists") || seedErrStr.includes("Unique constraint")) {
+        console.log("   ⏭️  Database already has data, skipping seed\n");
+      } else {
+        console.log("   ⚠️  Seed failed:");
+        console.log(seedErrStr);
+        console.log("   💡 Run 'npm run db:seed' manually if needed\n");
+      }
+    }
   }
 }
 

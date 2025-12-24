@@ -4,6 +4,10 @@ Technical documentation for developers working on the Aquário project.
 
 ## Quick Start
 
+**Prerequisites:**
+- Node.js 18+ and npm installed ([Download Node.js](https://nodejs.org/))
+- Docker (optional, for local database) or cloud database
+
 ```bash
 # 1. Clone repository
 git clone https://github.com/aquario-ufpb/aquario.git
