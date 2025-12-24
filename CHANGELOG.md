@@ -18,6 +18,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] - 2024-12-24
+
+### Changed
+- **Upgraded Next.js from 14.2.18 to 15.5.9** (latest stable)
+- **Upgraded ESLint from 8 to 9** (required by Next.js 15)
+- Updated all route handlers to use async params (Next.js 15 breaking change)
+- Updated all page components to use `React.use()` for params unwrapping
+
+### Removed
+- Removed unused `reactjs-tiptap-editor` library and related pages (-220 packages)
+- Removed unused `react-quill` library
+- Removed broken editor component
+
+### Security
+- **Fixed all npm audit vulnerabilities** (5 → 0)
+  - Fixed glob vulnerability in eslint-config-next
+  - Removed react-quill XSS vulnerability
+
 ## [1.0.1] - 2024-12-24
 
 ### Changed
@@ -80,7 +98,8 @@ npm run release:minor
 npm run release:major
 ```
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/aquario-ufpb/aquario/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/aquario-ufpb/aquario/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/aquario-ufpb/aquario/releases/tag/v1.0.0
 
