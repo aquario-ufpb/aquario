@@ -11,6 +11,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 type SearchResult = {
   id: string;
@@ -121,6 +122,10 @@ export function GlobalSearch() {
       </button>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
+        <DialogTitle className="sr-only">Pesquisa Global</DialogTitle>
+        <DialogDescription className="sr-only">
+          Pesquise por entidades, guias, mapas e páginas do site
+        </DialogDescription>
         <CommandInput
           placeholder="Pesquisar entidades, guias, mapas, páginas..."
           value={query}
