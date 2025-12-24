@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -24,17 +24,18 @@ type ProjetoDetalhado = {
   tags: string[];
 } & Projeto;
 
-export default function ProjetoPage({ params }: { params: { id: string } }) {
+export default function ProjetoPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [projeto, setProjeto] = useState<ProjetoDetalhado | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (params.id) {
+    if (id) {
       const fetchProjeto = async () => {
         try {
-          const response = await fetch(`http://localhost:3001/projetos/${params.id}`);
+          const response = await fetch(`http://localhost:3001/projetos/${id}`);
           if (!response.ok) {
             throw new Error("Projeto não encontrado");
           }
@@ -52,7 +53,7 @@ export default function ProjetoPage({ params }: { params: { id: string } }) {
       };
       fetchProjeto();
     }
-  }, [params.id]);
+  }, [id]);
 
   if (isLoading) {
     return <Skeleton className="h-screen w-full" />;

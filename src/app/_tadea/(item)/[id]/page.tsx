@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,17 +27,18 @@ type ItemAchadoEPerdido = {
   criadoEm: string;
 };
 
-export default function ItemDetailPage({ params }: { params: { id: string } }) {
+export default function ItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const { user, token, isAuthenticated } = useAuth();
   const [item, setItem] = useState<ItemAchadoEPerdido | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (params.id) {
+    if (id) {
       const fetchItem = async () => {
         try {
-          const response = await fetch(`http://localhost:3001/achados-e-perdidos/${params.id}`);
+          const response = await fetch(`http://localhost:3001/achados-e-perdidos/${id}`);
           if (!response.ok) {
             throw new Error("Falha ao buscar o item");
           }
@@ -55,7 +56,7 @@ export default function ItemDetailPage({ params }: { params: { id: string } }) {
       };
       fetchItem();
     }
-  }, [params.id]);
+  }, [id]);
 
   const handleUpdateStatus = async () => {
     if (!item) {

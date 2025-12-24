@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function EditarItemPage({ params }: { params: { id: string } }) {
+export default function EditarItemPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const { token, user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [titulo, setTitulo] = useState("");
@@ -30,10 +31,10 @@ export default function EditarItemPage({ params }: { params: { id: string } }) {
   }, [isAuthLoading, isAdmin, router]);
 
   useEffect(() => {
-    if (params.id && isAdmin) {
+    if (id && isAdmin) {
       const fetchItem = async () => {
         try {
-          const response = await fetch(`http://localhost:3001/achados-e-perdidos/${params.id}`);
+          const response = await fetch(`http://localhost:3001/achados-e-perdidos/${id}`);
           if (!response.ok) {
             throw new Error("Falha ao buscar dados do item");
           }
@@ -52,7 +53,7 @@ export default function EditarItemPage({ params }: { params: { id: string } }) {
       };
       fetchItem();
     }
-  }, [params.id, isAdmin]);
+  }, [id, isAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +61,7 @@ export default function EditarItemPage({ params }: { params: { id: string } }) {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/achados-e-perdidos/${params.id}`, {
+      const response = await fetch(`http://localhost:3001/achados-e-perdidos/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, use } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEntidadeBySlug, useEntidades } from "@/lib/client/hooks";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,7 +19,8 @@ import { EditarEntidadeDialog } from "@/components/pages/entidades/editar-entida
 import { isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
 import { useBackend } from "@/lib/shared/config/env";
 
-export default function EntidadeDetailPage({ params }: { params: { slug: string } }) {
+export default function EntidadeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
   const { user } = useAuth();
   const { isEnabled: backendEnabled } = useBackend();
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Use React Query hooks
-  const { data: entidade, isLoading, error: queryError } = useEntidadeBySlug(params.slug);
+  const { data: entidade, isLoading, error: queryError } = useEntidadeBySlug(slug);
   const { data: allEntidades = [] } = useEntidades();
 
   // Compute other entidades of the same type
@@ -345,11 +346,11 @@ export default function EntidadeDetailPage({ params }: { params: { slug: string 
           onOpenChange={setIsEditDialogOpen}
           onSuccess={newSlug => {
             // If slug changed, redirect to new URL
-            if (newSlug && newSlug !== params.slug) {
+            if (newSlug && newSlug !== slug) {
               router.push(`/entidade/${newSlug}`);
             } else {
               // Otherwise, invalidate and refetch entidade data
-              queryClient.invalidateQueries({ queryKey: queryKeys.entidades.bySlug(params.slug) });
+              queryClient.invalidateQueries({ queryKey: queryKeys.entidades.bySlug(slug) });
             }
           }}
         />

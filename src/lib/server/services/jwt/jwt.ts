@@ -20,7 +20,8 @@ const getSecret = (): string => {
 export function signToken(userId: string): string {
   return jwt.sign({ sub: userId }, getSecret(), {
     expiresIn: JWT_EXPIRES_IN,
-  });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any);
 }
 
 /**

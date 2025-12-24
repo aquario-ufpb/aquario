@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -26,16 +26,17 @@ type User = {
   curso?: Curso | null;
 };
 
-export default function UserProfilePage({ params }: { params: { id: string } }) {
+export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (params.id) {
+    if (id) {
       const fetchUser = async () => {
         try {
-          const response = await fetch(`http://localhost:3001/usuarios/${params.id}`);
+          const response = await fetch(`http://localhost:3001/usuarios/${id}`);
           if (!response.ok) {
             throw new Error("Usuário não encontrado");
           }
@@ -53,7 +54,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
       };
       fetchUser();
     }
-  }, [params.id]);
+  }, [id]);
 
   if (isLoading) {
     return (

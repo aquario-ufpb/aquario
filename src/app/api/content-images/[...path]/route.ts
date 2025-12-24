@@ -105,9 +105,9 @@ function resolvePath(slugPath: string[], baseDir: string): string | null {
   return finalPath;
 }
 
-export async function GET(_request: unknown, { params }: { params: { path: string[] } }) {
+export async function GET(_request: unknown, { params }: { params: Promise<{ path: string[] }> }) {
   try {
-    const slugPath = params.path;
+    const { path: slugPath } = await params;
 
     // Check if this is an entidades image request (starts with "entidades" or "assets/entidades")
     let contentDir: string;

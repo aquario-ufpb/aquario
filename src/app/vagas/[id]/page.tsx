@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, use } from "react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,12 @@ import VacancyCard from "@/components/pages/vagas/vacancy-card";
 import VagaProfileCard from "@/components/shared/vaga-profile-card";
 import Link from "next/link";
 
-export default function VagaPage({ params }: { params: { id: string } }) {
+export default function VagaPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
 
   // Use React Query hooks
-  const { data: vaga, isLoading, error: queryError } = useVagaById(params.id);
+  const { data: vaga, isLoading, error: queryError } = useVagaById(id);
   const { data: allVagas = [] } = useVagas();
 
   // Compute similar vagas

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import DOMPurify from "dompurify";
@@ -21,15 +21,16 @@ type Publicacao = {
   criadoEm: string;
 };
 
-export default function BlogPostPage({ params }: { params: { id: string } }) {
+export default function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [post, setPost] = useState<Publicacao | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (params.id) {
+    if (id) {
       const fetchPost = async () => {
         try {
-          const response = await fetch(`http://localhost:3001/publicacoes/${params.id}`);
+          const response = await fetch(`http://localhost:3001/publicacoes/${id}`);
           if (!response.ok) {
             throw new Error("Falha ao buscar a publicação");
           }
@@ -43,7 +44,7 @@ export default function BlogPostPage({ params }: { params: { id: string } }) {
       };
       fetchPost();
     }
-  }, [params.id]);
+  }, [id]);
 
   const getInitials = (name: string) => {
     const names = name.split(" ");
