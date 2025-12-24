@@ -143,12 +143,13 @@ aquario/
 
 ### Database
 
-| Command              | Description        |
-| -------------------- | ------------------ |
-| `npm run db:migrate` | Run migrations     |
-| `npm run db:seed`    | Seed database      |
-| `npm run db:studio`  | Open Prisma Studio |
-| `npm run db:reset`   | Reset database     |
+| Command                    | Description                              |
+| -------------------------- | ---------------------------------------- |
+| `npm run db:migrate`       | Run migrations (development)            |
+| `npm run db:migrate:deploy` | Deploy migrations (production)         |
+| `npm run db:seed`          | Seed database                            |
+| `npm run db:studio`        | Open Prisma Studio                       |
+| `npm run db:reset`         | Reset database                           |
 
 ### Code Quality
 
@@ -355,6 +356,30 @@ git submodule update --init --recursive
    ```
 3. Push the tag: `git push origin --tags`
 4. Create a GitHub Release from the tag
+
+---
+
+## Production Deployment
+
+### Database Migrations
+
+**Good news:** Migrations run automatically during `npm run build` if `DATABASE_URL` is set!
+
+The build script (`scripts/build-with-migrations.js`) will:
+- ✅ Always generate Prisma Client
+- ✅ Run migrations if `DATABASE_URL` is set (production/staging)
+- ✅ Skip migrations if `DATABASE_URL` is not set (frontend-only mode)
+- ✅ Always build the Next.js app
+
+**For Vercel:** Just use the default build command (`npm run build`) - migrations will run automatically if you have `DATABASE_URL` configured in your environment variables.
+
+**Manual migration (if needed):**
+
+```bash
+npm run db:migrate:deploy
+```
+
+**Note:** `prisma migrate deploy` is safe for production - it only applies pending migrations and won't create new ones.
 
 ---
 

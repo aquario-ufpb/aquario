@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "node scripts/build-with-migrations.js",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "dotenv -e .env.local -- prisma db push",
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "dotenv -e .env.local -- prisma studio",
     "db:seed": "dotenv -e .env.local -- tsx prisma/seed.ts",
     "db:reset": "dotenv -e .env.local -- prisma migrate reset",
