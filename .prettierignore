@@ -107,3 +107,6 @@ src/Tests & Examples - Dev/
 content/aquario-guias/
 content/aquario-entidades/
 content/aquario-mapas/
+
+# Markdown files (documentation)
+*.md
