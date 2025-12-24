@@ -23,7 +23,10 @@ export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000
 
 export const DATABASE_URL = process.env.DATABASE_URL;
 
-export const DB_PROVIDER = (process.env.DB_PROVIDER || "prisma") as "prisma" | "memory";
+// Default to memory provider if no DATABASE_URL is set, otherwise use prisma
+export const DB_PROVIDER = (process.env.DB_PROVIDER || (DATABASE_URL ? "prisma" : "memory")) as
+  | "prisma"
+  | "memory";
 
 // =============================================================================
 // Authentication (JWT)
