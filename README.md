@@ -40,10 +40,11 @@ Job listings, internships, research positions, and volunteer opportunities.
 ## Quick Start
 
 ```bash
-git clone https://github.com/ralfferreira/aquario.git
+git clone https://github.com/aquario-ufpb/aquario.git
 cd aquario
 npm install
 cp .env.example .env.local
+npm run setup
 npm run dev
 ```
 

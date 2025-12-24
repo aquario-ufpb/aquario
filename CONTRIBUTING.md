@@ -21,12 +21,17 @@ Thank you for your interest in contributing! 🎉
 git clone https://github.com/YOUR-USERNAME/aquario.git
 cd aquario
 
-# 2. Setup
-./scripts/setup-submodules.sh
+# 2. Install dependencies
 npm install
-cp .env.example .env.local
 
-# 3. Create a branch
+# 3. Configure environment (required before setup)
+cp .env.example .env.local
+# Edit .env.local if needed (default works with Docker)
+
+# 4. Run setup (submodules, Docker, migrations)
+npm run setup
+
+# 5. Create a branch
 git checkout -b feature/my-feature
 
 # 4. Make changes and verify

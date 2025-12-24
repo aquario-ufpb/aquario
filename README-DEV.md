@@ -5,23 +5,29 @@ Technical documentation for developers working on the Aquário project.
 ## Quick Start
 
 ```bash
-# 1. Clone and setup
+# 1. Clone repository
 git clone https://github.com/aquario-ufpb/aquario.git
 cd aquario
-./scripts/setup-submodules.sh
 
 # 2. Install dependencies
 npm install
 
-# 3. Setup environment
+# 3. Configure environment (required before setup)
 cp .env.example .env.local
-# Edit .env.local with your values
+# Edit .env.local if needed (default works with Docker)
 
-# 4. Start development
+# 4. Run setup (submodules, Docker, migrations)
+npm run setup
+
+# 5. Start development
 npm run dev
 ```
 
 **Access:** http://localhost:3000
+
+> 💡 **Tip:** `npm run setup` handles everything - git submodules, Docker database, and migrations. Safe to run multiple times!
+> 
+> **Note:** Copy `.env.example` to `.env.local` **before** running `npm run setup` so it can detect your database configuration.
 
 ---
 
@@ -135,21 +141,24 @@ aquario/
 
 ### Development
 
-| Command         | Description              |
-| --------------- | ------------------------ |
-| `npm run dev`   | Start development server |
-| `npm run build` | Build for production     |
-| `npm run start` | Start production server  |
+| Command         | Description                                    |
+| --------------- | ---------------------------------------------- |
+| `npm run setup` | **First-time setup** (submodules, Docker, DB) |
+| `npm run dev`   | Start development server                       |
+| `npm run build` | Build for production                           |
+| `npm run start` | Start production server                        |
 
 ### Database
 
 | Command                    | Description                              |
 | -------------------------- | ---------------------------------------- |
-| `npm run db:migrate`       | Run migrations (development)            |
-| `npm run db:migrate:deploy` | Deploy migrations (production)         |
+| `npm run db:migrate`       | Run migrations (development)             |
+| `npm run db:migrate:deploy` | Deploy migrations (production)          |
 | `npm run db:seed`          | Seed database                            |
 | `npm run db:studio`        | Open Prisma Studio                       |
-| `npm run db:reset`         | Reset database                           |
+| `npm run db:reset`        | Reset database                           |
+
+> 💡 **Tip:** Run `npm run setup` to automatically handle submodules, Docker, and migrations!
 
 ### Code Quality
 
