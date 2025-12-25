@@ -24,22 +24,43 @@ export const useCurrentUser = () => {
 };
 
 /**
- * Hook to list all users (admin only)
- * Uses the token from auth context automatically
+ * Hook to list users with pagination (admin only)
  */
-export const useUsuarios = () => {
+export const useUsuariosPaginated = (options: { page?: number; limit?: number }) => {
   const { token } = useAuth();
 
   return useQuery({
-    queryKey: queryKeys.usuarios.all,
+    queryKey: [...queryKeys.usuarios.all, "paginated", options.page, options.limit],
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");
       }
-      return usuariosService.listUsers(token);
+      return usuariosService.listUsersPaginated(token, options);
     },
     enabled: !!token,
-    staleTime: 30 * 1000, // 30 seconds - user list might change more frequently
+    staleTime: 30 * 1000,
+  });
+};
+
+/**
+ * Hook to search users (for autocomplete/search)
+ */
+export const useSearchUsers = (query: string, limit?: number) => {
+  const { token } = useAuth();
+
+  return useQuery({
+    queryKey: [...queryKeys.usuarios.all, "search", query, limit],
+    queryFn: () => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      if (!query.trim()) {
+        return [];
+      }
+      return usuariosService.searchUsers(token, query, limit);
+    },
+    enabled: !!token && !!query.trim(),
+    staleTime: 10 * 1000, // 10 seconds for search results
   });
 };
 

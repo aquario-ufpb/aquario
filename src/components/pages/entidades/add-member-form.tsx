@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, UserPlus, X } from "lucide-react";
 import Image from "next/image";
-import { useUsuarios } from "@/lib/client/hooks/use-usuarios";
+import { useSearchUsers } from "@/lib/client/hooks/use-usuarios";
 import { useAddEntidadeMember, useEntidadeCargos } from "@/lib/client/hooks/use-entidades";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -77,29 +77,12 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
   const [startedAt, setStartedAt] = useState("");
   const [endedAt, setEndedAt] = useState("");
 
-  const { data: users = [] } = useUsuarios();
+  const { data: filteredUsers = [] } = useSearchUsers(searchQuery, 10);
   const { data: cargos = [] } = useEntidadeCargos(entidade.id);
   const addMemberMutation = useAddEntidadeMember();
   const queryClient = useQueryClient();
 
   const members = entidade.membros || [];
-
-  // Filter users based on search query
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return [];
-    }
-    const query = searchQuery.toLowerCase();
-    return users
-      .filter(
-        u =>
-          u.nome.toLowerCase().includes(query) ||
-          (u.email && u.email.toLowerCase().includes(query)) ||
-          (u.centro?.nome && u.centro.nome.toLowerCase().includes(query)) ||
-          (u.curso?.nome && u.curso.nome.toLowerCase().includes(query))
-      )
-      .slice(0, 10); // Limit to 10 results
-  }, [searchQuery, users]);
 
   // Check if user is already a member
   const isUserMember = (userId: string): Membro | undefined => {
@@ -117,6 +100,12 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
   const handleAddMember = async () => {
     if (!selectedUserId) {
       toast.error("Selecione um usuário");
+      return;
+    }
+
+    // Validate dates
+    if (startedAt && endedAt && new Date(startedAt) > new Date(endedAt)) {
+      toast.error("Data de início não pode ser posterior à data de término");
       return;
     }
 
@@ -157,7 +146,7 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
     }
   };
 
-  const selectedUser = users.find(u => u.id === selectedUserId);
+  const selectedUser = filteredUsers.find(u => u.id === selectedUserId);
   const selectedUserMembership = selectedUserId ? isUserMember(selectedUserId) : undefined;
 
   return (
@@ -293,6 +282,7 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
                   type="date"
                   value={startedAt}
                   onChange={e => setStartedAt(e.target.value)}
+                  max={endedAt || undefined}
                 />
               </div>
               <div className="space-y-2">
@@ -302,6 +292,7 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
                   type="date"
                   value={endedAt}
                   onChange={e => setEndedAt(e.target.value)}
+                  min={startedAt || undefined}
                 />
               </div>
             </div>

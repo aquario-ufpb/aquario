@@ -1,7 +1,7 @@
 "use client";
 
 import { useRequireAuth } from "@/lib/client/hooks/use-require-auth";
-import { useCurrentUser, useUsuarios } from "@/lib/client/hooks/use-usuarios";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { UsersTable } from "@/components/pages/admin/users-table";
 import { EntidadesTable } from "@/components/pages/admin/entidades-table";
 import { AdminPageSkeleton } from "@/components/pages/admin/admin-page-skeleton";
@@ -9,9 +9,8 @@ import { AdminPageSkeleton } from "@/components/pages/admin/admin-page-skeleton"
 export default function AdminPage() {
   const { isLoading: authLoading } = useRequireAuth({ requireRole: "MASTER_ADMIN" });
   const { data: user, isLoading: userLoading } = useCurrentUser();
-  const { isLoading } = useUsuarios();
 
-  if (authLoading || userLoading || isLoading) {
+  if (authLoading || userLoading) {
     return <AdminPageSkeleton />;
   }
 

@@ -140,3 +140,55 @@ export async function PUT(request: Request, context: RouteContext) {
     }
   });
 }
+
+export async function DELETE(request: Request, context: RouteContext) {
+  return await withAuth(request, async (_req, usuario) => {
+    const { id: entidadeId, membroId } = await context.params;
+
+    try {
+      const { entidadesRepository } = getContainer();
+
+      // Check if entidade exists
+      const entidade = await entidadesRepository.findById(entidadeId);
+      if (!entidade) {
+        return NextResponse.json({ message: "Entidade não encontrada." }, { status: 404 });
+      }
+
+      // Check if user has permission (MASTER_ADMIN or entidade ADMIN)
+      const isMasterAdmin = usuario.papelPlataforma === "MASTER_ADMIN";
+      const isEntidadeAdmin = entidade.membros?.some(
+        (m: { usuario: { id: string }; papel: string }) =>
+          m.usuario.id === usuario.id && m.papel === "ADMIN"
+      );
+
+      if (!isMasterAdmin && !isEntidadeAdmin) {
+        return NextResponse.json(
+          { message: "Você não tem permissão para deletar membros desta entidade." },
+          { status: 403 }
+        );
+      }
+
+      // Check if membership exists
+      const membership = await prisma.membroEntidade.findFirst({
+        where: {
+          id: membroId,
+          entidadeId: entidadeId,
+        },
+      });
+
+      if (!membership) {
+        return NextResponse.json({ message: "Membresia não encontrada." }, { status: 404 });
+      }
+
+      // Delete the membership
+      await prisma.membroEntidade.delete({
+        where: { id: membroId },
+      });
+
+      return NextResponse.json({ message: "Membresia deletada com sucesso." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao deletar membro";
+      return NextResponse.json({ message }, { status: 400 });
+    }
+  });
+}

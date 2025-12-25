@@ -97,6 +97,26 @@ export const useUpdateEntidadeMember = () => {
 };
 
 /**
+ * Hook to delete a member from an entidade
+ */
+export const useDeleteEntidadeMember = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ entidadeId, membroId }: { entidadeId: string; membroId: string }) => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return entidadesService.deleteMember(entidadeId, membroId, token);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.entidades.all });
+    },
+  });
+};
+
+/**
  * Hook to fetch cargos for an entidade
  */
 export const useEntidadeCargos = (entidadeId: string) => {

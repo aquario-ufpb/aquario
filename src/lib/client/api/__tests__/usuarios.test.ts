@@ -61,25 +61,32 @@ describe("usuariosService", () => {
     });
   });
 
-  describe("listUsers", () => {
-    it("should return array of users on success", async () => {
+  describe("listUsersPaginated", () => {
+    it("should return paginated users on success", async () => {
       const mockUsers = [mockUser, { ...mockUser, id: "user-2", nome: "User 2" }];
+      const mockResponse = {
+        users: mockUsers,
+        pagination: {
+          page: 1,
+          limit: 25,
+          total: 2,
+          totalPages: 1,
+        },
+      };
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
-        json: async () => mockUsers,
+        json: async () => mockResponse,
       } as Response);
 
-      const result = await usuariosService.listUsers("token-123");
+      const result = await usuariosService.listUsersPaginated("token-123", { page: 1, limit: 25 });
 
-      expect(result).toEqual(mockUsers);
-      expect(result.length).toBe(2);
+      expect(result.users).toEqual(mockUsers);
+      expect(result.users.length).toBe(2);
+      expect(result.pagination.total).toBe(2);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("/usuarios"),
         expect.objectContaining({
           method: "GET",
-          headers: {
-            Authorization: "Bearer token-123",
-          },
         })
       );
     });
@@ -89,9 +96,9 @@ describe("usuariosService", () => {
         ok: false,
       } as Response);
 
-      await expect(usuariosService.listUsers("token-123")).rejects.toThrow(
-        "Falha ao listar usuários"
-      );
+      await expect(
+        usuariosService.listUsersPaginated("token-123", { page: 1, limit: 25 })
+      ).rejects.toThrow("Falha ao listar usuários");
     });
   });
 

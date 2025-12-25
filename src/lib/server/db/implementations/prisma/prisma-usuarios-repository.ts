@@ -71,6 +71,102 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     return usuarios;
   }
 
+  async findManyPaginated(options: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ users: UsuarioWithRelations[]; total: number }> {
+    const page = options.page ?? 1;
+    const limit = options.limit ?? 25;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      prisma.usuario.findMany({
+        include: {
+          centro: true,
+          curso: true,
+        },
+        orderBy: {
+          nome: "asc",
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.usuario.count(),
+    ]);
+
+    return { users, total };
+  }
+
+  async search(options: { query: string; limit?: number }): Promise<UsuarioWithRelations[]> {
+    const limit = options.limit ?? 10;
+    const searchQuery = options.query.trim();
+
+    if (!searchQuery) {
+      return [];
+    }
+
+    // Normalize query for accent-insensitive search
+    const normalizedQuery = searchQuery
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+    const usuarios = await prisma.usuario.findMany({
+      where: {
+        OR: [
+          {
+            nome: {
+              contains: normalizedQuery,
+              mode: "insensitive",
+            },
+          },
+          {
+            email: {
+              contains: normalizedQuery,
+              mode: "insensitive",
+            },
+          },
+          {
+            centro: {
+              OR: [
+                {
+                  nome: {
+                    contains: normalizedQuery,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  sigla: {
+                    contains: normalizedQuery,
+                    mode: "insensitive",
+                  },
+                },
+              ],
+            },
+          },
+          {
+            curso: {
+              nome: {
+                contains: normalizedQuery,
+                mode: "insensitive",
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        centro: true,
+        curso: true,
+      },
+      orderBy: {
+        nome: "asc",
+      },
+      take: limit,
+    });
+
+    return usuarios;
+  }
+
   async markAsVerified(id: string): Promise<void> {
     await prisma.usuario.update({
       where: { id },

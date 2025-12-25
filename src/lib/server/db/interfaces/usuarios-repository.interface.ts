@@ -22,6 +22,19 @@ export type IUsuariosRepository = {
   findMany(): Promise<UsuarioWithRelations[]>;
 
   /**
+   * Find users with pagination
+   */
+  findManyPaginated(options: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ users: UsuarioWithRelations[]; total: number }>;
+
+  /**
+   * Search users with limit (for autocomplete/search)
+   */
+  search(options: { query: string; limit?: number }): Promise<UsuarioWithRelations[]>;
+
+  /**
    * Mark a user as email verified
    */
   markAsVerified(id: string): Promise<void>;

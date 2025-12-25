@@ -99,7 +99,31 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
       }
     });
 
-    return Array.from(memberMap.values());
+    const membersArray = Array.from(memberMap.values());
+
+    // Sort members by cargo ordem (lower ordem = higher priority)
+    // Members with cargo appear first, sorted by ordem
+    // Members without cargo appear last
+    return membersArray.sort((a, b) => {
+      const aOrdem = a.currentCargo?.ordem ?? Infinity;
+      const bOrdem = b.currentCargo?.ordem ?? Infinity;
+
+      // If both have cargo, sort by ordem
+      if (a.currentCargo && b.currentCargo) {
+        return aOrdem - bOrdem;
+      }
+
+      // If only one has cargo, it comes first
+      if (a.currentCargo && !b.currentCargo) {
+        return -1;
+      }
+      if (!a.currentCargo && b.currentCargo) {
+        return 1;
+      }
+
+      // If neither has cargo, maintain original order
+      return 0;
+    });
   }, [filteredMembers]);
 
   // Check if user can add members (MASTER_ADMIN or entidade ADMIN)

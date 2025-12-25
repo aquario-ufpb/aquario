@@ -249,6 +249,20 @@ export const entidadesService = {
     return response.json();
   },
 
+  deleteMember: async (entidadeId: string, membroId: string, token: string): Promise<void> => {
+    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_MEMBRO(entidadeId, membroId)}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Falha ao deletar membro");
+    }
+  },
+
   // Cargo management
   getCargos: async (
     entidadeId: string

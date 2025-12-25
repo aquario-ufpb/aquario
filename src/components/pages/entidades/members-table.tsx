@@ -11,11 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import type { Membro, Cargo } from "@/lib/shared/types/membro.types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useUpdateEntidadeMember } from "@/lib/client/hooks/use-entidades";
+import { useUpdateEntidadeMember, useDeleteEntidadeMember } from "@/lib/client/hooks/use-entidades";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/client/query-keys";
@@ -35,9 +35,20 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
   const [editingMemberEndedAt, setEditingMemberEndedAt] = useState("");
 
   const updateMemberMutation = useUpdateEntidadeMember();
+  const deleteMemberMutation = useDeleteEntidadeMember();
   const queryClient = useQueryClient();
 
   const handleUpdateMember = async (membroId: string) => {
+    // Validate dates
+    if (
+      editingMemberStartedAt &&
+      editingMemberEndedAt &&
+      new Date(editingMemberStartedAt) > new Date(editingMemberEndedAt)
+    ) {
+      toast.error("Data de início não pode ser posterior à data de término");
+      return;
+    }
+
     try {
       await updateMemberMutation.mutateAsync({
         entidadeId: entidade.id,
@@ -77,6 +88,36 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
     setEditingMemberEndedAt(
       membro.endedAt ? new Date(membro.endedAt).toISOString().split("T")[0] : ""
     );
+  };
+
+  const handleDeleteMember = async (membroId: string, userName: string) => {
+    if (
+      !confirm(
+        `Tem certeza que deseja remover "${userName}" desta entidade?\n\nEsta ação não pode ser desfeita.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteMemberMutation.mutateAsync({
+        entidadeId: entidade.id,
+        membroId,
+      });
+
+      toast.success("Membro removido", {
+        description: `${userName} foi removido da entidade.`,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.entidades.bySlug(entidade.slug),
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao remover membro";
+      toast.error("Erro ao remover membro", {
+        description: errorMessage,
+      });
+    }
   };
 
   return (
@@ -196,6 +237,7 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
                             value={editingMemberStartedAt}
                             onChange={e => setEditingMemberStartedAt(e.target.value)}
                             className="w-36 h-8"
+                            max={editingMemberEndedAt || undefined}
                           />
                         ) : (
                           <span className="text-sm">
@@ -213,6 +255,7 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
                             onChange={e => setEditingMemberEndedAt(e.target.value)}
                             className="w-36 h-8"
                             placeholder="Ativo"
+                            min={editingMemberStartedAt || undefined}
                           />
                         ) : (
                           <span className="text-sm">
@@ -242,13 +285,24 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
                               </Button>
                             </>
                           ) : (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => startEditingMember(membro)}
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => startEditingMember(membro)}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteMember(membro.id, membro.usuario.nome)}
+                                disabled={deleteMemberMutation.isPending}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
                           )}
                         </div>
                       </td>

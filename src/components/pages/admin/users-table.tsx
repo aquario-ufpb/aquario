@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import {
-  useUsuarios,
+  useUsuariosPaginated,
   useUpdateUserRole,
   useDeleteUser,
   useCreateFacadeUser,
 } from "@/lib/client/hooks/use-usuarios";
 import { useCentros, useCursos } from "@/lib/client/hooks";
-import type { User } from "@/lib/client/api/usuarios";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -34,8 +33,6 @@ import { Trash2, UserPlus } from "lucide-react";
 import { PaginationControls } from "@/components/shared/pagination-controls";
 
 export function UsersTable({ currentUserId }: { currentUserId: string }) {
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(25);
   const [isFacadeDialogOpen, setIsFacadeDialogOpen] = useState(false);
@@ -43,7 +40,20 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const [facadeCentroId, setFacadeCentroId] = useState("");
   const [facadeCursoId, setFacadeCursoId] = useState("");
 
-  const { data: users = [], isLoading, error: queryError, refetch } = useUsuarios();
+  const {
+    data: paginatedData,
+    isLoading,
+    error: queryError,
+    refetch,
+  } = useUsuariosPaginated({
+    page,
+    limit: itemsPerPage,
+  });
+
+  const users = paginatedData?.users ?? [];
+  const totalUsers = paginatedData?.pagination.total ?? 0;
+  const totalPages = paginatedData?.pagination.totalPages ?? 0;
+
   const updateRoleMutation = useUpdateUserRole();
   const deleteUserMutation = useDeleteUser();
   const createFacadeUserMutation = useCreateFacadeUser();
@@ -65,31 +75,6 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
       setFacadeCursoId("");
     }
   }, [facadeCentroId, cursos, facadeCursoId]);
-
-  // Filter users
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredUsers(users);
-    } else {
-      const query = searchQuery.toLowerCase();
-      setFilteredUsers(
-        users.filter(
-          u =>
-            u.nome.toLowerCase().includes(query) ||
-            (u.email && u.email.toLowerCase().includes(query)) ||
-            u.centro.nome.toLowerCase().includes(query) ||
-            u.curso.nome.toLowerCase().includes(query)
-        )
-      );
-    }
-    setPage(1);
-  }, [searchQuery, users]);
-
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const startIndex = (page - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
   const handleRoleUpdate = async (userId: string, newRole: "USER" | "MASTER_ADMIN") => {
     try {
@@ -174,12 +159,6 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-4">
-          <Input
-            placeholder="Buscar por nome, email, centro ou curso..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="flex-1"
-          />
           <Dialog open={isFacadeDialogOpen} onOpenChange={setIsFacadeDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="default" disabled={isLoading}>
@@ -303,14 +282,14 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
               </tr>
             </thead>
             <tbody>
-              {paginatedUsers.length === 0 ? (
+              {users.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-8 text-muted-foreground">
-                    {searchQuery ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}
+                    {isLoading ? "Carregando..." : "Nenhum usuário cadastrado"}
                   </td>
                 </tr>
               ) : (
-                paginatedUsers.map(userItem => (
+                users.map(userItem => (
                   <tr key={userItem.id} className="border-b hover:bg-muted/50">
                     <td className="p-4 font-medium">
                       {userItem.nome}
@@ -416,14 +395,12 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
         <PaginationControls
           currentPage={page}
           totalPages={totalPages}
-          totalItems={filteredUsers.length}
+          totalItems={totalUsers}
           itemsPerPage={itemsPerPage}
           onPageChange={setPage}
           onItemsPerPageChange={setItemsPerPage}
           itemLabel="usuário"
           itemLabelPlural="usuários"
-          totalItemsLabel={searchQuery ? users.length.toString() : undefined}
-          showTotalFromUnfiltered={!!searchQuery}
         />
       </CardContent>
     </Card>

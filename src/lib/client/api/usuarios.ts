@@ -45,14 +45,47 @@ export const usuariosService = {
     return response.json();
   },
 
-  listUsers: async (token: string): Promise<User[]> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}`, {
+  listUsersPaginated: async (
+    token: string,
+    options: { page?: number; limit?: number }
+  ): Promise<{
+    users: User[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }> => {
+    const params = new URLSearchParams();
+    if (options.page) {
+      params.append("page", options.page.toString());
+    }
+    if (options.limit) {
+      params.append("limit", options.limit.toString());
+    }
+
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}?${params.toString()}`, {
       method: "GET",
-      token, // Still accept token for explicit override if needed
+      token,
     });
 
     if (!response.ok) {
       throw new Error("Falha ao listar usuários");
+    }
+
+    return response.json();
+  },
+
+  searchUsers: async (token: string, query: string, limit?: number): Promise<User[]> => {
+    const params = new URLSearchParams();
+    params.append("search", query);
+    if (limit) {
+      params.append("limit", limit.toString());
+    }
+
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}?${params.toString()}`, {
+      method: "GET",
+      token,
+    });
+
+    if (!response.ok) {
+      throw new Error("Falha ao buscar usuários");
     }
 
     return response.json();

@@ -63,6 +63,59 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     return Promise.resolve([...this.usuarios].sort((a, b) => a.nome.localeCompare(b.nome)));
   }
 
+  findManyPaginated(options: {
+    page?: number;
+    limit?: number;
+  }): Promise<{ users: UsuarioWithRelations[]; total: number }> {
+    const page = options.page ?? 1;
+    const limit = options.limit ?? 25;
+    const skip = (page - 1) * limit;
+
+    const sorted = [...this.usuarios].sort((a, b) => a.nome.localeCompare(b.nome));
+    const users = sorted.slice(skip, skip + limit);
+    const total = this.usuarios.length;
+
+    return Promise.resolve({ users, total });
+  }
+
+  search(options: { query: string; limit?: number }): Promise<UsuarioWithRelations[]> {
+    const limit = options.limit ?? 10;
+    const searchQuery = options.query.trim().toLowerCase();
+
+    if (!searchQuery) {
+      return Promise.resolve([]);
+    }
+
+    // Normalize query for accent-insensitive search
+    const normalizeString = (str: string): string => {
+      return str
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+    };
+
+    const normalizedQuery = normalizeString(searchQuery);
+
+    const filtered = this.usuarios.filter(u => {
+      const normalizedNome = normalizeString(u.nome);
+      const normalizedEmail = u.email ? normalizeString(u.email) : "";
+      const normalizedCentroNome = normalizeString(u.centro.nome);
+      const normalizedCentroSigla = normalizeString(u.centro.sigla);
+      const normalizedCursoNome = normalizeString(u.curso.nome);
+
+      return (
+        normalizedNome.includes(normalizedQuery) ||
+        normalizedEmail.includes(normalizedQuery) ||
+        normalizedCentroNome.includes(normalizedQuery) ||
+        normalizedCentroSigla.includes(normalizedQuery) ||
+        normalizedCursoNome.includes(normalizedQuery)
+      );
+    });
+
+    const sorted = filtered.sort((a, b) => a.nome.localeCompare(b.nome));
+    return Promise.resolve(sorted.slice(0, limit));
+  }
+
   markAsVerified(id: string): Promise<void> {
     const usuario = this.usuarios.find(u => u.id === id);
     if (usuario) {
