@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useBackend } from "@/lib/shared/config/env";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
+import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
 
 export default function PerfilPage() {
   const { isEnabled: backendEnabled } = useBackend();
@@ -21,6 +22,8 @@ export default function PerfilPage() {
   const uploadPhotoMutation = useUploadPhoto();
   const deletePhotoMutation = useDeletePhoto();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
 
   // Redirect to home if backend is disabled
   useEffect(() => {
@@ -59,18 +62,47 @@ export default function PerfilPage() {
       return;
     }
 
+    // Create object URL for the crop dialog
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImageUrl(imageUrl);
+    setCropDialogOpen(true);
+  };
+
+  const handleCropConfirm = async (croppedBlob: Blob) => {
+    // Close dialog immediately to prevent multiple clicks
+    setCropDialogOpen(false);
+
+    // Clean up object URL
+    if (selectedImageUrl) {
+      URL.revokeObjectURL(selectedImageUrl);
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    // Create a File object from the cropped blob
+    const croppedFile = new File([croppedBlob], "profile-photo.jpg", { type: "image/jpeg" });
+
     try {
-      await uploadPhotoMutation.mutateAsync(file);
-      // React Query automatically refetches user data after mutation
+      await uploadPhotoMutation.mutateAsync(croppedFile);
       toast.success("Foto de perfil atualizada com sucesso!");
     } catch (error) {
       console.error("Error uploading photo:", error);
       toast.error(error instanceof Error ? error.message : "Erro ao fazer upload da foto.");
-    } finally {
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+    }
+  };
+
+  const handleCropCancel = () => {
+    setCropDialogOpen(false);
+    // Clean up object URL
+    if (selectedImageUrl) {
+      URL.revokeObjectURL(selectedImageUrl);
+    }
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -222,6 +254,13 @@ export default function PerfilPage() {
           )}
         </CardContent>
       </Card>
+
+      <PhotoCropDialog
+        open={cropDialogOpen}
+        imageUrl={selectedImageUrl}
+        onCancel={handleCropCancel}
+        onConfirm={handleCropConfirm}
+      />
     </main>
   );
 }
