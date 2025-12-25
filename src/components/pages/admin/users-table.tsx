@@ -50,12 +50,21 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const { data: centros = [] } = useCentros();
   const { data: cursos = [] } = useCursos(facadeCentroId);
 
-  // Reset cursoId when centroId changes
+  // Auto-select first centro when dialog opens and centros are available
   useEffect(() => {
-    if (!facadeCentroId) {
+    if (isFacadeDialogOpen && centros.length > 0 && !facadeCentroId) {
+      setFacadeCentroId(centros[0].id);
+    }
+  }, [isFacadeDialogOpen, centros, facadeCentroId]);
+
+  // Auto-select first curso when centro is selected and cursos are available
+  useEffect(() => {
+    if (facadeCentroId && cursos.length > 0 && !facadeCursoId) {
+      setFacadeCursoId(cursos[0].id);
+    } else if (!facadeCentroId) {
       setFacadeCursoId("");
     }
-  }, [facadeCentroId]);
+  }, [facadeCentroId, cursos, facadeCursoId]);
 
   // Filter users
   useEffect(() => {
