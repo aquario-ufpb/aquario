@@ -21,6 +21,8 @@ export type Membro = {
     curso?: { nome: string } | null;
   };
   papel: PapelMembro;
+  startedAt?: string; // ISO date string
+  endedAt?: string | null; // ISO date string or null for active members
 };
 
 /**

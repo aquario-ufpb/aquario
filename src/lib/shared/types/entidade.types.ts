@@ -30,7 +30,7 @@ export type Person = {
  *
  * Note on data sources:
  * - `people`: Only used by local file provider (from JSON files).
- *             For backend provider, derive from `membros` using `getPeopleFromEntidade()`.
+ *             For backend provider, use the dedicated Members section instead.
  * - `membros`: Only available when using backend provider.
  *              Contains full membership information including user IDs and roles.
  *              Used for permission checks (e.g., checking if user is ADMIN).
@@ -63,7 +63,11 @@ export type Entidade = {
 
 /**
  * Helper function to get people array from an entidade
- * Handles both local provider (direct people array) and backend provider (derived from membros)
+ *
+ * Note: When using backend provider, the dedicated Members section should be used instead.
+ * This function is primarily for local file provider (uses entidade.people directly).
+ *
+ * The membros derivation below is kept as a fallback for edge cases.
  */
 export function getPeopleFromEntidade(entidade: Entidade): Person[] {
   // If people array exists (local provider), use it
@@ -71,7 +75,7 @@ export function getPeopleFromEntidade(entidade: Entidade): Person[] {
     return entidade.people;
   }
 
-  // Otherwise, derive from membros (backend provider)
+  // Fallback: derive from membros (not recommended for backend - use Members section instead)
   if (entidade.membros) {
     return entidade.membros.map(membro => ({
       name: membro.usuario.nome,

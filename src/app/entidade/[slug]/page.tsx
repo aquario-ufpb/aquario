@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { EditarEntidadeDialog } from "@/components/pages/entidades/editar-entidade-dialog";
+import { EntidadeMembersSection } from "@/components/pages/entidades/entidade-members-section";
 import { isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
 import { useBackend } from "@/lib/shared/config/env";
 
@@ -242,38 +243,42 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
         </div>
       )}
 
-      {/* People Section */}
-      {getPeopleFromEntidade(entidade).length > 0 && (
-        <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-4">
-          <h2 className="text-2xl md:text-3xl font-semibold mb-8">Pessoas</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {getPeopleFromEntidade(entidade).map((person, index) => (
-              <Card
-                key={index}
-                className="hover:bg-accent/20 transition-all duration-200 border-border/50"
-              >
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-lg mb-2">{person.name}</h3>
-                  {person.role && (
-                    <p className="text-sm font-medium text-foreground mb-1">{person.role}</p>
-                  )}
-                  {person.profession && (
-                    <p className="text-xs text-muted-foreground mb-3">{person.profession}</p>
-                  )}
-                  {person.email && (
-                    <a
-                      href={`mailto:${person.email}`}
-                      className="text-xs text-primary hover:underline flex items-center gap-1"
-                    >
-                      <Mail className="w-3 h-3" />
-                      {person.email}
-                    </a>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+      {/* Members Section (Backend) or People Section (Local) */}
+      {backendEnabled ? (
+        <EntidadeMembersSection entidade={entidade} />
+      ) : (
+        getPeopleFromEntidade(entidade).length > 0 && (
+          <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-4">
+            <h2 className="text-2xl md:text-3xl font-semibold mb-8">Pessoas</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {getPeopleFromEntidade(entidade).map((person, index) => (
+                <Card
+                  key={index}
+                  className="hover:bg-accent/20 transition-all duration-200 border-border/50"
+                >
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg mb-2">{person.name}</h3>
+                    {person.role && (
+                      <p className="text-sm font-medium text-foreground mb-1">{person.role}</p>
+                    )}
+                    {person.profession && (
+                      <p className="text-xs text-muted-foreground mb-3">{person.profession}</p>
+                    )}
+                    {person.email && (
+                      <a
+                        href={`mailto:${person.email}`}
+                        className="text-xs text-primary hover:underline flex items-center gap-1"
+                      >
+                        <Mail className="w-3 h-3" />
+                        {person.email}
+                      </a>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
+        )
       )}
 
       {/* Divider */}
