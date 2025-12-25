@@ -1,4 +1,4 @@
-import { Vaga, TipoVaga, EntidadeVaga } from "@/components/pages/vagas/vacancy-card";
+import type { Vaga, TipoVaga, EntidadeVaga } from "@/lib/shared/types";
 
 export type VagasDataProvider = {
   /**

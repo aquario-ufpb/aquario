@@ -34,8 +34,8 @@ type EditarEntidadeDialogProps = {
 
 const TIPO_OPTIONS: { value: TipoEntidade; label: string }[] = [
   { value: "LABORATORIO", label: "Laboratório" },
-  { value: "GRUPO_ESTUDANTIL", label: "Grupo Estudantil" },
-  { value: "LIGA_ESTUDANTIL", label: "Liga Estudantil" },
+  { value: "GRUPO", label: "Grupo" },
+  { value: "LIGA_ACADEMICA", label: "Liga Acadêmica" },
   { value: "CENTRO_ACADEMICO", label: "Centro Acadêmico" },
   { value: "ATLETICA", label: "Atlética" },
   { value: "EMPRESA", label: "Empresa" },

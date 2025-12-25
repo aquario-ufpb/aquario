@@ -18,9 +18,9 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
     switch (entidade.tipo) {
       case "LABORATORIO":
         return "LAB";
-      case "GRUPO_ESTUDANTIL":
+      case "GRUPO":
         return "GRUPO";
-      case "LIGA_ESTUDANTIL":
+      case "LIGA_ACADEMICA":
         return "LIGA";
       case "CENTRO_ACADEMICO":
         return "CA";
@@ -113,10 +113,10 @@ export default function EntidadesPage() {
           filtered = filtered.filter(e => e.tipo === "LABORATORIO");
           break;
         case "grupos":
-          filtered = filtered.filter(e => e.tipo === "GRUPO_ESTUDANTIL");
+          filtered = filtered.filter(e => e.tipo === "GRUPO");
           break;
         case "ligas":
-          filtered = filtered.filter(e => e.tipo === "LIGA_ESTUDANTIL");
+          filtered = filtered.filter(e => e.tipo === "LIGA_ACADEMICA");
           break;
         case "academicos":
           filtered = filtered.filter(e => e.tipo === "CENTRO_ACADEMICO" || e.tipo === "ATLETICA");
@@ -152,9 +152,7 @@ export default function EntidadesPage() {
   const laboratorios = filteredEntidades.filter(e => e.tipo === "LABORATORIO").sort(sortEntidades);
 
   const gruposELigas = filteredEntidades
-    .filter(
-      e => e.tipo === "GRUPO_ESTUDANTIL" || e.tipo === "LIGA_ESTUDANTIL" || e.tipo === "OUTRO"
-    )
+    .filter(e => e.tipo === "GRUPO" || e.tipo === "LIGA_ACADEMICA" || e.tipo === "OUTRO")
     .sort(sortEntidades);
 
   const centrosEAtleticas = filteredEntidades

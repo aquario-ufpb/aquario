@@ -11,7 +11,6 @@ import React, {
 import { usuariosService, type User } from "@/lib/client/api/usuarios";
 import { tokenManager } from "@/lib/client/api/token-manager";
 import { identify, reset as resetPostHog } from "@/analytics/posthog-client";
-import { USE_BACKEND } from "@/lib/shared/config/env";
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -65,21 +64,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           const userData = await usuariosService.getCurrentUser(token);
           setUser(userData);
-          // Identify user in PostHog (only if backend is enabled)
-          if (USE_BACKEND) {
-            identify(userData.id, {
-              email: userData.email ?? undefined,
-              name: userData.nome,
-              papelPlataforma: userData.papelPlataforma,
-              centroId: userData.centro.id,
-              centroNome: userData.centro.nome,
-              centroSigla: userData.centro.sigla,
-              cursoId: userData.curso.id,
-              cursoNome: userData.curso.nome,
-              eVerificado: userData.eVerificado,
-              permissoes: userData.permissoes,
-            });
-          }
+          // Identify user in PostHog (analytics will be gated by ANALYTICS_ENABLED)
+          identify(userData.id, {
+            email: userData.email ?? undefined,
+            name: userData.nome,
+            papelPlataforma: userData.papelPlataforma,
+            centroId: userData.centro.id,
+            centroNome: userData.centro.nome,
+            centroSigla: userData.centro.sigla,
+            cursoId: userData.curso.id,
+            cursoNome: userData.curso.nome,
+            eVerificado: userData.eVerificado,
+            permissoes: userData.permissoes,
+          });
         } catch (error) {
           console.error("Falha ao buscar usuário:", error);
           logout();

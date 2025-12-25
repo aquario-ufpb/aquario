@@ -86,19 +86,20 @@ JWT_SECRET="your-secret-key-at-least-32-characters-long"
 # Leave RESEND_API_KEY empty for mock emails
 ```
 
-### Option 2: Frontend Only
+### Option 2: Memory Mode (Testing Only)
 
-For UI work without any database setup:
+For testing without a database (no entidades data):
 
 ```bash
 # In .env:
 DB_PROVIDER=memory
 NEXT_PUBLIC_GUIAS_DATA_PROVIDER=local
-NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER=local
 JWT_SECRET="any-32-character-secret-for-dev"
 ```
 
-Then just `npm run dev` — data comes from git submodules.
+Then just `npm run dev`.
+
+**Note:** Entidades always come from the backend API. With memory mode, the in-memory repository starts empty. For actual entidades data, use Option 1 with a seeded database.
 
 ### Option 3: Connected to Staging
 
@@ -224,10 +225,11 @@ See `.env.example` for the complete list with detailed comments.
 
 ### Data Providers
 
-| Variable                              | Description                             |
-| ------------------------------------- | --------------------------------------- |
-| `NEXT_PUBLIC_GUIAS_DATA_PROVIDER`     | `local` (submodules) or `backend` (API) |
-| `NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER` | `local` (submodules) or `backend` (API) |
+| Variable                          | Description                             |
+| --------------------------------- | --------------------------------------- |
+| `NEXT_PUBLIC_GUIAS_DATA_PROVIDER` | `local` (submodules) or `backend` (API) |
+
+**Note:** Entidades always use the backend API. Data is seeded from submodules into the database.
 
 ### Analytics
 

@@ -16,10 +16,8 @@ import {
 } from "@/components/ui/select";
 import { authService } from "@/lib/client/api/auth";
 import { useCentros, useCursos } from "@/lib/client/hooks";
-import { useBackend } from "@/lib/shared/config/env";
 
 export default function Registro() {
-  const { isEnabled: backendEnabled } = useBackend();
   const router = useRouter();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -34,13 +32,6 @@ export default function Registro() {
   // Use React Query hooks
   const { data: centros = [], isLoading: isLoadingCentros, error: centrosError } = useCentros();
   const { data: cursos = [], isLoading: isLoadingCursos, error: cursosError } = useCursos(centroId);
-
-  // Redirect to home if backend is disabled
-  useEffect(() => {
-    if (!backendEnabled) {
-      router.replace("/");
-    }
-  }, [backendEnabled, router]);
 
   // Handle errors from React Query
   useEffect(() => {
@@ -61,10 +52,6 @@ export default function Registro() {
       setCursoId("");
     }
   }, [centroId]);
-
-  if (!backendEnabled) {
-    return null;
-  }
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();

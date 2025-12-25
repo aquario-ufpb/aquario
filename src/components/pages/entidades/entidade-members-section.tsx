@@ -11,7 +11,6 @@ import type { Entidade } from "@/lib/shared/types";
 import { type Membro, isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
 import { AddMemberDialog } from "./add-member-dialog";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
-import { useBackend } from "@/lib/shared/config/env";
 import Image from "next/image";
 
 type EntidadeMembersSectionProps = {
@@ -30,7 +29,6 @@ type MergedMember = {
 
 export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps) {
   const { data: user } = useCurrentUser();
-  const { isEnabled: backendEnabled } = useBackend();
   const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
   const [showOldMembers, setShowOldMembers] = useState(false);
 
@@ -99,7 +97,6 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
 
   // Check if user can add members (MASTER_ADMIN or entidade ADMIN)
   const canAddMembers =
-    backendEnabled &&
     user &&
     (user.papelPlataforma === "MASTER_ADMIN" || isUserAdminOfEntidade(user.id, entidade.membros));
 

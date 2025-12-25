@@ -7,16 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useBackend } from "@/lib/shared/config/env";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
 
 export default function PerfilPage() {
-  const { isEnabled: backendEnabled } = useBackend();
-  const router = useRouter();
   const { isLoading: authLoading } = useRequireAuth(); // Only for auth check/redirect
   const { data: user, isLoading: userLoading } = useCurrentUser(); // Get user from React Query
   const uploadPhotoMutation = useUploadPhoto();
@@ -33,17 +29,6 @@ export default function PerfilPage() {
       }
     };
   }, [selectedImageUrl]);
-
-  // Redirect to home if backend is disabled
-  useEffect(() => {
-    if (!backendEnabled) {
-      router.replace("/");
-    }
-  }, [backendEnabled, router]);
-
-  if (!backendEnabled) {
-    return null;
-  }
 
   const getInitials = (name: string) => {
     const names = name.split(" ");

@@ -9,7 +9,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Monitor, CalendarDays } from "lucide-react";
-import { Vaga } from "@/components/pages/vagas/vacancy-card";
+import type { Vaga } from "@/lib/shared/types";
 
 type VagaProfileCardProps = {
   vaga: Vaga;

@@ -60,16 +60,17 @@ npm run db:migrate
 npm run dev
 ```
 
-**Frontend Only (no Database):**
+**Memory Mode (Testing Only):**
 
 ```bash
 # Set in .env:
 DB_PROVIDER=memory
 NEXT_PUBLIC_GUIAS_DATA_PROVIDER=local
-NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER=local
 ```
 
 > 💡 **Tip:** Email is automatically mocked when `RESEND_API_KEY` is not set. Users are auto-verified in dev mode.
+> 
+> **Note:** Entidades always come from the backend API. With memory mode, the repository starts empty. For actual entidades data, use a seeded database.
 
 ## Code Standards
 
