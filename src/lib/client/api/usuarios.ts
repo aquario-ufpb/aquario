@@ -52,7 +52,7 @@ export const usuariosService = {
 
   listUsersPaginated: async (
     token: string,
-    options: { page?: number; limit?: number }
+    options: { page?: number; limit?: number; filter?: "all" | "facade" | "real" }
   ): Promise<{
     users: User[];
     pagination: { page: number; limit: number; total: number; totalPages: number };
@@ -63,6 +63,9 @@ export const usuariosService = {
     }
     if (options.limit) {
       params.append("limit", options.limit.toString());
+    }
+    if (options.filter && options.filter !== "all") {
+      params.append("filter", options.filter);
     }
 
     const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}?${params.toString()}`, {

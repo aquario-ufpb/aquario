@@ -74,13 +74,20 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
   async findManyPaginated(options: {
     page?: number;
     limit?: number;
+    filter?: "all" | "facade" | "real";
   }): Promise<{ users: UsuarioWithRelations[]; total: number }> {
     const page = options.page ?? 1;
     const limit = options.limit ?? 25;
     const skip = (page - 1) * limit;
+    const filter = options.filter ?? "all";
+
+    // Build where clause based on filter
+    const where =
+      filter === "facade" ? { eFacade: true } : filter === "real" ? { eFacade: false } : undefined;
 
     const [users, total] = await Promise.all([
       prisma.usuario.findMany({
+        where,
         include: {
           centro: true,
           curso: true,
@@ -91,7 +98,7 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
         skip,
         take: limit,
       }),
-      prisma.usuario.count(),
+      prisma.usuario.count({ where }),
     ]);
 
     return { users, total };

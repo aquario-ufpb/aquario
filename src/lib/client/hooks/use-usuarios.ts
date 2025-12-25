@@ -26,11 +26,15 @@ export const useCurrentUser = () => {
 /**
  * Hook to list users with pagination (admin only)
  */
-export const useUsuariosPaginated = (options: { page?: number; limit?: number }) => {
+export const useUsuariosPaginated = (options: {
+  page?: number;
+  limit?: number;
+  filter?: "all" | "facade" | "real";
+}) => {
   const { token } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKeys.usuarios.all, "paginated", options.page, options.limit],
+    queryKey: [...queryKeys.usuarios.all, "paginated", options.page, options.limit, options.filter],
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");

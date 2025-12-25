@@ -55,20 +55,10 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   } = useUsuariosPaginated({
     page,
     limit: itemsPerPage,
+    filter: userFilter,
   });
 
-  // Filter users based on selected filter
-  const allUsers = paginatedData?.users ?? [];
-  const users = allUsers.filter(user => {
-    if (userFilter === "facade") {
-      return user.eFacade;
-    }
-    if (userFilter === "real") {
-      return !user.eFacade;
-    }
-    return true;
-  });
-
+  const users = paginatedData?.users ?? [];
   const totalUsers = paginatedData?.pagination.total ?? 0;
   const totalPages = paginatedData?.pagination.totalPages ?? 0;
 
@@ -309,7 +299,13 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
             <Label htmlFor="user-filter" className="text-sm font-medium">
               Filtrar:
             </Label>
-            <Select value={userFilter} onValueChange={(value: UserFilter) => setUserFilter(value)}>
+            <Select
+              value={userFilter}
+              onValueChange={(value: UserFilter) => {
+                setUserFilter(value);
+                setPage(1); // Reset to first page when filter changes
+              }}
+            >
               <SelectTrigger id="user-filter" className="w-40">
                 <SelectValue />
               </SelectTrigger>

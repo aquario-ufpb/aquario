@@ -54,13 +54,16 @@ export function GET(request: Request) {
     // Check if this is a paginated request
     const page = searchParams.get("page");
     const limit = searchParams.get("limit");
+    const filter = searchParams.get("filter") as "all" | "facade" | "real" | null;
 
     if (page || limit) {
       const pageNum = parseInt(page || "1", 10);
       const limitNum = parseInt(limit || "25", 10);
+      const validFilter = filter && ["all", "facade", "real"].includes(filter) ? filter : "all";
       const { users, total } = await usuariosRepository.findManyPaginated({
         page: pageNum,
         limit: Math.min(limitNum, 100), // Cap at 100 for safety
+        filter: validFilter,
       });
 
       return NextResponse.json({

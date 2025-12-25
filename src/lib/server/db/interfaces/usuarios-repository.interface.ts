@@ -27,6 +27,7 @@ export type IUsuariosRepository = {
   findManyPaginated(options: {
     page?: number;
     limit?: number;
+    filter?: "all" | "facade" | "real";
   }): Promise<{ users: UsuarioWithRelations[]; total: number }>;
 
   /**

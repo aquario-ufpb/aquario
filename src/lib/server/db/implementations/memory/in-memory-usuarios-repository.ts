@@ -66,14 +66,24 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
   findManyPaginated(options: {
     page?: number;
     limit?: number;
+    filter?: "all" | "facade" | "real";
   }): Promise<{ users: UsuarioWithRelations[]; total: number }> {
     const page = options.page ?? 1;
     const limit = options.limit ?? 25;
     const skip = (page - 1) * limit;
+    const filter = options.filter ?? "all";
 
-    const sorted = [...this.usuarios].sort((a, b) => a.nome.localeCompare(b.nome));
+    // Filter users based on filter option
+    let filteredUsers = [...this.usuarios];
+    if (filter === "facade") {
+      filteredUsers = filteredUsers.filter(u => u.eFacade);
+    } else if (filter === "real") {
+      filteredUsers = filteredUsers.filter(u => !u.eFacade);
+    }
+
+    const sorted = filteredUsers.sort((a, b) => a.nome.localeCompare(b.nome));
     const users = sorted.slice(skip, skip + limit);
-    const total = this.usuarios.length;
+    const total = filteredUsers.length;
 
     return Promise.resolve({ users, total });
   }
