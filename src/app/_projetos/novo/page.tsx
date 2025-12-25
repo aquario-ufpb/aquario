@@ -54,7 +54,7 @@ export default function NovoProjetoPage() {
     };
 
     fetchUsuarios();
-  }, [isAuthLoading, user, router, setUsuarios]);
+  }, [isLoading, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

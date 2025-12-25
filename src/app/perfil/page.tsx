@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useBackend } from "@/lib/shared/config/env";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
