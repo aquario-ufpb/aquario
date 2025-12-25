@@ -80,7 +80,7 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
   };
 
   return (
-    <ScrollArea className="flex-1 border rounded-lg">
+    <ScrollArea className="max-h-[400px] border rounded-lg">
       <div className="min-w-full">
         <table className="w-full">
           <thead className="bg-muted/50 sticky top-0">
