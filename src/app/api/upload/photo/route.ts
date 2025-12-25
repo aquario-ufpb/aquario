@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
+import { formatUserResponse } from "@/lib/server/utils/format-user-response";
 
 /**
  * POST /api/upload/photo
@@ -41,8 +42,15 @@ export async function POST(request: Request) {
 
       const { blobStorage, usuariosRepository } = getContainer();
 
-      // Generate unique filename with timestamp to avoid caching issues
-      const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
+      // Map MIME type to safe file extension (don't trust user-provided filename)
+      const mimeToExtension: Record<string, string> = {
+        "image/jpeg": "jpg",
+        "image/jpg": "jpg", // Non-standard but some browsers send this
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/gif": "gif",
+      };
+      const extension = mimeToExtension[file.type] || "jpg";
       const timestamp = Date.now();
       const filename = `photos/${usuario.id}-${timestamp}.${extension}`;
 
@@ -78,24 +86,7 @@ export async function POST(request: Request) {
         );
       }
 
-      return NextResponse.json({
-        id: updatedUser.id,
-        nome: updatedUser.nome,
-        email: updatedUser.email,
-        papelPlataforma: updatedUser.papelPlataforma,
-        eVerificado: updatedUser.eVerificado,
-        urlFotoPerfil: updatedUser.urlFotoPerfil,
-        centro: {
-          id: updatedUser.centro.id,
-          nome: updatedUser.centro.nome,
-          sigla: updatedUser.centro.sigla,
-        },
-        curso: {
-          id: updatedUser.curso.id,
-          nome: updatedUser.curso.nome,
-        },
-        permissoes: updatedUser.permissoes,
-      });
+      return NextResponse.json(formatUserResponse(updatedUser));
     } catch (error) {
       // If upload succeeded but database update failed, try to clean up the uploaded file
       if (uploadedUrl) {

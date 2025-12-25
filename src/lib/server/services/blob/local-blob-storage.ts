@@ -1,5 +1,5 @@
 import { writeFile, mkdir, unlink, access } from "fs/promises";
-import { join } from "path";
+import { join, normalize, resolve } from "path";
 import { existsSync } from "fs";
 import type { IBlobStorage } from "./blob-storage.interface";
 
@@ -37,9 +37,36 @@ export class LocalBlobStorage implements IBlobStorage {
   }
 
   /**
+   * Validate path to prevent path traversal attacks
+   * Ensures the path doesn't contain ".." or escape baseDir
+   */
+  private validatePath(path: string): void {
+    // Normalize the path to resolve any ".." or "." components
+    const normalizedPath = normalize(path);
+
+    // Check for path traversal attempts
+    if (
+      normalizedPath.includes("..") ||
+      normalizedPath.startsWith("/") ||
+      normalizedPath.startsWith("\\")
+    ) {
+      throw new Error("Invalid path: path traversal detected");
+    }
+
+    // Ensure the resolved path stays within baseDir
+    const fullPath = resolve(this.baseDir, normalizedPath);
+    const resolvedBase = resolve(this.baseDir);
+
+    if (!fullPath.startsWith(resolvedBase)) {
+      throw new Error("Invalid path: path escapes base directory");
+    }
+  }
+
+  /**
    * Convert a storage path to a file system path
    */
   private getFilePath(path: string): string {
+    this.validatePath(path);
     return join(this.baseDir, path);
   }
 
@@ -54,8 +81,9 @@ export class LocalBlobStorage implements IBlobStorage {
    * Extract path from URL (for delete operations)
    */
   private extractPath(urlOrPath: string): string {
-    if (urlOrPath.startsWith(this.publicUrl)) {
-      return urlOrPath.replace(this.publicUrl + "/", "");
+    const prefix = this.publicUrl + "/";
+    if (urlOrPath.startsWith(prefix)) {
+      return urlOrPath.slice(prefix.length);
     }
     return urlOrPath;
   }

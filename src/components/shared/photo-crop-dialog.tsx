@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ZoomIn } from "lucide-react";
+import { toast } from "sonner";
 
 type PhotoCropDialogProps = {
   open: boolean;
@@ -94,6 +95,7 @@ export function PhotoCropDialog({ open, imageUrl, onCancel, onConfirm }: PhotoCr
       onConfirm(croppedBlob);
     } catch (error) {
       console.error("Error cropping image:", error);
+      toast.error("Erro ao processar imagem. Tente novamente.");
     } finally {
       setIsProcessing(false);
     }

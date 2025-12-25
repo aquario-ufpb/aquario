@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
+import { formatUserResponse } from "@/lib/server/utils/format-user-response";
 import { z } from "zod";
 
 const updatePhotoSchema = z.object({
@@ -43,24 +44,7 @@ export async function PATCH(request: Request) {
         );
       }
 
-      return NextResponse.json({
-        id: updatedUser.id,
-        nome: updatedUser.nome,
-        email: updatedUser.email,
-        papelPlataforma: updatedUser.papelPlataforma,
-        eVerificado: updatedUser.eVerificado,
-        urlFotoPerfil: updatedUser.urlFotoPerfil,
-        centro: {
-          id: updatedUser.centro.id,
-          nome: updatedUser.centro.nome,
-          sigla: updatedUser.centro.sigla,
-        },
-        curso: {
-          id: updatedUser.curso.id,
-          nome: updatedUser.curso.nome,
-        },
-        permissoes: updatedUser.permissoes,
-      });
+      return NextResponse.json(formatUserResponse(updatedUser));
     } catch (error) {
       if (error instanceof z.ZodError) {
         return NextResponse.json(
@@ -106,24 +90,7 @@ export async function DELETE(request: Request) {
         );
       }
 
-      return NextResponse.json({
-        id: updatedUser.id,
-        nome: updatedUser.nome,
-        email: updatedUser.email,
-        papelPlataforma: updatedUser.papelPlataforma,
-        eVerificado: updatedUser.eVerificado,
-        urlFotoPerfil: updatedUser.urlFotoPerfil,
-        centro: {
-          id: updatedUser.centro.id,
-          nome: updatedUser.centro.nome,
-          sigla: updatedUser.centro.sigla,
-        },
-        curso: {
-          id: updatedUser.curso.id,
-          nome: updatedUser.curso.nome,
-        },
-        permissoes: updatedUser.permissoes,
-      });
+      return NextResponse.json(formatUserResponse(updatedUser));
     } catch (error) {
       console.error("Error deleting profile photo:", error);
       return NextResponse.json({ message: "Erro ao deletar foto de perfil." }, { status: 500 });

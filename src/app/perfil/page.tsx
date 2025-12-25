@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useBackend } from "@/lib/shared/config/env";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
@@ -24,6 +24,15 @@ export default function PerfilPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
+
+  // Cleanup object URL on unmount or when URL changes to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (selectedImageUrl) {
+        URL.revokeObjectURL(selectedImageUrl);
+      }
+    };
+  }, [selectedImageUrl]);
 
   // Redirect to home if backend is disabled
   useEffect(() => {
@@ -162,6 +171,9 @@ export default function PerfilPage() {
               {/* Hover overlay for upload/change */}
               {!uploadPhotoMutation.isPending && (
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Alterar foto de perfil"
                   className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/50 rounded-full cursor-pointer"
                   style={{
                     transition: "opacity 0.2s",
@@ -169,6 +181,12 @@ export default function PerfilPage() {
                     willChange: "opacity",
                   }}
                   onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
                 >
                   <Camera className="text-white" size={20} strokeWidth={2} />
                 </div>
@@ -185,6 +203,7 @@ export default function PerfilPage() {
             {/* Delete button badge (only when photo exists and not uploading) */}
             {user.urlFotoPerfil && !uploadPhotoMutation.isPending && (
               <button
+                aria-label="Remover foto de perfil"
                 className="absolute -bottom-1 -right-1 w-7 h-7 flex items-center justify-center bg-neutral-800 dark:bg-neutral-700 text-white rounded-full shadow-md disabled:opacity-50 outline-none border-0 p-0 m-0"
                 style={{
                   transition: "background-color 0.2s",
