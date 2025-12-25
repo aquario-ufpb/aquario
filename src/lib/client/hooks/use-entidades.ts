@@ -53,7 +53,7 @@ export const useAddEntidadeMember = () => {
       }
       return entidadesService.addMember(entidadeId, data, token);
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_, _variables) => {
       // Invalidate entidade queries to refetch with new member
       queryClient.invalidateQueries({ queryKey: queryKeys.entidades.all });
       // Also invalidate by slug if we have it (we'll need to pass it or fetch it)

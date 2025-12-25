@@ -17,7 +17,7 @@ const addMemberSchema = z.object({
 });
 
 export async function POST(request: Request, context: RouteContext) {
-  return withAuth(request, async (req, usuario) => {
+  return await withAuth(request, async (req, usuario) => {
     const { id: entidadeId } = await context.params;
 
     try {

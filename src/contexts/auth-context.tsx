@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Identify user in PostHog (only if backend is enabled)
           if (USE_BACKEND) {
             identify(userData.id, {
-              email: userData.email,
+              email: userData.email ?? undefined,
               name: userData.nome,
               papelPlataforma: userData.papelPlataforma,
               centroId: userData.centro.id,

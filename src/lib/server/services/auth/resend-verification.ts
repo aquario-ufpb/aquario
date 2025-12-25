@@ -39,6 +39,10 @@ export async function resendVerificationByUser(
     throw new Error("Usuário não encontrado.");
   }
 
+  if (!usuario.email) {
+    throw new Error("Usuário não possui email cadastrado.");
+  }
+
   if (usuario.eVerificado) {
     return {
       success: true,
@@ -108,7 +112,7 @@ export async function resendVerificationByEmail(
 
   const usuario = await deps.usuariosRepository.findByEmail(normalizedEmail);
 
-  if (!usuario || usuario.eVerificado) {
+  if (!usuario || !usuario.email || usuario.eVerificado) {
     return successResponse;
   }
 

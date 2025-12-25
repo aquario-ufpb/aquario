@@ -11,7 +11,7 @@ const createFacadeUserSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  return withAdmin(request, async () => {
+  return await withAdmin(request, async () => {
     try {
       const body = await request.json();
       const data = createFacadeUserSchema.parse(body);
