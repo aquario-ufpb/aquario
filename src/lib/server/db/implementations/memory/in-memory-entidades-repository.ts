@@ -13,18 +13,8 @@ export class InMemoryEntidadesRepository implements IEntidadesRepository {
   }
 
   findBySlug(slug: string): Promise<EntidadeWithRelations | null> {
-    // First check metadata slug
-    const byMetadata = this.entidades.find(e => {
-      const metadata = e.metadata as Record<string, unknown> | null;
-      return metadata?.slug === slug;
-    });
-
-    if (byMetadata) {
-      return Promise.resolve(byMetadata);
-    }
-
-    // Fallback to generated slug
-    return Promise.resolve(this.entidades.find(e => this.nomeToSlug(e.nome) === slug) ?? null);
+    // Find by slug column
+    return Promise.resolve(this.entidades.find(e => e.slug === slug) ?? null);
   }
 
   update(id: string, data: EntidadeUpdateInput): Promise<void> {
@@ -35,6 +25,9 @@ export class InMemoryEntidadesRepository implements IEntidadesRepository {
 
     if (data.nome !== undefined) {
       entidade.nome = data.nome;
+    }
+    if (data.slug !== undefined) {
+      entidade.slug = data.slug;
     }
     if (data.subtitle !== undefined) {
       entidade.subtitle = data.subtitle;

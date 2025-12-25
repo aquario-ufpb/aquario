@@ -12,7 +12,7 @@ export type IEntidadesRepository = {
   findById(id: string): Promise<EntidadeWithRelations | null>;
 
   /**
-   * Find an entidade by slug (stored in metadata)
+   * Find an entidade by slug
    */
   findBySlug(slug: string): Promise<EntidadeWithRelations | null>;
 

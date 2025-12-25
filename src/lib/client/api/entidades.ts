@@ -29,7 +29,7 @@ export type UpdateEntidadeRequest = {
   website?: string | null;
   location?: string | null;
   founding_date?: string | null; // ISO date string
-  slug?: string; // Custom slug (stored in metadata)
+  slug?: string; // Custom slug
 };
 
 export const entidadesService = {

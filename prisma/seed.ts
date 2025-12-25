@@ -70,6 +70,20 @@ function convertImagePathToUrl(imagePath: string | undefined): string | null {
   return `/api/content-images/entidades/assets/${normalized}`;
 }
 
+/**
+ * Generate a URL-friendly slug from a name
+ */
+function nomeToSlug(nome: string): string {
+  return nome
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim();
+}
+
 async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
   const entidadesDir = path.join(process.cwd(), "content/aquario-entidades/centro-de-informatica");
 
@@ -89,10 +103,12 @@ async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
 
       const tipo = tipoMapping[data.tipo] || "OUTRO";
       const urlFoto = convertImagePathToUrl(data.imagePath);
+      const slug = nomeToSlug(data.name);
 
       await prisma.entidade.upsert({
         where: { nome_tipo: { nome: data.name, tipo } },
         update: {
+          slug,
           subtitle: data.subtitle || null,
           descricao: data.description || null,
           urlFoto,
@@ -105,6 +121,7 @@ async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
         },
         create: {
           nome: data.name,
+          slug,
           subtitle: data.subtitle || null,
           descricao: data.description || null,
           tipo,

@@ -88,6 +88,7 @@ export type TokenVerificacaoCreateInput = {
 
 export type EntidadeUpdateInput = {
   nome?: string;
+  slug?: string | null;
   subtitle?: string | null;
   descricao?: string | null;
   tipo?: TipoEntidade;

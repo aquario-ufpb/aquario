@@ -6,6 +6,7 @@ import { API_URL, ENDPOINTS } from "@/lib/shared/config/constants";
 type BackendEntidadeResponse = {
   id: string;
   nome: string;
+  slug?: string | null;
   subtitle?: string | null;
   descricao?: string | null;
   tipo: string;
@@ -78,22 +79,17 @@ export class BackendEntidadesProvider implements EntidadesDataProvider {
     return `/api/content-images/assets/entidades/${urlFoto}`;
   }
 
-  private getEntidadeSlug(
-    nome: string,
-    metadata: Record<string, unknown> | null | undefined
-  ): string {
-    if (metadata && typeof metadata === "object" && "slug" in metadata) {
-      const slug = metadata.slug;
-      if (typeof slug === "string" && slug.trim()) {
-        return slug.trim();
-      }
+  private getEntidadeSlug(nome: string, slug: string | null | undefined): string {
+    // Use slug column if available
+    if (slug && slug.trim()) {
+      return slug.trim();
     }
     // Fallback to generating from nome
     return this.nomeToSlug(nome);
   }
 
   private mapBackendToFrontend(backend: BackendEntidadeResponse, includeMembros = false): Entidade {
-    const slug = this.getEntidadeSlug(backend.nome, backend.metadata);
+    const slug = this.getEntidadeSlug(backend.nome, backend.slug);
 
     // Extract order from metadata
     const order =

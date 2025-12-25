@@ -37,14 +37,9 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
   }
 
   async findBySlug(slug: string): Promise<EntidadeWithRelations | null> {
-    // First try to find by slug in metadata
-    const entidades = await prisma.entidade.findMany({
-      where: {
-        metadata: {
-          path: ["slug"],
-          equals: slug,
-        },
-      },
+    // Query the dedicated slug column
+    const entidade = await prisma.entidade.findUnique({
+      where: { slug },
       include: {
         centro: true,
         membros: {
@@ -59,33 +54,7 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
       },
     });
 
-    if (entidades.length > 0) {
-      return entidades[0];
-    }
-
-    // Fallback: search by name-based slug
-    const allEntidades = await prisma.entidade.findMany({
-      include: {
-        centro: true,
-        membros: {
-          include: {
-            usuario: {
-              include: {
-                curso: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // Find by generated slug from name
-    const entidade = allEntidades.find(e => {
-      const generatedSlug = this.nomeToSlug(e.nome);
-      return generatedSlug === slug;
-    });
-
-    return entidade || null;
+    return entidade;
   }
 
   async update(id: string, data: EntidadeUpdateInput): Promise<void> {
@@ -93,6 +62,9 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
 
     if (data.nome !== undefined) {
       updateData.nome = data.nome;
+    }
+    if (data.slug !== undefined) {
+      updateData.slug = data.slug;
     }
     if (data.subtitle !== undefined) {
       updateData.subtitle = data.subtitle;

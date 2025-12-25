@@ -126,6 +126,7 @@ model TokenVerificacao {
 model Entidade {
   id           String       @id @default(uuid())
   nome         String
+  slug         String?      @unique
   subtitle     String?
   descricao    String?
   tipo         TipoEntidade
@@ -143,6 +144,7 @@ model Entidade {
   membros MembroEntidade[]
 
   @@unique([nome, tipo])
+  @@index([slug])
 }
 
 model MembroEntidade {

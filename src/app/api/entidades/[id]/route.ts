@@ -97,9 +97,8 @@ export function PUT(request: Request, context: RouteContext) {
         updateData.foundingDate = data.foundingDate ? new Date(data.foundingDate) : null;
       }
       if (data.slug !== undefined) {
-        // Store slug in metadata
-        const currentMetadata = (entidade.metadata as Record<string, unknown>) || {};
-        updateData.metadata = { ...currentMetadata, slug: data.slug };
+        // Store slug in dedicated column
+        updateData.slug = data.slug;
       }
 
       await entidadesRepository.update(id, updateData);
