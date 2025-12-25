@@ -119,56 +119,75 @@ export default function PerfilPage() {
     <main className="container mx-auto max-w-4xl p-4 pt-24">
       <Card>
         <CardHeader className="flex flex-col items-center text-center p-6 bg-muted/50">
-          <div className="relative group mb-4">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={user.urlFotoPerfil || undefined} alt={user.nome} />
-              <AvatarFallback className="text-3xl">{getInitials(user.nome)}</AvatarFallback>
-            </Avatar>
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 text-white hover:bg-white/20"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadPhotoMutation.isPending}
-              >
-                <Camera className="h-5 w-5" />
-              </Button>
+          <div className="relative mb-6 w-24 h-24">
+            {/* Avatar */}
+            <div className="relative group w-full h-full">
+              <Avatar className="w-full h-full">
+                <AvatarImage src={user.urlFotoPerfil || undefined} alt={user.nome} />
+                <AvatarFallback className="text-3xl">{getInitials(user.nome)}</AvatarFallback>
+              </Avatar>
+
+              {/* Hover overlay for upload/change */}
+              {!uploadPhotoMutation.isPending && (
+                <div
+                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/50 rounded-full cursor-pointer"
+                  style={{
+                    transition: "opacity 0.2s",
+                    transform: "translateZ(0)",
+                    willChange: "opacity",
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Camera className="text-white" size={20} strokeWidth={2} />
+                </div>
+              )}
+
+              {/* Loading overlay */}
+              {uploadPhotoMutation.isPending && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full">
+                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
             </div>
+
+            {/* Delete button badge (only when photo exists and not uploading) */}
+            {user.urlFotoPerfil && !uploadPhotoMutation.isPending && (
+              <button
+                className="absolute -bottom-1 -right-1 w-7 h-7 flex items-center justify-center bg-neutral-800 dark:bg-neutral-700 text-white rounded-full shadow-md disabled:opacity-50 outline-none border-0 p-0 m-0"
+                style={{
+                  transition: "background-color 0.2s",
+                  transform: "translateZ(0)",
+                }}
+                onMouseEnter={e => {
+                  if (!deletePhotoMutation.isPending) {
+                    e.currentTarget.style.backgroundColor = "rgb(239 68 68)"; // red-500
+                  }
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = "";
+                }}
+                onClick={handleDeletePhoto}
+                disabled={deletePhotoMutation.isPending}
+              >
+                {deletePhotoMutation.isPending ? (
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="w-3 h-3 flex-shrink-0" />
+                )}
+              </button>
+            )}
+
+            {/* Hidden file input */}
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
               onChange={handleFileSelect}
               className="hidden"
+              disabled={uploadPhotoMutation.isPending}
             />
           </div>
-          <div className="flex gap-2 mb-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadPhotoMutation.isPending}
-            >
-              <Camera className="h-4 w-4 mr-2" />
-              {uploadPhotoMutation.isPending
-                ? "Enviando..."
-                : user.urlFotoPerfil
-                  ? "Alterar Foto"
-                  : "Adicionar Foto"}
-            </Button>
-            {user.urlFotoPerfil && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDeletePhoto}
-                disabled={deletePhotoMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {deletePhotoMutation.isPending ? "Removendo..." : "Remover"}
-              </Button>
-            )}
-          </div>
+
           <CardTitle className="text-3xl font-bold">{user.nome}</CardTitle>
           <CardDescription className="text-lg">{user.email}</CardDescription>
         </CardHeader>
