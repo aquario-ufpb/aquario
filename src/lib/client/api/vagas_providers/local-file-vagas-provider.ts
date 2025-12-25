@@ -1,4 +1,4 @@
-import { Vaga, TipoVaga, EntidadeVaga } from "@/components/pages/vagas/vacancy-card";
+import { Vaga, TipoVaga, EntidadeVaga } from "@/lib/shared/types";
 import { VagasDataProvider } from "./vagas-provider.interface";
 
 type VagaJson = {

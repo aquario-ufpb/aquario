@@ -2,43 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Monitor } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import TypeBadge from "@/components/shared/badges";
-
-export const TipoVaga = {
-  ESTAGIO: "ESTAGIO",
-  TRAINEE: "TRAINEE",
-  VOLUNTARIO: "VOLUNTARIO",
-  PESQUISA: "PESQUISA",
-  CLT: "CLT",
-  PJ: "PJ",
-} as const;
-
-export type TipoVaga = (typeof TipoVaga)[keyof typeof TipoVaga];
-
-export type EntidadeVaga = "laboratorios" | "grupos" | "ufpb" | "pessoa" | "externo" | "ligas";
-
-type Publicador = {
-  nome: string;
-  urlFotoPerfil?: string | null;
-};
-
-export type Vaga = {
-  id: string;
-  titulo: string;
-  descricao: string;
-  tipoVaga: TipoVaga;
-  areas: string[];
-  publicador: Publicador;
-  criadoEm: string;
-  entidade: EntidadeVaga;
-  prazo: string;
-  salario: string;
-  sobreEmpresa: string;
-  responsabilidades: string[];
-  requisitos: string[];
-  informacoesAdicionais: string;
-  etapasProcesso: string[];
-  linkVaga: string;
-};
+import type { Vaga } from "@/lib/shared/types";
 
 type VacancyCardProps = {
   vaga: Vaga;

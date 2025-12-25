@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TipoVaga } from "@/components/pages/vagas/vacancy-card";
+import { TipoVaga } from "@/lib/shared/types";
 
 export default function NovaVagaPage() {
   const { token, isLoading: isAuthLoading } = useAuth();

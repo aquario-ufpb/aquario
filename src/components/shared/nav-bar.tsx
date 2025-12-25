@@ -10,7 +10,6 @@ import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import LinkHover from "@/components/shared/link-hover";
 import { ModeToggle } from "@/components/shared/mode-toggle";
 import Link from "next/link";
-import { useBackend } from "@/lib/shared/config/env";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -228,12 +227,6 @@ function AuthSection() {
   const isLoading = authLoading || userLoading;
   const { theme, resolvedTheme } = useTheme();
   const isDark = (resolvedTheme || theme) === "dark";
-  const { isEnabled: backendEnabled } = useBackend();
-
-  // Hide auth section if backend is disabled
-  if (!backendEnabled) {
-    return <ModeToggle />;
-  }
 
   if (isLoading) {
     return null;

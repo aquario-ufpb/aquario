@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEntidadeBySlug, useEntidades } from "@/lib/client/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/client/query-keys";
-import { TipoEntidade, getPeopleFromEntidade } from "@/lib/shared/types";
+import { TipoEntidade } from "@/lib/shared/types";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,12 +18,10 @@ import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { EditarEntidadeDialog } from "@/components/pages/entidades/editar-entidade-dialog";
 import { EntidadeMembersSection } from "@/components/pages/entidades/entidade-members-section";
 import { isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
-import { useBackend } from "@/lib/shared/config/env";
 
 export default function EntidadeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const { data: user } = useCurrentUser();
-  const { isEnabled: backendEnabled } = useBackend();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -44,7 +42,6 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
 
   // Check if user can edit this entidade (only if backend is enabled)
   const canEdit =
-    backendEnabled &&
     user &&
     (user.papelPlataforma === "MASTER_ADMIN" || isUserAdminOfEntidade(user.id, entidade?.membros));
 
@@ -64,9 +61,9 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
     switch (entidade.tipo) {
       case "LABORATORIO":
         return "default";
-      case "GRUPO_ESTUDANTIL":
+      case "GRUPO":
         return "secondary";
-      case "LIGA_ESTUDANTIL":
+      case "LIGA_ACADEMICA":
         return "outline";
       default:
         return "destructive";
@@ -100,9 +97,9 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
     switch (tipo) {
       case "LABORATORIO":
         return "LAB";
-      case "GRUPO_ESTUDANTIL":
+      case "GRUPO":
         return "GRUPO";
-      case "LIGA_ESTUDANTIL":
+      case "LIGA_ACADEMICA":
         return "LIGA";
       case "CENTRO_ACADEMICO":
         return "CA";
@@ -243,43 +240,7 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
         </div>
       )}
 
-      {/* Members Section (Backend) or People Section (Local) */}
-      {backendEnabled ? (
-        <EntidadeMembersSection entidade={entidade} />
-      ) : (
-        getPeopleFromEntidade(entidade).length > 0 && (
-          <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-4">
-            <h2 className="text-2xl md:text-3xl font-semibold mb-8">Pessoas</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {getPeopleFromEntidade(entidade).map((person, index) => (
-                <Card
-                  key={index}
-                  className="hover:bg-accent/20 transition-all duration-200 border-border/50"
-                >
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold text-lg mb-2">{person.name}</h3>
-                    {person.role && (
-                      <p className="text-sm font-medium text-foreground mb-1">{person.role}</p>
-                    )}
-                    {person.profession && (
-                      <p className="text-xs text-muted-foreground mb-3">{person.profession}</p>
-                    )}
-                    {person.email && (
-                      <a
-                        href={`mailto:${person.email}`}
-                        className="text-xs text-primary hover:underline flex items-center gap-1"
-                      >
-                        <Mail className="w-3 h-3" />
-                        {person.email}
-                      </a>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )
-      )}
+      <EntidadeMembersSection entidade={entidade} />
 
       {/* Divider */}
       {otherEntidades.length > 0 && (

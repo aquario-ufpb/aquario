@@ -73,20 +73,6 @@ vi.mock("@/lib/client/api/paas_providers/local-file-paas-provider", () => {
   };
 });
 
-// Mock the LocalFileEntidadesProvider to avoid require.context issues
-vi.mock("@/lib/client/api/entidades_providers/local-file-entidades-provider", () => {
-  return {
-    LocalFileEntidadesProvider: class MockLocalFileEntidadesProvider {
-      getAll() {
-        return Promise.resolve([]);
-      }
-      getBySlug() {
-        return Promise.resolve(null);
-      }
-    },
-  };
-});
-
 // Mock the LocalFileVagasProvider to avoid require.context issues
 vi.mock("@/lib/client/api/vagas_providers/local-file-vagas-provider", () => {
   return {

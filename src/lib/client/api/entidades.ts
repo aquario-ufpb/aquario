@@ -1,21 +1,43 @@
 import { Entidade, TipoEntidade } from "@/lib/shared/types";
-import { EntidadesDataProvider } from "./entidades_providers/entidades-provider.interface";
-import { BackendEntidadesProvider } from "./entidades_providers/backend-entidades-provider";
-import { LocalFileEntidadesProvider } from "./entidades_providers/local-file-entidades-provider";
-import { ENTIDADES_DATA_PROVIDER_CONFIG } from "@/lib/shared/config/env";
+import { PapelMembro } from "@/lib/shared/types/membro.types";
+import { API_URL, ENDPOINTS } from "@/lib/shared/config/constants";
 
-// Provider factory
-function createProvider(): EntidadesDataProvider {
-  switch (ENTIDADES_DATA_PROVIDER_CONFIG.PROVIDER) {
-    case ENTIDADES_DATA_PROVIDER_CONFIG.PROVIDERS.LOCAL:
-      return new LocalFileEntidadesProvider();
-    case ENTIDADES_DATA_PROVIDER_CONFIG.PROVIDERS.BACKEND:
-    default:
-      return new BackendEntidadesProvider();
-  }
-}
-
-const provider = createProvider();
+type BackendEntidadeResponse = {
+  id: string;
+  nome: string;
+  slug?: string | null;
+  subtitle?: string | null;
+  descricao?: string | null;
+  tipo: string;
+  urlFoto?: string | null;
+  contato?: string | null;
+  instagram?: string | null;
+  linkedin?: string | null;
+  website?: string | null;
+  location?: string | null;
+  foundingDate?: string | null;
+  metadata?: Record<string, unknown> | null;
+  centroId: string;
+  centro?: {
+    id: string;
+    nome: string;
+    sigla: string;
+  } | null;
+  membros?: Array<{
+    id: string;
+    usuario: {
+      id: string;
+      nome: string;
+      urlFotoPerfil?: string | null;
+      curso?: {
+        nome: string;
+      } | null;
+    };
+    papel: PapelMembro;
+    startedAt?: string;
+    endedAt?: string | null;
+  }>;
+};
 
 export type UpdateEntidadeRequest = {
   nome?: string;
@@ -34,20 +56,34 @@ export type UpdateEntidadeRequest = {
 
 export const entidadesService = {
   getAll: async (): Promise<Entidade[]> => {
-    return await provider.getAll();
+    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADES}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch entidades");
+    }
+    const data: BackendEntidadeResponse[] = await response.json();
+    return data.map(entidade => mapBackendToFrontend(entidade));
   },
 
   getBySlug: async (slug: string): Promise<Entidade | null> => {
-    return await provider.getBySlug(slug);
+    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_BY_SLUG(slug)}`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error("Failed to fetch entidade");
+    }
+    const data: BackendEntidadeResponse = await response.json();
+    // Include membros when fetching by slug (needed for permission checks)
+    return mapBackendToFrontend(data, true);
   },
 
   getByTipo: async (tipo: TipoEntidade): Promise<Entidade[]> => {
-    return await provider.getByTipo(tipo);
+    // Fetch all and filter by tipo (backend doesn't have tipo filter endpoint yet)
+    const all = await entidadesService.getAll();
+    return all.filter(entidade => entidade.tipo === tipo);
   },
 
   update: async (id: string, data: UpdateEntidadeRequest, token: string): Promise<void> => {
-    const { API_URL, ENDPOINTS } = await import("@/lib/shared/config/constants");
-
     // Map frontend fields to backend fields
     const backendData: Record<string, unknown> = {};
     if (data.nome !== undefined) {
@@ -60,17 +96,7 @@ export const entidadesService = {
       backendData.descricao = data.description;
     }
     if (data.tipo !== undefined) {
-      // Map frontend tipo to backend tipo
-      const tipoMap: Record<TipoEntidade, string> = {
-        LABORATORIO: "LABORATORIO",
-        GRUPO_ESTUDANTIL: "GRUPO",
-        LIGA_ESTUDANTIL: "LIGA_ACADEMICA",
-        CENTRO_ACADEMICO: "CENTRO_ACADEMICO",
-        ATLETICA: "ATLETICA",
-        EMPRESA: "EMPRESA",
-        OUTRO: "OUTRO",
-      };
-      backendData.tipo = tipoMap[data.tipo] || data.tipo;
+      backendData.tipo = data.tipo;
     }
     if (data.imagePath !== undefined) {
       if (data.imagePath) {
@@ -141,8 +167,6 @@ export const entidadesService = {
     startedAt: string;
     endedAt: string | null;
   }> => {
-    const { API_URL, ENDPOINTS } = await import("@/lib/shared/config/constants");
-
     const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_MEMBROS(entidadeId)}`, {
       method: "POST",
       headers: {
@@ -160,3 +184,90 @@ export const entidadesService = {
     return response.json();
   },
 };
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+function nomeToSlug(nome: string): string {
+  return nome
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special chars
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single
+    .trim();
+}
+
+function normalizeTipo(backendTipo: string): TipoEntidade {
+  // Validate that the backend tipo is a valid TipoEntidade
+  const validTipos: TipoEntidade[] = [
+    "LABORATORIO",
+    "GRUPO",
+    "LIGA_ACADEMICA",
+    "CENTRO_ACADEMICO",
+    "ATLETICA",
+    "EMPRESA",
+    "OUTRO",
+  ];
+
+  return validTipos.includes(backendTipo as TipoEntidade) ? (backendTipo as TipoEntidade) : "OUTRO";
+}
+
+function mapImagePath(urlFoto: string | null | undefined): string {
+  if (!urlFoto) {
+    return "/api/content-images/assets/entidades/default.png";
+  }
+
+  // If it's already a full path, return as is
+  if (urlFoto.startsWith("/") || urlFoto.startsWith("http")) {
+    return urlFoto;
+  }
+
+  // Convert filename to API route
+  return `/api/content-images/assets/entidades/${urlFoto}`;
+}
+
+function getEntidadeSlug(nome: string, slug: string | null | undefined): string {
+  // Use slug column if available
+  if (slug && slug.trim()) {
+    return slug.trim();
+  }
+  // Fallback to generating from nome
+  return nomeToSlug(nome);
+}
+
+function mapBackendToFrontend(backend: BackendEntidadeResponse, includeMembros = false): Entidade {
+  const slug = getEntidadeSlug(backend.nome, backend.slug);
+
+  // Extract order from metadata
+  const order =
+    backend.metadata && typeof backend.metadata === "object" && "order" in backend.metadata
+      ? (backend.metadata.order as number | null)
+      : null;
+
+  // Format founding_date if present
+  const founding_date = backend.foundingDate
+    ? new Date(backend.foundingDate).toISOString().split("T")[0]
+    : null;
+
+  return {
+    id: backend.id,
+    name: backend.nome,
+    slug: slug,
+    subtitle: backend.subtitle || null,
+    description: backend.descricao || null,
+    tipo: normalizeTipo(backend.tipo),
+    imagePath: mapImagePath(backend.urlFoto),
+    contato_email: backend.contato || "",
+    instagram: backend.instagram || null,
+    linkedin: backend.linkedin || null,
+    website: backend.website || null,
+    location: backend.location || null,
+    founding_date: founding_date,
+    order: order,
+    membros: includeMembros ? backend.membros : undefined,
+    centro: backend.centro || null,
+  };
+}

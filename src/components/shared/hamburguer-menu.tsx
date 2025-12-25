@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { useBackend } from "@/lib/shared/config/env";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, LogOut, Settings } from "lucide-react";
@@ -253,7 +252,6 @@ export default function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { setTheme, theme, resolvedTheme } = useTheme();
-  const { isEnabled: backendEnabled } = useBackend();
 
   useEffect(() => {
     setMounted(true);
@@ -285,8 +283,8 @@ export default function HamburgerMenu() {
                 </MenuLink>
               ))}
 
-              {/* User Section (only when backend is enabled) */}
-              {backendEnabled && <UserSection onClose={closeMenu} />}
+              {/* User Section */}
+              <UserSection onClose={closeMenu} />
 
               {/* Theme Toggle */}
               <ThemeToggle

@@ -5,27 +5,11 @@ import { useCurrentUser, useUsuarios } from "@/lib/client/hooks/use-usuarios";
 import { UsersTable } from "@/components/pages/admin/users-table";
 import { EntidadesTable } from "@/components/pages/admin/entidades-table";
 import { AdminPageSkeleton } from "@/components/pages/admin/admin-page-skeleton";
-import { useBackend } from "@/lib/shared/config/env";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export default function AdminPage() {
-  const { isEnabled: backendEnabled } = useBackend();
-  const router = useRouter();
   const { isLoading: authLoading } = useRequireAuth({ requireRole: "MASTER_ADMIN" });
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const { isLoading } = useUsuarios();
-
-  // Redirect to home if backend is disabled
-  useEffect(() => {
-    if (!backendEnabled) {
-      router.replace("/");
-    }
-  }, [backendEnabled, router]);
-
-  if (!backendEnabled) {
-    return null;
-  }
 
   if (authLoading || userLoading || isLoading) {
     return <AdminPageSkeleton />;
