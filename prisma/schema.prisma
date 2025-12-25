@@ -152,11 +152,14 @@ model MembroEntidade {
   usuarioId  String
   entidadeId String
   papel      PapelMembro
+  startedAt  DateTime    @default(now())
+  endedAt    DateTime?
 
   usuario  Usuario  @relation(fields: [usuarioId], references: [id])
   entidade Entidade @relation(fields: [entidadeId], references: [id])
 
-  @@unique([usuarioId, entidadeId])
+  @@index([usuarioId, entidadeId])
+  @@index([endedAt])
 }
 
 // ============================================================================
