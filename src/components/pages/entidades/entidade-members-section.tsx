@@ -1,12 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { UserPlus, Users, History } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
 import type { Entidade } from "@/lib/shared/types";
 import { type Membro, isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
 import { AddMemberDialog } from "./add-member-dialog";
@@ -101,134 +98,135 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
     (user.papelPlataforma === "MASTER_ADMIN" || isUserAdminOfEntidade(user.id, entidade.membros));
 
   return (
-    <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-8">
-      <Card className="border-border/50">
-        <CardHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-muted-foreground" />
-                <CardTitle className="text-2xl md:text-3xl font-semibold">Membros</CardTitle>
-              </div>
-              {canAddMembers && (
-                <Button
-                  variant="default"
-                  onClick={() => setIsAddMemberDialogOpen(true)}
-                  className="flex items-center gap-2"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Adicionar Membro
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="show-old-members"
-                checked={showOldMembers}
-                onCheckedChange={checked => setShowOldMembers(checked === true)}
-              />
-              <Label
-                htmlFor="show-old-members"
-                className="text-sm font-normal cursor-pointer flex items-center gap-2"
-              >
-                <History className="w-4 h-4" />
-                Incluir membros antigos
-              </Label>
-            </div>
+    <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-12">
+      <div className="border-t border-border/30 pt-8">
+        {/* Header with filter toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold">Membros</h2>
+            <Badge variant="secondary" className="text-xs">
+              {mergedMembers.length}
+            </Badge>
           </div>
-        </CardHeader>
-        <CardContent>
-          {mergedMembers.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg">
-                {showOldMembers
-                  ? "Esta entidade ainda não possui membros."
-                  : "Esta entidade ainda não possui membros ativos."}
-              </p>
+
+          <div className="flex items-center gap-3">
+            {/* Segmented control for toggle */}
+            <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-1">
+              <button
+                onClick={() => setShowOldMembers(false)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  !showOldMembers
+                    ? "bg-background shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Ativos
+              </button>
+              <button
+                onClick={() => setShowOldMembers(true)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  showOldMembers
+                    ? "bg-background shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Todos
+              </button>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {mergedMembers.map((merged, index) => (
-                <Card
-                  key={`${merged.usuario.id}-${index}`}
-                  className={`hover:bg-accent/20 transition-all duration-200 border-border/50 ${
-                    !merged.isActive ? "opacity-75" : ""
-                  }`}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex flex-col items-center text-center gap-3">
-                      {/* Avatar */}
-                      <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-border/50">
-                        {merged.usuario.urlFotoPerfil ? (
-                          <Image
-                            src={merged.usuario.urlFotoPerfil}
-                            alt={merged.usuario.nome}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-muted flex items-center justify-center">
-                            <span className="text-2xl font-semibold">
-                              {merged.usuario.nome.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
 
-                      {/* Name */}
-                      <h3 className="font-semibold text-lg">{merged.usuario.nome}</h3>
+            {canAddMembers && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAddMemberDialogOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                Adicionar
+              </Button>
+            )}
+          </div>
+        </div>
 
-                      {/* Role Badge */}
-                      <div className="flex flex-col items-center gap-1">
-                        <Badge
-                          variant={merged.currentPapel === "ADMIN" ? "default" : "secondary"}
-                          className="text-xs"
-                        >
-                          {merged.currentPapel === "ADMIN" ? "Administrador" : "Membro"}
-                        </Badge>
-                        {!merged.isActive && (
-                          <Badge variant="outline" className="text-xs">
-                            Antigo
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Membership Count */}
-                      {merged.membershipCount > 1 && (
-                        <Badge variant="outline" className="text-xs">
-                          Membro {merged.membershipCount}x
-                        </Badge>
+        {/* Members Grid */}
+        {mergedMembers.length === 0 ? (
+          <div className="text-center py-16 text-muted-foreground">
+            <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
+            <p className="text-sm">
+              {showOldMembers
+                ? "Esta entidade ainda não possui membros."
+                : "Esta entidade ainda não possui membros ativos."}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            {mergedMembers.map((merged, index) => (
+              <div
+                key={`${merged.usuario.id}-${index}`}
+                className={`group hover:scale-105 transition-transform duration-200 ${
+                  !merged.isActive ? "opacity-60" : ""
+                }`}
+              >
+                <div className="flex flex-col items-center text-center gap-3">
+                  {/* Avatar */}
+                  <div className="relative">
+                    <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-border/30 group-hover:border-border/60 transition-colors">
+                      {merged.usuario.urlFotoPerfil ? (
+                        <Image
+                          src={merged.usuario.urlFotoPerfil}
+                          alt={merged.usuario.nome}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                          <span className="text-xl font-semibold">
+                            {merged.usuario.nome.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
                       )}
-
-                      {/* Course */}
-                      {merged.usuario.curso?.nome && (
-                        <p className="text-xs text-muted-foreground">{merged.usuario.curso.nome}</p>
-                      )}
-
-                      {/* Dates */}
-                      <div className="text-xs text-muted-foreground mt-2 space-y-1">
-                        {merged.earliestStart && (
-                          <p>
-                            {merged.membershipCount > 1 ? "Primeira vez: " : "Desde: "}
-                            {new Date(merged.earliestStart).toLocaleDateString("pt-BR")}
-                          </p>
-                        )}
-                        {merged.latestEnd && (
-                          <p>Até: {new Date(merged.latestEnd).toLocaleDateString("pt-BR")}</p>
-                        )}
-                        {merged.isActive && merged.earliestStart && (
-                          <p className="text-green-600 dark:text-green-400 font-medium">Ativo</p>
-                        )}
-                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    {/* Role indicator */}
+                    {merged.currentPapel === "ADMIN" && (
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary border-2 border-background flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-primary-foreground">A</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Name */}
+                  <div className="w-full">
+                    <h3 className="font-medium text-sm leading-tight mb-1 line-clamp-2">
+                      {merged.usuario.nome}
+                    </h3>
+
+                    {/* Course */}
+                    {merged.usuario.curso?.nome && (
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {merged.usuario.curso.nome}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {!merged.isActive && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        Antigo
+                      </Badge>
+                    )}
+                    {merged.membershipCount > 1 && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        {merged.membershipCount}x
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Add Member Dialog */}
       {canAddMembers && entidade.id && (
