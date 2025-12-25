@@ -16,6 +16,7 @@ export function GET(request: Request) {
         email: u.email,
         papelPlataforma: u.papelPlataforma,
         eVerificado: u.eVerificado,
+        eFacade: u.eFacade,
         urlFotoPerfil: u.urlFotoPerfil,
         centro: {
           id: u.centro.id,

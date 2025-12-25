@@ -11,13 +11,14 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     const usuario = await prisma.usuario.create({
       data: {
         nome: data.nome,
-        email: data.email.toLowerCase().trim(),
-        senhaHash: data.senhaHash,
+        email: data.email ? data.email.toLowerCase().trim() : null,
+        senhaHash: data.senhaHash ?? null,
         centroId: data.centroId,
         cursoId: data.cursoId,
         permissoes: data.permissoes ?? [],
         papelPlataforma: data.papelPlataforma ?? "USER",
         eVerificado: data.eVerificado ?? false,
+        eFacade: data.eFacade ?? false,
         urlFotoPerfil: data.urlFotoPerfil,
         matricula: data.matricula,
       },

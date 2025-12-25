@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUsuarios, useUpdateUserRole, useDeleteUser } from "@/lib/client/hooks/use-usuarios";
+import {
+  useUsuarios,
+  useUpdateUserRole,
+  useDeleteUser,
+  useCreateFacadeUser,
+} from "@/lib/client/hooks/use-usuarios";
+import { useCentros, useCursos } from "@/lib/client/hooks";
 import type { User } from "@/lib/client/api/usuarios";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,8 +19,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, UserPlus } from "lucide-react";
 import { PaginationControls } from "@/components/shared/pagination-controls";
 
 export function UsersTable({ currentUserId }: { currentUserId: string }) {
@@ -22,10 +38,24 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(25);
+  const [isFacadeDialogOpen, setIsFacadeDialogOpen] = useState(false);
+  const [facadeNome, setFacadeNome] = useState("");
+  const [facadeCentroId, setFacadeCentroId] = useState("");
+  const [facadeCursoId, setFacadeCursoId] = useState("");
 
   const { data: users = [], isLoading, error: queryError, refetch } = useUsuarios();
   const updateRoleMutation = useUpdateUserRole();
   const deleteUserMutation = useDeleteUser();
+  const createFacadeUserMutation = useCreateFacadeUser();
+  const { data: centros = [] } = useCentros();
+  const { data: cursos = [] } = useCursos(facadeCentroId);
+
+  // Reset cursoId when centroId changes
+  useEffect(() => {
+    if (!facadeCentroId) {
+      setFacadeCursoId("");
+    }
+  }, [facadeCentroId]);
 
   // Filter users
   useEffect(() => {
@@ -37,7 +67,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
         users.filter(
           u =>
             u.nome.toLowerCase().includes(query) ||
-            u.email.toLowerCase().includes(query) ||
+            (u.email && u.email.toLowerCase().includes(query)) ||
             u.centro.nome.toLowerCase().includes(query) ||
             u.curso.nome.toLowerCase().includes(query)
         )
@@ -92,6 +122,41 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
     }
   };
 
+  const handleCreateFacadeUser = async () => {
+    if (!facadeNome.trim()) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+    if (!facadeCentroId) {
+      toast.error("Centro é obrigatório");
+      return;
+    }
+    if (!facadeCursoId) {
+      toast.error("Curso é obrigatório");
+      return;
+    }
+
+    try {
+      await createFacadeUserMutation.mutateAsync({
+        nome: facadeNome.trim(),
+        centroId: facadeCentroId,
+        cursoId: facadeCursoId,
+      });
+      toast.success("Usuário facade criado", {
+        description: `${facadeNome} foi criado como usuário facade.`,
+      });
+      setIsFacadeDialogOpen(false);
+      setFacadeNome("");
+      setFacadeCentroId("");
+      setFacadeCursoId("");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao criar usuário facade";
+      toast.error("Erro ao criar usuário facade", {
+        description: errorMessage,
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -106,6 +171,92 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
             onChange={e => setSearchQuery(e.target.value)}
             className="flex-1"
           />
+          <Dialog open={isFacadeDialogOpen} onOpenChange={setIsFacadeDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="default" disabled={isLoading}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Criar Usuário Facade
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Criar Usuário Facade</DialogTitle>
+                <DialogDescription>
+                  Crie um usuário facade para exibição pública. Este usuário não poderá fazer login
+                  até que seja mesclado com uma conta real.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="facade-nome">Nome *</Label>
+                  <Input
+                    id="facade-nome"
+                    placeholder="Nome do usuário"
+                    value={facadeNome}
+                    onChange={e => setFacadeNome(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="facade-centro">Centro *</Label>
+                  <Select value={facadeCentroId} onValueChange={setFacadeCentroId}>
+                    <SelectTrigger id="facade-centro">
+                      <SelectValue placeholder="Selecione um centro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {centros.map(centro => (
+                        <SelectItem key={centro.id} value={centro.id}>
+                          {centro.nome} ({centro.sigla})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="facade-curso">Curso *</Label>
+                  <Select
+                    value={facadeCursoId}
+                    onValueChange={setFacadeCursoId}
+                    disabled={!facadeCentroId}
+                  >
+                    <SelectTrigger id="facade-curso">
+                      <SelectValue
+                        placeholder={
+                          !facadeCentroId ? "Selecione um centro primeiro" : "Selecione um curso"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cursos.map(curso => (
+                        <SelectItem key={curso.id} value={curso.id}>
+                          {curso.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsFacadeDialogOpen(false)}
+                  disabled={createFacadeUserMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleCreateFacadeUser}
+                  disabled={
+                    createFacadeUserMutation.isPending ||
+                    !facadeNome ||
+                    !facadeCentroId ||
+                    !facadeCursoId
+                  }
+                >
+                  {createFacadeUserMutation.isPending ? "Criando..." : "Criar"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Button onClick={() => refetch()} variant="outline" disabled={isLoading}>
             Atualizar
           </Button>
@@ -152,8 +303,15 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
               ) : (
                 paginatedUsers.map(userItem => (
                   <tr key={userItem.id} className="border-b hover:bg-muted/50">
-                    <td className="p-4 font-medium">{userItem.nome}</td>
-                    <td className="p-4">{userItem.email}</td>
+                    <td className="p-4 font-medium">
+                      {userItem.nome}
+                      {userItem.eFacade && (
+                        <span className="ml-2 text-xs text-muted-foreground">(Facade)</span>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      {userItem.email || <span className="text-muted-foreground">—</span>}
+                    </td>
                     <td className="p-4">{userItem.centro.sigla}</td>
                     <td className="p-4">{userItem.curso.nome}</td>
                     <td className="p-4">

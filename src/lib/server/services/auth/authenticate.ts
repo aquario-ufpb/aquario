@@ -28,6 +28,10 @@ export async function authenticate(
     throw new Error("EMAIL_NAO_ENCONTRADO");
   }
 
+  if (!usuario.senhaHash) {
+    throw new Error("EMAIL_NAO_ENCONTRADO");
+  }
+
   const senhaCorresponde = await compare(input.senha, usuario.senhaHash);
 
   if (!senhaCorresponde) {

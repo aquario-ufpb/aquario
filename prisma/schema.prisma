@@ -83,12 +83,13 @@ model Curso {
 model Usuario {
   id                String           @id @default(uuid())
   nome              String
-  email             String           @unique
+  email             String?          @unique
   matricula         String?          @unique
-  senhaHash         String
+  senhaHash         String?
   permissoes        String[]         @default([])
   papelPlataforma   PapelPlataforma  @default(USER)
   eVerificado       Boolean          @default(false)
+  eFacade           Boolean          @default(false)
   urlFotoPerfil     String?
   criadoEm          DateTime         @default(now())
   atualizadoEm      DateTime         @updatedAt
@@ -101,6 +102,10 @@ model Usuario {
 
   membroDeEntidades MembroEntidade[]
   tokensVerificacao TokenVerificacao[]
+
+  @@index([email])
+  @@index([matricula])
+  @@index([eFacade])
 }
 
 model TokenVerificacao {

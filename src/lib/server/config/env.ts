@@ -53,6 +53,14 @@ export const MASTER_ADMIN_EMAILS = (process.env.MASTER_ADMIN_EMAILS || "")
   .filter(Boolean);
 
 // =============================================================================
+// Environment
+// =============================================================================
+
+export const NODE_ENV = process.env.NODE_ENV || "development";
+export const IS_DEV = NODE_ENV === "development";
+export const IS_PROD = NODE_ENV === "production";
+
+// =============================================================================
 // Email (Resend)
 // =============================================================================
 
@@ -65,7 +73,7 @@ export const RESEND_API_KEY = process.env.RESEND_API_KEY;
 /**
  * Whether email service is available (has API key)
  */
-export const EMAIL_ENABLED = !!RESEND_API_KEY;
+export const EMAIL_ENABLED = !!RESEND_API_KEY && IS_PROD;
 
 /**
  * Email sender address
@@ -84,14 +92,6 @@ export const EMAIL_FROM = process.env.EMAIL_FROM
  * When empty: Uses local file storage (development mode)
  */
 export const BLOB_READ_WRITE_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
-
-// =============================================================================
-// Environment
-// =============================================================================
-
-export const NODE_ENV = process.env.NODE_ENV || "development";
-export const IS_DEV = NODE_ENV === "development";
-export const IS_PROD = NODE_ENV === "production";
 
 // =============================================================================
 // Validation

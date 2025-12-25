@@ -4,9 +4,10 @@ import { apiClient } from "./api-client";
 export type User = {
   id: string;
   nome: string;
-  email: string;
+  email: string | null;
   papelPlataforma: "USER" | "MASTER_ADMIN";
   eVerificado: boolean;
+  eFacade?: boolean;
   urlFotoPerfil?: string | null;
   centro: {
     id: string;
@@ -22,6 +23,12 @@ export type User = {
 
 export type UpdateUserRoleRequest = {
   papelPlataforma: "USER" | "MASTER_ADMIN";
+};
+
+export type CreateFacadeUserRequest = {
+  nome: string;
+  centroId: string;
+  cursoId: string;
 };
 
 export const usuariosService = {
@@ -131,6 +138,24 @@ export const usuariosService = {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Falha ao deletar foto de perfil");
+    }
+
+    return response.json();
+  },
+
+  createFacadeUser: async (data: CreateFacadeUserRequest, token: string): Promise<User> => {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}/facade`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      token,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Falha ao criar usuário facade");
     }
 
     return response.json();
