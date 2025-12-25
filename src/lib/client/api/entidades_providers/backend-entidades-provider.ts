@@ -35,6 +35,8 @@ type BackendEntidadeResponse = {
       } | null;
     };
     papel: PapelMembro;
+    startedAt?: string;
+    endedAt?: string | null;
   }>;
 };
 

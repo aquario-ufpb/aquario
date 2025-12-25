@@ -144,3 +144,25 @@ export const useDeletePhoto = () => {
     },
   });
 };
+
+/**
+ * Hook to create a facade user (admin only)
+ * Returns a mutation that can be called with nome, centroId, and cursoId
+ */
+export const useCreateFacadeUser = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { nome: string; centroId: string; cursoId: string }) => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return usuariosService.createFacadeUser(data, token);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch users list after creating facade user
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+    },
+  });
+};

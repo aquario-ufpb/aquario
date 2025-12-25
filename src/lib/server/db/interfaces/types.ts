@@ -68,13 +68,14 @@ export type SecaoGuiaWithRelations = SecaoGuia & {
 // Input types for creation
 export type UsuarioCreateInput = {
   nome: string;
-  email: string;
-  senhaHash: string;
+  email?: string | null;
+  senhaHash?: string | null;
   centroId: string;
   cursoId: string;
   permissoes?: string[];
   papelPlataforma?: PapelPlataforma;
   eVerificado?: boolean;
+  eFacade?: boolean;
   urlFotoPerfil?: string | null;
   matricula?: string | null;
 };

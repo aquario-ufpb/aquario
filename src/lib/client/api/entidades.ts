@@ -119,4 +119,44 @@ export const entidadesService = {
       throw new Error(errorData.message || "Falha ao atualizar entidade");
     }
   },
+
+  addMember: async (
+    entidadeId: string,
+    data: {
+      usuarioId: string;
+      papel: "ADMIN" | "MEMBRO";
+      startedAt?: string;
+      endedAt?: string | null;
+    },
+    token: string
+  ): Promise<{
+    id: string;
+    usuario: {
+      id: string;
+      nome: string;
+      urlFotoPerfil?: string | null;
+      curso?: { nome: string } | null;
+    };
+    papel: "ADMIN" | "MEMBRO";
+    startedAt: string;
+    endedAt: string | null;
+  }> => {
+    const { API_URL, ENDPOINTS } = await import("@/lib/shared/config/constants");
+
+    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_MEMBROS(entidadeId)}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Falha ao adicionar membro");
+    }
+
+    return response.json();
+  },
 };

@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - _New features will be listed here_
 - Add/Update user profile image
+- Support for tracking membership `startedAt` and `endedAt` in `MembroEntidade`.
+- Support for "facade" users (placeholders for real people that haven't logged in yet).
+- **Admin Functionality**:
+  - Ability to manually create facade users from the Admin panel.
+  - Dialog to search and add members to an entity directly from its page.
+  - CLI script (`npm run merge-facade-user`) to merge facade accounts into real user profiles while preserving history.
 
 ### Changed
 - _Changes in existing functionality will be listed here_

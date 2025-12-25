@@ -40,8 +40,8 @@ export async function forgotPassword(
 
   const usuario = await deps.usuariosRepository.findByEmail(normalizedEmail);
 
-  if (!usuario) {
-    // Don't reveal that user doesn't exist
+  if (!usuario || !usuario.email) {
+    // Don't reveal that user doesn't exist or has no email
     return successResponse;
   }
 
