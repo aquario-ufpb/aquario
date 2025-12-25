@@ -9,6 +9,17 @@
 export type PapelMembro = "ADMIN" | "MEMBRO";
 
 /**
+ * Cargo (position) within an entity - purely expository
+ */
+export type Cargo = {
+  id: string;
+  nome: string;
+  descricao?: string | null;
+  ordem: number;
+  entidadeId: string;
+};
+
+/**
  * Represents a member of an entity (from backend)
  * This is the source of truth for entity membership and permissions.
  */
@@ -21,6 +32,7 @@ export type Membro = {
     curso?: { nome: string } | null;
   };
   papel: PapelMembro;
+  cargo?: Cargo | null;
   startedAt?: string; // ISO date string
   endedAt?: string | null; // ISO date string or null for active members
 };

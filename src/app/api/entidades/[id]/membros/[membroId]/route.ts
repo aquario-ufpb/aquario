@@ -1,29 +1,28 @@
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { z } from "zod";
-import { getContainer } from "@/lib/server/container";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { prisma } from "@/lib/server/db/prisma";
+import { getContainer } from "@/lib/server/container";
 
 type RouteContext = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; membroId: string }>;
 };
 
-const addMemberSchema = z.object({
-  usuarioId: z.string().uuid("ID de usuário inválido"),
-  papel: z.enum(["ADMIN", "MEMBRO"]),
+const updateMemberSchema = z.object({
+  papel: z.enum(["ADMIN", "MEMBRO"]).optional(),
   cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
   startedAt: z.string().optional(), // ISO date string
   endedAt: z.string().nullable().optional(), // ISO date string or null
 });
 
-export async function POST(request: Request, context: RouteContext) {
+export async function PUT(request: Request, context: RouteContext) {
   return await withAuth(request, async (req, usuario) => {
-    const { id: entidadeId } = await context.params;
+    const { id: entidadeId, membroId } = await context.params;
 
     try {
       const body = await req.json();
-      const data = addMemberSchema.parse(body);
+      const data = updateMemberSchema.parse(body);
 
       const { entidadesRepository } = getContainer();
 
@@ -42,38 +41,25 @@ export async function POST(request: Request, context: RouteContext) {
 
       if (!isMasterAdmin && !isEntidadeAdmin) {
         return NextResponse.json(
-          { message: "Você não tem permissão para adicionar membros a esta entidade." },
+          { message: "Você não tem permissão para editar membros desta entidade." },
           { status: 403 }
         );
       }
 
-      // Check if user exists
-      const userExists = await prisma.usuario.findUnique({
-        where: { id: data.usuarioId },
-      });
-
-      if (!userExists) {
-        return NextResponse.json({ message: "Usuário não encontrado." }, { status: 404 });
-      }
-
-      // Check if user is already a member (active membership)
-      const existingActiveMembership = await prisma.membroEntidade.findFirst({
+      // Check if membership exists
+      const membership = await prisma.membroEntidade.findFirst({
         where: {
-          usuarioId: data.usuarioId,
+          id: membroId,
           entidadeId: entidadeId,
-          endedAt: null, // Only check active memberships
         },
       });
 
-      if (existingActiveMembership) {
-        return NextResponse.json(
-          { message: "Este usuário já é membro ativo desta entidade." },
-          { status: 400 }
-        );
+      if (!membership) {
+        return NextResponse.json({ message: "Membresia não encontrada." }, { status: 404 });
       }
 
       // Validate cargoId if provided
-      if (data.cargoId) {
+      if (data.cargoId !== undefined && data.cargoId !== null) {
         const cargo = await prisma.cargo.findFirst({
           where: {
             id: data.cargoId,
@@ -89,19 +75,24 @@ export async function POST(request: Request, context: RouteContext) {
         }
       }
 
-      // Create membership
-      const startedAt = data.startedAt ? new Date(data.startedAt) : new Date();
-      const endedAt = data.endedAt ? new Date(data.endedAt) : null;
+      // Build update data
+      const updateData: Record<string, unknown> = {};
+      if (data.papel !== undefined) {
+        updateData.papel = data.papel;
+      }
+      if (data.cargoId !== undefined) {
+        updateData.cargoId = data.cargoId;
+      }
+      if (data.startedAt !== undefined) {
+        updateData.startedAt = data.startedAt ? new Date(data.startedAt) : new Date();
+      }
+      if (data.endedAt !== undefined) {
+        updateData.endedAt = data.endedAt ? new Date(data.endedAt) : null;
+      }
 
-      const membro = await prisma.membroEntidade.create({
-        data: {
-          usuarioId: data.usuarioId,
-          entidadeId: entidadeId,
-          papel: data.papel,
-          cargoId: data.cargoId || null,
-          startedAt,
-          endedAt,
-        },
+      const updatedMembro = await prisma.membroEntidade.update({
+        where: { id: membroId },
+        data: updateData,
         include: {
           usuario: {
             include: {
@@ -113,28 +104,28 @@ export async function POST(request: Request, context: RouteContext) {
       });
 
       return NextResponse.json({
-        id: membro.id,
+        id: updatedMembro.id,
         usuario: {
-          id: membro.usuario.id,
-          nome: membro.usuario.nome,
-          urlFotoPerfil: membro.usuario.urlFotoPerfil,
-          curso: membro.usuario.curso
+          id: updatedMembro.usuario.id,
+          nome: updatedMembro.usuario.nome,
+          urlFotoPerfil: updatedMembro.usuario.urlFotoPerfil,
+          curso: updatedMembro.usuario.curso
             ? {
-                nome: membro.usuario.curso.nome,
+                nome: updatedMembro.usuario.curso.nome,
               }
             : null,
         },
-        papel: membro.papel,
-        cargo: membro.cargo
+        papel: updatedMembro.papel,
+        cargo: updatedMembro.cargo
           ? {
-              id: membro.cargo.id,
-              nome: membro.cargo.nome,
-              descricao: membro.cargo.descricao,
-              ordem: membro.cargo.ordem,
+              id: updatedMembro.cargo.id,
+              nome: updatedMembro.cargo.nome,
+              descricao: updatedMembro.cargo.descricao,
+              ordem: updatedMembro.cargo.ordem,
             }
           : null,
-        startedAt: membro.startedAt.toISOString(),
-        endedAt: membro.endedAt?.toISOString() || null,
+        startedAt: updatedMembro.startedAt.toISOString(),
+        endedAt: updatedMembro.endedAt?.toISOString() || null,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -144,7 +135,7 @@ export async function POST(request: Request, context: RouteContext) {
         );
       }
 
-      const message = error instanceof Error ? error.message : "Erro ao adicionar membro";
+      const message = error instanceof Error ? error.message : "Erro ao atualizar membro";
       return NextResponse.json({ message }, { status: 400 });
     }
   });

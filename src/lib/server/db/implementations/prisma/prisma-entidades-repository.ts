@@ -7,6 +7,11 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
     const entidades = await prisma.entidade.findMany({
       include: {
         centro: true,
+        cargos: {
+          orderBy: {
+            ordem: "asc",
+          },
+        },
       },
       orderBy: {
         nome: "asc",
@@ -21,6 +26,11 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
       where: { id },
       include: {
         centro: true,
+        cargos: {
+          orderBy: {
+            ordem: "asc",
+          },
+        },
         membros: {
           include: {
             usuario: {
@@ -28,6 +38,7 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
                 curso: true,
               },
             },
+            cargo: true,
           },
         },
       },
@@ -42,6 +53,11 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
       where: { slug },
       include: {
         centro: true,
+        cargos: {
+          orderBy: {
+            ordem: "asc",
+          },
+        },
         membros: {
           include: {
             usuario: {
@@ -49,6 +65,7 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
                 curso: true,
               },
             },
+            cargo: true,
           },
         },
       },

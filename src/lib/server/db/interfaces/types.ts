@@ -11,6 +11,7 @@ import type {
   TokenVerificacao,
   Entidade,
   MembroEntidade,
+  Cargo,
   Guia,
   SecaoGuia,
   SubSecaoGuia,
@@ -31,6 +32,7 @@ export type {
   TokenVerificacao,
   Entidade,
   MembroEntidade,
+  Cargo,
   Guia,
   SecaoGuia,
   SubSecaoGuia,
@@ -49,10 +51,12 @@ export type UsuarioWithRelations = Usuario & {
 
 export type EntidadeWithRelations = Entidade & {
   centro?: Centro | null;
+  cargos?: Cargo[];
   membros?: (MembroEntidade & {
     usuario: Usuario & {
       curso?: Curso | null;
     };
+    cargo?: Cargo | null;
   })[];
 };
 

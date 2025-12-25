@@ -147,9 +147,26 @@ model Entidade {
 
   centro  Centro           @relation(fields: [centroId], references: [id])
   membros MembroEntidade[]
+  cargos  Cargo[]
 
   @@unique([nome, tipo])
   @@index([slug])
+}
+
+model Cargo {
+  id         String   @id @default(uuid())
+  nome       String
+  descricao  String?
+  ordem      Int      @default(0)
+  entidadeId String
+  criadoEm   DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  entidade Entidade        @relation(fields: [entidadeId], references: [id], onDelete: Cascade)
+  membros  MembroEntidade[]
+
+  @@index([entidadeId])
+  @@index([ordem])
 }
 
 model MembroEntidade {
@@ -157,14 +174,17 @@ model MembroEntidade {
   usuarioId  String
   entidadeId String
   papel      PapelMembro
+  cargoId    String?
   startedAt  DateTime    @default(now())
   endedAt    DateTime?
 
   usuario  Usuario  @relation(fields: [usuarioId], references: [id])
   entidade Entidade @relation(fields: [entidadeId], references: [id])
+  cargo    Cargo?   @relation(fields: [cargoId], references: [id], onDelete: SetNull)
 
   @@index([usuarioId, entidadeId])
   @@index([endedAt])
+  @@index([cargoId])
 }
 
 // ============================================================================

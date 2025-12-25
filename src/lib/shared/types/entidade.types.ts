@@ -2,7 +2,7 @@
  * Entity type definitions
  */
 
-import type { Membro } from "./membro.types";
+import type { Membro, Cargo } from "./membro.types";
 
 export type TipoEntidade =
   | "LABORATORIO"
@@ -32,6 +32,7 @@ export type Entidade = {
   founding_date?: string | null;
   order?: number | null;
   membros?: Membro[];
+  cargos?: Cargo[];
   centro?: {
     id: string;
     nome: string;

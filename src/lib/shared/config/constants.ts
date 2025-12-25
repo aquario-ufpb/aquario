@@ -34,6 +34,8 @@ export const ENDPOINTS = {
   ENTIDADE_BY_SLUG: (slug: string) => `/entidades/slug/${slug}`,
   ENTIDADE_BY_ID: (id: string) => `/entidades/${id}`,
   ENTIDADE_MEMBROS: (id: string) => `/entidades/${id}/membros`,
+  ENTIDADE_MEMBRO: (id: string, membroId: string) => `/entidades/${id}/membros/${membroId}`,
+  ENTIDADE_CARGOS: (id: string) => `/entidades/${id}/cargos`,
 } as const;
 
 // External API URLs
