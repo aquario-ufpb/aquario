@@ -57,7 +57,6 @@ describe("AuthContext", () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.user).toBeNull();
     expect(result.current.token).toBeNull();
   });
 
@@ -72,7 +71,6 @@ describe("AuthContext", () => {
     });
 
     expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.user).toEqual(mockUser);
     expect(result.current.token).toBe("test-token");
     expect(mockGetCurrentUser).toHaveBeenCalledWith("test-token");
   });
@@ -88,7 +86,6 @@ describe("AuthContext", () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.user).toBeNull();
     expect(localStorage.getItem("token")).toBeNull();
   });
 
@@ -140,10 +137,6 @@ describe("AuthContext", () => {
     // Wait for state to update asynchronously
     await waitFor(() => {
       expect(result.current.token).toBeNull();
-    });
-
-    await waitFor(() => {
-      expect(result.current.user).toBeNull();
     });
 
     await waitFor(() => {

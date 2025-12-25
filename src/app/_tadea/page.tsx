@@ -1,10 +1,9 @@
 "use client";
 
-"use client";
-
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import LostAndFoundCard from "@/components/pages/tadea/tadea";
 import Banner from "@/components/shared/banner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,7 +35,7 @@ type ItemAchadoEPerdido = {
 };
 
 export default function TadeaPage() {
-  const { user } = useAuth();
+  const { data: user } = useCurrentUser();
   const [itens, setItens] = useState<ItemAchadoEPerdido[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +21,8 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/client/utils";
 
 export default function NovoProjetoPage() {
-  const { token, user, isLoading: isAuthLoading } = useAuth();
+  const { token, isLoading: isAuthLoading } = useAuth();
+  const { data: user, isLoading: userLoading } = useCurrentUser();
   const router = useRouter();
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -31,8 +33,10 @@ export default function NovoProjetoPage() {
   const [selectedMembros, setSelectedMembros] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
+  const isLoading = isAuthLoading || userLoading;
+
   useEffect(() => {
-    if (!isAuthLoading && !user) {
+    if (!isLoading && !user) {
       router.push("/projetos");
     }
 

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Cropper from "react-easy-crop";
-import { Area } from "react-easy-crop";
+import Cropper, { Area } from "react-easy-crop";
 import {
   Dialog,
   DialogContent,
