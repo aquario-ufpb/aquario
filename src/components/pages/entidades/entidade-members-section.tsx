@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserPlus, Users } from "lucide-react";
 import type { Entidade } from "@/lib/shared/types";
 import { type Membro, isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
-import { AddMemberDialog } from "./add-member-dialog";
+import { ManageMembershipsDialog } from "./manage-memberships-dialog";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import Image from "next/image";
 
@@ -17,16 +17,18 @@ type EntidadeMembersSectionProps = {
 type MergedMember = {
   usuario: Membro["usuario"];
   papel: Membro["papel"];
+  cargo: Membro["cargo"];
   membershipCount: number;
   earliestStart: string | undefined;
   latestEnd: string | null | undefined;
   isActive: boolean;
   currentPapel: Membro["papel"];
+  currentCargo: Membro["cargo"];
 };
 
 export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps) {
   const { data: user } = useCurrentUser();
-  const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
+  const [isManageMembershipsDialogOpen, setIsManageMembershipsDialogOpen] = useState(false);
   const [showOldMembers, setShowOldMembers] = useState(false);
 
   // Get all members or just active ones based on toggle
@@ -69,22 +71,30 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
           // If this membership is active, mark as active
           existing.isActive = true;
           existing.currentPapel = membro.papel;
+          existing.currentCargo = membro.cargo;
         }
 
         // Prefer ADMIN role if any membership was ADMIN
         if (membro.papel === "ADMIN") {
           existing.currentPapel = "ADMIN";
         }
+
+        // Prefer cargo from active membership
+        if (!membro.endedAt && membro.cargo) {
+          existing.currentCargo = membro.cargo;
+        }
       } else {
         // First time seeing this user
         memberMap.set(userId, {
           usuario: membro.usuario,
           papel: membro.papel,
+          cargo: membro.cargo,
           membershipCount: 1,
           earliestStart: membro.startedAt,
           latestEnd: membro.endedAt,
           isActive: !membro.endedAt,
           currentPapel: membro.papel,
+          currentCargo: membro.cargo,
         });
       }
     });
@@ -138,7 +148,7 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIsAddMemberDialogOpen(true)}
+                onClick={() => setIsManageMembershipsDialogOpen(true)}
                 className="flex items-center gap-2"
               >
                 <UserPlus className="w-3.5 h-3.5" />
@@ -163,7 +173,7 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
             {mergedMembers.map((merged, index) => (
               <div
                 key={`${merged.usuario.id}-${index}`}
-                className={`group hover:scale-105 transition-transform duration-200 ${
+                className={`group hover:scale-101 transition-transform duration-200 ${
                   !merged.isActive ? "opacity-60" : ""
                 }`}
               >
@@ -206,6 +216,13 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
                         {merged.usuario.curso.nome}
                       </p>
                     )}
+
+                    {/* Cargo */}
+                    {merged.currentCargo && (
+                      <p className="text-xs font-medium text-primary line-clamp-1 mt-0.5">
+                        {merged.currentCargo.nome}
+                      </p>
+                    )}
                   </div>
 
                   {/* Badges */}
@@ -228,13 +245,12 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
         )}
       </div>
 
-      {/* Add Member Dialog */}
+      {/* Manage Memberships Dialog */}
       {canAddMembers && entidade.id && (
-        <AddMemberDialog
-          entidadeId={entidade.id}
-          entidadeSlug={entidade.slug}
-          open={isAddMemberDialogOpen}
-          onOpenChange={setIsAddMemberDialogOpen}
+        <ManageMembershipsDialog
+          entidade={entidade}
+          open={isManageMembershipsDialogOpen}
+          onOpenChange={setIsManageMembershipsDialogOpen}
         />
       )}
     </div>

@@ -2,7 +2,7 @@ import { Entidade, TipoEntidade } from "@/lib/shared/types";
 import { PapelMembro } from "@/lib/shared/types/membro.types";
 import { API_URL, ENDPOINTS } from "@/lib/shared/config/constants";
 
-type BackendEntidadeResponse = {
+type ApiEntidadeResponse = {
   id: string;
   nome: string;
   slug?: string | null;
@@ -34,8 +34,21 @@ type BackendEntidadeResponse = {
       } | null;
     };
     papel: PapelMembro;
+    cargo?: {
+      id: string;
+      nome: string;
+      descricao?: string | null;
+      ordem: number;
+    } | null;
     startedAt?: string;
     endedAt?: string | null;
+  }>;
+  cargos?: Array<{
+    id: string;
+    nome: string;
+    descricao?: string | null;
+    ordem: number;
+    entidadeId: string;
   }>;
 };
 
@@ -60,8 +73,8 @@ export const entidadesService = {
     if (!response.ok) {
       throw new Error("Failed to fetch entidades");
     }
-    const data: BackendEntidadeResponse[] = await response.json();
-    return data.map(entidade => mapBackendToFrontend(entidade));
+    const data: ApiEntidadeResponse[] = await response.json();
+    return data.map(entidade => mapApiResponseToEntidade(entidade));
   },
 
   getBySlug: async (slug: string): Promise<Entidade | null> => {
@@ -72,63 +85,63 @@ export const entidadesService = {
       }
       throw new Error("Failed to fetch entidade");
     }
-    const data: BackendEntidadeResponse = await response.json();
+    const data: ApiEntidadeResponse = await response.json();
     // Include membros when fetching by slug (needed for permission checks)
-    return mapBackendToFrontend(data, true);
+    return mapApiResponseToEntidade(data, true);
   },
 
   getByTipo: async (tipo: TipoEntidade): Promise<Entidade[]> => {
-    // Fetch all and filter by tipo (backend doesn't have tipo filter endpoint yet)
+    // Fetch all and filter by tipo (API doesn't have tipo filter endpoint yet)
     const all = await entidadesService.getAll();
     return all.filter(entidade => entidade.tipo === tipo);
   },
 
   update: async (id: string, data: UpdateEntidadeRequest, token: string): Promise<void> => {
-    // Map frontend fields to backend fields
-    const backendData: Record<string, unknown> = {};
+    // Map frontend fields to API fields
+    const requestData: Record<string, unknown> = {};
     if (data.nome !== undefined) {
-      backendData.nome = data.nome;
+      requestData.nome = data.nome;
     }
     if (data.subtitle !== undefined) {
-      backendData.subtitle = data.subtitle;
+      requestData.subtitle = data.subtitle;
     }
     if (data.description !== undefined) {
-      backendData.descricao = data.description;
+      requestData.descricao = data.description;
     }
     if (data.tipo !== undefined) {
-      backendData.tipo = data.tipo;
+      requestData.tipo = data.tipo;
     }
     if (data.imagePath !== undefined) {
       if (data.imagePath) {
         // Extract filename from imagePath if it's a full path
         const imageMatch = data.imagePath.match(/assets\/entidades\/(.+)$/);
-        backendData.urlFoto = imageMatch ? imageMatch[1] : data.imagePath;
+        requestData.urlFoto = imageMatch ? imageMatch[1] : data.imagePath;
       } else {
-        backendData.urlFoto = null;
+        requestData.urlFoto = null;
       }
     }
     if (data.contato_email !== undefined) {
-      backendData.contato = data.contato_email;
+      requestData.contato = data.contato_email;
     }
     if (data.instagram !== undefined) {
-      backendData.instagram = data.instagram;
+      requestData.instagram = data.instagram;
     }
     if (data.linkedin !== undefined) {
-      backendData.linkedin = data.linkedin;
+      requestData.linkedin = data.linkedin;
     }
     if (data.website !== undefined) {
-      backendData.website = data.website;
+      requestData.website = data.website;
     }
     if (data.location !== undefined) {
-      backendData.location = data.location;
+      requestData.location = data.location;
     }
     if (data.founding_date !== undefined) {
-      backendData.foundingDate = data.founding_date
+      requestData.foundingDate = data.founding_date
         ? new Date(data.founding_date).toISOString()
         : null;
     }
     if (data.slug !== undefined) {
-      backendData.slug = data.slug;
+      requestData.slug = data.slug;
     }
 
     const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_BY_ID(id)}`, {
@@ -137,7 +150,7 @@ export const entidadesService = {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(backendData),
+      body: JSON.stringify(requestData),
     });
 
     if (!response.ok) {
@@ -151,6 +164,7 @@ export const entidadesService = {
     data: {
       usuarioId: string;
       papel: "ADMIN" | "MEMBRO";
+      cargoId?: string | null;
       startedAt?: string;
       endedAt?: string | null;
     },
@@ -164,6 +178,12 @@ export const entidadesService = {
       curso?: { nome: string } | null;
     };
     papel: "ADMIN" | "MEMBRO";
+    cargo?: {
+      id: string;
+      nome: string;
+      descricao?: string | null;
+      ordem: number;
+    } | null;
     startedAt: string;
     endedAt: string | null;
   }> => {
@@ -183,6 +203,152 @@ export const entidadesService = {
 
     return response.json();
   },
+
+  updateMember: async (
+    entidadeId: string,
+    membroId: string,
+    data: {
+      papel?: "ADMIN" | "MEMBRO";
+      cargoId?: string | null;
+      startedAt?: string;
+      endedAt?: string | null;
+    },
+    token: string
+  ): Promise<{
+    id: string;
+    usuario: {
+      id: string;
+      nome: string;
+      urlFotoPerfil?: string | null;
+      curso?: { nome: string } | null;
+    };
+    papel: "ADMIN" | "MEMBRO";
+    cargo?: {
+      id: string;
+      nome: string;
+      descricao?: string | null;
+      ordem: number;
+    } | null;
+    startedAt: string;
+    endedAt: string | null;
+  }> => {
+    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_MEMBRO(entidadeId, membroId)}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Falha ao atualizar membro");
+    }
+
+    return response.json();
+  },
+
+  // Cargo management
+  getCargos: async (
+    entidadeId: string
+  ): Promise<
+    Array<{
+      id: string;
+      nome: string;
+      descricao?: string | null;
+      ordem: number;
+      entidadeId: string;
+    }>
+  > => {
+    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch cargos");
+    }
+    return response.json();
+  },
+
+  createCargo: async (
+    entidadeId: string,
+    data: {
+      nome: string;
+      descricao?: string | null;
+      ordem?: number;
+    },
+    token: string
+  ): Promise<{
+    id: string;
+    nome: string;
+    descricao?: string | null;
+    ordem: number;
+    entidadeId: string;
+  }> => {
+    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Falha ao criar cargo");
+    }
+
+    return response.json();
+  },
+
+  updateCargo: async (
+    entidadeId: string,
+    cargoId: string,
+    data: {
+      nome?: string;
+      descricao?: string | null;
+      ordem?: number;
+    },
+    token: string
+  ): Promise<{
+    id: string;
+    nome: string;
+    descricao?: string | null;
+    ordem: number;
+    entidadeId: string;
+  }> => {
+    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ cargoId, ...data }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Falha ao atualizar cargo");
+    }
+
+    return response.json();
+  },
+
+  deleteCargo: async (entidadeId: string, cargoId: string, token: string): Promise<void> => {
+    const response = await fetch(
+      `${API_URL}${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}?cargoId=${cargoId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Falha ao deletar cargo");
+    }
+  },
 };
 
 // =============================================================================
@@ -200,8 +366,8 @@ function nomeToSlug(nome: string): string {
     .trim();
 }
 
-function normalizeTipo(backendTipo: string): TipoEntidade {
-  // Validate that the backend tipo is a valid TipoEntidade
+function normalizeTipo(apiTipo: string): TipoEntidade {
+  // Validate that the API tipo is a valid TipoEntidade
   const validTipos: TipoEntidade[] = [
     "LABORATORIO",
     "GRUPO",
@@ -212,7 +378,7 @@ function normalizeTipo(backendTipo: string): TipoEntidade {
     "OUTRO",
   ];
 
-  return validTipos.includes(backendTipo as TipoEntidade) ? (backendTipo as TipoEntidade) : "OUTRO";
+  return validTipos.includes(apiTipo as TipoEntidade) ? (apiTipo as TipoEntidade) : "OUTRO";
 }
 
 function mapImagePath(urlFoto: string | null | undefined): string {
@@ -238,36 +404,50 @@ function getEntidadeSlug(nome: string, slug: string | null | undefined): string 
   return nomeToSlug(nome);
 }
 
-function mapBackendToFrontend(backend: BackendEntidadeResponse, includeMembros = false): Entidade {
-  const slug = getEntidadeSlug(backend.nome, backend.slug);
+function mapApiResponseToEntidade(apiData: ApiEntidadeResponse, includeMembros = false): Entidade {
+  const slug = getEntidadeSlug(apiData.nome, apiData.slug);
 
   // Extract order from metadata
   const order =
-    backend.metadata && typeof backend.metadata === "object" && "order" in backend.metadata
-      ? (backend.metadata.order as number | null)
+    apiData.metadata && typeof apiData.metadata === "object" && "order" in apiData.metadata
+      ? (apiData.metadata.order as number | null)
       : null;
 
   // Format founding_date if present
-  const founding_date = backend.foundingDate
-    ? new Date(backend.foundingDate).toISOString().split("T")[0]
+  const founding_date = apiData.foundingDate
+    ? new Date(apiData.foundingDate).toISOString().split("T")[0]
     : null;
 
   return {
-    id: backend.id,
-    name: backend.nome,
+    id: apiData.id,
+    name: apiData.nome,
     slug: slug,
-    subtitle: backend.subtitle || null,
-    description: backend.descricao || null,
-    tipo: normalizeTipo(backend.tipo),
-    imagePath: mapImagePath(backend.urlFoto),
-    contato_email: backend.contato || "",
-    instagram: backend.instagram || null,
-    linkedin: backend.linkedin || null,
-    website: backend.website || null,
-    location: backend.location || null,
+    subtitle: apiData.subtitle || null,
+    description: apiData.descricao || null,
+    tipo: normalizeTipo(apiData.tipo),
+    imagePath: mapImagePath(apiData.urlFoto),
+    contato_email: apiData.contato || "",
+    instagram: apiData.instagram || null,
+    linkedin: apiData.linkedin || null,
+    website: apiData.website || null,
+    location: apiData.location || null,
     founding_date: founding_date,
     order: order,
-    membros: includeMembros ? backend.membros : undefined,
-    centro: backend.centro || null,
+    membros: includeMembros
+      ? apiData.membros?.map(membro => ({
+          ...membro,
+          cargo: membro.cargo
+            ? {
+                ...membro.cargo,
+                entidadeId: apiData.id,
+              }
+            : null,
+        }))
+      : undefined,
+    cargos: apiData.cargos?.map(cargo => ({
+      ...cargo,
+      entidadeId: apiData.id,
+    })),
+    centro: apiData.centro || null,
   };
 }
