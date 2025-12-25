@@ -59,16 +59,23 @@ export function ManageMembershipsDialog({
             <TabsTrigger value="cargos">Gerenciar Cargos</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="members" className="flex-1 overflow-hidden flex flex-col mt-4">
+          <TabsContent
+            value="members"
+            className="flex-1 min-h-0 overflow-y-auto flex flex-col mt-4"
+          >
             <AddMemberForm entidade={entidade}>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-2 flex-shrink-0">
                 <Label className="text-base font-semibold">Membros ({members.length})</Label>
                 <AddMemberForm.Trigger />
               </div>
 
-              <AddMemberForm.Content />
+              <div className="flex-shrink-0">
+                <AddMemberForm.Content />
+              </div>
 
-              <MembersTable members={members} cargos={cargos} entidade={entidade} />
+              <div className="flex-shrink-0 mt-4">
+                <MembersTable members={members} cargos={cargos} entidade={entidade} />
+              </div>
             </AddMemberForm>
           </TabsContent>
 

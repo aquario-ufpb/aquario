@@ -16,10 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ability to manually create facade users from the Admin panel.
   - Dialog to search and add members to an entity directly from its page.
   - CLI script (`npm run merge-facade-user`) to merge facade accounts into real user profiles while preserving history.
+- Added Cargos: each Entidade can manage its cargos and memberships
 
 ### Changed
 - _Changes in existing functionality will be listed here_
-
+- Improved UI for entidades page
 ### Fixed
 - _Bug fixes will be listed here_
 
