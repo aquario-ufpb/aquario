@@ -55,6 +55,16 @@ export type IUsuariosRepository = {
   updateFotoPerfil(id: string, urlFotoPerfil: string | null): Promise<void>;
 
   /**
+   * Update user's centro
+   */
+  updateCentro(id: string, centroId: string): Promise<void>;
+
+  /**
+   * Update user's curso
+   */
+  updateCurso(id: string, cursoId: string): Promise<void>;
+
+  /**
    * Delete a user
    */
   delete(id: string): Promise<void>;

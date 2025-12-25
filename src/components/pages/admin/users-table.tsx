@@ -6,6 +6,7 @@ import {
   useUpdateUserRole,
   useDeleteUser,
   useCreateFacadeUser,
+  useUpdateUserInfo,
 } from "@/lib/client/hooks/use-usuarios";
 import { useCentros, useCursos } from "@/lib/client/hooks";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -32,6 +33,8 @@ import { toast } from "sonner";
 import { Trash2, UserPlus } from "lucide-react";
 import { PaginationControls } from "@/components/shared/pagination-controls";
 
+type UserFilter = "all" | "facade" | "real";
+
 export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(25);
@@ -39,6 +42,10 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const [facadeNome, setFacadeNome] = useState("");
   const [facadeCentroId, setFacadeCentroId] = useState("");
   const [facadeCursoId, setFacadeCursoId] = useState("");
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editCentroId, setEditCentroId] = useState("");
+  const [editCursoId, setEditCursoId] = useState("");
+  const [userFilter, setUserFilter] = useState<UserFilter>("all");
 
   const {
     data: paginatedData,
@@ -50,15 +57,28 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
     limit: itemsPerPage,
   });
 
-  const users = paginatedData?.users ?? [];
+  // Filter users based on selected filter
+  const allUsers = paginatedData?.users ?? [];
+  const users = allUsers.filter(user => {
+    if (userFilter === "facade") {
+      return user.eFacade;
+    }
+    if (userFilter === "real") {
+      return !user.eFacade;
+    }
+    return true;
+  });
+
   const totalUsers = paginatedData?.pagination.total ?? 0;
   const totalPages = paginatedData?.pagination.totalPages ?? 0;
 
   const updateRoleMutation = useUpdateUserRole();
   const deleteUserMutation = useDeleteUser();
   const createFacadeUserMutation = useCreateFacadeUser();
+  const updateUserInfoMutation = useUpdateUserInfo();
   const { data: centros = [] } = useCentros();
   const { data: cursos = [] } = useCursos(facadeCentroId);
+  const { data: editCursos = [] } = useCursos(editCentroId);
 
   // Auto-select first centro when dialog opens and centros are available
   useEffect(() => {
@@ -151,6 +171,42 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
     }
   };
 
+  const handleStartEdit = (userId: string, centroId: string, cursoId: string) => {
+    setEditingUserId(userId);
+    setEditCentroId(centroId);
+    setEditCursoId(cursoId);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingUserId(null);
+    setEditCentroId("");
+    setEditCursoId("");
+  };
+
+  const handleSaveEdit = async (userId: string, userName: string) => {
+    try {
+      await updateUserInfoMutation.mutateAsync({
+        userId,
+        data: {
+          centroId: editCentroId,
+          cursoId: editCursoId,
+        },
+      });
+      toast.success("Informações atualizadas", {
+        description: `As informações de ${userName} foram atualizadas.`,
+      });
+      setEditingUserId(null);
+      setEditCentroId("");
+      setEditCursoId("");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro ao atualizar informações do usuário";
+      toast.error("Erro ao atualizar informações", {
+        description: errorMessage,
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -158,7 +214,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
         <CardDescription>Gerencie usuários e permissões da plataforma</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center flex-wrap">
           <Dialog open={isFacadeDialogOpen} onOpenChange={setIsFacadeDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="default" disabled={isLoading}>
@@ -248,6 +304,22 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
           <Button onClick={() => refetch()} variant="outline" disabled={isLoading}>
             Atualizar
           </Button>
+
+          <div className="flex items-center gap-2">
+            <Label htmlFor="user-filter" className="text-sm font-medium">
+              Filtrar:
+            </Label>
+            <Select value={userFilter} onValueChange={(value: UserFilter) => setUserFilter(value)}>
+              <SelectTrigger id="user-filter" className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os usuários</SelectItem>
+                <SelectItem value="facade">Apenas Facade</SelectItem>
+                <SelectItem value="real">Apenas Reais</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {queryError && (
@@ -289,104 +361,185 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                   </td>
                 </tr>
               ) : (
-                users.map(userItem => (
-                  <tr key={userItem.id} className="border-b hover:bg-muted/50">
-                    <td className="p-4 font-medium">
-                      {userItem.nome}
-                      {userItem.eFacade && (
-                        <span className="ml-2 text-xs text-muted-foreground">(Facade)</span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      {userItem.email || <span className="text-muted-foreground">—</span>}
-                    </td>
-                    <td className="p-4">{userItem.centro.sigla}</td>
-                    <td className="p-4">{userItem.curso.nome}</td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        {userItem.eVerificado ? (
-                          <>
-                            <svg
-                              className="w-4 h-4 text-green-600 dark:text-green-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                            <span className="text-sm">Verificado</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg
-                              className="w-4 h-4 text-yellow-600 dark:text-yellow-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                              />
-                            </svg>
-                            <span className="text-sm">Não verificado</span>
-                          </>
+                users.map(userItem => {
+                  const isEditing = editingUserId === userItem.id;
+                  return (
+                    <tr key={userItem.id} className="border-b hover:bg-muted/50">
+                      <td className="p-4 font-medium">
+                        {userItem.nome}
+                        {userItem.eFacade && (
+                          <span className="ml-2 text-xs text-muted-foreground">(Facade)</span>
                         )}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <Select
-                        value={userItem.papelPlataforma}
-                        onValueChange={(value: "USER" | "MASTER_ADMIN") =>
-                          handleRoleUpdate(userItem.id, value)
-                        }
-                        disabled={
-                          updateRoleMutation.isPending &&
-                          updateRoleMutation.variables?.userId === userItem.id
-                        }
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="USER">Usuário</SelectItem>
-                          <SelectItem value="MASTER_ADMIN">Administrador</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="p-4 text-right">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteUser(userItem.id, userItem.nome)}
-                        disabled={
-                          (deleteUserMutation.isPending &&
-                            deleteUserMutation.variables === userItem.id) ||
-                          userItem.id === currentUserId
-                        }
-                        className="gap-2"
-                        title={
-                          userItem.id === currentUserId
-                            ? "Você não pode deletar sua própria conta"
-                            : "Deletar usuário"
-                        }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        {deleteUserMutation.isPending &&
-                        deleteUserMutation.variables === userItem.id
-                          ? "Deletando..."
-                          : "Deletar"}
-                      </Button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="p-4">
+                        {userItem.email || <span className="text-muted-foreground">—</span>}
+                      </td>
+                      <td className="p-4">
+                        {isEditing ? (
+                          <Select value={editCentroId} onValueChange={setEditCentroId}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {centros.map(centro => (
+                                <SelectItem key={centro.id} value={centro.id}>
+                                  {centro.sigla}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          userItem.centro.sigla
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {isEditing ? (
+                          <Select
+                            value={editCursoId}
+                            onValueChange={setEditCursoId}
+                            disabled={!editCentroId}
+                          >
+                            <SelectTrigger className="w-48">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {editCursos.map(curso => (
+                                <SelectItem key={curso.id} value={curso.id}>
+                                  {curso.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          userItem.curso.nome
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          {userItem.eVerificado ? (
+                            <>
+                              <svg
+                                className="w-4 h-4 text-green-600 dark:text-green-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                              <span className="text-sm">Verificado</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg
+                                className="w-4 h-4 text-yellow-600 dark:text-yellow-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                />
+                              </svg>
+                              <span className="text-sm">Não verificado</span>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <Select
+                          value={userItem.papelPlataforma}
+                          onValueChange={(value: "USER" | "MASTER_ADMIN") =>
+                            handleRoleUpdate(userItem.id, value)
+                          }
+                          disabled={
+                            updateRoleMutation.isPending &&
+                            updateRoleMutation.variables?.userId === userItem.id
+                          }
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="USER">Usuário</SelectItem>
+                            <SelectItem value="MASTER_ADMIN">Administrador</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex gap-2 justify-end">
+                          {isEditing ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCancelEdit}
+                                disabled={updateUserInfoMutation.isPending}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleSaveEdit(userItem.id, userItem.nome)}
+                                disabled={
+                                  updateUserInfoMutation.isPending || !editCentroId || !editCursoId
+                                }
+                              >
+                                {updateUserInfoMutation.isPending ? "Salvando..." : "Salvar"}
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleStartEdit(
+                                    userItem.id,
+                                    userItem.centro.id,
+                                    userItem.curso.id
+                                  )
+                                }
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteUser(userItem.id, userItem.nome)}
+                                disabled={
+                                  (deleteUserMutation.isPending &&
+                                    deleteUserMutation.variables === userItem.id) ||
+                                  userItem.id === currentUserId
+                                }
+                                className="gap-2"
+                                title={
+                                  userItem.id === currentUserId
+                                    ? "Você não pode deletar sua própria conta"
+                                    : "Deletar usuário"
+                                }
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                {deleteUserMutation.isPending &&
+                                deleteUserMutation.variables === userItem.id
+                                  ? "Deletando..."
+                                  : "Deletar"}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

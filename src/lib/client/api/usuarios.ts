@@ -31,6 +31,11 @@ export type CreateFacadeUserRequest = {
   cursoId: string;
 };
 
+export type UpdateUserInfoRequest = {
+  centroId?: string;
+  cursoId?: string;
+};
+
 export const usuariosService = {
   getCurrentUser: async (token: string): Promise<User> => {
     const response = await apiClient(`${API_URL}${ENDPOINTS.ME}`, {
@@ -189,6 +194,28 @@ export const usuariosService = {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Falha ao criar usuário facade");
+    }
+
+    return response.json();
+  },
+
+  updateUserInfo: async (
+    userId: string,
+    data: UpdateUserInfoRequest,
+    token: string
+  ): Promise<User> => {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}/${userId}/info`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      token,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Falha ao atualizar informações do usuário");
     }
 
     return response.json();

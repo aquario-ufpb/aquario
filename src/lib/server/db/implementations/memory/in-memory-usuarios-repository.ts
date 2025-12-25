@@ -152,6 +152,24 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     return Promise.resolve();
   }
 
+  updateCentro(id: string, centroId: string): Promise<void> {
+    const usuario = this.usuarios.find(u => u.id === id);
+    if (usuario) {
+      usuario.centroId = centroId;
+      usuario.atualizadoEm = new Date();
+    }
+    return Promise.resolve();
+  }
+
+  updateCurso(id: string, cursoId: string): Promise<void> {
+    const usuario = this.usuarios.find(u => u.id === id);
+    if (usuario) {
+      usuario.cursoId = cursoId;
+      usuario.atualizadoEm = new Date();
+    }
+    return Promise.resolve();
+  }
+
   delete(id: string): Promise<void> {
     const index = this.usuarios.findIndex(u => u.id === id);
     if (index !== -1) {

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { UserPlus, Users } from "lucide-react";
 import type { Entidade } from "@/lib/shared/types";
 import { type Membro, isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
@@ -24,6 +25,11 @@ type MergedMember = {
   isActive: boolean;
   currentPapel: Membro["papel"];
   currentCargo: Membro["cargo"];
+  allCargos: Array<{
+    nome: string;
+    startedAt: string | undefined;
+    endedAt: string | null | undefined;
+  }>;
 };
 
 export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps) {
@@ -51,6 +57,15 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
       if (existing) {
         // Update with latest information
         existing.membershipCount += 1;
+
+        // Add cargo to the list
+        if (membro.cargo) {
+          existing.allCargos.push({
+            nome: membro.cargo.nome,
+            startedAt: membro.startedAt,
+            endedAt: membro.endedAt,
+          });
+        }
 
         // Update earliest start date
         if (membro.startedAt) {
@@ -95,16 +110,29 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
           isActive: !membro.endedAt,
           currentPapel: membro.papel,
           currentCargo: membro.cargo,
+          allCargos: membro.cargo
+            ? [{ nome: membro.cargo.nome, startedAt: membro.startedAt, endedAt: membro.endedAt }]
+            : [],
         });
       }
     });
 
     const membersArray = Array.from(memberMap.values());
 
-    // Sort members by cargo ordem (lower ordem = higher priority)
-    // Members with cargo appear first, sorted by ordem
-    // Members without cargo appear last
+    // Sort members:
+    // 1. Active members first, inactive last
+    // 2. Within each group, sort by cargo ordem (lower ordem = higher priority)
+    // 3. Members with cargo appear before members without cargo
     return membersArray.sort((a, b) => {
+      // First, sort by active status (active first)
+      if (a.isActive && !b.isActive) {
+        return -1;
+      }
+      if (!a.isActive && b.isActive) {
+        return 1;
+      }
+
+      // Then sort by cargo ordem
       const aOrdem = a.currentCargo?.ordem ?? Infinity;
       const bOrdem = b.currentCargo?.ordem ?? Infinity;
 
@@ -121,8 +149,8 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
         return 1;
       }
 
-      // If neither has cargo, maintain original order
-      return 0;
+      // If neither has cargo, sort by name
+      return a.usuario.nome.localeCompare(b.usuario.nome);
     });
   }, [filteredMembers]);
 
@@ -257,9 +285,55 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
                       </Badge>
                     )}
                     {merged.membershipCount > 1 && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        {merged.membershipCount}x
-                      </Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                              {merged.membershipCount}x
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-xs space-y-1 max-w-xs">
+                              <p className="font-semibold mb-1">Cargos:</p>
+                              {merged.allCargos
+                                .sort((a, b) => {
+                                  if (!a.startedAt) {
+                                    return 1;
+                                  }
+                                  if (!b.startedAt) {
+                                    return -1;
+                                  }
+                                  return (
+                                    new Date(a.startedAt).getTime() -
+                                    new Date(b.startedAt).getTime()
+                                  );
+                                })
+                                .map((cargo, idx) => {
+                                  const formatDate = (date: string | undefined | null) => {
+                                    if (!date) {
+                                      return "presente";
+                                    }
+                                    return new Date(date).toLocaleDateString("pt-BR", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    });
+                                  };
+
+                                  return (
+                                    <p key={idx} className="leading-relaxed">
+                                      • <span className="font-medium">{cargo.nome}</span>
+                                      <br />
+                                      <span className="text-muted-foreground ml-2 text-[10px]">
+                                        {formatDate(cargo.startedAt)} - {formatDate(cargo.endedAt)}
+                                      </span>
+                                    </p>
+                                  );
+                                })}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
                 </div>

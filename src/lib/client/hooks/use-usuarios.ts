@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { usuariosService } from "@/lib/client/api/usuarios";
+import { usuariosService, type UpdateUserInfoRequest } from "@/lib/client/api/usuarios";
 import { queryKeys } from "@/lib/client/query-keys";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -183,6 +183,23 @@ export const useCreateFacadeUser = () => {
     },
     onSuccess: () => {
       // Invalidate and refetch users list after creating facade user
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+    },
+  });
+};
+
+export const useUpdateUserInfo = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, data }: { userId: string; data: UpdateUserInfoRequest }) => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return usuariosService.updateUserInfo(userId, data, token);
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
     },
   });

@@ -195,6 +195,20 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     });
   }
 
+  async updateCentro(id: string, centroId: string): Promise<void> {
+    await prisma.usuario.update({
+      where: { id },
+      data: { centroId },
+    });
+  }
+
+  async updateCurso(id: string, cursoId: string): Promise<void> {
+    await prisma.usuario.update({
+      where: { id },
+      data: { cursoId },
+    });
+  }
+
   async delete(id: string): Promise<void> {
     await prisma.usuario.delete({
       where: { id },
