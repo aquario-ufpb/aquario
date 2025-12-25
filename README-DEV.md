@@ -17,8 +17,8 @@ cd aquario
 npm install
 
 # 3. Configure environment (required before setup)
-cp .env.example .env.local
-# Edit .env.local if needed (default works with Docker)
+cp .env.example .env
+# Edit .env if needed (default works with Docker)
 
 # 4. Run setup (submodules, Docker, migrations)
 npm run setup
@@ -31,7 +31,7 @@ npm run dev
 
 > 💡 **Tip:** `npm run setup` handles everything - git submodules, Docker database, and migrations. Safe to run multiple times!
 > 
-> **Note:** Copy `.env.example` to `.env.local` **before** running `npm run setup` so it can detect your database configuration.
+> **Note:** Copy `.env.example` to `.env` **before** running `npm run setup` so it can detect your database configuration.
 
 ---
 
@@ -78,7 +78,7 @@ npm run db:seed
 npm run dev
 ```
 
-Your `.env.local`:
+Your `.env`:
 
 ```bash
 DATABASE_URL="postgresql://postgres:password@localhost:5432/aquario"
@@ -91,7 +91,7 @@ JWT_SECRET="your-secret-key-at-least-32-characters-long"
 For UI work without any database setup:
 
 ```bash
-# In .env.local:
+# In .env:
 DB_PROVIDER=memory
 NEXT_PUBLIC_GUIAS_DATA_PROVIDER=local
 NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER=local
@@ -105,7 +105,7 @@ Then just `npm run dev` — data comes from git submodules.
 For project members who need to test with real services:
 
 ```bash
-# In .env.local:
+# In .env:
 DATABASE_URL="postgresql://...@neon.tech/aquario"
 RESEND_API_KEY="re_xxx"
 JWT_SECRET="staging-secret"

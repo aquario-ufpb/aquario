@@ -19,7 +19,6 @@ const PROJECT_ROOT = join(__dirname, "..");
 
 /**
  * Load environment variables from .env files
- * Follows Next.js precedence: .env.local > .env
  */
 function loadEnvFile(filePath) {
   if (!existsSync(filePath)) {
@@ -42,7 +41,7 @@ function loadEnvFile(filePath) {
   });
 }
 
-// Load .env files (Next.js precedence: .env.local overrides .env)
+// Load .env files
 loadEnvFile(join(PROJECT_ROOT, ".env"));
 loadEnvFile(join(PROJECT_ROOT, ".env.local"));
 
@@ -269,7 +268,7 @@ console.log("🗄️  Step 3: Running database migrations...");
 
 if (!hasDatabaseUrl) {
   console.log("   ⏭️  No DATABASE_URL set, skipping migrations");
-  console.log("   💡 Set DATABASE_URL in .env.local to run migrations\n");
+  console.log("   💡 Set DATABASE_URL in .env to run migrations\n");
 } else {
   console.log("   🔍 DATABASE_URL detected, running migrations...");
 
@@ -321,7 +320,7 @@ if (!hasDatabaseUrl) {
       }
     } else if (errorStr.includes("P1001") || errorStr.includes("Can't reach database")) {
       console.log("\n   💡 Issue: Cannot connect to database");
-      console.log("   💡 Check your DATABASE_URL in .env.local");
+      console.log("   💡 Check your DATABASE_URL in .env");
       console.log("   💡 Make sure the database is running (Docker or cloud)");
     } else if (errorStr.includes("already applied")) {
       console.log("\n   ✅ This is OK - migrations are already up to date!");

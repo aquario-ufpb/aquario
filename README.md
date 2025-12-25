@@ -46,7 +46,7 @@ Job listings, internships, research positions, and volunteer opportunities.
 git clone https://github.com/aquario-ufpb/aquario.git
 cd aquario
 npm install
-cp .env.example .env.local
+cp .env.example .env
 npm run setup
 npm run dev
 ```

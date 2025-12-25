@@ -28,8 +28,8 @@ cd aquario
 npm install
 
 # 3. Configure environment (required before setup)
-cp .env.example .env.local
-# Edit .env.local if needed (default works with Docker)
+cp .env.example .env
+# Edit .env if needed (default works with Docker)
 
 # 4. Run setup (submodules, Docker, migrations)
 npm run setup
@@ -63,7 +63,7 @@ npm run dev
 **Frontend Only (no Database):**
 
 ```bash
-# Set in .env.local:
+# Set in .env:
 DB_PROVIDER=memory
 NEXT_PUBLIC_GUIAS_DATA_PROVIDER=local
 NEXT_PUBLIC_ENTIDADES_DATA_PROVIDER=local
