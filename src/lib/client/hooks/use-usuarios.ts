@@ -123,7 +123,7 @@ export const useUploadPhoto = () => {
 
 /**
  * Hook to delete a profile photo
- * Automatically invalidates and refetches current user data
+ * Automatically updates cache and refetches current user data
  */
 export const useDeletePhoto = () => {
   const { token } = useAuth();
@@ -136,8 +136,10 @@ export const useDeletePhoto = () => {
       }
       return usuariosService.deletePhoto(token);
     },
-    onSuccess: () => {
-      // Invalidate current user query to refetch without photo
+    onSuccess: updatedUser => {
+      // Update the cache directly with the new user data (photo removed)
+      queryClient.setQueryData(queryKeys.usuarios.current, updatedUser);
+      // Also invalidate to ensure fresh data
       queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
     },
   });

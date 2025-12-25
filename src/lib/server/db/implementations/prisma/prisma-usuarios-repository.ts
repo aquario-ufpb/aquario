@@ -91,7 +91,7 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     });
   }
 
-  async updatePhotoPerfil(id: string, urlFotoPerfil: string | null): Promise<void> {
+  async updateFotoPerfil(id: string, urlFotoPerfil: string | null): Promise<void> {
     await prisma.usuario.update({
       where: { id },
       data: { urlFotoPerfil },

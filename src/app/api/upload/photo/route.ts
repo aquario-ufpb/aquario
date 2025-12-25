@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       uploadedUrl = await blobStorage.upload(file, filename, file.type);
 
       // Update database with new URL
-      await usuariosRepository.updatePhotoPerfil(usuario.id, uploadedUrl);
+      await usuariosRepository.updateFotoPerfil(usuario.id, uploadedUrl);
 
       // Fetch updated user to return
       const updatedUser = await usuariosRepository.findById(usuario.id);

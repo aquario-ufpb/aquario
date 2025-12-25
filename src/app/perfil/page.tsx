@@ -81,9 +81,10 @@ export default function PerfilPage() {
     // Close dialog immediately to prevent multiple clicks
     setCropDialogOpen(false);
 
-    // Clean up object URL
+    // Clean up object URL and reset state
     if (selectedImageUrl) {
       URL.revokeObjectURL(selectedImageUrl);
+      setSelectedImageUrl("");
     }
 
     // Reset file input
@@ -105,9 +106,10 @@ export default function PerfilPage() {
 
   const handleCropCancel = () => {
     setCropDialogOpen(false);
-    // Clean up object URL
+    // Clean up object URL and reset state
     if (selectedImageUrl) {
       URL.revokeObjectURL(selectedImageUrl);
+      setSelectedImageUrl("");
     }
     // Reset file input
     if (fileInputRef.current) {

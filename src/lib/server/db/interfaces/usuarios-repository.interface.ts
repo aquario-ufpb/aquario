@@ -39,7 +39,7 @@ export type IUsuariosRepository = {
   /**
    * Update user's profile photo URL
    */
-  updatePhotoPerfil(id: string, urlFotoPerfil: string | null): Promise<void>;
+  updateFotoPerfil(id: string, urlFotoPerfil: string | null): Promise<void>;
 
   /**
    * Delete a user

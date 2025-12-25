@@ -1,5 +1,5 @@
 import { writeFile, mkdir, unlink, access } from "fs/promises";
-import { join, normalize, resolve } from "path";
+import { join, normalize, resolve, dirname } from "path";
 import { existsSync } from "fs";
 import type { IBlobStorage } from "./blob-storage.interface";
 
@@ -24,12 +24,7 @@ export class LocalBlobStorage implements IBlobStorage {
    */
   private async ensureDirectory(path: string): Promise<void> {
     const fullPath = join(this.baseDir, path);
-    // Extract directory part (everything before the last /)
-    const lastSlashIndex = Math.max(fullPath.lastIndexOf("/"), fullPath.lastIndexOf("\\"));
-    if (lastSlashIndex === -1) {
-      return; // No directory part
-    }
-    const dirPath = fullPath.substring(0, lastSlashIndex);
+    const dirPath = dirname(fullPath);
 
     if (dirPath && !existsSync(dirPath)) {
       await mkdir(dirPath, { recursive: true });

@@ -33,7 +33,7 @@ export async function PATCH(request: Request) {
       }
 
       // Update user's photo URL
-      await usuariosRepository.updatePhotoPerfil(usuario.id, urlFotoPerfil ?? null);
+      await usuariosRepository.updateFotoPerfil(usuario.id, urlFotoPerfil ?? null);
 
       // Return updated user
       const updatedUser = await usuariosRepository.findById(usuario.id);
@@ -79,7 +79,7 @@ export async function DELETE(request: Request) {
       }
 
       // Update user's photo URL to null
-      await usuariosRepository.updatePhotoPerfil(usuario.id, null);
+      await usuariosRepository.updateFotoPerfil(usuario.id, null);
 
       // Return updated user
       const updatedUser = await usuariosRepository.findById(usuario.id);

@@ -89,7 +89,7 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     return Promise.resolve();
   }
 
-  updatePhotoPerfil(id: string, urlFotoPerfil: string | null): Promise<void> {
+  updateFotoPerfil(id: string, urlFotoPerfil: string | null): Promise<void> {
     const usuario = this.usuarios.find(u => u.id === id);
     if (usuario) {
       usuario.urlFotoPerfil = urlFotoPerfil;
