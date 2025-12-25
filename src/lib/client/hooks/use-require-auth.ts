@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "./use-usuarios";
 
 type RequireAuthOptions = {
   redirectTo?: string;
@@ -8,17 +9,21 @@ type RequireAuthOptions = {
 };
 
 /**
- * Hook to require authentication for a page
- * Automatically redirects to login if not authenticated
- * Returns user and loading state
+ * Hook to require authentication for a page.
+ * Automatically redirects to login if not authenticated.
+ *
+ * For user data, use useCurrentUser() hook instead.
  *
  * @param options - Configuration options
- * @returns Object with user, isLoading, and isAuthenticated
+ * @returns Object with isLoading and isAuthenticated
  */
 export function useRequireAuth(options: RequireAuthOptions = {}) {
   const { redirectTo = "/login", requireRole } = options;
-  const { user, isLoading, isAuthenticated, token } = useAuth();
+  const { isLoading: authLoading, isAuthenticated, token } = useAuth();
+  const { data: user, isLoading: userLoading } = useCurrentUser();
   const router = useRouter();
+
+  const isLoading = authLoading || userLoading;
 
   useEffect(() => {
     // Don't redirect while still loading
@@ -26,14 +31,13 @@ export function useRequireAuth(options: RequireAuthOptions = {}) {
       return;
     }
 
-    // If there's a token but no user, the auth context's logout() is handling the redirect
-    // Don't duplicate the redirect to avoid race conditions
+    // If there's a token but no user data yet, wait for user to load
     if (token && !user) {
       return;
     }
 
-    // Only redirect if there's no token and no user (truly not authenticated)
-    if (!token && !user) {
+    // Only redirect if there's no token (truly not authenticated)
+    if (!token) {
       router.replace(redirectTo);
       return;
     }
@@ -45,7 +49,6 @@ export function useRequireAuth(options: RequireAuthOptions = {}) {
   }, [isLoading, token, user, router, redirectTo, requireRole]);
 
   return {
-    user,
     isLoading,
     isAuthenticated,
   };

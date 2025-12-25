@@ -9,8 +9,8 @@ import { SearchBar1 } from "@/components/ui/searchbar1";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
-import { useAuth } from "@/contexts/auth-context";
 import { useVagas } from "@/lib/client/hooks";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 
 function VagasCard({ vaga }: { vaga: Vaga }) {
   /*const handleClick = () => {
@@ -29,9 +29,9 @@ function VagasCard({ vaga }: { vaga: Vaga }) {
 
 export default function VagasPage() {
   const { data: vagas = [] } = useVagas();
+  const { data: user } = useCurrentUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
-  const { user } = useAuth();
 
   const canPostJob = !!(
     user &&

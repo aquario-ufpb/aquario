@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +19,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TipoVaga } from "@/components/pages/vagas/vacancy-card";
 
 export default function NovaVagaPage() {
-  const { token, user, isLoading: isAuthLoading } = useAuth();
+  const { token, isLoading: isAuthLoading } = useAuth();
+  const { data: user } = useCurrentUser();
   const router = useRouter();
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");

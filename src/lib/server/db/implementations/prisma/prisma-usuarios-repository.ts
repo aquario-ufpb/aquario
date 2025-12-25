@@ -91,6 +91,13 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     });
   }
 
+  async updatePhotoPerfil(id: string, urlFotoPerfil: string | null): Promise<void> {
+    await prisma.usuario.update({
+      where: { id },
+      data: { urlFotoPerfil },
+    });
+  }
+
   async delete(id: string): Promise<void> {
     await prisma.usuario.delete({
       where: { id },

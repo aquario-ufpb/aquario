@@ -113,3 +113,6 @@ next-env.d.ts
 # Playwright
 playwright-report/
 test-results/
+
+# Local uploads (development mode)
+public/uploads/

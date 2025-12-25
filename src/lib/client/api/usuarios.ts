@@ -84,4 +84,55 @@ export const usuariosService = {
       throw new Error(errorData.message || "Falha ao deletar usuário");
     }
   },
+
+  uploadPhoto: async (file: File, token: string): Promise<User> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await apiClient(`${API_URL}${ENDPOINTS.UPLOAD_PHOTO}`, {
+      method: "POST",
+      token,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Falha ao fazer upload da foto");
+    }
+
+    // Upload route now returns the updated user object directly
+    return response.json();
+  },
+
+  updatePhoto: async (urlFotoPerfil: string | null, token: string): Promise<User> => {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_PHOTO}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      token,
+      body: JSON.stringify({ urlFotoPerfil }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Falha ao atualizar foto de perfil");
+    }
+
+    return response.json();
+  },
+
+  deletePhoto: async (token: string): Promise<User> => {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_PHOTO}`, {
+      method: "DELETE",
+      token,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Falha ao deletar foto de perfil");
+    }
+
+    return response.json();
+  },
 };

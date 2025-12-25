@@ -37,6 +37,11 @@ export type IUsuariosRepository = {
   updatePapelPlataforma(id: string, papelPlataforma: PapelPlataforma): Promise<void>;
 
   /**
+   * Update user's profile photo URL
+   */
+  updatePhotoPerfil(id: string, urlFotoPerfil: string | null): Promise<void>;
+
+  /**
    * Delete a user
    */
   delete(id: string): Promise<void>;
