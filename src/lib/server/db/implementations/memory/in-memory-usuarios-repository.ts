@@ -89,6 +89,15 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     return Promise.resolve();
   }
 
+  updateFotoPerfil(id: string, urlFotoPerfil: string | null): Promise<void> {
+    const usuario = this.usuarios.find(u => u.id === id);
+    if (usuario) {
+      usuario.urlFotoPerfil = urlFotoPerfil;
+      usuario.atualizadoEm = new Date();
+    }
+    return Promise.resolve();
+  }
+
   delete(id: string): Promise<void> {
     const index = this.usuarios.findIndex(u => u.id === id);
     if (index !== -1) {

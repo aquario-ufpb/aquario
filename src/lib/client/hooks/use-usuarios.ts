@@ -94,3 +94,53 @@ export const useDeleteUser = () => {
     },
   });
 };
+
+/**
+ * Hook to upload a profile photo
+ * The upload route now handles both upload and database update atomically
+ * Automatically invalidates and refetches current user data
+ */
+export const useUploadPhoto = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      // Upload route now returns the updated user object directly
+      return usuariosService.uploadPhoto(file, token);
+    },
+    onSuccess: updatedUser => {
+      // Update the cache directly with the new user data (includes new photo URL)
+      queryClient.setQueryData(queryKeys.usuarios.current, updatedUser);
+      // Also invalidate to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
+    },
+  });
+};
+
+/**
+ * Hook to delete a profile photo
+ * Automatically updates cache and refetches current user data
+ */
+export const useDeletePhoto = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return usuariosService.deletePhoto(token);
+    },
+    onSuccess: updatedUser => {
+      // Update the cache directly with the new user data (photo removed)
+      queryClient.setQueryData(queryKeys.usuarios.current, updatedUser);
+      // Also invalidate to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
+    },
+  });
+};

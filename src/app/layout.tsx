@@ -15,6 +15,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "Aquario",
   description: "O seu melhor guia e comunidade para o Centro de Informática da UFPB",
   icons: {
@@ -42,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br">
+    <html lang="pt-br" suppressHydrationWarning>
       <body className={`${outfit.variable} font-sans bg-white dark:bg-transparent`}>
         <PostHogProvider>
           <ReactQueryProvider>

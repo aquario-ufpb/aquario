@@ -1,5 +1,5 @@
 import type { Container, DbProvider } from "./types";
-import { DB_PROVIDER, EMAIL_ENABLED } from "@/lib/server/config/env";
+import { DB_PROVIDER, EMAIL_ENABLED, BLOB_READ_WRITE_TOKEN } from "@/lib/server/config/env";
 
 // Lazy import implementations to avoid circular dependencies
 // and to allow tree-shaking in production
@@ -59,6 +59,22 @@ function getEmailService() {
 }
 
 /**
+ * Get the appropriate blob storage service based on environment
+ * Uses Vercel Blob if token is configured, otherwise falls back to local storage
+ */
+function getBlobStorage() {
+  if (BLOB_READ_WRITE_TOKEN) {
+    const { VercelBlobStorage } = require("@/lib/server/services/blob/vercel-blob-storage");
+    return new VercelBlobStorage(BLOB_READ_WRITE_TOKEN);
+  }
+
+  // No token = local storage (for development)
+  const { LocalBlobStorage } = require("@/lib/server/services/blob/local-blob-storage");
+  console.log("[Blob Storage] No BLOB_READ_WRITE_TOKEN found - using local file storage");
+  return new LocalBlobStorage();
+}
+
+/**
  * Create container with Prisma implementations
  */
 function createPrismaContainer(): Container {
@@ -98,6 +114,7 @@ function createPrismaContainer(): Container {
     secoesGuiaRepository: new PrismaSecoesGuiaRepository(),
     subSecoesGuiaRepository: new PrismaSubSecoesGuiaRepository(),
     emailService: getEmailService(),
+    blobStorage: getBlobStorage(),
   };
 }
 
@@ -141,6 +158,7 @@ function createMemoryContainer(): Container {
     secoesGuiaRepository: new InMemorySecoesGuiaRepository(),
     subSecoesGuiaRepository: new InMemorySubSecoesGuiaRepository(),
     emailService: new MockEmailService(),
+    blobStorage: getBlobStorage(),
   };
 }
 

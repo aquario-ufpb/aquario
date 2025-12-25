@@ -5,6 +5,7 @@ import Image from "next/image";
 import { User, LogOut, Settings, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 
 import LinkHover from "@/components/shared/link-hover";
 import { ModeToggle } from "@/components/shared/mode-toggle";
@@ -152,7 +153,7 @@ function UserDropdownMenu({ user, isDark }: { user: UserType; isDark: boolean })
           className="relative h-8 w-8 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 hover:ring-2 hover:ring-blue-500 dark:hover:ring-blue-400 hover:ring-offset-2 transition-all duration-100"
         >
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.urlFotoPerfil || ""} alt={user.nome} />
+            <AvatarImage src={user.urlFotoPerfil || undefined} alt={user.nome} />
             <AvatarFallback className="text-xs">{getInitials(user.nome)}</AvatarFallback>
           </Avatar>
         </Button>
@@ -222,7 +223,9 @@ function NavLinks({ isDark }: { isDark: boolean }) {
 
 // Auth Section Component
 function AuthSection() {
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: user, isLoading: userLoading } = useCurrentUser();
+  const isLoading = authLoading || userLoading;
   const { theme, resolvedTheme } = useTheme();
   const isDark = (resolvedTheme || theme) === "dark";
   const { isEnabled: backendEnabled } = useBackend();

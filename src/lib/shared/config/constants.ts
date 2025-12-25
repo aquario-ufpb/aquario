@@ -26,6 +26,8 @@ export const ENDPOINTS = {
 
   // User management
   USUARIOS: "/usuarios",
+  UPLOAD_PHOTO: "/upload/photo",
+  USUARIO_PHOTO: "/usuarios/me/photo",
 
   // Entidades
   ENTIDADES: "/entidades",

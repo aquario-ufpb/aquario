@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authService } from "@/lib/client/api/auth";
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { useBackend } from "@/lib/shared/config/env";
 
 function VerificarEmailForm() {
@@ -19,7 +20,8 @@ function VerificarEmailForm() {
   const [email, setEmail] = useState("");
   const [resendSuccess, setResendSuccess] = useState(false);
   const searchParams = useSearchParams();
-  const { token, user } = useAuth();
+  const { token } = useAuth();
+  const { data: user } = useCurrentUser();
 
   // Redirect to home if backend is disabled
   useEffect(() => {

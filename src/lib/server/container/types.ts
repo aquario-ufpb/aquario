@@ -9,6 +9,7 @@ import type {
   ISubSecoesGuiaRepository,
 } from "@/lib/server/db/interfaces/guias-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
+import type { IBlobStorage } from "@/lib/server/services/blob/blob-storage.interface";
 
 /**
  * Container type definition
@@ -29,6 +30,7 @@ export type Container = {
 
   // Services
   emailService: IEmailService;
+  blobStorage: IBlobStorage;
 };
 
 /**

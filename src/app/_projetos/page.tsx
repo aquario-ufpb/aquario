@@ -4,7 +4,7 @@ import SearchFilters from "@/components/shared/search-filters";
 import Banner from "@/components/shared/banner";
 import ProjectCard, { Projeto, Autor } from "@/components/shared/project-card";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -17,7 +17,7 @@ export default function Projetos() {
   };
   const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { data: user } = useCurrentUser();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeButton, setActiveButton] = useState("Todos");
   const [tagTerm, setTagTerm] = useState("");

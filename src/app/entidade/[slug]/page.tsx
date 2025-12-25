@@ -14,14 +14,14 @@ import { Mail, Instagram, Linkedin, MapPin, Globe, ArrowLeft, Edit } from "lucid
 import { trackEvent } from "@/analytics/posthog-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { EditarEntidadeDialog } from "@/components/pages/entidades/editar-entidade-dialog";
 import { isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
 import { useBackend } from "@/lib/shared/config/env";
 
 export default function EntidadeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const { user } = useAuth();
+  const { data: user } = useCurrentUser();
   const { isEnabled: backendEnabled } = useBackend();
   const router = useRouter();
   const queryClient = useQueryClient();

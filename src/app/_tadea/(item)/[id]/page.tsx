@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,8 @@ type ItemAchadoEPerdido = {
 
 export default function ItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { user, token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated } = useAuth();
+  const { data: user } = useCurrentUser();
   const [item, setItem] = useState<ItemAchadoEPerdido | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -48,7 +48,7 @@ export function EditarEntidadeDialog({
   onOpenChange,
   onSuccess,
 }: EditarEntidadeDialogProps) {
-  const { token, user } = useAuth();
+  const { token, isAuthenticated } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
   const slugCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -145,7 +145,7 @@ export function EditarEntidadeDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !user) {
+    if (!token || !isAuthenticated) {
       toast.error("Você precisa estar autenticado para editar");
       return;
     }

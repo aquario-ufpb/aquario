@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditarItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { token, user, isLoading: isAuthLoading } = useAuth();
+  const { token, isLoading: isAuthLoading } = useAuth();
+  const { data: user, isLoading: userLoading } = useCurrentUser();
   const router = useRouter();
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -19,16 +21,17 @@ export default function EditarItemPage({ params }: { params: Promise<{ id: strin
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isLoading = isAuthLoading || userLoading;
   const isAdmin = !!(
     user &&
     (user.permissoes.includes("ADMIN") || user.papelPlataforma === "MASTER_ADMIN")
   );
 
   useEffect(() => {
-    if (!isAuthLoading && !isAdmin) {
+    if (!isLoading && !isAdmin) {
       router.push("/tadea");
     }
-  }, [isAuthLoading, isAdmin, router]);
+  }, [isLoading, isAdmin, router]);
 
   useEffect(() => {
     if (id && isAdmin) {

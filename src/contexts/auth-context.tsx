@@ -15,7 +15,6 @@ import { USE_BACKEND } from "@/lib/shared/config/env";
 
 type AuthContextType = {
   isAuthenticated: boolean;
-  user: User | null;
   token: string | null;
   login: (token: string) => void;
   logout: () => void;
@@ -107,7 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         isAuthenticated: !!user,
-        user,
         token,
         login,
         logout,
