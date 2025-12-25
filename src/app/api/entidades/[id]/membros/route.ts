@@ -17,11 +17,7 @@ const addMemberSchema = z.object({
 });
 
 export async function POST(request: Request, context: RouteContext) {
-<<<<<<< HEAD
   return await withAuth(request, async (req, usuario) => {
-=======
-  return withAuth(request, async (req, usuario) => {
->>>>>>> d7f3470 (membership)
     const { id: entidadeId } = await context.params;
 
     try {

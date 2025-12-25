@@ -8,16 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { UserPlus, Users, History } from "lucide-react";
 import type { Entidade } from "@/lib/shared/types";
-<<<<<<< HEAD
 import { type Membro, isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
 import { AddMemberDialog } from "./add-member-dialog";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
-=======
-import type { Membro } from "@/lib/shared/types/membro.types";
-import { AddMemberDialog } from "./add-member-dialog";
-import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
-import { isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
->>>>>>> d7f3470 (membership)
 import { useBackend } from "@/lib/shared/config/env";
 import Image from "next/image";
 
@@ -42,22 +35,13 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
   const [showOldMembers, setShowOldMembers] = useState(false);
 
   // Get all members or just active ones based on toggle
-<<<<<<< HEAD
   const filteredMembers = useMemo(() => {
     const allMembers: Membro[] = entidade.membros || [];
-=======
-  const allMembers: Membro[] = entidade.membros || [];
-  const filteredMembers = useMemo(() => {
->>>>>>> d7f3470 (membership)
     if (showOldMembers) {
       return allMembers;
     }
     return allMembers.filter(m => !m.endedAt);
-<<<<<<< HEAD
   }, [entidade.membros, showOldMembers]);
-=======
-  }, [allMembers, showOldMembers]);
->>>>>>> d7f3470 (membership)
 
   // Merge members by usuario.id
   const mergedMembers = useMemo(() => {
