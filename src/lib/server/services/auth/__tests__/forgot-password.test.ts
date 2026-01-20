@@ -17,7 +17,7 @@ describe("forgotPassword", () => {
         delete: jest.fn(),
         list: jest.fn(),
         count: jest.fn(),
-      } as any,
+      },
       tokenVerificacaoRepository: {
         findLatestByUsuarioIdAndTipo: jest.fn(),
         deleteByUsuarioIdAndTipo: jest.fn(),
@@ -26,11 +26,11 @@ describe("forgotPassword", () => {
         markAsUsed: jest.fn(),
         deleteByUsuarioId: jest.fn(),
         deleteExpired: jest.fn(),
-      } as any,
+      },
       emailService: {
         sendPasswordResetEmail: jest.fn(),
         sendVerificationEmail: jest.fn(),
-      } as any,
+      },
     };
 
     jest.clearAllMocks();
@@ -45,7 +45,7 @@ describe("forgotPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: "test@example.com",
-    } as any);
+    });
 
     mockDeps.tokenVerificacaoRepository.findLatestByUsuarioIdAndTipo.mockResolvedValue(null);
     mockDeps.emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
@@ -75,7 +75,7 @@ describe("forgotPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: "test@example.com",
-    } as any);
+    });
 
     mockDeps.tokenVerificacaoRepository.findLatestByUsuarioIdAndTipo.mockResolvedValue(null);
 
@@ -108,7 +108,7 @@ describe("forgotPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: null, // No email
-    } as any);
+    });
 
     const result = await forgotPassword(input, mockDeps);
 
@@ -126,7 +126,7 @@ describe("forgotPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: "test@example.com",
-    } as any);
+    });
 
     // Recent token created 30 seconds ago
     const recentToken = {
@@ -155,7 +155,7 @@ describe("forgotPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: "test@example.com",
-    } as any);
+    });
 
     // Old token created 2 minutes ago
     const oldToken = {
@@ -182,7 +182,7 @@ describe("forgotPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: "test@example.com",
-    } as any);
+    });
 
     mockDeps.tokenVerificacaoRepository.findLatestByUsuarioIdAndTipo.mockResolvedValue(null);
 
@@ -203,7 +203,7 @@ describe("forgotPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: "test@example.com",
-    } as any);
+    });
 
     mockDeps.tokenVerificacaoRepository.findLatestByUsuarioIdAndTipo.mockResolvedValue(null);
 
@@ -229,7 +229,7 @@ describe("forgotPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: "test@example.com",
-    } as any);
+    });
 
     mockDeps.tokenVerificacaoRepository.findLatestByUsuarioIdAndTipo.mockResolvedValue(null);
     mockDeps.emailService.sendPasswordResetEmail.mockRejectedValue(
@@ -251,7 +251,7 @@ describe("forgotPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: "test@example.com",
-    } as any);
+    });
 
     mockDeps.tokenVerificacaoRepository.findLatestByUsuarioIdAndTipo.mockResolvedValue(null);
 
@@ -273,7 +273,7 @@ describe("forgotPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: "test@example.com",
-    } as any);
+    });
 
     // Token without criadoEm
     const tokenWithoutDate = {
@@ -283,7 +283,9 @@ describe("forgotPassword", () => {
       criadoEm: null,
     };
     mockDeps.tokenVerificacaoRepository.findLatestByUsuarioIdAndTipo.mockResolvedValue(
-      tokenWithoutDate as any
+      tokenWithoutDate as unknown as Awaited<
+        ReturnType<typeof mockDeps.tokenVerificacaoRepository.findLatestByUsuarioIdAndTipo>
+      >
     );
 
     const result = await forgotPassword(input, mockDeps);

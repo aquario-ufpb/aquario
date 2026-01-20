@@ -21,14 +21,14 @@ describe("register", () => {
         delete: jest.fn(),
         list: jest.fn(),
         count: jest.fn(),
-      } as any,
+      },
       centrosRepository: {
         findById: jest.fn(),
         list: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
-      } as any,
+      },
       cursosRepository: {
         findById: jest.fn(),
         list: jest.fn(),
@@ -36,17 +36,17 @@ describe("register", () => {
         update: jest.fn(),
         delete: jest.fn(),
         findByCentroId: jest.fn(),
-      } as any,
+      },
       tokenVerificacaoRepository: {
         create: jest.fn(),
         findByToken: jest.fn(),
         deleteByUsuarioId: jest.fn(),
         deleteExpired: jest.fn(),
-      } as any,
+      },
       emailService: {
         sendVerificationEmail: jest.fn(),
         sendPasswordResetEmail: jest.fn(),
-      } as any,
+      },
     };
 
     (hash as jest.Mock).mockResolvedValue("hashed-password");
@@ -85,7 +85,7 @@ describe("register", () => {
       centroId: "centro-1",
       cursoId: "curso-1",
       dataCadastro: new Date(),
-    } as any);
+    });
     mockDeps.emailService.sendVerificationEmail.mockResolvedValue(undefined);
 
     const result = await register(input, mockDeps);
@@ -123,7 +123,7 @@ describe("register", () => {
     });
     mockDeps.usuariosRepository.create.mockResolvedValue({
       id: "user-123",
-    } as any);
+    });
 
     await register(input, mockDeps);
 
@@ -167,7 +167,7 @@ describe("register", () => {
     mockDeps.usuariosRepository.create.mockResolvedValue({
       id: "admin-123",
       papelPlataforma: "MASTER_ADMIN",
-    } as any);
+    });
 
     const result = await register(input, mockDeps);
 
@@ -187,7 +187,7 @@ describe("register", () => {
 
     mockDeps.usuariosRepository.findByEmail.mockResolvedValue({
       id: "existing-user",
-    } as any);
+    });
 
     await expect(register(input, mockDeps)).rejects.toThrow("Este e-mail já está em uso.");
   });
@@ -275,7 +275,7 @@ describe("register", () => {
     });
     mockDeps.usuariosRepository.create.mockResolvedValue({
       id: "user-123",
-    } as any);
+    });
 
     await register(input, mockDeps);
 
@@ -307,7 +307,7 @@ describe("register", () => {
     });
     mockDeps.usuariosRepository.create.mockResolvedValue({
       id: "user-123",
-    } as any);
+    });
 
     await register(input, mockDeps);
 
@@ -337,7 +337,7 @@ describe("register", () => {
     });
     mockDeps.usuariosRepository.create.mockResolvedValue({
       id: "user-123",
-    } as any);
+    });
     mockDeps.emailService.sendVerificationEmail.mockRejectedValue(new Error("Email service error"));
 
     // Should not throw
@@ -368,7 +368,7 @@ describe("register", () => {
     });
     mockDeps.usuariosRepository.create.mockResolvedValue({
       id: "user-123",
-    } as any);
+    });
 
     const beforeTime = new Date(Date.now() + 24 * 60 * 60 * 1000 - 1000);
     await register(input, mockDeps);

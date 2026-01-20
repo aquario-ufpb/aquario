@@ -19,7 +19,7 @@ describe("resetPassword", () => {
         create: jest.fn(),
         deleteByUsuarioId: jest.fn(),
         deleteExpired: jest.fn(),
-      } as any,
+      },
       usuariosRepository: {
         findById: jest.fn(),
         updatePassword: jest.fn(),
@@ -29,7 +29,7 @@ describe("resetPassword", () => {
         delete: jest.fn(),
         list: jest.fn(),
         count: jest.fn(),
-      } as any,
+      },
     };
 
     (hash as jest.Mock).mockResolvedValue("hashed-new-password");
@@ -58,7 +58,7 @@ describe("resetPassword", () => {
       id: "user-123",
       nome: "Test User",
       email: "test@example.com",
-    } as any);
+    });
 
     const result = await resetPassword(input, mockDeps);
 
@@ -113,7 +113,7 @@ describe("resetPassword", () => {
 
     mockDeps.usuariosRepository.findById.mockResolvedValue({
       id: "user-123",
-    } as any);
+    });
 
     const result = await resetPassword(input, mockDeps);
 
@@ -139,7 +139,7 @@ describe("resetPassword", () => {
 
     mockDeps.usuariosRepository.findById.mockResolvedValue({
       id: "user-123",
-    } as any);
+    });
 
     const result = await resetPassword(input, mockDeps);
 
@@ -259,7 +259,7 @@ describe("resetPassword", () => {
 
     mockDeps.usuariosRepository.findById.mockResolvedValue({
       id: "user-123",
-    } as any);
+    });
 
     await resetPassword(input, mockDeps);
 
@@ -285,7 +285,7 @@ describe("resetPassword", () => {
 
     mockDeps.usuariosRepository.findById.mockResolvedValue({
       id: "user-123",
-    } as any);
+    });
 
     await resetPassword(input, mockDeps);
 

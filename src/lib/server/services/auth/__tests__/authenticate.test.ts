@@ -48,7 +48,7 @@ describe("authenticate", () => {
       delete: jest.fn(),
       list: jest.fn(),
       count: jest.fn(),
-    } as any;
+    };
   });
 
   it("should successfully authenticate with correct credentials", async () => {

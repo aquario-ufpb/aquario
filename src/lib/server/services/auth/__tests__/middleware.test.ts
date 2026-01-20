@@ -6,13 +6,18 @@ import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
 // Mock Next.js modules first
 jest.mock("next/server", () => ({
   NextResponse: {
-    json: jest.fn((data: any, init?: any) => {
-      const response = {
-        status: init?.status || 200,
-        json: async () => data,
-      };
-      return response;
-    }),
+    json: jest.fn(
+      (
+        data: Record<string, unknown>,
+        init?: { status?: number; headers?: Record<string, string> }
+      ) => {
+        const response = {
+          status: init?.status || 200,
+          json: () => Promise.resolve(data),
+        };
+        return response;
+      }
+    ),
   },
 }));
 
@@ -20,10 +25,19 @@ jest.mock("next/server", () => ({
 jest.mock("@/lib/server/services/jwt/jwt");
 jest.mock("@/lib/server/container");
 
+// Type for mock Request
+type MockRequest = Partial<Request> & {
+  headers: {
+    get: (name: string) => string | null;
+  };
+};
+
 describe("Auth Middleware", () => {
-  let mockUsuariosRepository: any;
+  let mockUsuariosRepository: {
+    findById: jest.Mock;
+  };
   let mockUser: UsuarioWithRelations;
-  let mockRequest: Request;
+  let mockRequest: MockRequest;
   let mockHandler: jest.Mock;
 
   beforeEach(() => {
@@ -61,7 +75,7 @@ describe("Auth Middleware", () => {
 
     mockHandler = jest.fn().mockResolvedValue({
       status: 200,
-      json: async () => ({ success: true }),
+      json: () => Promise.resolve({ success: true }),
     });
 
     // Clear all mocks before each test
@@ -78,7 +92,7 @@ describe("Auth Middleware", () => {
         headers: {
           get: (name: string) => mockHeaders.get(name.toLowerCase()) || null,
         },
-      } as any;
+      } as Request;
 
       (verifyToken as jest.Mock).mockReturnValue({ sub: "user-123" });
       mockUsuariosRepository.findById.mockResolvedValue(mockUser);
@@ -96,7 +110,7 @@ describe("Auth Middleware", () => {
         headers: {
           get: () => null,
         },
-      } as any;
+      } as Request;
 
       const response = await withAuth(mockRequest, mockHandler);
 
@@ -112,7 +126,7 @@ describe("Auth Middleware", () => {
           get: (name: string) =>
             name.toLowerCase() === "authorization" ? "InvalidFormat token" : null,
         },
-      } as any;
+      } as Request;
 
       const response = await withAuth(mockRequest, mockHandler);
 
@@ -128,7 +142,7 @@ describe("Auth Middleware", () => {
           get: (name: string) =>
             name.toLowerCase() === "authorization" ? "Bearer invalid-token" : null,
         },
-      } as any;
+      } as Request;
 
       (verifyToken as jest.Mock).mockReturnValue(null);
 
@@ -146,7 +160,7 @@ describe("Auth Middleware", () => {
           get: (name: string) =>
             name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
         },
-      } as any;
+      } as Request;
 
       (verifyToken as jest.Mock).mockReturnValue({ sub: "user-123" });
       mockUsuariosRepository.findById.mockResolvedValue(null);
@@ -166,7 +180,7 @@ describe("Auth Middleware", () => {
           get: (name: string) =>
             name.toLowerCase() === "authorization" ? `Bearer ${token}` : null,
         },
-      } as any;
+      } as Request;
 
       (verifyToken as jest.Mock).mockReturnValue({ sub: "user-123" });
       mockUsuariosRepository.findById.mockResolvedValue(mockUser);
@@ -185,7 +199,7 @@ describe("Auth Middleware", () => {
           get: (name: string) =>
             name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
         },
-      } as any;
+      } as Request;
 
       (verifyToken as jest.Mock).mockReturnValue({ sub: "admin-123" });
       mockUsuariosRepository.findById.mockResolvedValue(adminUser);
@@ -202,7 +216,7 @@ describe("Auth Middleware", () => {
           get: (name: string) =>
             name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
         },
-      } as any;
+      } as Request;
 
       (verifyToken as jest.Mock).mockReturnValue({ sub: "user-123" });
       mockUsuariosRepository.findById.mockResolvedValue(mockUser);
@@ -220,7 +234,7 @@ describe("Auth Middleware", () => {
         headers: {
           get: () => null,
         },
-      } as any;
+      } as Request;
 
       const response = await withAdmin(mockRequest, mockHandler);
 
@@ -236,7 +250,7 @@ describe("Auth Middleware", () => {
           get: (name: string) =>
             name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
         },
-      } as any;
+      } as Request;
 
       (verifyToken as jest.Mock).mockReturnValue({ sub: "user-123" });
       mockUsuariosRepository.findById.mockResolvedValue(mockUser);
@@ -253,7 +267,7 @@ describe("Auth Middleware", () => {
         headers: {
           get: () => null,
         },
-      } as any;
+      } as Request;
 
       const user = await getOptionalUser(mockRequest);
 
@@ -267,7 +281,7 @@ describe("Auth Middleware", () => {
           get: (name: string) =>
             name.toLowerCase() === "authorization" ? "Bearer invalid-token" : null,
         },
-      } as any;
+      } as Request;
 
       (verifyToken as jest.Mock).mockReturnValue(null);
 
@@ -283,7 +297,7 @@ describe("Auth Middleware", () => {
           get: (name: string) =>
             name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
         },
-      } as any;
+      } as Request;
 
       (verifyToken as jest.Mock).mockReturnValue({ sub: "user-123" });
       mockUsuariosRepository.findById.mockResolvedValue(null);

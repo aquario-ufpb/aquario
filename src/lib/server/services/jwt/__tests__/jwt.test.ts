@@ -41,18 +41,21 @@ describe("JWT Service", () => {
 
     it("should include user ID in the token payload", () => {
       const token = signToken(testUserId);
-      const decoded = jwt.verify(token, testSecret) as any;
+      const decoded = jwt.verify(token, testSecret) as jwt.JwtPayload;
 
       expect(decoded.sub).toBe(testUserId);
     });
 
     it("should set expiration time on the token", () => {
       const token = signToken(testUserId);
-      const decoded = jwt.verify(token, testSecret) as any;
+      const decoded = jwt.verify(token, testSecret) as jwt.JwtPayload;
 
       expect(decoded.exp).toBeDefined();
       expect(decoded.iat).toBeDefined();
-      expect(decoded.exp).toBeGreaterThan(decoded.iat);
+      // Use type guard instead of non-null assertion
+      if (decoded.exp && decoded.iat) {
+        expect(decoded.exp).toBeGreaterThan(decoded.iat);
+      }
     });
 
     it("should create different tokens for different users", () => {
@@ -155,7 +158,9 @@ describe("JWT Service", () => {
         custom: "data",
       };
       const token = jwt.sign(customPayload, testSecret);
-      const payload = decodeToken(token) as any;
+      const payload = decodeToken(token) as jwt.JwtPayload & {
+        custom: string;
+      };
 
       expect(payload.sub).toBe("custom-user");
       expect(payload.custom).toBe("data");

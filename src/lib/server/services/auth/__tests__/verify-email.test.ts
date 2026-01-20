@@ -11,7 +11,7 @@ describe("verifyEmail", () => {
         create: jest.fn(),
         deleteByUsuarioId: jest.fn(),
         deleteExpired: jest.fn(),
-      } as any,
+      },
       usuariosRepository: {
         findById: jest.fn(),
         markAsVerified: jest.fn(),
@@ -21,7 +21,7 @@ describe("verifyEmail", () => {
         delete: jest.fn(),
         list: jest.fn(),
         count: jest.fn(),
-      } as any,
+      },
     };
 
     jest.clearAllMocks();
@@ -48,7 +48,7 @@ describe("verifyEmail", () => {
       nome: "Test User",
       email: "test@example.com",
       eVerificado: false,
-    } as any);
+    });
 
     const result = await verifyEmail(input, mockDeps);
 
@@ -168,7 +168,7 @@ describe("verifyEmail", () => {
       nome: "Test User",
       email: "test@example.com",
       eVerificado: true, // Already verified
-    } as any);
+    });
 
     const result = await verifyEmail(input, mockDeps);
 
@@ -199,7 +199,7 @@ describe("verifyEmail", () => {
       nome: "Test User",
       email: "test@example.com",
       eVerificado: false,
-    } as any);
+    });
 
     await verifyEmail(input, mockDeps);
 
