@@ -1,4 +1,8 @@
-import { resetPassword, type ResetPasswordInput, type ResetPasswordDependencies } from "../reset-password";
+import {
+  resetPassword,
+  type ResetPasswordInput,
+  type ResetPasswordDependencies,
+} from "../reset-password";
 import { hash } from "bcryptjs";
 
 // Mock bcryptjs
@@ -150,9 +154,7 @@ describe("resetPassword", () => {
 
     mockDeps.tokenVerificacaoRepository.findByToken.mockResolvedValue(null);
 
-    await expect(resetPassword(input, mockDeps)).rejects.toThrow(
-      "Token inválido ou expirado."
-    );
+    await expect(resetPassword(input, mockDeps)).rejects.toThrow("Token inválido ou expirado.");
   });
 
   it("should throw error if token is expired", async () => {
@@ -172,9 +174,7 @@ describe("resetPassword", () => {
       criadoEm: new Date(),
     });
 
-    await expect(resetPassword(input, mockDeps)).rejects.toThrow(
-      "Token expirado"
-    );
+    await expect(resetPassword(input, mockDeps)).rejects.toThrow("Token expirado");
   });
 
   it("should throw error if token was already used", async () => {
@@ -195,9 +195,7 @@ describe("resetPassword", () => {
       criadoEm: new Date(),
     });
 
-    await expect(resetPassword(input, mockDeps)).rejects.toThrow(
-      "Este link já foi utilizado."
-    );
+    await expect(resetPassword(input, mockDeps)).rejects.toThrow("Este link já foi utilizado.");
   });
 
   it("should throw error if token type is not RESET_SENHA", async () => {
@@ -217,9 +215,7 @@ describe("resetPassword", () => {
       criadoEm: new Date(),
     });
 
-    await expect(resetPassword(input, mockDeps)).rejects.toThrow(
-      "Token inválido."
-    );
+    await expect(resetPassword(input, mockDeps)).rejects.toThrow("Token inválido.");
   });
 
   it("should throw error if user not found", async () => {
@@ -241,9 +237,7 @@ describe("resetPassword", () => {
 
     mockDeps.usuariosRepository.findById.mockResolvedValue(null);
 
-    await expect(resetPassword(input, mockDeps)).rejects.toThrow(
-      "Usuário não encontrado."
-    );
+    await expect(resetPassword(input, mockDeps)).rejects.toThrow("Usuário não encontrado.");
   });
 
   it("should hash password before updating", async () => {

@@ -73,7 +73,7 @@ describe("Auth Middleware", () => {
       const token = "valid-token";
       const mockHeaders = new Map();
       mockHeaders.set("authorization", `Bearer ${token}`);
-      
+
       mockRequest = {
         headers: {
           get: (name: string) => mockHeaders.get(name.toLowerCase()) || null,
@@ -109,7 +109,8 @@ describe("Auth Middleware", () => {
     it("should return 401 when Authorization header is malformed", async () => {
       mockRequest = {
         headers: {
-          get: (name: string) => name.toLowerCase() === "authorization" ? "InvalidFormat token" : null,
+          get: (name: string) =>
+            name.toLowerCase() === "authorization" ? "InvalidFormat token" : null,
         },
       } as any;
 
@@ -124,7 +125,8 @@ describe("Auth Middleware", () => {
     it("should return 401 when token is invalid", async () => {
       mockRequest = {
         headers: {
-          get: (name: string) => name.toLowerCase() === "authorization" ? "Bearer invalid-token" : null,
+          get: (name: string) =>
+            name.toLowerCase() === "authorization" ? "Bearer invalid-token" : null,
         },
       } as any;
 
@@ -141,7 +143,8 @@ describe("Auth Middleware", () => {
     it("should return 401 when user not found", async () => {
       mockRequest = {
         headers: {
-          get: (name: string) => name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
+          get: (name: string) =>
+            name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
         },
       } as any;
 
@@ -160,7 +163,8 @@ describe("Auth Middleware", () => {
       const token = "my-secret-token-123";
       mockRequest = {
         headers: {
-          get: (name: string) => name.toLowerCase() === "authorization" ? `Bearer ${token}` : null,
+          get: (name: string) =>
+            name.toLowerCase() === "authorization" ? `Bearer ${token}` : null,
         },
       } as any;
 
@@ -178,7 +182,8 @@ describe("Auth Middleware", () => {
       const adminUser = { ...mockUser, papelPlataforma: "MASTER_ADMIN" as const };
       mockRequest = {
         headers: {
-          get: (name: string) => name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
+          get: (name: string) =>
+            name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
         },
       } as any;
 
@@ -194,7 +199,8 @@ describe("Auth Middleware", () => {
     it("should return 403 when user is not MASTER_ADMIN", async () => {
       mockRequest = {
         headers: {
-          get: (name: string) => name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
+          get: (name: string) =>
+            name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
         },
       } as any;
 
@@ -227,7 +233,8 @@ describe("Auth Middleware", () => {
     it("should return user when valid token provided", async () => {
       mockRequest = {
         headers: {
-          get: (name: string) => name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
+          get: (name: string) =>
+            name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
         },
       } as any;
 
@@ -257,7 +264,8 @@ describe("Auth Middleware", () => {
     it("should return null when token is invalid", async () => {
       mockRequest = {
         headers: {
-          get: (name: string) => name.toLowerCase() === "authorization" ? "Bearer invalid-token" : null,
+          get: (name: string) =>
+            name.toLowerCase() === "authorization" ? "Bearer invalid-token" : null,
         },
       } as any;
 
@@ -272,7 +280,8 @@ describe("Auth Middleware", () => {
     it("should return null when user not found", async () => {
       mockRequest = {
         headers: {
-          get: (name: string) => name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
+          get: (name: string) =>
+            name.toLowerCase() === "authorization" ? "Bearer valid-token" : null,
         },
       } as any;
 

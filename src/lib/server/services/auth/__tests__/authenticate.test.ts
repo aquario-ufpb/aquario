@@ -116,9 +116,7 @@ describe("authenticate", () => {
       senha: "wrong-password",
     };
 
-    await expect(authenticate(input, mockUsuariosRepository)).rejects.toThrow(
-      "SENHA_INVALIDA"
-    );
+    await expect(authenticate(input, mockUsuariosRepository)).rejects.toThrow("SENHA_INVALIDA");
   });
 
   it("should throw error if email is not verified", async () => {

@@ -127,9 +127,7 @@ describe("register", () => {
 
     await register(input, mockDeps);
 
-    expect(mockDeps.usuariosRepository.findByEmail).toHaveBeenCalledWith(
-      "test@academico.ufpb.br"
-    );
+    expect(mockDeps.usuariosRepository.findByEmail).toHaveBeenCalledWith("test@academico.ufpb.br");
   });
 
   it("should throw error for non-academic email domain", async () => {
@@ -191,9 +189,7 @@ describe("register", () => {
       id: "existing-user",
     } as any);
 
-    await expect(register(input, mockDeps)).rejects.toThrow(
-      "Este e-mail já está em uso."
-    );
+    await expect(register(input, mockDeps)).rejects.toThrow("Este e-mail já está em uso.");
   });
 
   it("should throw error if centro not found", async () => {
@@ -208,9 +204,7 @@ describe("register", () => {
     mockDeps.usuariosRepository.findByEmail.mockResolvedValue(null);
     mockDeps.centrosRepository.findById.mockResolvedValue(null);
 
-    await expect(register(input, mockDeps)).rejects.toThrow(
-      "Centro não encontrado."
-    );
+    await expect(register(input, mockDeps)).rejects.toThrow("Centro não encontrado.");
   });
 
   it("should throw error if curso not found", async () => {
@@ -230,9 +224,7 @@ describe("register", () => {
     });
     mockDeps.cursosRepository.findById.mockResolvedValue(null);
 
-    await expect(register(input, mockDeps)).rejects.toThrow(
-      "Curso não encontrado."
-    );
+    await expect(register(input, mockDeps)).rejects.toThrow("Curso não encontrado.");
   });
 
   it("should throw error if curso does not belong to centro", async () => {
@@ -346,9 +338,7 @@ describe("register", () => {
     mockDeps.usuariosRepository.create.mockResolvedValue({
       id: "user-123",
     } as any);
-    mockDeps.emailService.sendVerificationEmail.mockRejectedValue(
-      new Error("Email service error")
-    );
+    mockDeps.emailService.sendVerificationEmail.mockRejectedValue(new Error("Email service error"));
 
     // Should not throw
     const result = await register(input, mockDeps);

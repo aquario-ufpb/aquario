@@ -1,4 +1,8 @@
-import { forgotPassword, type ForgotPasswordInput, type ForgotPasswordDependencies } from "../forgot-password";
+import {
+  forgotPassword,
+  type ForgotPasswordInput,
+  type ForgotPasswordDependencies,
+} from "../forgot-password";
 
 describe("forgotPassword", () => {
   let mockDeps: jest.Mocked<ForgotPasswordDependencies>;
@@ -278,7 +282,9 @@ describe("forgotPassword", () => {
       tipo: "RESET_SENHA" as const,
       criadoEm: null,
     };
-    mockDeps.tokenVerificacaoRepository.findLatestByUsuarioIdAndTipo.mockResolvedValue(tokenWithoutDate as any);
+    mockDeps.tokenVerificacaoRepository.findLatestByUsuarioIdAndTipo.mockResolvedValue(
+      tokenWithoutDate as any
+    );
 
     const result = await forgotPassword(input, mockDeps);
 

@@ -88,11 +88,7 @@ describe("JWT Service", () => {
 
     it("should return null for an expired token", () => {
       // Create a token that expires immediately
-      const expiredToken = jwt.sign(
-        { sub: testUserId },
-        testSecret,
-        { expiresIn: "0s" }
-      );
+      const expiredToken = jwt.sign({ sub: testUserId }, testSecret, { expiresIn: "0s" });
 
       // Wait a bit to ensure expiration
       const payload = verifyToken(expiredToken);
@@ -101,10 +97,7 @@ describe("JWT Service", () => {
     });
 
     it("should return null for a token with wrong signature", () => {
-      const tokenWithWrongSignature = jwt.sign(
-        { sub: testUserId },
-        "wrong-secret"
-      );
+      const tokenWithWrongSignature = jwt.sign({ sub: testUserId }, "wrong-secret");
 
       const payload = verifyToken(tokenWithWrongSignature);
 
@@ -131,10 +124,7 @@ describe("JWT Service", () => {
     });
 
     it("should decode a token even with wrong signature", () => {
-      const tokenWithWrongSignature = jwt.sign(
-        { sub: testUserId },
-        "wrong-secret"
-      );
+      const tokenWithWrongSignature = jwt.sign({ sub: testUserId }, "wrong-secret");
 
       const payload = decodeToken(tokenWithWrongSignature);
 
@@ -150,11 +140,7 @@ describe("JWT Service", () => {
     });
 
     it("should decode an expired token", () => {
-      const expiredToken = jwt.sign(
-        { sub: testUserId },
-        testSecret,
-        { expiresIn: "0s" }
-      );
+      const expiredToken = jwt.sign({ sub: testUserId }, testSecret, { expiresIn: "0s" });
 
       const payload = decodeToken(expiredToken);
 
