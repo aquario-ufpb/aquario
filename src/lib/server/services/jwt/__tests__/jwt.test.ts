@@ -12,6 +12,25 @@ describe("JWT Service", () => {
   const testSecret = "test-secret-key-for-testing";
 
   describe("signToken", () => {
+    it("should throw error when JWT_SECRET is not set", () => {
+      // Temporarily mock env with undefined JWT_SECRET
+      jest.resetModules();
+      jest.doMock("@/lib/server/config/env", () => ({
+        JWT_SECRET: undefined,
+        JWT_EXPIRES_IN: "7d",
+      }));
+
+      // Re-import the module to get the new mock
+      const { signToken: signTokenWithoutSecret } = require("../jwt");
+
+      expect(() => signTokenWithoutSecret(testUserId)).toThrow(
+        "JWT_SECRET environment variable is not set"
+      );
+
+      // Reset modules for other tests
+      jest.resetModules();
+    });
+
     it("should create a valid JWT token for a user", () => {
       const token = signToken(testUserId);
 

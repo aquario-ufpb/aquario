@@ -2,7 +2,6 @@ import { withAuth, withAdmin, getOptionalUser } from "../middleware";
 import { verifyToken } from "@/lib/server/services/jwt/jwt";
 import { getContainer } from "@/lib/server/container";
 import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
-import { NextResponse } from "next/server";
 
 // Mock Next.js modules first
 jest.mock("next/server", () => ({
