@@ -19,7 +19,7 @@ export function SearchBar({
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full h-10 rounded-full pl-10 pr-3 py-2 text-sm
+        className="w-full h-8 rounded-full pl-10 pr-3 py-2 text-sm
             placeholder:text-muted-foreground dark:placeholder:text-zinc-300
             dark:text-zinc-300
             focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30

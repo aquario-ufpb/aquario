@@ -3,13 +3,13 @@
 import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEntidades } from "@/lib/client/hooks";
-import { Entidade } from "@/lib/shared/types";
+import type { Entidade } from "@/lib/shared/types";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { trackEvent } from "@/analytics/posthog-client";
-import { TipoEntidade } from "@/lib/shared/types/entidade.types";
+import type { TipoEntidade } from "@/lib/shared/types/entidade.types";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { SearchBar } from "@/components/shared/search-bar";
 
