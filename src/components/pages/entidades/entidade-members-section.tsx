@@ -234,12 +234,6 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
                         </div>
                       )}
                     </div>
-                    {/* Role indicator */}
-                    {merged.currentPapel === "ADMIN" && (
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary border-2 border-background flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-primary-foreground">A</span>
-                      </div>
-                    )}
                   </div>
 
                   {/* Name */}

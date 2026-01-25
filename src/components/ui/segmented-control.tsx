@@ -23,7 +23,7 @@ export function SegmentedControl<T extends string>({
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-1",
+        "inline-flex items-center rounded-lg border border-border/50 bg-muted/60 p-1 dark:bg-muted/100",
         className
       )}
     >
