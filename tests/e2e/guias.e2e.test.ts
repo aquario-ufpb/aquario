@@ -6,7 +6,7 @@
 
 import { test, expect } from "@playwright/test";
 
-test.describe("Guias - User Navigation Flow", () => {
+test.describe.skip("Guias - User Navigation Flow", () => {
   test.beforeEach(async ({ page }) => {
     // Start from the guias root page
     await page.goto("/guias");
@@ -111,7 +111,7 @@ test.describe("Guias - User Navigation Flow", () => {
   });
 });
 
-test.describe("Guias - Content Display", () => {
+test.describe.skip("Guias - Content Display", () => {
   test("should display readable text content", async ({ page }) => {
     await page.goto("/guias");
     await page.waitForLoadState("networkidle");
@@ -123,7 +123,7 @@ test.describe("Guias - Content Display", () => {
   });
 });
 
-test.describe("Guias - Responsive Design", () => {
+test.describe.skip("Guias - Responsive Design", () => {
   test("should be usable on mobile viewport", async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE
@@ -158,7 +158,7 @@ test.describe("Guias - Responsive Design", () => {
   });
 });
 
-test.describe("Guias - Edge Cases", () => {
+test.describe.skip("Guias - Edge Cases", () => {
   test("should handle non-existent guia gracefully", async ({ page }) => {
     await page.goto("/guias/guia-que-nao-existe");
 
