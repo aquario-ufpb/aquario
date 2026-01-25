@@ -28,9 +28,12 @@ export async function POST(request: Request) {
 
     const message = error instanceof Error ? error.message : "Erro no login";
 
-    // Map internal errors to user-friendly messages
-    if (message === "EMAIL_NAO_ENCONTRADO" || message === "SENHA_INVALIDA") {
-      return NextResponse.json({ message: "Email ou senha incorretos" }, { status: 401 });
+    if (message === "EMAIL_NAO_ENCONTRADO") {
+      return NextResponse.json({ message: "Email não encontrado" }, { status: 401 });
+    }
+
+    if (message === "SENHA_INVALIDA") {
+      return NextResponse.json({ message: "Senha incorreta" }, { status: 401 });
     }
 
     return NextResponse.json({ message }, { status: 401 });

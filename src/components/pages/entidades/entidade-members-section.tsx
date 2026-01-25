@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { UserPlus, Users } from "lucide-react";
 import type { Entidade } from "@/lib/shared/types";
 import { type Membro, isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
@@ -172,29 +173,14 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Segmented control for toggle */}
-            <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-1">
-              <button
-                onClick={() => setShowOldMembers(false)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  !showOldMembers
-                    ? "bg-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Ativos
-              </button>
-              <button
-                onClick={() => setShowOldMembers(true)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  showOldMembers
-                    ? "bg-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Todos
-              </button>
-            </div>
+            <SegmentedControl
+              value={showOldMembers ? "all" : "active"}
+              onValueChange={value => setShowOldMembers(value === "all")}
+              options={[
+                { value: "active", label: "Ativos" },
+                { value: "all", label: "Todos" },
+              ]}
+            />
 
             {canAddMembers && (
               <Button

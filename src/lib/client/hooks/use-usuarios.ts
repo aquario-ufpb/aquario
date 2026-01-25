@@ -208,3 +208,22 @@ export const useUpdateUserInfo = () => {
     },
   });
 };
+
+/**
+ * Hook to get the current user's entity memberships
+ */
+export const useMyMemberships = () => {
+  const { token } = useAuth();
+
+  return useQuery({
+    queryKey: [...queryKeys.usuarios.current, "memberships"],
+    queryFn: () => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return usuariosService.getMyMemberships(token);
+    },
+    enabled: !!token,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};

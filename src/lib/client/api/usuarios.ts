@@ -36,6 +36,31 @@ export type UpdateUserInfoRequest = {
   cursoId?: string;
 };
 
+export type UserMembership = {
+  id: string;
+  entidade: {
+    id: string;
+    nome: string;
+    slug: string | null;
+    tipo: string;
+    urlFoto: string | null;
+    centro: {
+      id: string;
+      nome: string;
+      sigla: string;
+    };
+  };
+  papel: "ADMIN" | "MEMBRO";
+  cargo: {
+    id: string;
+    nome: string;
+    descricao: string | null;
+    ordem: number;
+  } | null;
+  startedAt: string;
+  endedAt: string | null;
+};
+
 export const usuariosService = {
   getCurrentUser: async (token: string): Promise<User> => {
     const response = await apiClient(`${API_URL}${ENDPOINTS.ME}`, {
@@ -219,6 +244,19 @@ export const usuariosService = {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Falha ao atualizar informações do usuário");
+    }
+
+    return response.json();
+  },
+
+  getMyMemberships: async (token: string): Promise<UserMembership[]> => {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_MEMBROS}`, {
+      method: "GET",
+      token,
+    });
+
+    if (!response.ok) {
+      throw new Error("Falha ao buscar membros");
     }
 
     return response.json();
