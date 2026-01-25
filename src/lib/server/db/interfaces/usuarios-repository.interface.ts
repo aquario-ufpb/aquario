@@ -17,6 +17,11 @@ export type IUsuariosRepository = {
   findByEmail(email: string): Promise<UsuarioWithRelations | null>;
 
   /**
+   * Find a user by slug
+   */
+  findBySlug(slug: string): Promise<UsuarioWithRelations | null>;
+
+  /**
    * List all users
    */
   findMany(): Promise<UsuarioWithRelations[]>;
@@ -65,6 +70,11 @@ export type IUsuariosRepository = {
    * Update user's curso
    */
   updateCurso(id: string, cursoId: string): Promise<void>;
+
+  /**
+   * Update user's slug
+   */
+  updateSlug(id: string, slug: string | null): Promise<void>;
 
   /**
    * Delete a user

@@ -21,6 +21,7 @@ export const queryKeys = {
     all: ["usuarios"] as const,
     current: ["usuarios", "current"] as const,
     byId: (id: string) => ["usuarios", id] as const,
+    bySlug: (slug: string) => ["usuarios", "slug", slug] as const,
   },
   entidades: {
     all: ["entidades"] as const,

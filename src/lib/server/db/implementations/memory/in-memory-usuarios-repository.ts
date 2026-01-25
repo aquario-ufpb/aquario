@@ -27,6 +27,13 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
   };
 
   create(data: UsuarioCreateInput): Promise<UsuarioWithRelations> {
+    const emailPart = data.email ? data.email.split("@")[0] : null;
+    const slug = data.eFacade
+      ? null
+      : emailPart
+        ? emailPart.toLowerCase().replace(/[^a-z0-9-]/g, "-")
+        : null;
+
     const usuario: UsuarioWithRelations = {
       id: randomUUID(),
       nome: data.nome,
@@ -40,6 +47,7 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
       eFacade: data.eFacade ?? false,
       urlFotoPerfil: data.urlFotoPerfil ?? null,
       matricula: data.matricula ?? null,
+      slug: slug ?? null,
       criadoEm: new Date(),
       atualizadoEm: new Date(),
       centro: this.defaultCentro,
@@ -57,6 +65,14 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
   findByEmail(email: string): Promise<UsuarioWithRelations | null> {
     const normalizedEmail = email.toLowerCase().trim();
     return Promise.resolve(this.usuarios.find(u => u.email === normalizedEmail) ?? null);
+  }
+
+  findBySlug(slug: string): Promise<UsuarioWithRelations | null> {
+    // Normalize slug to lowercase for case-insensitive lookup
+    const normalizedSlug = slug.toLowerCase();
+    return Promise.resolve(
+      this.usuarios.find(u => u.slug?.toLowerCase() === normalizedSlug) ?? null
+    );
   }
 
   findMany(): Promise<UsuarioWithRelations[]> {
@@ -205,6 +221,16 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     const usuario = this.usuarios.find(u => u.id === id);
     if (usuario) {
       usuario.cursoId = cursoId;
+      usuario.atualizadoEm = new Date();
+    }
+    return Promise.resolve();
+  }
+
+  updateSlug(id: string, slug: string | null): Promise<void> {
+    const usuario = this.usuarios.find(u => u.id === id);
+    if (usuario) {
+      // Normalize slug to lowercase for case-insensitive uniqueness
+      usuario.slug = slug ? slug.toLowerCase().trim() : null;
       usuario.atualizadoEm = new Date();
     }
     return Promise.resolve();

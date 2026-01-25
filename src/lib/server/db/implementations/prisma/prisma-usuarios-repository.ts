@@ -8,7 +8,64 @@ import type {
 import type { Prisma } from "@prisma/client";
 
 export class PrismaUsuariosRepository implements IUsuariosRepository {
+  /**
+   * Generate a slug from email (part before @)
+   */
+  private emailToSlug(email: string | null): string | null {
+    if (!email) {
+      return null;
+    }
+    const emailPart = email.split("@")[0];
+    return (
+      emailPart
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .trim() || null
+    );
+  }
+
+  /**
+   * Ensure slug is unique by appending a number if needed
+   */
+  private async ensureUniqueSlug(
+    baseSlug: string | null,
+    excludeUserId?: string
+  ): Promise<string | null> {
+    if (!baseSlug) {
+      return null;
+    }
+
+    // Normalize slug to lowercase for case-insensitive uniqueness
+    const normalizedBaseSlug = baseSlug.toLowerCase().trim();
+    let slug = normalizedBaseSlug;
+    let counter = 1;
+
+    while (true) {
+      const existing = await prisma.usuario.findFirst({
+        where: {
+          slug,
+          ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
+        },
+      });
+
+      if (!existing) {
+        return slug;
+      }
+
+      slug = `${normalizedBaseSlug}-${counter}`;
+      counter++;
+    }
+  }
+
   async create(data: UsuarioCreateInput): Promise<UsuarioWithRelations> {
+    // Generate slug from email (null for facade users)
+    const baseSlug = data.eFacade ? null : this.emailToSlug(data.email ?? null);
+    const slug = baseSlug ? await this.ensureUniqueSlug(baseSlug) : null;
+
     const usuario = await prisma.usuario.create({
       data: {
         nome: data.nome,
@@ -22,6 +79,7 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
         eFacade: data.eFacade ?? false,
         urlFotoPerfil: data.urlFotoPerfil,
         matricula: data.matricula,
+        slug,
       },
       include: {
         centro: true,
@@ -49,6 +107,20 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
 
     const usuario = await prisma.usuario.findUnique({
       where: { email: normalizedEmail },
+      include: {
+        centro: true,
+        curso: true,
+      },
+    });
+
+    return usuario;
+  }
+
+  async findBySlug(slug: string): Promise<UsuarioWithRelations | null> {
+    // Normalize slug to lowercase for case-insensitive lookup
+    const normalizedSlug = slug.toLowerCase();
+    const usuario = await prisma.usuario.findUnique({
+      where: { slug: normalizedSlug },
       include: {
         centro: true,
         curso: true,
@@ -285,6 +357,16 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     await prisma.usuario.update({
       where: { id },
       data: { cursoId },
+    });
+  }
+
+  async updateSlug(id: string, slug: string | null): Promise<void> {
+    // Ensure slug is unique if provided (excluding current user)
+    const finalSlug = slug ? await this.ensureUniqueSlug(slug, id) : null;
+
+    await prisma.usuario.update({
+      where: { id },
+      data: { slug: finalSlug },
     });
   }
 

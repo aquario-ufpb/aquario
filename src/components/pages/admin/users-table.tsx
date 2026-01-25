@@ -8,6 +8,7 @@ import {
   useCreateFacadeUser,
   useUpdateUserInfo,
   useMergeFacadeUser,
+  useUpdateUserSlug,
 } from "@/lib/client/hooks/use-usuarios";
 import { useCentros, useCursos } from "@/lib/client/hooks";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -47,6 +48,8 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editCentroId, setEditCentroId] = useState("");
   const [editCursoId, setEditCursoId] = useState("");
+  const [editingSlugUserId, setEditingSlugUserId] = useState<string | null>(null);
+  const [editSlug, setEditSlug] = useState("");
   const [userFilter, setUserFilter] = useState<UserFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isMergeDialogOpen, setIsMergeDialogOpen] = useState(false);
@@ -74,6 +77,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const deleteUserMutation = useDeleteUser();
   const createFacadeUserMutation = useCreateFacadeUser();
   const updateUserInfoMutation = useUpdateUserInfo();
+  const updateUserSlugMutation = useUpdateUserSlug();
   const mergeFacadeUserMutation = useMergeFacadeUser();
   const { data: centros = [] } = useCentros();
   const { data: cursos = [] } = useCursos(facadeCentroId);
@@ -215,6 +219,35 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
     } catch {
       toast.error("Erro ao copiar ID", {
         description: "Não foi possível copiar o ID para a área de transferência.",
+      });
+    }
+  };
+
+  const handleStartEditSlug = (userId: string, currentSlug: string | null) => {
+    setEditingSlugUserId(userId);
+    setEditSlug(currentSlug || "");
+  };
+
+  const handleCancelEditSlug = () => {
+    setEditingSlugUserId(null);
+    setEditSlug("");
+  };
+
+  const handleSaveSlug = async (userId: string, userName: string) => {
+    try {
+      await updateUserSlugMutation.mutateAsync({
+        userId,
+        slug: editSlug.trim() || null,
+      });
+      toast.success("Slug atualizado", {
+        description: `O slug de ${userName} foi atualizado.`,
+      });
+      setEditingSlugUserId(null);
+      setEditSlug("");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao atualizar slug";
+      toast.error("Erro ao atualizar slug", {
+        description: errorMessage,
       });
     }
   };
@@ -423,6 +456,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                 <th className="text-left p-4 font-semibold">ID</th>
                 <th className="text-left p-4 font-semibold">Nome</th>
                 <th className="text-left p-4 font-semibold">Email</th>
+                <th className="text-left p-4 font-semibold">Slug</th>
                 <th className="text-left p-4 font-semibold">Centro</th>
                 <th className="text-left p-4 font-semibold">Curso</th>
                 <th className="text-left p-4 font-semibold">Status</th>
@@ -433,13 +467,14 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
             <tbody>
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <td colSpan={9} className="text-center py-8 text-muted-foreground">
                     {isLoading ? "Carregando..." : "Nenhum usuário cadastrado"}
                   </td>
                 </tr>
               ) : (
                 users.map(userItem => {
                   const isEditing = editingUserId === userItem.id;
+                  const isEditingSlug = editingSlugUserId === userItem.id;
                   return (
                     <tr key={userItem.id} className="border-b hover:bg-muted/50">
                       <td className="p-4">
@@ -461,6 +496,100 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                       </td>
                       <td className="p-4">
                         {userItem.email || <span className="text-muted-foreground">—</span>}
+                      </td>
+                      <td className="p-4">
+                        {isEditingSlug ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={editSlug}
+                              onChange={e => setEditSlug(e.target.value)}
+                              placeholder="slug"
+                              className="w-32 font-mono text-sm"
+                              disabled={updateUserSlugMutation.isPending}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleCancelEditSlug}
+                              disabled={updateUserSlugMutation.isPending}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleSaveSlug(userItem.id, userItem.nome)}
+                              disabled={updateUserSlugMutation.isPending}
+                            >
+                              {updateUserSlugMutation.isPending ? "Salvando..." : "Salvar"}
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm text-muted-foreground">
+                              {userItem.slug || <span className="text-muted-foreground">—</span>}
+                            </span>
+                            {!userItem.eFacade && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleStartEditSlug(userItem.id, userItem.slug || null)
+                                }
+                                className="h-6 px-2 text-xs"
+                              >
+                                Editar
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {isEditingSlug ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={editSlug}
+                              onChange={e => setEditSlug(e.target.value)}
+                              placeholder="slug"
+                              className="w-32 font-mono text-sm"
+                              disabled={updateUserSlugMutation.isPending}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleCancelEditSlug}
+                              disabled={updateUserSlugMutation.isPending}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleSaveSlug(userItem.id, userItem.nome)}
+                              disabled={updateUserSlugMutation.isPending}
+                            >
+                              {updateUserSlugMutation.isPending ? "Salvando..." : "Salvar"}
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm text-muted-foreground">
+                              {userItem.slug || <span className="text-muted-foreground">—</span>}
+                            </span>
+                            {!userItem.eFacade && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleStartEditSlug(userItem.id, userItem.slug || null)
+                                }
+                                className="h-6 px-2 text-xs"
+                              >
+                                Editar
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="p-4">
                         {isEditing ? (

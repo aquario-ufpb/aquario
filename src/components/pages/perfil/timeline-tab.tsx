@@ -10,9 +10,16 @@ import type { UserMembership } from "@/lib/client/api/usuarios";
 type TimelineTabProps = {
   memberships: UserMembership[] | undefined;
   isLoading: boolean;
+  title?: string;
+  emptyMessage?: string;
 };
 
-export function TimelineTab({ memberships, isLoading }: TimelineTabProps) {
+export function TimelineTab({
+  memberships,
+  isLoading,
+  title = "Histórico de Membros",
+  emptyMessage = "Nenhum histórico de membros encontrado.",
+}: TimelineTabProps) {
   // Timeline data sorted by date (most recent first)
   const timelineData = memberships
     ? [...memberships].sort((a, b) => {
@@ -25,7 +32,7 @@ export function TimelineTab({ memberships, isLoading }: TimelineTabProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between h-12">
-        <h3 className="text-lg font-semibold">Histórico de Membros</h3>
+        <h3 className="text-lg font-semibold">{title}</h3>
         <div className="w-[120px]"></div>
       </div>
 
@@ -38,7 +45,7 @@ export function TimelineTab({ memberships, isLoading }: TimelineTabProps) {
       ) : timelineData.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>Nenhum histórico de membros encontrado.</p>
+          <p>{emptyMessage}</p>
         </div>
       ) : (
         <div className="relative">

@@ -9,6 +9,7 @@ type Curso = {
 export type User = {
   id: string;
   nome: string;
+  slug?: string | null;
   urlFotoPerfil?: string | null;
   curso?: Curso | null;
   periodo?: number | null;

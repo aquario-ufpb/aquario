@@ -24,6 +24,17 @@ export const useCurrentUser = () => {
 };
 
 /**
+ * Hook to get a user by slug
+ */
+export const useUsuarioBySlug = (slug: string) => {
+  return useQuery({
+    queryKey: queryKeys.usuarios.bySlug(slug),
+    queryFn: () => usuariosService.getBySlug(slug),
+    enabled: !!slug,
+  });
+};
+
+/**
  * Hook to list users with pagination (admin only)
  */
 export const useUsuariosPaginated = (options: {
@@ -217,6 +228,23 @@ export const useUpdateUserInfo = () => {
   });
 };
 
+export const useUpdateUserSlug = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, slug }: { userId: string; slug: string | null }) => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return usuariosService.updateUserSlug(userId, slug, token);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+    },
+  });
+};
+
 /**
  * Hook to get the current user's entity memberships
  */
@@ -232,6 +260,18 @@ export const useMyMemberships = () => {
       return usuariosService.getMyMemberships(token);
     },
     enabled: !!token,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+/**
+ * Hook to get a user's entity memberships by user ID
+ */
+export const useUserMemberships = (userId: string) => {
+  return useQuery({
+    queryKey: [...queryKeys.usuarios.byId(userId), "memberships"],
+    queryFn: () => usuariosService.getUserMemberships(userId),
+    enabled: !!userId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

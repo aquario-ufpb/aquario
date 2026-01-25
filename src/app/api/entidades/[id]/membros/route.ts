@@ -117,6 +117,7 @@ export async function POST(request: Request, context: RouteContext) {
         usuario: {
           id: membro.usuario.id,
           nome: membro.usuario.nome,
+          slug: membro.usuario.slug,
           urlFotoPerfil: membro.usuario.urlFotoPerfil,
           eFacade: membro.usuario.eFacade,
           curso: membro.usuario.curso

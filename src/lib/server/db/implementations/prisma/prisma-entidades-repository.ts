@@ -48,9 +48,10 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
   }
 
   async findBySlug(slug: string): Promise<EntidadeWithRelations | null> {
-    // Query the dedicated slug column
+    // Normalize slug to lowercase for case-insensitive lookup
+    const normalizedSlug = slug.toLowerCase();
     const entidade = await prisma.entidade.findUnique({
-      where: { slug },
+      where: { slug: normalizedSlug },
       include: {
         centro: true,
         cargos: {
@@ -81,7 +82,8 @@ export class PrismaEntidadesRepository implements IEntidadesRepository {
       updateData.nome = data.nome;
     }
     if (data.slug !== undefined) {
-      updateData.slug = data.slug;
+      // Normalize slug to lowercase for case-insensitive uniqueness
+      updateData.slug = data.slug ? data.slug.toLowerCase().trim() : null;
     }
     if (data.subtitle !== undefined) {
       updateData.subtitle = data.subtitle;

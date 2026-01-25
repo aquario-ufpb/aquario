@@ -5,6 +5,7 @@ export type User = {
   id: string;
   nome: string;
   email: string | null;
+  slug?: string | null;
   papelPlataforma: "USER" | "MASTER_ADMIN";
   eVerificado: boolean;
   eFacade?: boolean;
@@ -70,6 +71,19 @@ export const usuariosService = {
 
     if (!response.ok) {
       throw new Error("Falha ao buscar usuário");
+    }
+
+    return response.json();
+  },
+
+  getBySlug: async (slug: string): Promise<User> => {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_BY_SLUG(slug)}`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Usuário não encontrado");
     }
 
     return response.json();
@@ -252,10 +266,40 @@ export const usuariosService = {
     return response.json();
   },
 
+  updateUserSlug: async (userId: string, slug: string | null, token: string): Promise<User> => {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}/${userId}/slug`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      token,
+      body: JSON.stringify({ slug }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Falha ao atualizar slug");
+    }
+
+    return response.json();
+  },
+
   getMyMemberships: async (token: string): Promise<UserMembership[]> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_MEMBROS}`, {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_MEMBROS_ME}`, {
       method: "GET",
       token,
+    });
+
+    if (!response.ok) {
+      throw new Error("Falha ao buscar membros");
+    }
+
+    return response.json();
+  },
+
+  getUserMemberships: async (userId: string): Promise<UserMembership[]> => {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_MEMBROS(userId)}`, {
+      method: "GET",
     });
 
     if (!response.ok) {

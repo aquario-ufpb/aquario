@@ -13,6 +13,8 @@ type EntidadesTabProps = {
   isLoading: boolean;
   showAllEntities: boolean;
   onShowAllEntitiesChange: (showAll: boolean) => void;
+  title?: string;
+  emptyMessage?: string;
 };
 
 export function EntidadesTab({
@@ -20,6 +22,8 @@ export function EntidadesTab({
   isLoading,
   showAllEntities,
   onShowAllEntitiesChange,
+  title = "Minhas Entidades",
+  emptyMessage = "Você não é membro de nenhuma entidade ainda.",
 }: EntidadesTabProps) {
   // Filter memberships based on toggle
   const filteredMemberships = showAllEntities
@@ -37,7 +41,7 @@ export function EntidadesTab({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between h-12">
-        <h3 className="text-lg font-semibold">Minhas Entidades</h3>
+        <h3 className="text-lg font-semibold">{title}</h3>
         <SegmentedControl
           value={showAllEntities ? "all" : "active"}
           onValueChange={value => onShowAllEntitiesChange(value === "all")}
@@ -57,7 +61,7 @@ export function EntidadesTab({
       ) : entitiesMap.size === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>Você não é membro de nenhuma entidade ainda.</p>
+          <p>{emptyMessage}</p>
         </div>
       ) : (
         <div className="space-y-3">

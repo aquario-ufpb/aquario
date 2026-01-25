@@ -108,6 +108,7 @@ export async function PUT(request: Request, context: RouteContext) {
         usuario: {
           id: updatedMembro.usuario.id,
           nome: updatedMembro.usuario.nome,
+          slug: updatedMembro.usuario.slug,
           urlFotoPerfil: updatedMembro.usuario.urlFotoPerfil,
           eFacade: updatedMembro.usuario.eFacade,
           curso: updatedMembro.usuario.curso

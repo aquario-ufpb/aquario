@@ -336,10 +336,15 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
                 return <div key={merged.usuario.id}>{MemberContent}</div>;
               }
 
+              // Only link if user has a slug
+              if (!merged.usuario.slug) {
+                return <div key={merged.usuario.id}>{MemberContent}</div>;
+              }
+
               return (
                 <Link
                   key={merged.usuario.id}
-                  href={`/usuarios/${merged.usuario.id}`}
+                  href={`/usuarios/${merged.usuario.slug}`}
                   className="block"
                 >
                   {MemberContent}

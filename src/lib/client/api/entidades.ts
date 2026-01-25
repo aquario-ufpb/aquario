@@ -28,6 +28,7 @@ type ApiEntidadeResponse = {
     usuario: {
       id: string;
       nome: string;
+      slug?: string | null;
       urlFotoPerfil?: string | null;
       eFacade?: boolean;
       curso?: {

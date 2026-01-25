@@ -85,6 +85,7 @@ model Usuario {
   nome              String
   email             String?          @unique
   matricula         String?          @unique
+  slug              String?          @unique
   senhaHash         String?
   permissoes        String[]         @default([])
   papelPlataforma   PapelPlataforma  @default(USER)
@@ -106,6 +107,7 @@ model Usuario {
   @@index([email])
   @@index([matricula])
   @@index([eFacade])
+  @@index([slug])
 }
 
 model TokenVerificacao {

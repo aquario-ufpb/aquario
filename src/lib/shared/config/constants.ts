@@ -26,9 +26,11 @@ export const ENDPOINTS = {
 
   // User management
   USUARIOS: "/usuarios",
+  USUARIO_BY_SLUG: (slug: string) => `/usuarios/slug/${slug}`,
+  USUARIO_MEMBROS: (userId: string) => `/usuarios/${userId}/membros`,
   UPLOAD_PHOTO: "/upload/photo",
   USUARIO_PHOTO: "/usuarios/me/photo",
-  USUARIO_MEMBROS: "/usuarios/me/membros",
+  USUARIO_MEMBROS_ME: "/usuarios/me/membros",
   MERGE_FACADE_USER: "/usuarios/merge-facade",
 
   // Entidades

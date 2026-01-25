@@ -7,6 +7,7 @@ const mapUserToResponse = (u: {
   id: string;
   nome: string;
   email: string | null;
+  slug: string | null;
   papelPlataforma: string;
   eVerificado: boolean;
   eFacade: boolean;
@@ -18,6 +19,7 @@ const mapUserToResponse = (u: {
   id: u.id,
   nome: u.nome,
   email: u.email,
+  slug: u.slug,
   papelPlataforma: u.papelPlataforma,
   eVerificado: u.eVerificado,
   eFacade: u.eFacade,

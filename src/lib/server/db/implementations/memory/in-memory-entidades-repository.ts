@@ -13,8 +13,9 @@ export class InMemoryEntidadesRepository implements IEntidadesRepository {
   }
 
   findBySlug(slug: string): Promise<EntidadeWithRelations | null> {
-    // Find by slug column
-    return Promise.resolve(this.entidades.find(e => e.slug === slug) ?? null);
+    // Normalize slug to lowercase for case-insensitive lookup
+    const normalizedSlug = slug.toLowerCase();
+    return Promise.resolve(this.entidades.find(e => e.slug?.toLowerCase() === normalizedSlug) ?? null);
   }
 
   update(id: string, data: EntidadeUpdateInput): Promise<void> {
@@ -27,7 +28,8 @@ export class InMemoryEntidadesRepository implements IEntidadesRepository {
       entidade.nome = data.nome;
     }
     if (data.slug !== undefined) {
-      entidade.slug = data.slug;
+      // Normalize slug to lowercase for case-insensitive uniqueness
+      entidade.slug = data.slug ? data.slug.toLowerCase().trim() : null;
     }
     if (data.subtitle !== undefined) {
       entidade.subtitle = data.subtitle;

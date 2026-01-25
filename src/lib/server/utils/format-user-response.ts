@@ -9,6 +9,7 @@ export function formatUserResponse(user: UsuarioWithRelations) {
     id: user.id,
     nome: user.nome,
     email: user.email,
+    slug: user.slug,
     papelPlataforma: user.papelPlataforma,
     eVerificado: user.eVerificado,
     urlFotoPerfil: user.urlFotoPerfil,

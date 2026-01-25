@@ -28,6 +28,7 @@ export type Membro = {
   usuario: {
     id: string;
     nome: string;
+    slug?: string | null;
     urlFotoPerfil?: string | null;
     curso?: { nome: string } | null;
     eFacade?: boolean;

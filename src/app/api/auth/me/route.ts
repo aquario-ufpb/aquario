@@ -10,6 +10,7 @@ export function GET(request: Request) {
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
+        slug: usuario.slug,
         papelPlataforma: usuario.papelPlataforma,
         eVerificado: usuario.eVerificado,
         urlFotoPerfil: usuario.urlFotoPerfil,
