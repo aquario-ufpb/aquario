@@ -37,20 +37,15 @@ export default function SobrePage() {
           }}
         />
 
+        {/* Blur effect - positioned absolutely at the left edge */}
+        <div className="absolute left-0 top-0 bottom-0 w-[50%] z-0">
+          <Image src="/blur.svg" alt="Blur effect" fill className="object-contain object-left" />
+        </div>
+
         <div className="relative flex flex-col md:flex-row items-center h-full w-full max-w-7xl mx-auto px-4 md:px-8 md:pr-12 pt-24">
           {/* Fish Image - Left Side - Hidden on mobile */}
           <div className="hidden md:flex flex-1 relative w-full md:w-2/3 h-full mb-8 md:mb-0 items-center justify-start">
             <div className="relative w-full h-full -ml-8 md:-ml-16">
-              {/* Blur effect - behind the fish */}
-              <div className="absolute inset-0 z-0">
-                <Image
-                  src="/blur.svg"
-                  alt="Blur effect"
-                  fill
-                  className="object-contain object-left"
-                  style={{ transform: "translateX(-10%)" }}
-                />
-              </div>
               {/* Fish - on top */}
               <div
                 className="relative z-10 w-[120%] h-[120%] -ml-[10%] -mt-[10%]"
