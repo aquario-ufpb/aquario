@@ -132,14 +132,14 @@ export default function PerfilPage() {
 
   if (authLoading || userLoading || !user) {
     return (
-      <div className="container mx-auto max-w-4xl p-4 pt-24">
+      <div className="container mx-auto max-w-7xl px-6 md:px-8 lg:px-16 pt-24">
         <div className="flex flex-col items-center space-y-6">
           <Skeleton className="h-24 w-24 rounded-full" />
           <div className="space-y-2">
             <Skeleton className="h-7 w-48" />
             <Skeleton className="h-5 w-64" />
           </div>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 w-full max-w-2xl">
+          <div className="mt-6 grid gap-4 md:grid-cols-2 w-full">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
@@ -151,7 +151,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <main className="container mx-auto max-w-4xl p-4 pt-24">
+    <main className="container mx-auto max-w-7xl px-6 md:px-8 lg:px-16 pt-24">
       {/* Profile Header */}
       <div className="flex flex-col items-center text-center mb-8 pb-8 border-b">
         <div className="relative mb-6 w-24 h-24 mx-auto">

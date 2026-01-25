@@ -55,19 +55,21 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="mt-24">
-      <EntidadeBackButton />
+      <div className="container mx-auto max-w-7xl">
+        <EntidadeBackButton />
 
-      <EntidadeHeroSection
-        entidade={entidade}
-        canEdit={!!canEdit}
-        onEditClick={() => setIsEditDialogOpen(true)}
-      />
+        <EntidadeHeroSection
+          entidade={entidade}
+          canEdit={!!canEdit}
+          onEditClick={() => setIsEditDialogOpen(true)}
+        />
 
-      <EntidadeDescriptionSection entidade={entidade} />
+        <EntidadeDescriptionSection entidade={entidade} />
 
-      <EntidadeMembersSection entidade={entidade} />
+        <EntidadeMembersSection entidade={entidade} />
 
-      <EntidadeOtherEntitiesSection currentEntidade={entidade} otherEntidades={otherEntidades} />
+        <EntidadeOtherEntitiesSection currentEntidade={entidade} otherEntidades={otherEntidades} />
+      </div>
 
       {/* Edit Dialog */}
       {entidade && (

@@ -16,7 +16,7 @@ type EntidadeHeroSectionProps = {
 
 export function EntidadeHeroSection({ entidade, canEdit, onEditClick }: EntidadeHeroSectionProps) {
   return (
-    <div className="container mx-auto px-6 md:px-8 lg:px-16 pt-4 pb-12">
+    <div className="px-6 md:px-8 lg:px-16 pt-4 pb-12">
       <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-8 lg:gap-12">
         {/* Image */}
         <div className="flex justify-center lg:justify-start">

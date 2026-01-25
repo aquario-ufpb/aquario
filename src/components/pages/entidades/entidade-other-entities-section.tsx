@@ -17,7 +17,7 @@ export function EntidadeOtherEntitiesSection({
   }
 
   return (
-    <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-12">
+    <div className="px-6 md:px-8 lg:px-16 pb-12">
       <div className="border-t border-border/30 pt-8">
         <h2 className="text-lg font-semibold mb-6">
           Outros {formatEntityType(currentEntidade.tipo).toLowerCase()}s

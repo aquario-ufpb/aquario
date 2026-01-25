@@ -10,7 +10,7 @@ export function EntidadeDescriptionSection({ entidade }: EntidadeDescriptionSect
   }
 
   return (
-    <div className="container mx-auto px-6 md:px-8 lg:px-16 pb-12">
+    <div className="px-6 md:px-8 lg:px-16 pb-12">
       <div className="border-t border-border/30 pt-8">
         <h2 className="text-lg font-semibold mb-4">Sobre</h2>
         <p className="text-muted-foreground leading-relaxed">{entidade.description}</p>
