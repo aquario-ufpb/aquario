@@ -15,7 +15,9 @@ export class InMemoryEntidadesRepository implements IEntidadesRepository {
   findBySlug(slug: string): Promise<EntidadeWithRelations | null> {
     // Normalize slug to lowercase for case-insensitive lookup
     const normalizedSlug = slug.toLowerCase();
-    return Promise.resolve(this.entidades.find(e => e.slug?.toLowerCase() === normalizedSlug) ?? null);
+    return Promise.resolve(
+      this.entidades.find(e => e.slug?.toLowerCase() === normalizedSlug) ?? null
+    );
   }
 
   update(id: string, data: EntidadeUpdateInput): Promise<void> {

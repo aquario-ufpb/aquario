@@ -16,16 +16,21 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
       return null;
     }
     const emailPart = email.split("@")[0];
-    return (
-      emailPart
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9-]/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .trim() || null
-    );
+    if (!emailPart || emailPart.trim().length === 0) {
+      return null;
+    }
+
+    const slug = emailPart
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .trim();
+
+    // If slug becomes empty after normalization, return null
+    return slug || null;
   }
 
   /**

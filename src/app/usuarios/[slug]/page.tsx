@@ -1,20 +1,20 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
-import { useUsuarioBySlug, useUserMemberships, useCurrentUser } from "@/lib/client/hooks/use-usuarios";
-import { EntidadesTab } from "@/components/pages/perfil/entidades-tab";
-import { TimelineTab } from "@/components/pages/perfil/timeline-tab";
-import { useState } from "react";
 import {
+  useUsuarioBySlug,
+  useUserMemberships,
+  useCurrentUser,
   useUploadPhoto,
   useDeletePhoto,
 } from "@/lib/client/hooks/use-usuarios";
-import { useEffect, useRef } from "react";
+import { EntidadesTab } from "@/components/pages/perfil/entidades-tab";
+import { TimelineTab } from "@/components/pages/perfil/timeline-tab";
 import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";

@@ -28,11 +28,21 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
 
   create(data: UsuarioCreateInput): Promise<UsuarioWithRelations> {
     const emailPart = data.email ? data.email.split("@")[0] : null;
-    const slug = data.eFacade
-      ? null
-      : emailPart
-        ? emailPart.toLowerCase().replace(/[^a-z0-9-]/g, "-")
-        : null;
+    let slug: string | null = null;
+
+    if (!data.eFacade && emailPart && emailPart.trim().length > 0) {
+      const generatedSlug = emailPart
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .trim();
+
+      // Only set slug if it's not empty after normalization
+      slug = generatedSlug || null;
+    }
 
     const usuario: UsuarioWithRelations = {
       id: randomUUID(),
