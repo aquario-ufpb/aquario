@@ -67,11 +67,21 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
     page?: number;
     limit?: number;
     filter?: "all" | "facade" | "real";
+    search?: string;
   }): Promise<{ users: UsuarioWithRelations[]; total: number }> {
     const page = options.page ?? 1;
     const limit = options.limit ?? 25;
     const skip = (page - 1) * limit;
     const filter = options.filter ?? "all";
+    const searchQuery = options.search?.trim();
+
+    // Normalize function for accent-insensitive search
+    const normalizeString = (str: string): string => {
+      return str
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+    };
 
     // Filter users based on filter option
     let filteredUsers = [...this.usuarios];
@@ -79,6 +89,26 @@ export class InMemoryUsuariosRepository implements IUsuariosRepository {
       filteredUsers = filteredUsers.filter(u => u.eFacade);
     } else if (filter === "real") {
       filteredUsers = filteredUsers.filter(u => !u.eFacade);
+    }
+
+    // Apply search filter if search query is provided
+    if (searchQuery) {
+      const normalizedQuery = normalizeString(searchQuery);
+      filteredUsers = filteredUsers.filter(u => {
+        const normalizedNome = normalizeString(u.nome);
+        const normalizedEmail = u.email ? normalizeString(u.email) : "";
+        const normalizedCentroNome = normalizeString(u.centro.nome);
+        const normalizedCentroSigla = normalizeString(u.centro.sigla);
+        const normalizedCursoNome = normalizeString(u.curso.nome);
+
+        return (
+          normalizedNome.includes(normalizedQuery) ||
+          normalizedEmail.includes(normalizedQuery) ||
+          normalizedCentroNome.includes(normalizedQuery) ||
+          normalizedCentroSigla.includes(normalizedQuery) ||
+          normalizedCursoNome.includes(normalizedQuery)
+        );
+      });
     }
 
     const sorted = filteredUsers.sort((a, b) => a.nome.localeCompare(b.nome));

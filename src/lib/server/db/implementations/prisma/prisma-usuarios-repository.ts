@@ -5,6 +5,7 @@ import type {
   UsuarioCreateInput,
   PapelPlataforma,
 } from "@/lib/server/db/interfaces/types";
+import type { Prisma } from "@prisma/client";
 
 export class PrismaUsuariosRepository implements IUsuariosRepository {
   async create(data: UsuarioCreateInput): Promise<UsuarioWithRelations> {
@@ -75,15 +76,86 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     page?: number;
     limit?: number;
     filter?: "all" | "facade" | "real";
+    search?: string;
   }): Promise<{ users: UsuarioWithRelations[]; total: number }> {
     const page = options.page ?? 1;
     const limit = options.limit ?? 25;
     const skip = (page - 1) * limit;
     const filter = options.filter ?? "all";
+    const searchQuery = options.search?.trim();
 
-    // Build where clause based on filter
-    const where =
+    // Build base where clause based on filter
+    const filterWhere =
       filter === "facade" ? { eFacade: true } : filter === "real" ? { eFacade: false } : undefined;
+
+    // Build search where clause if search query is provided
+    let searchWhere: Prisma.UsuarioWhereInput | undefined = undefined;
+    if (searchQuery) {
+      // Normalize query for accent-insensitive search
+      const normalizedQuery = searchQuery
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      searchWhere = {
+        OR: [
+          {
+            nome: {
+              contains: normalizedQuery,
+              mode: "insensitive",
+            },
+          },
+          {
+            email: {
+              contains: normalizedQuery,
+              mode: "insensitive",
+            },
+          },
+          {
+            centro: {
+              OR: [
+                {
+                  nome: {
+                    contains: normalizedQuery,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  sigla: {
+                    contains: normalizedQuery,
+                    mode: "insensitive",
+                  },
+                },
+              ],
+            },
+          },
+          {
+            curso: {
+              nome: {
+                contains: normalizedQuery,
+                mode: "insensitive",
+              },
+            },
+          },
+        ],
+      };
+    }
+
+    // Combine filter and search where clauses
+    let where: Prisma.UsuarioWhereInput | undefined = undefined;
+    if (filterWhere && searchWhere) {
+      // Both filter and search: combine with AND
+      where = {
+        ...filterWhere,
+        ...searchWhere,
+      };
+    } else if (filterWhere) {
+      // Only filter
+      where = filterWhere;
+    } else if (searchWhere) {
+      // Only search
+      where = searchWhere;
+    }
 
     const [users, total] = await Promise.all([
       prisma.usuario.findMany({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -124,6 +125,7 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
     // 1. Active members first, inactive last
     // 2. Within each group, sort by cargo ordem (lower ordem = higher priority)
     // 3. Members with cargo appear before members without cargo
+    // 4. Within same ordem or no cargo, sort alphabetically by name
     return membersArray.sort((a, b) => {
       // First, sort by active status (active first)
       if (a.isActive && !b.isActive) {
@@ -137,9 +139,13 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
       const aOrdem = a.currentCargo?.ordem ?? Infinity;
       const bOrdem = b.currentCargo?.ordem ?? Infinity;
 
-      // If both have cargo, sort by ordem
+      // If both have cargo, sort by ordem first, then alphabetically
       if (a.currentCargo && b.currentCargo) {
-        return aOrdem - bOrdem;
+        if (aOrdem !== bOrdem) {
+          return aOrdem - bOrdem;
+        }
+        // Same ordem, sort alphabetically
+        return a.usuario.nome.localeCompare(b.usuario.nome);
       }
 
       // If only one has cargo, it comes first
@@ -208,117 +214,138 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {mergedMembers.map((merged, index) => (
-              <div
-                key={`${merged.usuario.id}-${index}`}
-                className={`group hover:scale-101 transition-transform duration-200 ${
-                  !merged.isActive ? "opacity-60" : ""
-                }`}
-              >
-                <div className="flex flex-col items-center text-center gap-3">
-                  {/* Avatar */}
-                  <div className="relative">
-                    <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-border/30 group-hover:border-border/60 transition-colors">
-                      {merged.usuario.urlFotoPerfil ? (
-                        <Image
-                          src={merged.usuario.urlFotoPerfil}
-                          alt={merged.usuario.nome}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-muted flex items-center justify-center">
-                          <span className="text-xl font-semibold">
-                            {merged.usuario.nome.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
+            {mergedMembers.map(merged => {
+              // Check if user is facade
+              const isFacade = merged.usuario.eFacade === true;
+              const MemberContent = (
+                <div
+                  className={`group hover:scale-101 transition-transform duration-200 ${
+                    !merged.isActive ? "opacity-60" : ""
+                  } ${!isFacade ? "cursor-pointer" : ""}`}
+                >
+                  <div className="flex flex-col items-center text-center gap-3">
+                    {/* Avatar */}
+                    <div className="relative">
+                      <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-border/30 group-hover:border-border/60 transition-colors">
+                        {merged.usuario.urlFotoPerfil ? (
+                          <Image
+                            src={merged.usuario.urlFotoPerfil}
+                            alt={merged.usuario.nome}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-muted flex items-center justify-center">
+                            <span className="text-xl font-semibold">
+                              {merged.usuario.nome.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Name */}
+                    <div className="w-full">
+                      <h3 className="font-medium text-sm leading-tight mb-1 line-clamp-2">
+                        {merged.usuario.nome}
+                      </h3>
+
+                      {/* Course */}
+                      {merged.usuario.curso?.nome && (
+                        <p className="text-xs text-muted-foreground line-clamp-1">
+                          {merged.usuario.curso.nome}
+                        </p>
+                      )}
+
+                      {/* Cargo */}
+                      {merged.currentCargo && (
+                        <p className="text-xs font-medium text-primary line-clamp-1 mt-0.5">
+                          {merged.currentCargo.nome}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Badges */}
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {!merged.isActive && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          Antigo
+                        </Badge>
+                      )}
+                      {merged.membershipCount > 1 && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                {merged.membershipCount}x
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <div className="text-xs space-y-1 max-w-xs">
+                                <p className="font-semibold mb-1">Cargos:</p>
+                                {merged.allCargos
+                                  .sort((a, b) => {
+                                    if (!a.startedAt) {
+                                      return 1;
+                                    }
+                                    if (!b.startedAt) {
+                                      return -1;
+                                    }
+                                    return (
+                                      new Date(a.startedAt).getTime() -
+                                      new Date(b.startedAt).getTime()
+                                    );
+                                  })
+                                  .map((cargo, idx) => {
+                                    const formatDate = (date: string | undefined | null) => {
+                                      if (!date) {
+                                        return "presente";
+                                      }
+                                      return new Date(date).toLocaleDateString("pt-BR", {
+                                        day: "2-digit",
+                                        month: "short",
+                                        year: "numeric",
+                                      });
+                                    };
+
+                                    return (
+                                      <p
+                                        key={`${merged.usuario.id}-cargo-${idx}`}
+                                        className="leading-relaxed"
+                                      >
+                                        • <span className="font-medium">{cargo.nome}</span>
+                                        <br />
+                                        <span className="text-muted-foreground ml-2 text-[10px]">
+                                          {formatDate(cargo.startedAt)} -{" "}
+                                          {formatDate(cargo.endedAt)}
+                                        </span>
+                                      </p>
+                                    );
+                                  })}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </div>
                   </div>
-
-                  {/* Name */}
-                  <div className="w-full">
-                    <h3 className="font-medium text-sm leading-tight mb-1 line-clamp-2">
-                      {merged.usuario.nome}
-                    </h3>
-
-                    {/* Course */}
-                    {merged.usuario.curso?.nome && (
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {merged.usuario.curso.nome}
-                      </p>
-                    )}
-
-                    {/* Cargo */}
-                    {merged.currentCargo && (
-                      <p className="text-xs font-medium text-primary line-clamp-1 mt-0.5">
-                        {merged.currentCargo.nome}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Badges */}
-                  <div className="flex flex-wrap gap-1 justify-center">
-                    {!merged.isActive && (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                        Antigo
-                      </Badge>
-                    )}
-                    {merged.membershipCount > 1 && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                              {merged.membershipCount}x
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="text-xs space-y-1 max-w-xs">
-                              <p className="font-semibold mb-1">Cargos:</p>
-                              {merged.allCargos
-                                .sort((a, b) => {
-                                  if (!a.startedAt) {
-                                    return 1;
-                                  }
-                                  if (!b.startedAt) {
-                                    return -1;
-                                  }
-                                  return (
-                                    new Date(a.startedAt).getTime() -
-                                    new Date(b.startedAt).getTime()
-                                  );
-                                })
-                                .map((cargo, idx) => {
-                                  const formatDate = (date: string | undefined | null) => {
-                                    if (!date) {
-                                      return "presente";
-                                    }
-                                    return new Date(date).toLocaleDateString("pt-BR", {
-                                      day: "2-digit",
-                                      month: "short",
-                                      year: "numeric",
-                                    });
-                                  };
-
-                                  return (
-                                    <p key={idx} className="leading-relaxed">
-                                      • <span className="font-medium">{cargo.nome}</span>
-                                      <br />
-                                      <span className="text-muted-foreground ml-2 text-[10px]">
-                                        {formatDate(cargo.startedAt)} - {formatDate(cargo.endedAt)}
-                                      </span>
-                                    </p>
-                                  );
-                                })}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+
+              if (isFacade) {
+                return <div key={merged.usuario.id}>{MemberContent}</div>;
+              }
+
+              return (
+                <Link
+                  key={merged.usuario.id}
+                  href={`/usuarios/${merged.usuario.id}`}
+                  className="block"
+                >
+                  {MemberContent}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

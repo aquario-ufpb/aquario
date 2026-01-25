@@ -39,22 +39,11 @@ export function GET(request: Request) {
     const { usuariosRepository } = getContainer();
     const { searchParams } = new URL(req.url);
 
-    // Check if this is a search request
-    const searchQuery = searchParams.get("search");
-    if (searchQuery) {
-      const limit = parseInt(searchParams.get("limit") || "10", 10);
-      const usuarios = await usuariosRepository.search({
-        query: searchQuery,
-        limit: Math.min(limit, 100), // Cap at 100 for safety
-      });
-
-      return NextResponse.json(usuarios.map(mapUserToResponse));
-    }
-
-    // Check if this is a paginated request
+    // Check if this is a paginated request (takes priority over standalone search)
     const page = searchParams.get("page");
     const limit = searchParams.get("limit");
     const filter = searchParams.get("filter") as "all" | "facade" | "real" | null;
+    const search = searchParams.get("search");
 
     if (page || limit) {
       const pageNum = parseInt(page || "1", 10);
@@ -64,6 +53,7 @@ export function GET(request: Request) {
         page: pageNum,
         limit: Math.min(limitNum, 100), // Cap at 100 for safety
         filter: validFilter,
+        search: search || undefined,
       });
 
       return NextResponse.json({
@@ -75,6 +65,18 @@ export function GET(request: Request) {
           totalPages: Math.ceil(total / limitNum),
         },
       });
+    }
+
+    // Check if this is a standalone search request
+    const searchQuery = searchParams.get("search");
+    if (searchQuery) {
+      const limit = parseInt(searchParams.get("limit") || "10", 10);
+      const usuarios = await usuariosRepository.search({
+        query: searchQuery,
+        limit: Math.min(limit, 100), // Cap at 100 for safety
+      });
+
+      return NextResponse.json(usuarios.map(mapUserToResponse));
     }
 
     // Default: return all users (for backward compatibility)

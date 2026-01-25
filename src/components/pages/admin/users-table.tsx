@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Trash2, UserPlus } from "lucide-react";
+import { Trash2, UserPlus, Search, Copy } from "lucide-react";
 import { PaginationControls } from "@/components/shared/pagination-controls";
 
 type UserFilter = "all" | "facade" | "real";
@@ -46,6 +46,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const [editCentroId, setEditCentroId] = useState("");
   const [editCursoId, setEditCursoId] = useState("");
   const [userFilter, setUserFilter] = useState<UserFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const {
     data: paginatedData,
@@ -56,11 +57,12 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
     page,
     limit: itemsPerPage,
     filter: userFilter,
+    search: searchQuery || undefined,
   });
 
   const users = paginatedData?.users ?? [];
-  const totalUsers = paginatedData?.pagination.total ?? 0;
-  const totalPages = paginatedData?.pagination.totalPages ?? 0;
+  const totalUsers = paginatedData?.pagination?.total ?? 0;
+  const totalPages = paginatedData?.pagination?.totalPages ?? 0;
 
   const updateRoleMutation = useUpdateUserRole();
   const deleteUserMutation = useDeleteUser();
@@ -197,6 +199,19 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
     }
   };
 
+  const handleCopyId = async (userId: string) => {
+    try {
+      await navigator.clipboard.writeText(userId);
+      toast.success("ID copiado", {
+        description: "O ID do usuário foi copiado para a área de transferência.",
+      });
+    } catch {
+      toast.error("Erro ao copiar ID", {
+        description: "Não foi possível copiar o ID para a área de transferência.",
+      });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -316,6 +331,22 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
               </SelectContent>
             </Select>
           </div>
+
+          <div className="flex-1 min-w-[200px] max-w-md">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="user-search"
+                placeholder="Buscar por nome, email, centro ou curso..."
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value);
+                  setPage(1); // Reset to first page when search changes
+                }}
+                className="pl-9"
+              />
+            </div>
+          </div>
         </div>
 
         {queryError && (
@@ -340,6 +371,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
+                <th className="text-left p-4 font-semibold">ID</th>
                 <th className="text-left p-4 font-semibold">Nome</th>
                 <th className="text-left p-4 font-semibold">Email</th>
                 <th className="text-left p-4 font-semibold">Centro</th>
@@ -352,7 +384,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
             <tbody>
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <td colSpan={8} className="text-center py-8 text-muted-foreground">
                     {isLoading ? "Carregando..." : "Nenhum usuário cadastrado"}
                   </td>
                 </tr>
@@ -361,6 +393,17 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                   const isEditing = editingUserId === userItem.id;
                   return (
                     <tr key={userItem.id} className="border-b hover:bg-muted/50">
+                      <td className="p-4">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyId(userItem.id)}
+                          className="font-mono text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 group cursor-pointer"
+                          title="Clique para copiar o ID"
+                        >
+                          <span>{userItem.id}</span>
+                          <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      </td>
                       <td className="p-4 font-medium">
                         {userItem.nome}
                         {userItem.eFacade && (
@@ -419,6 +462,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
+                                aria-hidden="true"
                               >
                                 <path
                                   strokeLinecap="round"
@@ -436,6 +480,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
+                                aria-hidden="true"
                               >
                                 <path
                                   strokeLinecap="round"

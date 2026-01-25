@@ -28,6 +28,7 @@ export type IUsuariosRepository = {
     page?: number;
     limit?: number;
     filter?: "all" | "facade" | "real";
+    search?: string;
   }): Promise<{ users: UsuarioWithRelations[]; total: number }>;
 
   /**

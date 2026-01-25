@@ -30,11 +30,19 @@ export const useUsuariosPaginated = (options: {
   page?: number;
   limit?: number;
   filter?: "all" | "facade" | "real";
+  search?: string;
 }) => {
   const { token } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKeys.usuarios.all, "paginated", options.page, options.limit, options.filter],
+    queryKey: [
+      ...queryKeys.usuarios.all,
+      "paginated",
+      options.page,
+      options.limit,
+      options.filter,
+      options.search,
+    ],
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");

@@ -110,6 +110,12 @@ export async function mergeFacadeUser(
     // Delete facade user if requested
     let facadeUserDeleted = false;
     if (deleteFacade) {
+      // Delete all memberships for the facade user first (to avoid foreign key constraint)
+      await prisma.membroEntidade.deleteMany({
+        where: { usuarioId: facadeUserId },
+      });
+
+      // Now delete the facade user
       await prisma.usuario.delete({
         where: { id: facadeUserId },
       });

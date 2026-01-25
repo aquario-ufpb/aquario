@@ -30,6 +30,7 @@ export type Membro = {
     nome: string;
     urlFotoPerfil?: string | null;
     curso?: { nome: string } | null;
+    eFacade?: boolean;
   };
   papel: PapelMembro;
   cargo?: Cargo | null;

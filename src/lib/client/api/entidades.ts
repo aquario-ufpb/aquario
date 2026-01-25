@@ -29,6 +29,7 @@ type ApiEntidadeResponse = {
       id: string;
       nome: string;
       urlFotoPerfil?: string | null;
+      eFacade?: boolean;
       curso?: {
         nome: string;
       } | null;
