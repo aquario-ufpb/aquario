@@ -29,6 +29,7 @@ export const ENDPOINTS = {
   UPLOAD_PHOTO: "/upload/photo",
   USUARIO_PHOTO: "/usuarios/me/photo",
   USUARIO_MEMBROS: "/usuarios/me/membros",
+  MERGE_FACADE_USER: "/usuarios/merge-facade",
 
   // Entidades
   ENTIDADES: "/entidades",

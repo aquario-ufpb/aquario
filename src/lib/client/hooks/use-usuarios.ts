@@ -235,3 +235,29 @@ export const useMyMemberships = () => {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
+
+/**
+ * Hook to merge a facade user's memberships into a real user (admin only)
+ */
+export const useMergeFacadeUser = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { facadeUserId: string; realUserId: string; deleteFacade: boolean }) => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return usuariosService.mergeFacadeUser(
+        data.facadeUserId,
+        data.realUserId,
+        data.deleteFacade,
+        token
+      );
+    },
+    onSuccess: () => {
+      // Invalidate and refetch users list after merging
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+    },
+  });
+};

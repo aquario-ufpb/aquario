@@ -28,7 +28,7 @@ export async function mergeFacadeUser(
     // Verify facade user exists and is actually a facade
     const facadeUser = await prisma.usuario.findUnique({
       where: { id: facadeUserId },
-      include: { membroDeEntidades: true },
+      include: { membroDeEntidades: { include: { cargo: true } } },
     });
 
     if (!facadeUser) {
@@ -99,6 +99,7 @@ export async function mergeFacadeUser(
           usuarioId: realUserId,
           entidadeId: facadeMembership.entidadeId,
           papel: facadeMembership.papel,
+          cargoId: facadeMembership.cargoId,
           startedAt: facadeMembership.startedAt,
           endedAt: facadeMembership.endedAt,
         },

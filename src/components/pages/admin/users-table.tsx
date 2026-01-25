@@ -7,6 +7,7 @@ import {
   useDeleteUser,
   useCreateFacadeUser,
   useUpdateUserInfo,
+  useMergeFacadeUser,
 } from "@/lib/client/hooks/use-usuarios";
 import { useCentros, useCursos } from "@/lib/client/hooks";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -29,8 +30,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Trash2, UserPlus, Search, Copy } from "lucide-react";
+import { Trash2, UserPlus, Search, Copy, Merge } from "lucide-react";
 import { PaginationControls } from "@/components/shared/pagination-controls";
 
 type UserFilter = "all" | "facade" | "real";
@@ -47,6 +49,10 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const [editCursoId, setEditCursoId] = useState("");
   const [userFilter, setUserFilter] = useState<UserFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMergeDialogOpen, setIsMergeDialogOpen] = useState(false);
+  const [mergeFacadeUserId, setMergeFacadeUserId] = useState<string | null>(null);
+  const [mergeRealUserId, setMergeRealUserId] = useState("");
+  const [mergeDeleteFacade, setMergeDeleteFacade] = useState(true);
 
   const {
     data: paginatedData,
@@ -68,6 +74,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const deleteUserMutation = useDeleteUser();
   const createFacadeUserMutation = useCreateFacadeUser();
   const updateUserInfoMutation = useUpdateUserInfo();
+  const mergeFacadeUserMutation = useMergeFacadeUser();
   const { data: centros = [] } = useCentros();
   const { data: cursos = [] } = useCursos(facadeCentroId);
   const { data: editCursos = [] } = useCursos(editCentroId);
@@ -208,6 +215,48 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
     } catch {
       toast.error("Erro ao copiar ID", {
         description: "Não foi possível copiar o ID para a área de transferência.",
+      });
+    }
+  };
+
+  const handleStartMerge = (facadeUserId: string) => {
+    setMergeFacadeUserId(facadeUserId);
+    setMergeRealUserId("");
+    setMergeDeleteFacade(true);
+    setIsMergeDialogOpen(true);
+  };
+
+  const handleMergeFacadeUser = async () => {
+    if (!mergeFacadeUserId || !mergeRealUserId) {
+      toast.error("Selecione o usuário real para mesclar");
+      return;
+    }
+
+    if (mergeFacadeUserId === mergeRealUserId) {
+      toast.error("Não é possível mesclar um usuário com ele mesmo");
+      return;
+    }
+
+    try {
+      const result = await mergeFacadeUserMutation.mutateAsync({
+        facadeUserId: mergeFacadeUserId,
+        realUserId: mergeRealUserId,
+        deleteFacade: mergeDeleteFacade,
+      });
+
+      toast.success("Usuário facade mesclado", {
+        description: `${result.membershipsCopied} membros copiados. ${
+          result.conflicts > 0 ? `${result.conflicts} conflitos ignorados. ` : ""
+        }${result.facadeUserDeleted ? "Usuário facade deletado." : "Usuário facade mantido."}`,
+      });
+
+      setIsMergeDialogOpen(false);
+      setMergeFacadeUserId(null);
+      setMergeRealUserId("");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao mesclar usuário facade";
+      toast.error("Erro ao mesclar usuário facade", {
+        description: errorMessage,
       });
     }
   };
@@ -539,6 +588,16 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                             </>
                           ) : (
                             <>
+                              {userItem.eFacade && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleStartMerge(userItem.id)}
+                                  title="Mesclar com usuário real"
+                                >
+                                  <Merge className="h-4 w-4" />
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -597,6 +656,80 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
           itemLabelPlural="usuários"
         />
       </CardContent>
+
+      {/* Merge Facade User Dialog */}
+      <Dialog open={isMergeDialogOpen} onOpenChange={setIsMergeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mesclar Usuário Facade</DialogTitle>
+            <DialogDescription>
+              Mescle as membros do usuário facade em um usuário real. Os membros conflitantes serão
+              ignorados.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="merge-facade-user">Usuário Facade</Label>
+              <Input
+                id="merge-facade-user"
+                value={
+                  mergeFacadeUserId
+                    ? users.find(u => u.id === mergeFacadeUserId)?.nome || mergeFacadeUserId
+                    : ""
+                }
+                disabled
+                className="bg-muted"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="merge-real-user">Usuário Real *</Label>
+              <Select value={mergeRealUserId} onValueChange={setMergeRealUserId}>
+                <SelectTrigger id="merge-real-user">
+                  <SelectValue placeholder="Selecione o usuário real" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users
+                    .filter(u => !u.eFacade && u.id !== mergeFacadeUserId)
+                    .map(user => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.nome} {user.email ? `(${user.email})` : ""}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="merge-delete-facade"
+                checked={mergeDeleteFacade}
+                onCheckedChange={checked => setMergeDeleteFacade(checked === true)}
+              />
+              <Label htmlFor="merge-delete-facade" className="text-sm font-normal cursor-pointer">
+                Deletar usuário facade após mesclar
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsMergeDialogOpen(false);
+                setMergeFacadeUserId(null);
+                setMergeRealUserId("");
+              }}
+              disabled={mergeFacadeUserMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleMergeFacadeUser}
+              disabled={mergeFacadeUserMutation.isPending || !mergeRealUserId}
+            >
+              {mergeFacadeUserMutation.isPending ? "Mesclando..." : "Mesclar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

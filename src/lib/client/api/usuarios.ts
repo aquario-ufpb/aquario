@@ -264,4 +264,36 @@ export const usuariosService = {
 
     return response.json();
   },
+
+  mergeFacadeUser: async (
+    facadeUserId: string,
+    realUserId: string,
+    deleteFacade: boolean,
+    token: string
+  ): Promise<{
+    success: boolean;
+    membershipsCopied: number;
+    conflicts: number;
+    facadeUserDeleted: boolean;
+  }> => {
+    const response = await apiClient(`${API_URL}${ENDPOINTS.MERGE_FACADE_USER}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      token,
+      body: JSON.stringify({
+        facadeUserId,
+        realUserId,
+        deleteFacade,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Falha ao mesclar usuário facade");
+    }
+
+    return response.json();
+  },
 };
