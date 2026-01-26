@@ -30,5 +30,16 @@
     ".next/types/**/*.ts",
     "src/Tests & Examples - Dev/Week1 - CSS, Tailwind and Shadcn/Exemplo/ComponentWithCss"
   ],
-  "exclude": ["node_modules", "content/**/scripts"]
+  "exclude": [
+    "node_modules",
+    "content/**/scripts",
+    "**/__tests__/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "playwright.config.ts",
+    "prisma/seed.ts",
+    "scripts/**/*"
+  ]
 }
