@@ -24,6 +24,25 @@ export default function Home() {
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
+
+    // Log environment indicator
+    if (process.env.NEXT_PUBLIC_IS_STAGING === "true") {
+      console.log(
+        "%c🎭 STAGING ENVIRONMENT",
+        "background: #f59e0b; color: black; padding: 4px 8px; border-radius: 4px; font-weight: bold;"
+      );
+      console.log("This is the staging environment. Data may be reset at any time.");
+    } else if (process.env.NODE_ENV === "production") {
+      console.log(
+        "%c🚀 PRODUCTION",
+        "background: #22c55e; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;"
+      );
+    } else {
+      console.log(
+        "%c🛠️ DEVELOPMENT",
+        "background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;"
+      );
+    }
   }, []);
 
   // Filter and shuffle entidades for preview (excluding EMPRESA)

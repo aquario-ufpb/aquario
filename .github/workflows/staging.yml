@@ -135,7 +135,9 @@ jobs:
         run: |
           URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} \
             --env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
-            --build-env DATABASE_URL="${{ steps.db-url.outputs.url }}")
+            --env NEXT_PUBLIC_IS_STAGING="true" \
+            --build-env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
+            --build-env NEXT_PUBLIC_IS_STAGING="true")
 
           echo "url=$URL" >> $GITHUB_OUTPUT
 
