@@ -7,6 +7,32 @@ if (typeof global.Map === "undefined") {
   (global as any).Map = Map;
 }
 
+// Mock localStorage for happy-dom
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+    get length() {
+      return Object.keys(store).length;
+    },
+    key: (index: number) => Object.keys(store)[index] || null,
+  };
+})();
+
+Object.defineProperty(globalThis, "localStorage", {
+  value: localStorageMock,
+  writable: true,
+});
+
 // Mock require.context for Webpack-specific features
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global.require as any) = global.require || {};

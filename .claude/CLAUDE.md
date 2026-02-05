@@ -129,7 +129,7 @@ npm run setup        # First-time project setup
 
 - **Unit tests**: Jest (`npm run test`)
 - **Integration tests**: Vitest (`npm run test:integration`)
-- **E2E tests**: Playwright (`npm run test:e2e`)
+- **All tests**: `npm run test:all`
 
 ## Changelog
 

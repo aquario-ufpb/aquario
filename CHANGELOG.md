@@ -26,9 +26,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - **Removed in-memory database implementation**: Deleted unused memory repositories and `DB_PROVIDER` config. PostgreSQL via Docker or cloud is now the only option.
+- **Removed Playwright E2E tests**: Simplified testing setup to Jest (unit) + Vitest (integration) only.
 
 ### Fixed
 - Fixed `postinstall` script location in package.json (was outside `scripts` block)
+- Fixed failing unit tests due to error message changes
+
+### Testing
+- **Increased test coverage from 55% to 79%**
+  - Added comprehensive tests for `api-error.ts` (37% → 97%)
+  - Added tests for `api-client.ts` token refresh logic (28% → 88%)
+  - Added tests for `entidades.ts` service methods (4% → 84%)
+  - Expanded tests for `usuarios.ts` (30% → 78%)
+- Fixed Vitest localStorage mock for integration tests
+- Total: 71 new unit tests added
 
 ---
 
