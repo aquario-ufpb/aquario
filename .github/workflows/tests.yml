@@ -2,14 +2,14 @@ name: Tests
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
     paths:
       - "src/**"
       - "prisma/**"
       - "package.json"
       - ".github/workflows/tests.yml"
   pull_request:
-    branches: [staging]
+    branches: [main]
     paths:
       - "src/**"
       - "prisma/**"

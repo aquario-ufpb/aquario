@@ -2,7 +2,7 @@ name: Staging Deployment
 
 on:
   push:
-    branches: [staging]
+    branches: [main]
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -139,10 +139,48 @@ jobs:
 
           echo "url=$URL" >> $GITHUB_OUTPUT
 
+      - name: Alias to staging domain
+        run: |
+          DEPLOY_URL="${{ steps.deploy.outputs.url }}"
+          DEPLOY_HOST="${DEPLOY_URL#https://}"
+
+          echo "Getting deployment ID for: $DEPLOY_HOST"
+
+          # Get deployment by URL
+          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            "https://api.vercel.com/v13/deployments/get?url=${DEPLOY_HOST}&teamId=${{ secrets.VERCEL_ORG_ID }}")
+
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id')
+
+          if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" == "null" ]; then
+            echo "::warning::Could not get deployment ID, trying alternative method..."
+            # Fallback: list recent deployments and find by URL
+            DEPLOYMENTS=$(curl -s -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+              "https://api.vercel.com/v6/deployments?teamId=${{ secrets.VERCEL_ORG_ID }}&limit=5")
+            DEPLOY_ID=$(echo "$DEPLOYMENTS" | jq -r --arg url "$DEPLOY_HOST" '.deployments[] | select(.url == $url) | .uid' | head -1)
+          fi
+
+          echo "Deployment ID: $DEPLOY_ID"
+
+          # Assign alias using REST API
+          ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/${DEPLOY_ID}/aliases?teamId=${{ secrets.VERCEL_ORG_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"alias": "staging.aquarioufpb.com"}')
+
+          echo "Alias response: $ALIAS_RESPONSE"
+
+          if echo "$ALIAS_RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
+            echo "::warning::Alias failed: $(echo $ALIAS_RESPONSE | jq -r '.error.message')"
+          else
+            echo "✅ Alias set successfully"
+          fi
+
       - name: Summary
         run: |
           echo "## 🎭 Staging Deployed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://staging.aquarioufpb.com" >> $GITHUB_STEP_SUMMARY
+          echo "**Vercel URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
