@@ -81,10 +81,6 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 This project is licensed under the [MIT License](LICENSE).
 
-The source code can be freely copied, modified, and redistributed, as long as the copyright notice and license text are maintained.
-
-However, the **"Aquário" name**, **logo**, and other **brand elements are NOT covered** by this license. You may create forks or reuse the code under MIT terms, but **you may not use the "Aquário" name** or present derivative works as if they were the original project.
-
 ## Contact
 
 - **Issues**: [GitHub Issues](https://github.com/aquario-ufpb/aquario/issues)
