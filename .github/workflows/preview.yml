@@ -47,9 +47,12 @@ jobs:
           BRANCHES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
             "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
 
-          PR_BRANCH_COUNT=$(echo "$BRANCHES" | jq '[.branches[] | select(.name | startswith("pr-"))] | length')
+          # Only count branches starting with "pr-" (never touch main or staging)
+          PR_BRANCHES=$(echo "$BRANCHES" | jq '[.branches[] | select(.name | startswith("pr-"))]')
+          PR_BRANCH_COUNT=$(echo "$PR_BRANCHES" | jq 'length')
           echo "Current PR branches: $PR_BRANCH_COUNT"
 
+          # Check if this PR already has a branch
           EXISTING=$(echo "$BRANCHES" | jq -r --arg name "${{ steps.branch-name.outputs.name }}" \
             '.branches[] | select(.name == $name) | .id')
 
@@ -57,8 +60,26 @@ jobs:
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "branch_id=$EXISTING" >> $GITHUB_OUTPUT
           elif [ "$PR_BRANCH_COUNT" -ge 8 ]; then
-            echo "::error::Maximum PR branches (8) reached. Close some PRs first."
-            exit 1
+            echo "At branch limit, deleting oldest PR branch..."
+
+            # Get oldest PR branch (by created_at), ONLY from pr-* branches
+            OLDEST=$(echo "$PR_BRANCHES" | jq -r 'sort_by(.created_at) | .[0]')
+            OLDEST_ID=$(echo "$OLDEST" | jq -r '.id')
+            OLDEST_NAME=$(echo "$OLDEST" | jq -r '.name')
+
+            # Safety check: make sure it starts with "pr-"
+            if [[ "$OLDEST_NAME" == pr-* ]]; then
+              echo "Deleting oldest PR branch: $OLDEST_NAME"
+              curl -s -X DELETE -H "Authorization: Bearer $NEON_API_KEY" \
+                "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$OLDEST_ID"
+              echo "✅ Deleted $OLDEST_NAME to make room"
+              sleep 2
+            else
+              echo "::error::Safety check failed - oldest branch is not a PR branch: $OLDEST_NAME"
+              exit 1
+            fi
+
+            echo "exists=false" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
@@ -136,19 +157,12 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build Project
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          DATABASE_URL: ${{ steps.db-url.outputs.url }}
-
       - name: Deploy to Vercel
         id: deploy
         run: |
-          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} \
-            --env DATABASE_URL="${{ steps.db-url.outputs.url }}")
+          URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} \
+            --env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
+            --build-env DATABASE_URL="${{ steps.db-url.outputs.url }}")
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Comment Preview URL on PR

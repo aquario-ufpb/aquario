@@ -88,22 +88,14 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build Project
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          DATABASE_URL: ${{ steps.db-url.outputs.url }}
-
       - name: Deploy to Vercel (Staging)
         id: deploy
         run: |
-          # Deploy with staging alias
-          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} \
-            --env DATABASE_URL="${{ steps.db-url.outputs.url }}")
+          URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} \
+            --env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
+            --build-env DATABASE_URL="${{ steps.db-url.outputs.url }}")
 
-          # Set staging alias
+          # Try to set staging alias (may fail on free tier)
           vercel alias $URL staging-aquario.vercel.app --token=${{ secrets.VERCEL_TOKEN }} || true
 
           echo "url=$URL" >> $GITHUB_OUTPUT
