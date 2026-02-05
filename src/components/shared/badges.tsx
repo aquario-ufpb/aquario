@@ -1,31 +1,18 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
+import {
+  EntidadeVagaType,
+  ENTIDADE_VAGA_LABELS,
+  ENTIDADE_VAGA_SHORT_LABELS,
+} from "@/lib/shared/constants/entity-types";
 
 type BadgeProps = {
-  type: "laboratorios" | "pessoa" | "ufpb" | "grupos" | "externo" | "ligas";
+  type: EntidadeVagaType;
   size: "large" | "small";
   className?: string;
 };
 
 const TypeBadge = ({ type, size, className }: BadgeProps) => {
-  const corrsBig = {
-    laboratorios: "Laboratório",
-    pessoa: "Pessoa",
-    ufpb: "UFPB",
-    grupos: "Grupo",
-    externo: "Externo",
-    ligas: "Liga",
-  };
-
-  const corrsSmall = {
-    laboratorios: "LAB",
-    pessoa: "PES",
-    ufpb: "UFPB",
-    grupos: "GRP",
-    externo: "EXT",
-    ligas: "LIGA",
-  };
-
   const colorsBig = {
     laboratorios: "text-violet-700 bg-violet-200 border-violet-700 hover:bg-violet-200",
     pessoa: "text-red-700 bg-red-200 border-red-700 hover:bg-red-200",
@@ -49,13 +36,13 @@ const TypeBadge = ({ type, size, className }: BadgeProps) => {
   if (size === "large") {
     return (
       <Badge className={`${colorsBig[type]} rounded-full border text-xs ${badgeClassName}`}>
-        {corrsBig[type]}
+        {ENTIDADE_VAGA_LABELS[type]}
       </Badge>
     );
   } else {
     return (
       <Badge className={`${colorsSmall[type]} rounded-sm text-center ${badgeClassName}`}>
-        {corrsSmall[type]}
+        {ENTIDADE_VAGA_SHORT_LABELS[type]}
       </Badge>
     );
   }

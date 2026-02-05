@@ -17,9 +17,11 @@ const OverlappingImages: React.FC<OverlappingImagesProps> = ({ users }) => {
     <div className="flex -space-x-5">
       {limitedUsers.map((user, index) => (
         <Image
-          key={index}
+          key={user.name}
           src={user.image}
           alt={user.name}
+          width={28}
+          height={28}
           className="w-7 h-7 rounded-full object-cover"
           style={{ zIndex: limitedUsers.length - index }}
         />

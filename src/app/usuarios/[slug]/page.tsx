@@ -97,7 +97,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
       await uploadPhotoMutation.mutateAsync(croppedFile);
       toast.success("Foto de perfil atualizada com sucesso!");
     } catch (error) {
-      console.error("Error uploading photo:", error);
       toast.error(error instanceof Error ? error.message : "Erro ao fazer upload da foto.");
     }
   };
@@ -128,7 +127,6 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
       await deletePhotoMutation.mutateAsync();
       toast.success("Foto de perfil removida com sucesso!");
     } catch (error) {
-      console.error("Error deleting photo:", error);
       toast.error(error instanceof Error ? error.message : "Erro ao remover foto de perfil.");
     }
   };

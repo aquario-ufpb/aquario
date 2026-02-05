@@ -93,7 +93,6 @@ export async function POST(request: Request) {
         try {
           const { blobStorage } = getContainer();
           await blobStorage.delete(uploadedUrl);
-          console.log("Cleaned up uploaded file after error");
         } catch (cleanupError) {
           console.error("Failed to cleanup uploaded file after error:", cleanupError);
         }

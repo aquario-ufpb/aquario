@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
@@ -26,12 +24,9 @@ type ProjectCardProps = {
   projeto: Projeto;
 };
 
-const stripHtml = (html: string) => {
-  if (typeof window !== "undefined") {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    return doc.body.textContent || "";
-  }
-  return html;
+// Server-safe HTML stripping using regex
+const stripHtml = (html: string): string => {
+  return html.replace(/<[^>]*>/g, "").trim();
 };
 
 const ProjectCard = ({ projeto }: ProjectCardProps) => {

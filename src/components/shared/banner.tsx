@@ -1,7 +1,4 @@
-"use client";
-
 import React from "react";
-import { useTheme } from "next-themes";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -20,10 +17,6 @@ const Banner: React.FC<BannerProps> = ({
   buttonHref,
   showButton = true,
 }) => {
-  const { theme } = useTheme();
-
-  const iconSrc = theme === "dark" ? "plus_Dark.png" : "plus.png";
-
   return (
     <div className="p-12 w-full">
       <div className="text-center">
@@ -38,8 +31,15 @@ const Banner: React.FC<BannerProps> = ({
             <Link href={buttonHref} passHref>
               <button className="mt-4 bg-neutral-800 dark:bg-neutral-100 rounded-full text-white dark:text-neutral-900 text-sm px-4 py-2 hover:bg-neutral-600 dark:hover:bg-neutral-200 transition-colors flex items-center">
                 <Image
-                  className="w-5 h-5 mr-2"
-                  src={`/${iconSrc}`}
+                  className="w-5 h-5 mr-2 dark:hidden"
+                  src="/plus.png"
+                  alt="icon-plus"
+                  width={20}
+                  height={20}
+                />
+                <Image
+                  className="w-5 h-5 mr-2 hidden dark:block"
+                  src="/plus_Dark.png"
                   alt="icon-plus"
                   width={20}
                   height={20}

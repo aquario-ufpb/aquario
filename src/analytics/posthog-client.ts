@@ -2,7 +2,7 @@
 
 import posthog from "posthog-js";
 import { PostHogEvent } from "./posthog-events";
-import { POSTHOG_KEY, IS_DEV } from "@/lib/shared/config/env";
+import { POSTHOG_KEY } from "@/lib/shared/config/env";
 
 /**
  * Strongly-typed PostHog event tracking
@@ -24,9 +24,6 @@ export function trackEvent<T extends PostHogEvent["name"]>(
     return;
   }
 
-  if (IS_DEV) {
-    console.log("[PostHog] Track Event", name, properties);
-  }
   posthog.capture(name, properties || {});
 }
 
@@ -56,10 +53,6 @@ export function identify(
 ): void {
   if (!POSTHOG_KEY) {
     return;
-  }
-
-  if (IS_DEV) {
-    console.log("[PostHog] Identify", userId, properties);
   }
 
   posthog.identify(userId, properties);

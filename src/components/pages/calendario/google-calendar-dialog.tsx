@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Calendar, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { GoogleCalendarEvent } from "@/lib/client/calendario/google-calendar";
 
 type GoogleCalendarDialogProps = {
@@ -18,16 +18,39 @@ export default function GoogleCalendarDialog({
   isDark,
 }: GoogleCalendarDialogProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleCopyLink = (url: string, index: number) => {
-    navigator.clipboard.writeText(url);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
-  };
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
-  const handleOpenLink = (url: string) => {
+  const handleCopyLink = useCallback(async (url: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedIndex(index);
+
+      // Clear previous timeout if exists
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        setCopiedIndex(null);
+        timeoutRef.current = null;
+      }, 2000);
+    } catch {
+      // Clipboard API not available or permission denied - silent fail
+    }
+  }, []);
+
+  const handleOpenLink = useCallback((url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
-  };
+  }, []);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -63,9 +86,9 @@ export default function GoogleCalendarDialog({
         </DialogHeader>
 
         <div className="space-y-3 mt-4">
-          {events.map((event, index) => (
+          {events.map(event => (
             <div
-              key={index}
+              key={event.classItem.id}
               className={`p-4 rounded-lg border ${
                 isDark ? "bg-slate-800/50 border-white/10" : "bg-slate-50 border-slate-200"
               }`}
@@ -93,7 +116,7 @@ export default function GoogleCalendarDialog({
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
                   <Button
-                    onClick={() => handleCopyLink(event.url, index)}
+                    onClick={() => handleCopyLink(event.url, events.indexOf(event))}
                     size="sm"
                     variant="outline"
                     className="flex items-center gap-1 flex-1 sm:flex-initial"
@@ -102,7 +125,7 @@ export default function GoogleCalendarDialog({
                       color: isDark ? "#C8E6FA" : "#0e3a6c",
                     }}
                   >
-                    {copiedIndex === index ? (
+                    {copiedIndex === events.indexOf(event) ? (
                       <>
                         <Check className="w-3 h-3" />
                         Copiado

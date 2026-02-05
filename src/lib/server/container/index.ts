@@ -54,7 +54,6 @@ function getEmailService() {
 
   // No API key = mock mode (for local development)
   const { MockEmailService } = require("@/lib/server/services/email/mock-email-service");
-  console.log("[Email] No RESEND_API_KEY found - using mock email service");
   return new MockEmailService();
 }
 
@@ -70,7 +69,6 @@ function getBlobStorage() {
 
   // No token = local storage (for development)
   const { LocalBlobStorage } = require("@/lib/server/services/blob/local-blob-storage");
-  console.log("[Blob Storage] No BLOB_READ_WRITE_TOKEN found - using local file storage");
   return new LocalBlobStorage();
 }
 

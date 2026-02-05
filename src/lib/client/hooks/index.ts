@@ -9,3 +9,4 @@ export * from "./use-usuarios";
 export * from "./use-require-auth";
 export * from "./use-entidades";
 export * from "./use-vagas";
+export * from "./use-prefetch";

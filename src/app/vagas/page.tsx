@@ -12,8 +12,9 @@ import { Plus } from "lucide-react";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { useVagas } from "@/lib/client/hooks";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
+import { usePrefetchVaga } from "@/lib/client/hooks/use-prefetch";
 
-function VagasCard({ vaga }: { vaga: Vaga }) {
+function VagasCard({ vaga, onPrefetch }: { vaga: Vaga; onPrefetch: (id: string) => void }) {
   /*const handleClick = () => {
       trackEvent("entidade_viewed", {
         entidade_name: entidade.name as string,
@@ -22,7 +23,12 @@ function VagasCard({ vaga }: { vaga: Vaga }) {
     };*/
 
   return (
-    <Link href={`/vagas/${vaga.id}`} /*onClick={handleClick}*/ className="block">
+    <Link
+      href={`/vagas/${vaga.id}`}
+      /*onClick={handleClick}*/
+      className="block"
+      onMouseEnter={() => onPrefetch(vaga.id)}
+    >
       <VacancyCard vaga={vaga} />
     </Link>
   );
@@ -31,6 +37,7 @@ function VagasCard({ vaga }: { vaga: Vaga }) {
 export default function VagasPage() {
   const { data: vagas = [] } = useVagas();
   const { data: user } = useCurrentUser();
+  const prefetchVaga = usePrefetchVaga();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
 
@@ -145,7 +152,9 @@ export default function VagasPage() {
 
             <div className="space-y-4">
               {vagasFiltradas.length > 0 ? (
-                vagasFiltradas.map(vaga => <VagasCard key={vaga.id} vaga={vaga} />)
+                vagasFiltradas.map(vaga => (
+                  <VagasCard key={vaga.id} vaga={vaga} onPrefetch={prefetchVaga} />
+                ))
               ) : (
                 <p className="text-center text-muted-foreground py-12">
                   Nenhuma vaga encontrada com os filtros selecionados.

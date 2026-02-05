@@ -31,6 +31,7 @@ export const useUsuarioBySlug = (slug: string) => {
     queryKey: queryKeys.usuarios.bySlug(slug),
     queryFn: () => usuariosService.getBySlug(slug),
     enabled: !!slug,
+    staleTime: 5 * 60 * 1000, // 5 minutes - user profile data doesn't change often
   });
 };
 
@@ -46,14 +47,7 @@ export const useUsuariosPaginated = (options: {
   const { token } = useAuth();
 
   return useQuery({
-    queryKey: [
-      ...queryKeys.usuarios.all,
-      "paginated",
-      options.page,
-      options.limit,
-      options.filter,
-      options.search,
-    ],
+    queryKey: queryKeys.usuarios.paginated(options),
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");
@@ -72,7 +66,7 @@ export const useSearchUsers = (query: string, limit?: number) => {
   const { token } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKeys.usuarios.all, "search", query, limit],
+    queryKey: queryKeys.usuarios.search(query, limit),
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");
@@ -252,7 +246,7 @@ export const useMyMemberships = () => {
   const { token } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKeys.usuarios.current, "memberships"],
+    queryKey: queryKeys.usuarios.currentMemberships,
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");
@@ -269,7 +263,7 @@ export const useMyMemberships = () => {
  */
 export const useUserMemberships = (userId: string) => {
   return useQuery({
-    queryKey: [...queryKeys.usuarios.byId(userId), "memberships"],
+    queryKey: queryKeys.usuarios.memberships(userId),
     queryFn: () => usuariosService.getUserMemberships(userId),
     enabled: !!userId,
     staleTime: 2 * 60 * 1000, // 2 minutes

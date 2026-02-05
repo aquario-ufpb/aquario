@@ -4,10 +4,13 @@ import { queryKeys } from "@/lib/client/query-keys";
 import { TipoEntidade } from "@/lib/shared/types/entidade.types";
 import { useAuth } from "@/contexts/auth-context";
 
+const FIVE_MINUTES = 5 * 60 * 1000;
+
 export const useEntidades = () => {
   return useQuery({
     queryKey: queryKeys.entidades.all,
     queryFn: () => entidadesService.getAll(),
+    staleTime: FIVE_MINUTES,
   });
 };
 
@@ -16,6 +19,7 @@ export const useEntidadeBySlug = (slug: string) => {
     queryKey: queryKeys.entidades.bySlug(slug),
     queryFn: () => entidadesService.getBySlug(slug),
     enabled: !!slug,
+    staleTime: FIVE_MINUTES,
   });
 };
 
@@ -24,6 +28,7 @@ export const useEntidadesByTipo = (tipo: TipoEntidade) => {
     queryKey: queryKeys.entidades.byTipo(tipo),
     queryFn: () => entidadesService.getByTipo(tipo),
     enabled: !!tipo,
+    staleTime: FIVE_MINUTES,
   });
 };
 
@@ -121,7 +126,7 @@ export const useDeleteEntidadeMember = () => {
  */
 export const useEntidadeCargos = (entidadeId: string) => {
   return useQuery({
-    queryKey: ["entidades", entidadeId, "cargos"],
+    queryKey: queryKeys.entidades.cargos(entidadeId),
     queryFn: () => entidadesService.getCargos(entidadeId),
     enabled: !!entidadeId,
   });
@@ -152,7 +157,7 @@ export const useCreateCargo = () => {
       return entidadesService.createCargo(entidadeId, data, token);
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["entidades", variables.entidadeId, "cargos"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.entidades.cargos(variables.entidadeId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.entidades.all });
     },
   });
@@ -185,7 +190,7 @@ export const useUpdateCargo = () => {
       return entidadesService.updateCargo(entidadeId, cargoId, data, token);
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["entidades", variables.entidadeId, "cargos"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.entidades.cargos(variables.entidadeId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.entidades.all });
     },
   });
@@ -206,7 +211,7 @@ export const useDeleteCargo = () => {
       return entidadesService.deleteCargo(entidadeId, cargoId, token);
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["entidades", variables.entidadeId, "cargos"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.entidades.cargos(variables.entidadeId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.entidades.all });
     },
   });

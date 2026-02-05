@@ -2,6 +2,8 @@
  * Vaga (Job/Opportunity) type definitions
  */
 
+import { EntidadeVagaType } from "@/lib/shared/constants/entity-types";
+
 /**
  * Types of opportunities available
  */
@@ -19,7 +21,7 @@ export type TipoVaga = (typeof TipoVaga)[keyof typeof TipoVaga];
 /**
  * Categories of entities that can post opportunities
  */
-export type EntidadeVaga = "laboratorios" | "grupos" | "ufpb" | "pessoa" | "externo" | "ligas";
+export type EntidadeVaga = EntidadeVagaType;
 
 /**
  * Publisher information for an opportunity

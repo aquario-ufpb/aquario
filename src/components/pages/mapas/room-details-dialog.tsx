@@ -43,8 +43,7 @@ export default function RoomDetailsDialog(props: RoomDetailsDialogProps) {
         const entidades = await Promise.all(labs.map(slug => entidadesService.getBySlug(slug)));
 
         setLabEntidades(entidades.filter((e): e is Entidade => e !== null));
-      } catch (error) {
-        console.error("Error loading lab entities:", error);
+      } catch {
         setLabEntidades([]);
       } finally {
         setIsLoadingLabs(false);

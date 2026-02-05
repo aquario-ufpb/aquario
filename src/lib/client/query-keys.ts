@@ -20,13 +20,26 @@ export const queryKeys = {
   usuarios: {
     all: ["usuarios"] as const,
     current: ["usuarios", "current"] as const,
+    currentMemberships: ["usuarios", "current", "memberships"] as const,
     byId: (id: string) => ["usuarios", id] as const,
     bySlug: (slug: string) => ["usuarios", "slug", slug] as const,
+    memberships: (userId: string) => ["usuarios", userId, "memberships"] as const,
+    paginated: (options: { page?: number; limit?: number; filter?: string; search?: string }) =>
+      [
+        "usuarios",
+        "paginated",
+        options.page,
+        options.limit,
+        options.filter,
+        options.search,
+      ] as const,
+    search: (query: string, limit?: number) => ["usuarios", "search", query, limit] as const,
   },
   entidades: {
     all: ["entidades"] as const,
     bySlug: (slug: string) => ["entidades", "slug", slug] as const,
     byTipo: (tipo: string) => ["entidades", "tipo", tipo] as const,
+    cargos: (entidadeId: string) => ["entidades", entidadeId, "cargos"] as const,
   },
   vagas: {
     all: ["vagas"] as const,
