@@ -2,6 +2,9 @@ import { randomBytes } from "crypto";
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
 import type { ITokenVerificacaoRepository } from "@/lib/server/db/interfaces/token-verificacao-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
+import { createLogger } from "@/lib/server/utils/logger";
+
+const log = createLogger("Auth");
 
 export type ForgotPasswordInput = {
   email: string;
@@ -77,7 +80,7 @@ export async function forgotPassword(
   try {
     await deps.emailService.sendPasswordResetEmail(usuario.email, tokenValue, usuario.nome);
   } catch (error) {
-    console.error("Failed to send password reset email:", error);
+    log.error("Failed to send password reset email", error, { email: usuario.email });
     // Still return success to prevent information leakage
   }
 

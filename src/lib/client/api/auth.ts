@@ -1,5 +1,6 @@
 import { API_URL, ENDPOINTS } from "@/lib/shared/config/constants";
 import { apiClient } from "./api-client";
+import { throwApiError } from "@/lib/client/errors";
 
 export type LoginResponse = {
   token: string;
@@ -59,7 +60,7 @@ export type RefreshTokenResponse = {
 
 export const authService = {
   login: async (email: string, senha: string): Promise<LoginResponse> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.LOGIN}`, {
+    const response = await apiClient(`${ENDPOINTS.LOGIN}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -68,15 +69,14 @@ export const authService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha no login");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.REGISTER}`, {
+    const response = await apiClient(`${ENDPOINTS.REGISTER}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -85,15 +85,14 @@ export const authService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha no registro");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   verifyEmail: async (token: string): Promise<VerifyEmailResponse> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.VERIFY_EMAIL}`, {
+    const response = await apiClient(`${ENDPOINTS.VERIFY_EMAIL}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -102,32 +101,30 @@ export const authService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao verificar email");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   resendVerification: async (token: string): Promise<ResendVerificationResponse> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.RESEND_VERIFICATION}`, {
+    const response = await apiClient(`${ENDPOINTS.RESEND_VERIFICATION}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      token, // Still accept token for explicit override if needed
+      token,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao reenviar verificação");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   requestResendVerification: async (email: string): Promise<ResendVerificationResponse> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.REQUEST_RESEND_VERIFICATION}`, {
+    const response = await apiClient(`${ENDPOINTS.REQUEST_RESEND_VERIFICATION}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -137,7 +134,6 @@ export const authService = {
 
     // Always return success for security (prevent email enumeration)
     if (!response.ok) {
-      // Still return success even if there's an error
       return {
         success: true,
         message:
@@ -149,7 +145,7 @@ export const authService = {
   },
 
   forgotPassword: async (email: string): Promise<ForgotPasswordResponse> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.FORGOT_PASSWORD}`, {
+    const response = await apiClient(`${ENDPOINTS.FORGOT_PASSWORD}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -159,7 +155,6 @@ export const authService = {
 
     // Always return success for security (prevent email enumeration)
     if (!response.ok) {
-      // Still return success even if there's an error
       return {
         success: true,
         message:
@@ -171,7 +166,7 @@ export const authService = {
   },
 
   resetPassword: async (token: string, novaSenha: string): Promise<ResetPasswordResponse> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.RESET_PASSWORD}`, {
+    const response = await apiClient(`${ENDPOINTS.RESET_PASSWORD}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -180,13 +175,14 @@ export const authService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao resetar senha");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
+  // Note: refreshToken uses raw fetch because it's called internally by apiClient
+  // Using apiClient here would cause infinite recursion
   refreshToken: async (currentToken: string): Promise<RefreshTokenResponse> => {
     const response = await fetch(`${API_URL}${ENDPOINTS.REFRESH}`, {
       method: "POST",
@@ -197,8 +193,7 @@ export const authService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao renovar token");
+      await throwApiError(response);
     }
 
     return response.json();

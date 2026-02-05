@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { withAuth } from "@/lib/server/services/auth/middleware";
-import { prisma } from "@/lib/server/db/prisma";
 import { getContainer } from "@/lib/server/container";
+import { ApiError, fromZodError } from "@/lib/server/errors";
 
 type RouteContext = {
   params: Promise<{ id: string; membroId: string }>;
@@ -24,12 +24,12 @@ export async function PUT(request: Request, context: RouteContext) {
       const body = await req.json();
       const data = updateMemberSchema.parse(body);
 
-      const { entidadesRepository } = getContainer();
+      const { entidadesRepository, membrosRepository } = getContainer();
 
       // Check if entidade exists
       const entidade = await entidadesRepository.findById(entidadeId);
       if (!entidade) {
-        return NextResponse.json({ message: "Entidade não encontrada." }, { status: 404 });
+        return ApiError.entidadeNotFound();
       }
 
       // Check if user has permission (MASTER_ADMIN or entidade ADMIN)
@@ -40,43 +40,32 @@ export async function PUT(request: Request, context: RouteContext) {
       );
 
       if (!isMasterAdmin && !isEntidadeAdmin) {
-        return NextResponse.json(
-          { message: "Você não tem permissão para editar membros desta entidade." },
-          { status: 403 }
-        );
+        return ApiError.forbidden("Você não tem permissão para editar membros desta entidade.");
       }
 
       // Check if membership exists
-      const membership = await prisma.membroEntidade.findFirst({
-        where: {
-          id: membroId,
-          entidadeId: entidadeId,
-        },
-      });
+      const membership = await membrosRepository.findByEntidadeAndMembro(entidadeId, membroId);
 
       if (!membership) {
-        return NextResponse.json({ message: "Membresia não encontrada." }, { status: 404 });
+        return ApiError.membroNotFound();
       }
 
       // Validate cargoId if provided
       if (data.cargoId !== undefined && data.cargoId !== null) {
-        const cargo = await prisma.cargo.findFirst({
-          where: {
-            id: data.cargoId,
-            entidadeId: entidadeId,
-          },
-        });
+        const cargoExists = await membrosRepository.cargoExistsInEntidade(data.cargoId, entidadeId);
 
-        if (!cargo) {
-          return NextResponse.json(
-            { message: "Cargo não encontrado ou não pertence a esta entidade." },
-            { status: 400 }
-          );
+        if (!cargoExists) {
+          return ApiError.badRequest("Cargo não encontrado ou não pertence a esta entidade.");
         }
       }
 
       // Build update data
-      const updateData: Record<string, unknown> = {};
+      const updateData: {
+        papel?: "ADMIN" | "MEMBRO";
+        cargoId?: string | null;
+        startedAt?: Date;
+        endedAt?: Date | null;
+      } = {};
       if (data.papel !== undefined) {
         updateData.papel = data.papel;
       }
@@ -90,18 +79,7 @@ export async function PUT(request: Request, context: RouteContext) {
         updateData.endedAt = data.endedAt ? new Date(data.endedAt) : null;
       }
 
-      const updatedMembro = await prisma.membroEntidade.update({
-        where: { id: membroId },
-        data: updateData,
-        include: {
-          usuario: {
-            include: {
-              curso: true,
-            },
-          },
-          cargo: true,
-        },
-      });
+      const updatedMembro = await membrosRepository.update(membroId, updateData);
 
       return NextResponse.json({
         id: updatedMembro.id,
@@ -111,34 +89,20 @@ export async function PUT(request: Request, context: RouteContext) {
           slug: updatedMembro.usuario.slug,
           urlFotoPerfil: updatedMembro.usuario.urlFotoPerfil,
           eFacade: updatedMembro.usuario.eFacade,
-          curso: updatedMembro.usuario.curso
-            ? {
-                nome: updatedMembro.usuario.curso.nome,
-              }
-            : null,
+          curso: updatedMembro.usuario.curso,
         },
         papel: updatedMembro.papel,
-        cargo: updatedMembro.cargo
-          ? {
-              id: updatedMembro.cargo.id,
-              nome: updatedMembro.cargo.nome,
-              descricao: updatedMembro.cargo.descricao,
-              ordem: updatedMembro.cargo.ordem,
-            }
-          : null,
+        cargo: updatedMembro.cargo,
         startedAt: updatedMembro.startedAt.toISOString(),
         endedAt: updatedMembro.endedAt?.toISOString() || null,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { message: error.errors[0]?.message || "Dados inválidos" },
-          { status: 400 }
-        );
+        return fromZodError(error);
       }
 
       const message = error instanceof Error ? error.message : "Erro ao atualizar membro";
-      return NextResponse.json({ message }, { status: 400 });
+      return ApiError.badRequest(message);
     }
   });
 }
@@ -148,12 +112,12 @@ export async function DELETE(request: Request, context: RouteContext) {
     const { id: entidadeId, membroId } = await context.params;
 
     try {
-      const { entidadesRepository } = getContainer();
+      const { entidadesRepository, membrosRepository } = getContainer();
 
       // Check if entidade exists
       const entidade = await entidadesRepository.findById(entidadeId);
       if (!entidade) {
-        return NextResponse.json({ message: "Entidade não encontrada." }, { status: 404 });
+        return ApiError.entidadeNotFound();
       }
 
       // Check if user has permission (MASTER_ADMIN or entidade ADMIN)
@@ -164,33 +128,23 @@ export async function DELETE(request: Request, context: RouteContext) {
       );
 
       if (!isMasterAdmin && !isEntidadeAdmin) {
-        return NextResponse.json(
-          { message: "Você não tem permissão para deletar membros desta entidade." },
-          { status: 403 }
-        );
+        return ApiError.forbidden("Você não tem permissão para deletar membros desta entidade.");
       }
 
       // Check if membership exists
-      const membership = await prisma.membroEntidade.findFirst({
-        where: {
-          id: membroId,
-          entidadeId: entidadeId,
-        },
-      });
+      const membership = await membrosRepository.findByEntidadeAndMembro(entidadeId, membroId);
 
       if (!membership) {
-        return NextResponse.json({ message: "Membresia não encontrada." }, { status: 404 });
+        return ApiError.membroNotFound();
       }
 
       // Delete the membership
-      await prisma.membroEntidade.delete({
-        where: { id: membroId },
-      });
+      await membrosRepository.delete(membroId);
 
       return NextResponse.json({ message: "Membresia deletada com sucesso." });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao deletar membro";
-      return NextResponse.json({ message }, { status: 400 });
+      return ApiError.badRequest(message);
     }
   });
 }

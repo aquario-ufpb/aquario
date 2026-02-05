@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/server/services/jwt/jwt";
 import { getContainer } from "@/lib/server/container";
+import { ApiError } from "@/lib/server/errors";
 import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
 
 export type AuthenticatedRequest = Request & {
@@ -29,20 +29,20 @@ export async function withAuth(
   const token = extractToken(request);
 
   if (!token) {
-    return NextResponse.json({ error: "Token não fornecido" }, { status: 401 });
+    return ApiError.tokenMissing();
   }
 
   const payload = verifyToken(token);
 
   if (!payload) {
-    return NextResponse.json({ error: "Token inválido ou expirado" }, { status: 401 });
+    return ApiError.tokenInvalid();
   }
 
   const { usuariosRepository } = getContainer();
   const usuario = await usuariosRepository.findById(payload.sub);
 
   if (!usuario) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 401 });
+    return ApiError.userNotFound();
   }
 
   return handler(request, usuario);
@@ -59,10 +59,7 @@ export function withAdmin(
   return withAuth(request, (req, usuario) => {
     if (usuario.papelPlataforma !== "MASTER_ADMIN") {
       return Promise.resolve(
-        NextResponse.json(
-          { error: "Acesso negado. Permissão de administrador necessária." },
-          { status: 403 }
-        )
+        ApiError.forbidden("Acesso negado. Permissão de administrador necessária.")
       );
     }
 

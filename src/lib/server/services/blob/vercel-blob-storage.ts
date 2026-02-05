@@ -1,5 +1,8 @@
 import { put, del, head } from "@vercel/blob";
 import type { IBlobStorage } from "./blob-storage.interface";
+import { createLogger } from "@/lib/server/utils/logger";
+
+const log = createLogger("BlobStorage");
 
 /**
  * Vercel Blob storage implementation
@@ -41,7 +44,7 @@ export class VercelBlobStorage implements IBlobStorage {
       await del(urlOrPath, { token: this.token });
       return true;
     } catch (error) {
-      console.error("Error deleting blob:", error);
+      log.error("Error deleting blob", error, { url: urlOrPath });
       return false;
     }
   }

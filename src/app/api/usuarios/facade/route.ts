@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
+import { ApiError, fromZodError } from "@/lib/server/errors";
 
 const createFacadeUserSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -21,21 +22,18 @@ export async function POST(request: Request) {
       // Validate centro
       const centro = await centrosRepository.findById(data.centroId);
       if (!centro) {
-        return NextResponse.json({ message: "Centro não encontrado." }, { status: 400 });
+        return ApiError.notFound("Centro");
       }
 
       // Validate curso
       const curso = await cursosRepository.findById(data.cursoId);
       if (!curso) {
-        return NextResponse.json({ message: "Curso não encontrado." }, { status: 400 });
+        return ApiError.notFound("Curso");
       }
 
       // Ensure curso belongs to the selected centro
       if (curso.centroId !== data.centroId) {
-        return NextResponse.json(
-          { message: "O curso selecionado não pertence ao centro informado." },
-          { status: 400 }
-        );
+        return ApiError.badRequest("O curso selecionado não pertence ao centro informado.");
       }
 
       // Create facade user
@@ -74,14 +72,11 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { message: error.errors[0]?.message || "Dados inválidos" },
-          { status: 400 }
-        );
+        return fromZodError(error);
       }
 
       const message = error instanceof Error ? error.message : "Erro ao criar usuário facade";
-      return NextResponse.json({ message }, { status: 400 });
+      return ApiError.badRequest(message);
     }
   });
 }

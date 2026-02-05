@@ -3,6 +3,10 @@ export const dynamic = "force-dynamic";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { formatUserResponse } from "@/lib/server/utils/format-user-response";
+import { createLogger } from "@/lib/server/utils/logger";
+import { ApiError } from "@/lib/server/errors";
+
+const log = createLogger("Upload");
 
 /**
  * POST /api/upload/photo
@@ -19,25 +23,19 @@ export async function POST(request: Request) {
       const file = formData.get("file") as File | null;
 
       if (!file) {
-        return NextResponse.json({ message: "Nenhum arquivo enviado." }, { status: 400 });
+        return ApiError.badRequest("Nenhum arquivo enviado.");
       }
 
       // Validate file type
       const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
       if (!allowedTypes.includes(file.type)) {
-        return NextResponse.json(
-          { message: "Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF." },
-          { status: 400 }
-        );
+        return ApiError.badRequest("Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF.");
       }
 
       // Validate file size (max 5MB)
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
-        return NextResponse.json(
-          { message: "Arquivo muito grande. Tamanho máximo: 5MB." },
-          { status: 400 }
-        );
+        return ApiError.badRequest("Arquivo muito grande. Tamanho máximo: 5MB.");
       }
 
       const { blobStorage, usuariosRepository } = getContainer();
@@ -59,7 +57,7 @@ export async function POST(request: Request) {
         try {
           await blobStorage.delete(oldPhotoUrl);
         } catch (error) {
-          console.warn("Could not delete old photo:", error);
+          log.warn("Could not delete old photo", { url: oldPhotoUrl, error: String(error) });
         }
       }
 
@@ -77,13 +75,10 @@ export async function POST(request: Request) {
           try {
             await blobStorage.delete(uploadedUrl);
           } catch (cleanupError) {
-            console.error("Failed to cleanup uploaded file after user fetch error:", cleanupError);
+            log.error("Failed to cleanup uploaded file after user fetch error", cleanupError);
           }
         }
-        return NextResponse.json(
-          { message: "Erro ao buscar usuário atualizado." },
-          { status: 500 }
-        );
+        return ApiError.internal("Erro ao buscar usuário atualizado.");
       }
 
       return NextResponse.json(formatUserResponse(updatedUser));
@@ -94,12 +89,12 @@ export async function POST(request: Request) {
           const { blobStorage } = getContainer();
           await blobStorage.delete(uploadedUrl);
         } catch (cleanupError) {
-          console.error("Failed to cleanup uploaded file after error:", cleanupError);
+          log.error("Failed to cleanup uploaded file after error", cleanupError);
         }
       }
 
-      console.error("Error uploading photo:", error);
-      return NextResponse.json({ message: "Erro ao fazer upload da foto." }, { status: 500 });
+      log.error("Error uploading photo", error, { userId: usuario.id });
+      return ApiError.internal("Erro ao fazer upload da foto.");
     }
   });
 }

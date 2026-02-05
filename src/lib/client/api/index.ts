@@ -4,3 +4,7 @@ export * from "./cursos";
 export * from "./centros";
 export * from "./paas";
 export * from "./mapas";
+export * from "./auth";
+export * from "./usuarios";
+export * from "./entidades";
+export * from "./vagas";

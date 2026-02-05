@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { resendVerificationByEmail } from "@/lib/server/services/auth/resend-verification";
+import { fromZodError } from "@/lib/server/errors";
 
 const requestSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -26,15 +27,11 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: error.errors[0]?.message || "Dados inválidos" },
-        { status: 400 }
-      );
+      return fromZodError(error);
     }
 
-    // Always return success for security
+    // Always return success for security (don't reveal if email exists)
     return NextResponse.json({
-      success: true,
       message:
         "Se o email estiver cadastrado e não verificado, você receberá um novo email de verificação.",
     });

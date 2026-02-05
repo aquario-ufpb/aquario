@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
 import { resendVerificationByUser } from "@/lib/server/services/auth/resend-verification";
 import { withAuth } from "@/lib/server/services/auth/middleware";
+import { ApiError } from "@/lib/server/errors";
 
 export function POST(request: Request) {
   return withAuth(request, async (_req, usuario) => {
@@ -20,7 +21,7 @@ export function POST(request: Request) {
       return NextResponse.json(result);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao reenviar verificação";
-      return NextResponse.json({ success: false, message }, { status: 400 });
+      return ApiError.badRequest(message);
     }
   });
 }

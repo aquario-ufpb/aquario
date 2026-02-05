@@ -1,6 +1,8 @@
 import { Entidade, TipoEntidade } from "@/lib/shared/types";
 import { PapelMembro } from "@/lib/shared/types/membro.types";
-import { API_URL, ENDPOINTS } from "@/lib/shared/config/constants";
+import { ENDPOINTS } from "@/lib/shared/config/constants";
+import { throwApiError } from "@/lib/client/errors";
+import { apiClient } from "./api-client";
 
 type ApiEntidadeResponse = {
   id: string;
@@ -71,21 +73,25 @@ export type UpdateEntidadeRequest = {
 
 export const entidadesService = {
   getAll: async (): Promise<Entidade[]> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADES}`);
+    const response = await apiClient(`${ENDPOINTS.ENTIDADES}`, {
+      method: "GET",
+    });
     if (!response.ok) {
-      throw new Error("Failed to fetch entidades");
+      await throwApiError(response);
     }
     const data: ApiEntidadeResponse[] = await response.json();
     return data.map(entidade => mapApiResponseToEntidade(entidade));
   },
 
   getBySlug: async (slug: string): Promise<Entidade | null> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_BY_SLUG(slug)}`);
+    const response = await apiClient(`${ENDPOINTS.ENTIDADE_BY_SLUG(slug)}`, {
+      method: "GET",
+    });
     if (!response.ok) {
       if (response.status === 404) {
         return null;
       }
-      throw new Error("Failed to fetch entidade");
+      await throwApiError(response);
     }
     const data: ApiEntidadeResponse = await response.json();
     // Include membros when fetching by slug (needed for permission checks)
@@ -146,18 +152,17 @@ export const entidadesService = {
       requestData.slug = data.slug;
     }
 
-    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_BY_ID(id)}`, {
+    const response = await apiClient(`${ENDPOINTS.ENTIDADE_BY_ID(id)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      token,
       body: JSON.stringify(requestData),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Falha ao atualizar entidade");
+      await throwApiError(response);
     }
   },
 
@@ -189,18 +194,17 @@ export const entidadesService = {
     startedAt: string;
     endedAt: string | null;
   }> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_MEMBROS(entidadeId)}`, {
+    const response = await apiClient(`${ENDPOINTS.ENTIDADE_MEMBROS(entidadeId)}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      token,
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Falha ao adicionar membro");
+      await throwApiError(response);
     }
 
     return response.json();
@@ -234,34 +238,30 @@ export const entidadesService = {
     startedAt: string;
     endedAt: string | null;
   }> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_MEMBRO(entidadeId, membroId)}`, {
+    const response = await apiClient(`${ENDPOINTS.ENTIDADE_MEMBRO(entidadeId, membroId)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      token,
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Falha ao atualizar membro");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   deleteMember: async (entidadeId: string, membroId: string, token: string): Promise<void> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_MEMBRO(entidadeId, membroId)}`, {
+    const response = await apiClient(`${ENDPOINTS.ENTIDADE_MEMBRO(entidadeId, membroId)}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      token,
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Falha ao deletar membro");
+      await throwApiError(response);
     }
   },
 
@@ -277,9 +277,11 @@ export const entidadesService = {
       entidadeId: string;
     }>
   > => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}`);
+    const response = await apiClient(`${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}`, {
+      method: "GET",
+    });
     if (!response.ok) {
-      throw new Error("Failed to fetch cargos");
+      await throwApiError(response);
     }
     return response.json();
   },
@@ -299,18 +301,17 @@ export const entidadesService = {
     ordem: number;
     entidadeId: string;
   }> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}`, {
+    const response = await apiClient(`${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      token,
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Falha ao criar cargo");
+      await throwApiError(response);
     }
 
     return response.json();
@@ -332,37 +333,33 @@ export const entidadesService = {
     ordem: number;
     entidadeId: string;
   }> => {
-    const response = await fetch(`${API_URL}${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}`, {
+    const response = await apiClient(`${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      token,
       body: JSON.stringify({ cargoId, ...data }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Falha ao atualizar cargo");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   deleteCargo: async (entidadeId: string, cargoId: string, token: string): Promise<void> => {
-    const response = await fetch(
-      `${API_URL}${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}?cargoId=${cargoId}`,
+    const response = await apiClient(
+      `${ENDPOINTS.ENTIDADE_CARGOS(entidadeId)}?cargoId=${cargoId}`,
       {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        token,
       }
     );
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Falha ao deletar cargo");
+      await throwApiError(response);
     }
   },
 };

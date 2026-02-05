@@ -12,3 +12,5 @@ export type {
   ISecoesGuiaRepository,
   ISubSecoesGuiaRepository,
 } from "./guias-repository.interface";
+export type { IMembrosRepository } from "./membros-repository.interface";
+export type { ICargosRepository } from "./cargos-repository.interface";

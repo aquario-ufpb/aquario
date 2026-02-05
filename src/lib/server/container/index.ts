@@ -1,5 +1,5 @@
-import type { Container, DbProvider } from "./types";
-import { DB_PROVIDER, EMAIL_ENABLED, BLOB_READ_WRITE_TOKEN } from "@/lib/server/config/env";
+import type { Container } from "./types";
+import { EMAIL_ENABLED, BLOB_READ_WRITE_TOKEN } from "@/lib/server/config/env";
 
 // Lazy import implementations to avoid circular dependencies
 // and to allow tree-shaking in production
@@ -30,15 +30,9 @@ export function resetContainer(): void {
 }
 
 /**
- * Create a new container instance based on environment
+ * Create a new container instance
  */
 function createContainer(): Container {
-  const provider = DB_PROVIDER as DbProvider;
-
-  if (provider === "memory") {
-    return createMemoryContainer();
-  }
-
   return createPrismaContainer();
 }
 
@@ -101,6 +95,12 @@ function createPrismaContainer(): Container {
   const {
     PrismaSubSecoesGuiaRepository,
   } = require("@/lib/server/db/implementations/prisma/prisma-sub-secoes-guia-repository");
+  const {
+    PrismaMembrosRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-membros-repository");
+  const {
+    PrismaCargosRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-cargos-repository");
 
   return {
     usuariosRepository: new PrismaUsuariosRepository(),
@@ -111,54 +111,12 @@ function createPrismaContainer(): Container {
     guiasRepository: new PrismaGuiasRepository(),
     secoesGuiaRepository: new PrismaSecoesGuiaRepository(),
     subSecoesGuiaRepository: new PrismaSubSecoesGuiaRepository(),
+    membrosRepository: new PrismaMembrosRepository(),
+    cargosRepository: new PrismaCargosRepository(),
     emailService: getEmailService(),
     blobStorage: getBlobStorage(),
   };
 }
 
-/**
- * Create container with in-memory implementations (for testing)
- */
-function createMemoryContainer(): Container {
-  const {
-    InMemoryUsuariosRepository,
-  } = require("@/lib/server/db/implementations/memory/in-memory-usuarios-repository");
-  const {
-    InMemoryCentrosRepository,
-  } = require("@/lib/server/db/implementations/memory/in-memory-centros-repository");
-  const {
-    InMemoryCursosRepository,
-  } = require("@/lib/server/db/implementations/memory/in-memory-cursos-repository");
-  const {
-    InMemoryTokenVerificacaoRepository,
-  } = require("@/lib/server/db/implementations/memory/in-memory-token-verificacao-repository");
-  const {
-    InMemoryEntidadesRepository,
-  } = require("@/lib/server/db/implementations/memory/in-memory-entidades-repository");
-  const {
-    InMemoryGuiasRepository,
-  } = require("@/lib/server/db/implementations/memory/in-memory-guias-repository");
-  const {
-    InMemorySecoesGuiaRepository,
-  } = require("@/lib/server/db/implementations/memory/in-memory-secoes-guia-repository");
-  const {
-    InMemorySubSecoesGuiaRepository,
-  } = require("@/lib/server/db/implementations/memory/in-memory-sub-secoes-guia-repository");
-  const { MockEmailService } = require("@/lib/server/services/email/mock-email-service");
-
-  return {
-    usuariosRepository: new InMemoryUsuariosRepository(),
-    centrosRepository: new InMemoryCentrosRepository(),
-    cursosRepository: new InMemoryCursosRepository(),
-    tokenVerificacaoRepository: new InMemoryTokenVerificacaoRepository(),
-    entidadesRepository: new InMemoryEntidadesRepository(),
-    guiasRepository: new InMemoryGuiasRepository(),
-    secoesGuiaRepository: new InMemorySecoesGuiaRepository(),
-    subSecoesGuiaRepository: new InMemorySubSecoesGuiaRepository(),
-    emailService: new MockEmailService(),
-    blobStorage: getBlobStorage(),
-  };
-}
-
 // Re-export types
-export type { Container, DbProvider } from "./types";
+export type { Container } from "./types";

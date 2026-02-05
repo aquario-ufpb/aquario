@@ -51,8 +51,7 @@ The app automatically configures itself based on what's present:
 
 | If this is set...                      | Behavior                                    |
 | -------------------------------------- | ------------------------------------------- |
-| `DATABASE_URL`                         | Uses PostgreSQL via Prisma                  |
-| No `DATABASE_URL`                      | Uses in-memory database                     |
+| `DATABASE_URL`                         | Uses PostgreSQL via Prisma (required)       |
 | `RESEND_API_KEY`                       | Sends real emails via Resend                |
 | No `RESEND_API_KEY`                    | Logs emails to console, auto-verifies users |
 | `NEXT_PUBLIC_POSTHOG_KEY` + production | Tracks analytics                            |
@@ -86,22 +85,7 @@ JWT_SECRET="your-secret-key-at-least-32-characters-long"
 # Leave RESEND_API_KEY empty for mock emails
 ```
 
-### Option 2: Memory Mode (Testing Only)
-
-For testing without a database (no entidades data):
-
-```bash
-# In .env:
-DB_PROVIDER=memory
-NEXT_PUBLIC_GUIAS_DATA_PROVIDER=local
-JWT_SECRET="any-32-character-secret-for-dev"
-```
-
-Then just `npm run dev`.
-
-**Note:** Entidades always come from the backend API. With memory mode, the in-memory repository starts empty. For actual entidades data, use Option 1 with a seeded database.
-
-### Option 3: Connected to Staging
+### Option 2: Connected to Staging
 
 For project members who need to test with real services:
 
@@ -213,8 +197,7 @@ See `.env.example` for the complete list with detailed comments.
 
 | Variable       | Description                     |
 | -------------- | ------------------------------- |
-| `DATABASE_URL` | PostgreSQL connection string    |
-| `DB_PROVIDER`  | Force `prisma` or `memory` mode |
+| `DATABASE_URL` | PostgreSQL connection string (required) |
 
 ### Email
 

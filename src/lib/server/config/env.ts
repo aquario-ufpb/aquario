@@ -23,11 +23,6 @@ export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000
 
 export const DATABASE_URL = process.env.DATABASE_URL;
 
-// Default to memory provider if no DATABASE_URL is set, otherwise use prisma
-export const DB_PROVIDER = (process.env.DB_PROVIDER || (DATABASE_URL ? "prisma" : "memory")) as
-  | "prisma"
-  | "memory";
-
 // =============================================================================
 // Authentication (JWT)
 // =============================================================================
@@ -110,8 +105,8 @@ export function validateServerEnv(): { valid: boolean; errors: string[] } {
     errors.push("JWT_SECRET must be at least 32 characters");
   }
 
-  if (DB_PROVIDER === "prisma" && !DATABASE_URL) {
-    errors.push("DATABASE_URL is required when using prisma provider");
+  if (!DATABASE_URL) {
+    errors.push("DATABASE_URL is required");
   }
 
   return {

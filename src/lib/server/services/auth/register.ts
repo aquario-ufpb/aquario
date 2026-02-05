@@ -6,6 +6,9 @@ import type { ICursosRepository } from "@/lib/server/db/interfaces/cursos-reposi
 import type { ITokenVerificacaoRepository } from "@/lib/server/db/interfaces/token-verificacao-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
 import { MASTER_ADMIN_EMAILS, EMAIL_ENABLED } from "@/lib/server/config/env";
+import { createLogger } from "@/lib/server/utils/logger";
+
+const log = createLogger("Auth");
 
 // Allowed email domains for registration
 const ALLOWED_EMAIL_DOMAINS = ["@academico.ufpb.br"];
@@ -131,7 +134,7 @@ export async function register(
   try {
     await deps.emailService.sendVerificationEmail(normalizedEmail, tokenValue, input.nome);
   } catch (error) {
-    console.error("Failed to send verification email:", error);
+    log.error("Failed to send verification email", error, { email: normalizedEmail });
     // Don't fail registration if email fails
   }
 

@@ -1,0 +1,46 @@
+/**
+ * Standard API error codes (shared between frontend and backend)
+ *
+ * These codes allow the frontend to handle specific errors programmatically.
+ * Use SCREAMING_SNAKE_CASE for consistency.
+ */
+export const ErrorCode = {
+  // Authentication & Authorization
+  UNAUTHORIZED: "UNAUTHORIZED",
+  TOKEN_MISSING: "TOKEN_MISSING",
+  TOKEN_INVALID: "TOKEN_INVALID",
+  TOKEN_EXPIRED: "TOKEN_EXPIRED",
+  FORBIDDEN: "FORBIDDEN",
+  EMAIL_NOT_VERIFIED: "EMAIL_NOT_VERIFIED",
+
+  // Validation
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  INVALID_INPUT: "INVALID_INPUT",
+
+  // Resources
+  NOT_FOUND: "NOT_FOUND",
+  USER_NOT_FOUND: "USER_NOT_FOUND",
+  ENTIDADE_NOT_FOUND: "ENTIDADE_NOT_FOUND",
+  MEMBRO_NOT_FOUND: "MEMBRO_NOT_FOUND",
+  CARGO_NOT_FOUND: "CARGO_NOT_FOUND",
+
+  // Conflicts
+  CONFLICT: "CONFLICT",
+  EMAIL_ALREADY_EXISTS: "EMAIL_ALREADY_EXISTS",
+  SLUG_ALREADY_EXISTS: "SLUG_ALREADY_EXISTS",
+  ALREADY_MEMBER: "ALREADY_MEMBER",
+  ALREADY_VERIFIED: "ALREADY_VERIFIED",
+
+  // Auth specific
+  INVALID_CREDENTIALS: "INVALID_CREDENTIALS",
+  WEAK_PASSWORD: "WEAK_PASSWORD",
+
+  // Rate limiting
+  RATE_LIMITED: "RATE_LIMITED",
+
+  // Server errors
+  INTERNAL_ERROR: "INTERNAL_ERROR",
+  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+} as const;
+
+export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

@@ -6,7 +6,6 @@ import Checkbox from "@/components/pages/vagas/checkbox-filter";
 import VacancyCard from "@/components/pages/vagas/vacancy-card";
 import type { Vaga } from "@/lib/shared/types";
 import { SearchBar1 } from "@/components/ui/searchbar1";
-// import { trackEvent } from "@/analytics/posthog-client";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
@@ -15,20 +14,8 @@ import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { usePrefetchVaga } from "@/lib/client/hooks/use-prefetch";
 
 function VagasCard({ vaga, onPrefetch }: { vaga: Vaga; onPrefetch: (id: string) => void }) {
-  /*const handleClick = () => {
-      trackEvent("entidade_viewed", {
-        entidade_name: entidade.name as string,
-        entidade_type: entidade.tipo as TipoEntidade,
-      });
-    };*/
-
   return (
-    <Link
-      href={`/vagas/${vaga.id}`}
-      /*onClick={handleClick}*/
-      className="block"
-      onMouseEnter={() => onPrefetch(vaga.id)}
-    >
+    <Link href={`/vagas/${vaga.id}`} className="block" onMouseEnter={() => onPrefetch(vaga.id)}>
       <VacancyCard vaga={vaga} />
     </Link>
   );

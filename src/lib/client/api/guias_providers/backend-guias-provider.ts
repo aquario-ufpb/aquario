@@ -1,35 +1,33 @@
 import { Guia, Secao, SubSecao } from "@/lib/shared/types";
-import { API_URL, ENDPOINTS } from "@/lib/shared/config/constants";
+import { ENDPOINTS } from "@/lib/shared/config/constants";
 import { GuiasDataProvider } from "./guias-provider.interface";
+import { apiClient } from "../api-client";
+import { throwApiError } from "@/lib/client/errors";
 
 export class BackendGuiasProvider implements GuiasDataProvider {
   async getAll(): Promise<Guia[]> {
-    // Get all guias for Centro de Informática
-    // Since we're consolidating, we'll fetch all guias regardless of course
-    const response = await fetch(`${API_URL}/guias`);
+    const response = await apiClient("/guias", { method: "GET" });
     if (!response.ok) {
-      throw new Error("Failed to fetch guias");
+      await throwApiError(response);
     }
     return response.json();
   }
 
   async getSecoes(guiaSlug: string): Promise<Secao[]> {
-    // For backend, we need to find the guia by slug and get its ID
     const guias = await this.getAll();
     const guia = guias.find(g => g.slug === guiaSlug);
     if (!guia) {
       throw new Error(`Guia with slug '${guiaSlug}' not found`);
     }
 
-    const response = await fetch(`${API_URL}${ENDPOINTS.SECOES(guia.id)}`);
+    const response = await apiClient(`${ENDPOINTS.SECOES(guia.id)}`, { method: "GET" });
     if (!response.ok) {
-      throw new Error("Failed to fetch secoes");
+      await throwApiError(response);
     }
     return response.json();
   }
 
   async getSubSecoes(secaoSlug: string): Promise<SubSecao[]> {
-    // For backend, we need to find the secao by slug and get its ID
     const guias = await this.getAll();
     let targetSecao = null;
 
@@ -46,17 +44,17 @@ export class BackendGuiasProvider implements GuiasDataProvider {
       throw new Error(`Secao with slug '${secaoSlug}' not found`);
     }
 
-    const response = await fetch(`${API_URL}${ENDPOINTS.SUBSECOES(targetSecao.id)}`);
+    const response = await apiClient(`${ENDPOINTS.SUBSECOES(targetSecao.id)}`, { method: "GET" });
     if (!response.ok) {
-      throw new Error("Failed to fetch subSecoes");
+      await throwApiError(response);
     }
     return response.json();
   }
 
   async getCentros(): Promise<Array<{ id: string; nome: string; sigla: string }>> {
-    const response = await fetch(`${API_URL}${ENDPOINTS.CENTROS}`);
+    const response = await apiClient(`${ENDPOINTS.CENTROS}`, { method: "GET" });
     if (!response.ok) {
-      throw new Error("Failed to fetch centros");
+      await throwApiError(response);
     }
     return response.json();
   }
@@ -64,10 +62,9 @@ export class BackendGuiasProvider implements GuiasDataProvider {
   async getCursos(
     centroSigla: string
   ): Promise<Array<{ id: string; nome: string; centroId: string; realId: string }>> {
-    // First get the centro ID by sigla
-    const centrosResponse = await fetch(`${API_URL}${ENDPOINTS.CENTROS}`);
+    const centrosResponse = await apiClient(`${ENDPOINTS.CENTROS}`, { method: "GET" });
     if (!centrosResponse.ok) {
-      throw new Error("Failed to fetch centros");
+      await throwApiError(centrosResponse);
     }
     const centros = await centrosResponse.json();
     const centro = centros.find((c: { sigla: string }) => c.sigla === centroSigla);
@@ -76,19 +73,17 @@ export class BackendGuiasProvider implements GuiasDataProvider {
       throw new Error(`Centro with sigla '${centroSigla}' not found`);
     }
 
-    // Then get cursos for this centro
-    const cursosResponse = await fetch(`${API_URL}${ENDPOINTS.CURSOS(centro.id)}`);
+    const cursosResponse = await apiClient(`${ENDPOINTS.CURSOS(centro.id)}`, { method: "GET" });
     if (!cursosResponse.ok) {
-      throw new Error("Failed to fetch cursos");
+      await throwApiError(cursosResponse);
     }
     const cursos = await cursosResponse.json();
 
-    // Map the real course data to include slug-based IDs for frontend compatibility
     return cursos.map((curso: { id: string; nome: string; centroId: string }) => ({
-      id: this.nomeToSlug(curso.nome), // Convert nome to slug for frontend compatibility
+      id: this.nomeToSlug(curso.nome),
       nome: curso.nome,
       centroId: curso.centroId,
-      realId: curso.id, // Keep the real ID for API calls
+      realId: curso.id,
     }));
   }
 
@@ -96,10 +91,10 @@ export class BackendGuiasProvider implements GuiasDataProvider {
     return nome
       .toLowerCase()
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // Remove accents
-      .replace(/[^a-z0-9\s-]/g, "") // Remove special chars
-      .replace(/\s+/g, "-") // Replace spaces with hyphens
-      .replace(/-+/g, "-") // Replace multiple hyphens with single
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
       .trim();
   }
 }
