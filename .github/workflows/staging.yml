@@ -95,8 +95,8 @@ jobs:
             --env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
             --build-env DATABASE_URL="${{ steps.db-url.outputs.url }}")
 
-          # Try to set staging alias (may fail on free tier)
-          vercel alias $URL staging-aquario.vercel.app --token=${{ secrets.VERCEL_TOKEN }} || true
+          # Set staging alias to custom domain
+          vercel alias $URL staging.aquarioufpb.com --token=${{ secrets.VERCEL_TOKEN }}
 
           echo "url=$URL" >> $GITHUB_OUTPUT
 
@@ -104,6 +104,7 @@ jobs:
         run: |
           echo "## 🎭 Staging Deployed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://staging.aquarioufpb.com" >> $GITHUB_STEP_SUMMARY
+          echo "**Vercel URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
