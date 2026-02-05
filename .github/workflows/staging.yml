@@ -55,9 +55,6 @@ jobs:
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
         run: |
-          # Wait for branch to be ready
-          sleep 10
-
           # Get staging branch
           BRANCHES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
             "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
@@ -68,6 +65,28 @@ jobs:
             echo "::error::Staging branch not found"
             exit 1
           fi
+
+          # Wait for endpoint to be ready (poll up to 60 seconds)
+          echo "Waiting for endpoint to be ready..."
+          for i in {1..12}; do
+            ENDPOINTS=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$STAGING_ID/endpoints")
+
+            ENDPOINT_STATUS=$(echo "$ENDPOINTS" | jq -r '.endpoints[0].current_state // "pending"')
+            echo "Attempt $i: Endpoint status: $ENDPOINT_STATUS"
+
+            if [ "$ENDPOINT_STATUS" == "idle" ] || [ "$ENDPOINT_STATUS" == "active" ]; then
+              echo "Endpoint is ready"
+              break
+            fi
+
+            if [ $i -eq 12 ]; then
+              echo "::error::Endpoint not ready after 60 seconds"
+              exit 1
+            fi
+
+            sleep 5
+          done
 
           # Get database and role info
           DATABASES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
