@@ -95,16 +95,16 @@ jobs:
           STAGING_EXISTS=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "staging") | .id')
 
           if [ -z "$STAGING_EXISTS" ]; then
-            echo "Staging branch doesn't exist, creating from main..."
+            echo "Staging branch doesn't exist, creating from main with endpoint..."
             MAIN_ID=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "main") | .id')
 
             curl -s -X POST -H "Authorization: Bearer $NEON_API_KEY" \
               -H "Content-Type: application/json" \
-              -d "{\"branch\": {\"name\": \"staging\", \"parent_id\": \"$MAIN_ID\"}}" \
+              -d "{\"branch\": {\"name\": \"staging\", \"parent_id\": \"$MAIN_ID\"}, \"endpoints\": [{\"type\": \"read_write\"}]}" \
               "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches"
 
             echo "✅ Staging branch created"
-            sleep 3
+            sleep 5
           else
             echo "✅ Staging branch exists"
           fi

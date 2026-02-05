@@ -41,10 +41,10 @@ jobs:
             sleep 2
           fi
 
-          echo "Creating fresh staging branch from main..."
+          echo "Creating fresh staging branch from main with endpoint..."
           RESPONSE=$(curl -s -X POST -H "Authorization: Bearer $NEON_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "{\"branch\": {\"name\": \"staging\", \"parent_id\": \"$MAIN_ID\"}}" \
+            -d "{\"branch\": {\"name\": \"staging\", \"parent_id\": \"$MAIN_ID\"}, \"endpoints\": [{\"type\": \"read_write\"}]}" \
             "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
 
           echo "Staging branch recreated"
