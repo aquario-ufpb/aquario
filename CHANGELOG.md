@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.0.5] - 2025-02-05
+
 ### Added
 - Add/Update user profile image
 - Support for tracking membership `startedAt` and `endedAt` in `MembroEntidade`.
@@ -17,12 +21,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - CLI script (`npm run merge-facade-user`) to merge facade accounts into real user profiles while preserving history.
 - Added Cargos: each Entidade can manage its cargos and memberships
 - AI assistant guidelines (`.claude/CLAUDE.md`, `.cursor/rules.md`)
+- **CI/CD Pipeline**:
+  - Preview deployments for PRs with unique Vercel URLs and Neon database branches
+  - Staging deployment on push to main (`staging.aquarioufpb.com`)
+  - Production deployment on GitHub Release (`aquarioufpb.com`)
+  - Automatic cleanup of Neon branches when PRs close
+  - Branch limit management (max 8 preview branches, auto-deletes oldest)
+- **Release automation**: `npm run release:patch:push` (and minor/major) creates tag, pushes, and creates GitHub Release in one command
+- **Environment indicator**: Console logs show current environment (dev/staging/production)
+- **README badges**: Version, changelog, tests, production/staging links, commits ahead indicator
+- Auto-update version badge on release
 
 ### Changed
 - Improved UI for entidades page
 - **Refactored `apiClient`**: Now auto-prepends `API_URL`, simplifying all frontend API calls
 - **Standardized frontend API services**: All services now use `apiClient` instead of raw `fetch()`
 - **Standardized backend error format**: All API routes now throw `ApiError` with machine-readable `ErrorCode`
+- Updated README-DEV.md with CI/CD workflow documentation
+- Upgraded Node.js requirement from 18+ to 22+
 
 ### Removed
 - **Removed in-memory database implementation**: Deleted unused memory repositories and `DB_PROVIDER` config. PostgreSQL via Docker or cloud is now the only option.
@@ -116,17 +132,21 @@ Before releasing, move all `[Unreleased]` entries to a new version section with 
 ### Release Commands
 
 ```bash
-# Patch release (1.0.0 → 1.0.1) - Bug fixes
+# Local only (creates tag but doesn't push or deploy)
 npm run release:patch
-
-# Minor release (1.0.0 → 1.1.0) - New features
 npm run release:minor
-
-# Major release (1.0.0 → 2.0.0) - Breaking changes
 npm run release:major
+
+# Full release (creates tag, pushes, creates GitHub Release → deploys to production)
+npm run release:patch:push   # Bug fixes (1.0.0 → 1.0.1)
+npm run release:minor:push   # New features (1.0.0 → 1.1.0)
+npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 ```
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.2...HEAD
+> **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
+
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/aquario-ufpb/aquario/compare/v1.0.2...v1.0.5
 [1.0.2]: https://github.com/aquario-ufpb/aquario/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/aquario-ufpb/aquario/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/aquario-ufpb/aquario/releases/tag/v1.0.0
