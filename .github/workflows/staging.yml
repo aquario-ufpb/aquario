@@ -138,7 +138,7 @@ jobs:
             --build-env DATABASE_URL="${{ steps.db-url.outputs.url }}")
 
           # Set staging alias to custom domain
-          vercel alias $URL staging.aquarioufpb.com --token=${{ secrets.VERCEL_TOKEN }}
+          vercel alias $URL staging.aquarioufpb.com --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }}
 
           echo "url=$URL" >> $GITHUB_OUTPUT
 
