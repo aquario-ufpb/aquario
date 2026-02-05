@@ -58,12 +58,14 @@ jobs:
           git commit -m "chore: update version badge to ${VERSION}"
           git push origin "$BRANCH"
 
-          # Create and auto-merge PR
+          # Create PR
           gh pr create --title "chore: update version badge to ${VERSION}" \
             --body "Automated PR to update version badge after release ${VERSION}" \
             --base main \
             --head "$BRANCH"
 
+          # Approve and auto-merge
+          gh pr review "$BRANCH" --approve
           gh pr merge "$BRANCH" --auto --squash --delete-branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
