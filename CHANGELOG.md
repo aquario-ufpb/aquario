@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.5] - 2025-02-05
+## [1.0.9] - 2025-02-05
 
 ### Added
 - Add/Update user profile image
@@ -21,16 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - CLI script (`npm run merge-facade-user`) to merge facade accounts into real user profiles while preserving history.
 - Added Cargos: each Entidade can manage its cargos and memberships
 - AI assistant guidelines (`.claude/CLAUDE.md`, `.cursor/rules.md`)
-- **CI/CD Pipeline**:
-  - Preview deployments for PRs with unique Vercel URLs and Neon database branches
-  - Staging deployment on push to main (`staging.aquarioufpb.com`)
-  - Production deployment on GitHub Release (`aquarioufpb.com`)
+- **CI/CD Pipeline** (GitHub Actions + Vercel + Neon):
+  - `preview.yml`: Preview deployments for PRs with unique Vercel URLs and Neon database branches
+  - `staging.yml`: Staging deployment on push to main (resets Neon staging branch from main)
+  - `production.yml`: Production deployment on GitHub Release (creates PR to update version badge)
+  - `tests.yml`: Unit and integration tests on PR and push to main
   - Automatic cleanup of Neon branches when PRs close
   - Branch limit management (max 8 preview branches, auto-deletes oldest)
+  - Neon endpoint polling to wait for database readiness
+  - Vercel configured to only auto-build on main (other deploys via CLI)
 - **Release automation**: `npm run release:patch:push` (and minor/major) creates tag, pushes, and creates GitHub Release in one command
-- **Environment indicator**: Console logs show current environment (dev/staging/production)
-- **README badges**: Version, changelog, tests, production/staging links, commits ahead indicator
-- Auto-update version badge on release
+- **Environment indicator**: `NEXT_PUBLIC_IS_STAGING` env var + console logs show current environment (dev/staging/production)
+- **README badges**: Version, changelog, tests, production/staging links, "commits ahead" indicator showing unreleased changes
+- Auto-update version badge on release via PR
 
 ### Changed
 - Improved UI for entidades page
@@ -145,8 +148,8 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.5...HEAD
-[1.0.5]: https://github.com/aquario-ufpb/aquario/compare/v1.0.2...v1.0.5
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.9...HEAD
+[1.0.9]: https://github.com/aquario-ufpb/aquario/compare/v1.0.2...v1.0.9
 [1.0.2]: https://github.com/aquario-ufpb/aquario/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/aquario-ufpb/aquario/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/aquario-ufpb/aquario/releases/tag/v1.0.0
