@@ -19,10 +19,7 @@
     "test:integration": "vitest",
     "test:integration:ui": "vitest --ui",
     "test:integration:watch": "vitest --watch",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed",
-    "test:all": "npm run test && npm run test:integration && npm run test:e2e",
+    "test:all": "npm run test && npm run test:integration",
     "db:generate": "prisma generate",
     "db:migrate": "dotenv -e .env -- prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
@@ -32,9 +29,9 @@
     "db:reset": "dotenv -e .env -- prisma migrate reset",
     "release:patch": "npm version patch -m 'chore(release): %s'",
     "release:minor": "npm version minor -m 'chore(release): %s'",
-    "release:major": "npm version major -m 'chore(release): %s'"
+    "release:major": "npm version major -m 'chore(release): %s'",
+    "postinstall": "prisma generate"
   },
-  "postinstall": "prisma generate",
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -97,7 +94,6 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",

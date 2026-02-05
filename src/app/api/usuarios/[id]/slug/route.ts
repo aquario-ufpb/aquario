@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
+import { ApiError, fromZodError } from "@/lib/server/errors";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -31,14 +32,11 @@ export function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json(updatedUser);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { message: error.errors[0]?.message || "Dados inválidos" },
-          { status: 400 }
-        );
+        return fromZodError(error);
       }
 
       const message = error instanceof Error ? error.message : "Erro ao atualizar slug";
-      return NextResponse.json({ message }, { status: 400 });
+      return ApiError.badRequest(message);
     }
   });
 }

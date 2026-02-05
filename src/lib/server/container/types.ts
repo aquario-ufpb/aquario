@@ -8,6 +8,8 @@ import type {
   ISecoesGuiaRepository,
   ISubSecoesGuiaRepository,
 } from "@/lib/server/db/interfaces/guias-repository.interface";
+import type { IMembrosRepository } from "@/lib/server/db/interfaces/membros-repository.interface";
+import type { ICargosRepository } from "@/lib/server/db/interfaces/cargos-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
 import type { IBlobStorage } from "@/lib/server/services/blob/blob-storage.interface";
 
@@ -27,13 +29,10 @@ export type Container = {
   guiasRepository: IGuiasRepository;
   secoesGuiaRepository: ISecoesGuiaRepository;
   subSecoesGuiaRepository: ISubSecoesGuiaRepository;
+  membrosRepository: IMembrosRepository;
+  cargosRepository: ICargosRepository;
 
   // Services
   emailService: IEmailService;
   blobStorage: IBlobStorage;
 };
-
-/**
- * Database provider type
- */
-export type DbProvider = "prisma" | "memory";

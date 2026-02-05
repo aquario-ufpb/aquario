@@ -2,6 +2,9 @@ import { randomBytes } from "crypto";
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
 import type { ITokenVerificacaoRepository } from "@/lib/server/db/interfaces/token-verificacao-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
+import { createLogger } from "@/lib/server/utils/logger";
+
+const log = createLogger("Auth");
 
 export type ResendVerificationByUserInput = {
   usuarioId: string;
@@ -84,7 +87,7 @@ export async function resendVerificationByUser(
   try {
     await deps.emailService.sendVerificationEmail(usuario.email, tokenValue, usuario.nome);
   } catch (error) {
-    console.error("Failed to send verification email:", error);
+    log.error("Failed to send verification email", error, { email: usuario.email });
     throw new Error("Falha ao enviar email. Tente novamente mais tarde.");
   }
 
@@ -147,7 +150,7 @@ export async function resendVerificationByEmail(
   try {
     await deps.emailService.sendVerificationEmail(usuario.email, tokenValue, usuario.nome);
   } catch (error) {
-    console.error("Failed to send verification email:", error);
+    log.error("Failed to send verification email", error, { email: usuario.email });
   }
 
   return successResponse;

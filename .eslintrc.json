@@ -13,6 +13,7 @@
     ".next",
     "out",
     "build",
+    "content/**",
     "src/Tests & Examples - Dev/**/*",
     "**/Tests & Examples - Dev/**/*"
   ],

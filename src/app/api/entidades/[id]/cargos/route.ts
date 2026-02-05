@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { withAuth } from "@/lib/server/services/auth/middleware";
-import { prisma } from "@/lib/server/db/prisma";
 import { getContainer } from "@/lib/server/container";
+import { ApiError, fromZodError } from "@/lib/server/errors";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -23,14 +23,16 @@ const updateCargoSchema = z.object({
 
 // GET - List all cargos for an entidade
 export async function GET(_request: Request, context: RouteContext) {
-  const { id: entidadeId } = await context.params;
+  try {
+    const { id: entidadeId } = await context.params;
+    const { cargosRepository } = getContainer();
 
-  const cargos = await prisma.cargo.findMany({
-    where: { entidadeId },
-    orderBy: { ordem: "asc" },
-  });
+    const cargos = await cargosRepository.findByEntidadeId(entidadeId);
 
-  return NextResponse.json(cargos);
+    return NextResponse.json(cargos);
+  } catch {
+    return ApiError.internal("Erro ao buscar cargos");
+  }
 }
 
 // POST - Create a new cargo
@@ -42,12 +44,12 @@ export async function POST(request: Request, context: RouteContext) {
       const body = await req.json();
       const data = createCargoSchema.parse(body);
 
-      const { entidadesRepository } = getContainer();
+      const { entidadesRepository, cargosRepository } = getContainer();
 
       // Check if entidade exists
       const entidade = await entidadesRepository.findById(entidadeId);
       if (!entidade) {
-        return NextResponse.json({ message: "Entidade não encontrada." }, { status: 404 });
+        return ApiError.entidadeNotFound();
       }
 
       // Check if user has permission (MASTER_ADMIN or entidade ADMIN)
@@ -58,32 +60,24 @@ export async function POST(request: Request, context: RouteContext) {
       );
 
       if (!isMasterAdmin && !isEntidadeAdmin) {
-        return NextResponse.json(
-          { message: "Você não tem permissão para criar cargos nesta entidade." },
-          { status: 403 }
-        );
+        return ApiError.forbidden("Você não tem permissão para criar cargos nesta entidade.");
       }
 
-      const cargo = await prisma.cargo.create({
-        data: {
-          nome: data.nome,
-          descricao: data.descricao || null,
-          ordem: data.ordem,
-          entidadeId,
-        },
+      const cargo = await cargosRepository.create({
+        nome: data.nome,
+        descricao: data.descricao,
+        ordem: data.ordem,
+        entidadeId,
       });
 
       return NextResponse.json(cargo);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { message: error.errors[0]?.message || "Dados inválidos" },
-          { status: 400 }
-        );
+        return fromZodError(error);
       }
 
       const message = error instanceof Error ? error.message : "Erro ao criar cargo";
-      return NextResponse.json({ message }, { status: 400 });
+      return ApiError.badRequest(message);
     }
   });
 }
@@ -98,28 +92,23 @@ export async function PUT(request: Request, context: RouteContext) {
       const { cargoId, ...updateData } = body;
 
       if (!cargoId) {
-        return NextResponse.json({ message: "ID do cargo é obrigatório." }, { status: 400 });
+        return ApiError.badRequest("ID do cargo é obrigatório.");
       }
 
       const data = updateCargoSchema.parse(updateData);
+      const { entidadesRepository, cargosRepository } = getContainer();
 
       // Check if cargo exists and belongs to this entidade
-      const cargo = await prisma.cargo.findFirst({
-        where: {
-          id: cargoId,
-          entidadeId,
-        },
-      });
+      const cargo = await cargosRepository.findByIdAndEntidade(cargoId, entidadeId);
 
       if (!cargo) {
-        return NextResponse.json({ message: "Cargo não encontrado." }, { status: 404 });
+        return ApiError.cargoNotFound();
       }
 
-      const { entidadesRepository } = getContainer();
       const entidade = await entidadesRepository.findById(entidadeId);
 
       if (!entidade) {
-        return NextResponse.json({ message: "Entidade não encontrada." }, { status: 404 });
+        return ApiError.entidadeNotFound();
       }
 
       // Check if user has permission (MASTER_ADMIN or entidade ADMIN)
@@ -130,32 +119,19 @@ export async function PUT(request: Request, context: RouteContext) {
       );
 
       if (!isMasterAdmin && !isEntidadeAdmin) {
-        return NextResponse.json(
-          { message: "Você não tem permissão para atualizar cargos nesta entidade." },
-          { status: 403 }
-        );
+        return ApiError.forbidden("Você não tem permissão para atualizar cargos nesta entidade.");
       }
 
-      const updatedCargo = await prisma.cargo.update({
-        where: { id: cargoId },
-        data: {
-          ...(data.nome !== undefined && { nome: data.nome }),
-          ...(data.descricao !== undefined && { descricao: data.descricao }),
-          ...(data.ordem !== undefined && { ordem: data.ordem }),
-        },
-      });
+      const updatedCargo = await cargosRepository.update(cargoId, data);
 
       return NextResponse.json(updatedCargo);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { message: error.errors[0]?.message || "Dados inválidos" },
-          { status: 400 }
-        );
+        return fromZodError(error);
       }
 
       const message = error instanceof Error ? error.message : "Erro ao atualizar cargo";
-      return NextResponse.json({ message }, { status: 400 });
+      return ApiError.badRequest(message);
     }
   });
 }
@@ -170,26 +146,22 @@ export async function DELETE(request: Request, context: RouteContext) {
       const cargoId = searchParams.get("cargoId");
 
       if (!cargoId) {
-        return NextResponse.json({ message: "ID do cargo é obrigatório." }, { status: 400 });
+        return ApiError.badRequest("ID do cargo é obrigatório.");
       }
+
+      const { entidadesRepository, cargosRepository } = getContainer();
 
       // Check if cargo exists and belongs to this entidade
-      const cargo = await prisma.cargo.findFirst({
-        where: {
-          id: cargoId,
-          entidadeId,
-        },
-      });
+      const cargo = await cargosRepository.findByIdAndEntidade(cargoId, entidadeId);
 
       if (!cargo) {
-        return NextResponse.json({ message: "Cargo não encontrado." }, { status: 404 });
+        return ApiError.cargoNotFound();
       }
 
-      const { entidadesRepository } = getContainer();
       const entidade = await entidadesRepository.findById(entidadeId);
 
       if (!entidade) {
-        return NextResponse.json({ message: "Entidade não encontrada." }, { status: 404 });
+        return ApiError.entidadeNotFound();
       }
 
       // Check if user has permission (MASTER_ADMIN or entidade ADMIN)
@@ -200,20 +172,15 @@ export async function DELETE(request: Request, context: RouteContext) {
       );
 
       if (!isMasterAdmin && !isEntidadeAdmin) {
-        return NextResponse.json(
-          { message: "Você não tem permissão para deletar cargos nesta entidade." },
-          { status: 403 }
-        );
+        return ApiError.forbidden("Você não tem permissão para deletar cargos nesta entidade.");
       }
 
-      await prisma.cargo.delete({
-        where: { id: cargoId },
-      });
+      await cargosRepository.delete(cargoId);
 
       return NextResponse.json({ message: "Cargo deletado com sucesso." });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao deletar cargo";
-      return NextResponse.json({ message }, { status: 400 });
+      return ApiError.badRequest(message);
     }
   });
 }

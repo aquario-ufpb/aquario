@@ -1,6 +1,9 @@
 import { Resend } from "resend";
 import type { IEmailService } from "./email-service.interface";
 import { RESEND_API_KEY, EMAIL_FROM, APP_URL } from "@/lib/server/config/env";
+import { createLogger } from "@/lib/server/utils/logger";
+
+const log = createLogger("Email");
 
 export class ResendEmailService implements IEmailService {
   private resend: Resend;
@@ -28,7 +31,7 @@ export class ResendEmailService implements IEmailService {
         html: this.getVerificationEmailTemplate(nome, verificationUrl),
       });
     } catch (error) {
-      console.error("Failed to send verification email:", error);
+      log.error("Failed to send verification email", error, { to });
       throw new Error("Falha ao enviar email de verificação.");
     }
   }
@@ -44,7 +47,7 @@ export class ResendEmailService implements IEmailService {
         html: this.getPasswordResetEmailTemplate(nome, resetUrl),
       });
     } catch (error) {
-      console.error("Failed to send password reset email:", error);
+      log.error("Failed to send password reset email", error, { to });
       throw new Error("Falha ao enviar email de reset de senha.");
     }
   }

@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import { JWT_SECRET, JWT_EXPIRES_IN } from "@/lib/server/config/env";
 
 export type JwtPayload = {
@@ -18,10 +18,10 @@ const getSecret = (): string => {
  * Sign a JWT token for a user
  */
 export function signToken(userId: string): string {
-  return jwt.sign({ sub: userId }, getSecret(), {
-    expiresIn: JWT_EXPIRES_IN,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any);
+  const options: SignOptions = {
+    expiresIn: JWT_EXPIRES_IN as SignOptions["expiresIn"],
+  };
+  return jwt.sign({ sub: userId }, getSecret(), options);
 }
 
 /**

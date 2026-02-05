@@ -103,10 +103,8 @@ pnpm-lock.yaml
 src/Tests & Examples - Dev/
 **/Tests & Examples - Dev/
 
-# Git submodules (separate repositories with their own formatting)
-content/aquario-guias/
-content/aquario-entidades/
-content/aquario-mapas/
+# Content folder (submodules, external data - separate formatting)
+content/
 
 # Markdown files (documentation)
 *.md

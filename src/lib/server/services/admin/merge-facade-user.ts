@@ -1,4 +1,10 @@
-import { prisma } from "@/lib/server/db/prisma";
+import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
+import type { IMembrosRepository } from "@/lib/server/db/interfaces/membros-repository.interface";
+
+type MergeDependencies = {
+  usuariosRepository: IUsuariosRepository;
+  membrosRepository: IMembrosRepository;
+};
 
 /**
  * Merge a facade user's memberships into a real user account
@@ -11,12 +17,14 @@ import { prisma } from "@/lib/server/db/prisma";
  * @param facadeUserId - ID of the facade user to merge from
  * @param realUserId - ID of the real user to merge into
  * @param deleteFacade - Whether to delete the facade user after merging (default: true)
+ * @param deps - Repository dependencies
  * @returns Summary of the merge operation
  */
 export async function mergeFacadeUser(
   facadeUserId: string,
   realUserId: string,
-  deleteFacade: boolean = true
+  deleteFacade: boolean = true,
+  deps: MergeDependencies
 ): Promise<{
   success: boolean;
   membershipsCopied: number;
@@ -24,12 +32,11 @@ export async function mergeFacadeUser(
   facadeUserDeleted: boolean;
   error?: string;
 }> {
+  const { usuariosRepository, membrosRepository } = deps;
+
   try {
     // Verify facade user exists and is actually a facade
-    const facadeUser = await prisma.usuario.findUnique({
-      where: { id: facadeUserId },
-      include: { membroDeEntidades: { include: { cargo: true } } },
-    });
+    const facadeUser = await usuariosRepository.findById(facadeUserId);
 
     if (!facadeUser) {
       return {
@@ -52,10 +59,7 @@ export async function mergeFacadeUser(
     }
 
     // Verify real user exists
-    const realUser = await prisma.usuario.findUnique({
-      where: { id: realUserId },
-      include: { membroDeEntidades: true },
-    });
+    const realUser = await usuariosRepository.findById(realUserId);
 
     if (!realUser) {
       return {
@@ -77,16 +81,18 @@ export async function mergeFacadeUser(
       };
     }
 
+    // Get memberships for both users
+    const facadeMemberships = await membrosRepository.findRawByUsuarioId(facadeUserId);
+    const realUserMemberships = await membrosRepository.findRawByUsuarioId(realUserId);
+
     // Get existing memberships for real user to check conflicts
-    const realUserEntidadeIds = new Set(
-      realUser.membroDeEntidades.map((m: { entidadeId: string }) => m.entidadeId)
-    );
+    const realUserEntidadeIds = new Set(realUserMemberships.map(m => m.entidadeId));
 
     let membershipsCopied = 0;
     let conflicts = 0;
 
     // Copy memberships from facade to real user
-    for (const facadeMembership of facadeUser.membroDeEntidades) {
+    for (const facadeMembership of facadeMemberships) {
       // Check if real user already has membership in this entity
       if (realUserEntidadeIds.has(facadeMembership.entidadeId)) {
         conflicts++;
@@ -94,15 +100,13 @@ export async function mergeFacadeUser(
       }
 
       // Copy the membership, updating usuarioId to real user
-      await prisma.membroEntidade.create({
-        data: {
-          usuarioId: realUserId,
-          entidadeId: facadeMembership.entidadeId,
-          papel: facadeMembership.papel,
-          cargoId: facadeMembership.cargoId,
-          startedAt: facadeMembership.startedAt,
-          endedAt: facadeMembership.endedAt,
-        },
+      await membrosRepository.create({
+        usuarioId: realUserId,
+        entidadeId: facadeMembership.entidadeId,
+        papel: facadeMembership.papel,
+        cargoId: facadeMembership.cargoId,
+        startedAt: facadeMembership.startedAt,
+        endedAt: facadeMembership.endedAt,
       });
 
       membershipsCopied++;
@@ -112,14 +116,10 @@ export async function mergeFacadeUser(
     let facadeUserDeleted = false;
     if (deleteFacade) {
       // Delete all memberships for the facade user first (to avoid foreign key constraint)
-      await prisma.membroEntidade.deleteMany({
-        where: { usuarioId: facadeUserId },
-      });
+      await membrosRepository.deleteByUsuarioId(facadeUserId);
 
       // Now delete the facade user
-      await prisma.usuario.delete({
-        where: { id: facadeUserId },
-      });
+      await usuariosRepository.delete(facadeUserId);
       facadeUserDeleted = true;
     }
 

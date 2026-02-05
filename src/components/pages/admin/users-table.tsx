@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   useUsuariosPaginated,
   useUpdateUserRole,
   useDeleteUser,
-  useCreateFacadeUser,
   useUpdateUserInfo,
-  useMergeFacadeUser,
   useUpdateUserSlug,
 } from "@/lib/client/hooks/use-usuarios";
 import { useCentros, useCursos } from "@/lib/client/hooks";
@@ -21,30 +19,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Trash2, UserPlus, Search, Copy, Merge } from "lucide-react";
+import { Trash2, Search, Copy, Merge } from "lucide-react";
 import { PaginationControls } from "@/components/shared/pagination-controls";
+import { FacadeUserDialog } from "./facade-user-dialog";
+import { MergeFacadeDialog } from "./merge-facade-dialog";
 
 type UserFilter = "all" | "facade" | "real";
 
 export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(25);
-  const [isFacadeDialogOpen, setIsFacadeDialogOpen] = useState(false);
-  const [facadeNome, setFacadeNome] = useState("");
-  const [facadeCentroId, setFacadeCentroId] = useState("");
-  const [facadeCursoId, setFacadeCursoId] = useState("");
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editCentroId, setEditCentroId] = useState("");
   const [editCursoId, setEditCursoId] = useState("");
@@ -54,8 +40,6 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMergeDialogOpen, setIsMergeDialogOpen] = useState(false);
   const [mergeFacadeUserId, setMergeFacadeUserId] = useState<string | null>(null);
-  const [mergeRealUserId, setMergeRealUserId] = useState("");
-  const [mergeDeleteFacade, setMergeDeleteFacade] = useState(true);
 
   const {
     data: paginatedData,
@@ -75,29 +59,10 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
 
   const updateRoleMutation = useUpdateUserRole();
   const deleteUserMutation = useDeleteUser();
-  const createFacadeUserMutation = useCreateFacadeUser();
   const updateUserInfoMutation = useUpdateUserInfo();
   const updateUserSlugMutation = useUpdateUserSlug();
-  const mergeFacadeUserMutation = useMergeFacadeUser();
   const { data: centros = [] } = useCentros();
-  const { data: cursos = [] } = useCursos(facadeCentroId);
   const { data: editCursos = [] } = useCursos(editCentroId);
-
-  // Auto-select first centro when dialog opens and centros are available
-  useEffect(() => {
-    if (isFacadeDialogOpen && centros.length > 0 && !facadeCentroId) {
-      setFacadeCentroId(centros[0].id);
-    }
-  }, [isFacadeDialogOpen, centros, facadeCentroId]);
-
-  // Auto-select first curso when centro is selected and cursos are available
-  useEffect(() => {
-    if (facadeCentroId && cursos.length > 0 && !facadeCursoId) {
-      setFacadeCursoId(cursos[0].id);
-    } else if (!facadeCentroId) {
-      setFacadeCursoId("");
-    }
-  }, [facadeCentroId, cursos, facadeCursoId]);
 
   const handleRoleUpdate = async (userId: string, newRole: "USER" | "MASTER_ADMIN") => {
     try {
@@ -111,9 +76,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro ao atualizar papel do usuário";
-      toast.error("Erro ao atualizar papel", {
-        description: errorMessage,
-      });
+      toast.error("Erro ao atualizar papel", { description: errorMessage });
     }
   };
 
@@ -133,44 +96,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Erro ao deletar usuário";
-      toast.error("Erro ao deletar usuário", {
-        description: errorMessage,
-      });
-    }
-  };
-
-  const handleCreateFacadeUser = async () => {
-    if (!facadeNome.trim()) {
-      toast.error("Nome é obrigatório");
-      return;
-    }
-    if (!facadeCentroId) {
-      toast.error("Centro é obrigatório");
-      return;
-    }
-    if (!facadeCursoId) {
-      toast.error("Curso é obrigatório");
-      return;
-    }
-
-    try {
-      await createFacadeUserMutation.mutateAsync({
-        nome: facadeNome.trim(),
-        centroId: facadeCentroId,
-        cursoId: facadeCursoId,
-      });
-      toast.success("Usuário facade criado", {
-        description: `${facadeNome} foi criado como usuário facade.`,
-      });
-      setIsFacadeDialogOpen(false);
-      setFacadeNome("");
-      setFacadeCentroId("");
-      setFacadeCursoId("");
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Erro ao criar usuário facade";
-      toast.error("Erro ao criar usuário facade", {
-        description: errorMessage,
-      });
+      toast.error("Erro ao deletar usuário", { description: errorMessage });
     }
   };
 
@@ -190,23 +116,16 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
     try {
       await updateUserInfoMutation.mutateAsync({
         userId,
-        data: {
-          centroId: editCentroId,
-          cursoId: editCursoId,
-        },
+        data: { centroId: editCentroId, cursoId: editCursoId },
       });
       toast.success("Informações atualizadas", {
         description: `As informações de ${userName} foram atualizadas.`,
       });
-      setEditingUserId(null);
-      setEditCentroId("");
-      setEditCursoId("");
+      handleCancelEdit();
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro ao atualizar informações do usuário";
-      toast.error("Erro ao atualizar informações", {
-        description: errorMessage,
-      });
+      toast.error("Erro ao atualizar informações", { description: errorMessage });
     }
   };
 
@@ -242,57 +161,19 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
       toast.success("Slug atualizado", {
         description: `O slug de ${userName} foi atualizado.`,
       });
-      setEditingSlugUserId(null);
-      setEditSlug("");
+      handleCancelEditSlug();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Erro ao atualizar slug";
-      toast.error("Erro ao atualizar slug", {
-        description: errorMessage,
-      });
+      toast.error("Erro ao atualizar slug", { description: errorMessage });
     }
   };
 
   const handleStartMerge = (facadeUserId: string) => {
     setMergeFacadeUserId(facadeUserId);
-    setMergeRealUserId("");
-    setMergeDeleteFacade(true);
     setIsMergeDialogOpen(true);
   };
 
-  const handleMergeFacadeUser = async () => {
-    if (!mergeFacadeUserId || !mergeRealUserId) {
-      toast.error("Selecione o usuário real para mesclar");
-      return;
-    }
-
-    if (mergeFacadeUserId === mergeRealUserId) {
-      toast.error("Não é possível mesclar um usuário com ele mesmo");
-      return;
-    }
-
-    try {
-      const result = await mergeFacadeUserMutation.mutateAsync({
-        facadeUserId: mergeFacadeUserId,
-        realUserId: mergeRealUserId,
-        deleteFacade: mergeDeleteFacade,
-      });
-
-      toast.success("Usuário facade mesclado", {
-        description: `${result.membershipsCopied} membros copiados. ${
-          result.conflicts > 0 ? `${result.conflicts} conflitos ignorados. ` : ""
-        }${result.facadeUserDeleted ? "Usuário facade deletado." : "Usuário facade mantido."}`,
-      });
-
-      setIsMergeDialogOpen(false);
-      setMergeFacadeUserId(null);
-      setMergeRealUserId("");
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Erro ao mesclar usuário facade";
-      toast.error("Erro ao mesclar usuário facade", {
-        description: errorMessage,
-      });
-    }
-  };
+  const mergeFacadeUser = users.find(u => u.id === mergeFacadeUserId);
 
   return (
     <Card>
@@ -302,92 +183,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-4 items-center flex-wrap">
-          <Dialog open={isFacadeDialogOpen} onOpenChange={setIsFacadeDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="default" disabled={isLoading}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Criar Usuário Facade
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Usuário Facade</DialogTitle>
-                <DialogDescription>
-                  Crie um usuário facade para exibição pública. Este usuário não poderá fazer login
-                  até que seja mesclado com uma conta real.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="facade-nome">Nome *</Label>
-                  <Input
-                    id="facade-nome"
-                    placeholder="Nome do usuário"
-                    value={facadeNome}
-                    onChange={e => setFacadeNome(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="facade-centro">Centro *</Label>
-                  <Select value={facadeCentroId} onValueChange={setFacadeCentroId}>
-                    <SelectTrigger id="facade-centro">
-                      <SelectValue placeholder="Selecione um centro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {centros.map(centro => (
-                        <SelectItem key={centro.id} value={centro.id}>
-                          {centro.nome} ({centro.sigla})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="facade-curso">Curso *</Label>
-                  <Select
-                    value={facadeCursoId}
-                    onValueChange={setFacadeCursoId}
-                    disabled={!facadeCentroId}
-                  >
-                    <SelectTrigger id="facade-curso">
-                      <SelectValue
-                        placeholder={
-                          !facadeCentroId ? "Selecione um centro primeiro" : "Selecione um curso"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cursos.map(curso => (
-                        <SelectItem key={curso.id} value={curso.id}>
-                          {curso.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsFacadeDialogOpen(false)}
-                  disabled={createFacadeUserMutation.isPending}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleCreateFacadeUser}
-                  disabled={
-                    createFacadeUserMutation.isPending ||
-                    !facadeNome ||
-                    !facadeCentroId ||
-                    !facadeCursoId
-                  }
-                >
-                  {createFacadeUserMutation.isPending ? "Criando..." : "Criar"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <FacadeUserDialog disabled={isLoading} />
           <Button onClick={() => refetch()} variant="outline" disabled={isLoading}>
             Atualizar
           </Button>
@@ -400,7 +196,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
               value={userFilter}
               onValueChange={(value: UserFilter) => {
                 setUserFilter(value);
-                setPage(1); // Reset to first page when filter changes
+                setPage(1);
               }}
             >
               <SelectTrigger id="user-filter" className="w-40">
@@ -423,7 +219,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                 value={searchQuery}
                 onChange={e => {
                   setSearchQuery(e.target.value);
-                  setPage(1); // Reset to first page when search changes
+                  setPage(1);
                 }}
                 className="pl-9"
               />
@@ -477,6 +273,7 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                   const isEditingSlug = editingSlugUserId === userItem.id;
                   return (
                     <tr key={userItem.id} className="border-b hover:bg-muted/50">
+                      {/* ID Column */}
                       <td className="p-4">
                         <button
                           type="button"
@@ -488,15 +285,21 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                           <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
                       </td>
+
+                      {/* Nome Column */}
                       <td className="p-4 font-medium">
                         {userItem.nome}
                         {userItem.eFacade && (
                           <span className="ml-2 text-xs text-muted-foreground">(Facade)</span>
                         )}
                       </td>
+
+                      {/* Email Column */}
                       <td className="p-4">
                         {userItem.email || <span className="text-muted-foreground">—</span>}
                       </td>
+
+                      {/* Slug Column */}
                       <td className="p-4">
                         {isEditingSlug ? (
                           <div className="flex items-center gap-2">
@@ -544,53 +347,8 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                           </div>
                         )}
                       </td>
-                      <td className="p-4">
-                        {isEditingSlug ? (
-                          <div className="flex items-center gap-2">
-                            <Input
-                              value={editSlug}
-                              onChange={e => setEditSlug(e.target.value)}
-                              placeholder="slug"
-                              className="w-32 font-mono text-sm"
-                              disabled={updateUserSlugMutation.isPending}
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleCancelEditSlug}
-                              disabled={updateUserSlugMutation.isPending}
-                            >
-                              Cancelar
-                            </Button>
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => handleSaveSlug(userItem.id, userItem.nome)}
-                              disabled={updateUserSlugMutation.isPending}
-                            >
-                              {updateUserSlugMutation.isPending ? "Salvando..." : "Salvar"}
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm text-muted-foreground">
-                              {userItem.slug || <span className="text-muted-foreground">—</span>}
-                            </span>
-                            {!userItem.eFacade && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleStartEditSlug(userItem.id, userItem.slug || null)
-                                }
-                                className="h-6 px-2 text-xs"
-                              >
-                                Editar
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </td>
+
+                      {/* Centro Column */}
                       <td className="p-4">
                         {isEditing ? (
                           <Select value={editCentroId} onValueChange={setEditCentroId}>
@@ -609,6 +367,8 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                           userItem.centro.sigla
                         )}
                       </td>
+
+                      {/* Curso Column */}
                       <td className="p-4">
                         {isEditing ? (
                           <Select
@@ -631,6 +391,8 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                           userItem.curso.nome
                         )}
                       </td>
+
+                      {/* Status Column */}
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           {userItem.eVerificado ? (
@@ -672,6 +434,8 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                           )}
                         </div>
                       </td>
+
+                      {/* Papel Column */}
                       <td className="p-4">
                         <Select
                           value={userItem.papelPlataforma}
@@ -692,6 +456,8 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
                           </SelectContent>
                         </Select>
                       </td>
+
+                      {/* Ações Column */}
                       <td className="p-4 text-right">
                         <div className="flex gap-2 justify-end">
                           {isEditing ? (
@@ -786,79 +552,13 @@ export function UsersTable({ currentUserId }: { currentUserId: string }) {
         />
       </CardContent>
 
-      {/* Merge Facade User Dialog */}
-      <Dialog open={isMergeDialogOpen} onOpenChange={setIsMergeDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Mesclar Usuário Facade</DialogTitle>
-            <DialogDescription>
-              Mescle as membros do usuário facade em um usuário real. Os membros conflitantes serão
-              ignorados.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="merge-facade-user">Usuário Facade</Label>
-              <Input
-                id="merge-facade-user"
-                value={
-                  mergeFacadeUserId
-                    ? users.find(u => u.id === mergeFacadeUserId)?.nome || mergeFacadeUserId
-                    : ""
-                }
-                disabled
-                className="bg-muted"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="merge-real-user">Usuário Real *</Label>
-              <Select value={mergeRealUserId} onValueChange={setMergeRealUserId}>
-                <SelectTrigger id="merge-real-user">
-                  <SelectValue placeholder="Selecione o usuário real" />
-                </SelectTrigger>
-                <SelectContent>
-                  {users
-                    .filter(u => !u.eFacade && u.id !== mergeFacadeUserId)
-                    .map(user => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.nome} {user.email ? `(${user.email})` : ""}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="merge-delete-facade"
-                checked={mergeDeleteFacade}
-                onCheckedChange={checked => setMergeDeleteFacade(checked === true)}
-              />
-              <Label htmlFor="merge-delete-facade" className="text-sm font-normal cursor-pointer">
-                Deletar usuário facade após mesclar
-              </Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsMergeDialogOpen(false);
-                setMergeFacadeUserId(null);
-                setMergeRealUserId("");
-              }}
-              disabled={mergeFacadeUserMutation.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleMergeFacadeUser}
-              disabled={mergeFacadeUserMutation.isPending || !mergeRealUserId}
-            >
-              {mergeFacadeUserMutation.isPending ? "Mesclando..." : "Mesclar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <MergeFacadeDialog
+        open={isMergeDialogOpen}
+        onOpenChange={setIsMergeDialogOpen}
+        facadeUserId={mergeFacadeUserId}
+        facadeUserName={mergeFacadeUser?.nome || ""}
+        availableUsers={users}
+      />
     </Card>
   );
 }

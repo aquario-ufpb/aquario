@@ -3,6 +3,8 @@ export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { mergeFacadeUser } from "@/lib/server/services/admin/merge-facade-user";
+import { getContainer } from "@/lib/server/container";
+import { ApiError, fromZodError } from "@/lib/server/errors";
 
 const mergeFacadeUserSchema = z.object({
   facadeUserId: z.string().uuid("ID de usuário facade inválido"),
@@ -16,13 +18,14 @@ export async function POST(request: Request) {
       const body = await request.json();
       const data = mergeFacadeUserSchema.parse(body);
 
-      const result = await mergeFacadeUser(data.facadeUserId, data.realUserId, data.deleteFacade);
+      const { usuariosRepository, membrosRepository } = getContainer();
+      const result = await mergeFacadeUser(data.facadeUserId, data.realUserId, data.deleteFacade, {
+        usuariosRepository,
+        membrosRepository,
+      });
 
       if (!result.success) {
-        return NextResponse.json(
-          { message: result.error || "Erro ao mesclar usuário facade" },
-          { status: 400 }
-        );
+        return ApiError.badRequest(result.error || "Erro ao mesclar usuário facade");
       }
 
       return NextResponse.json({
@@ -33,14 +36,11 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { message: error.errors[0]?.message || "Dados inválidos" },
-          { status: 400 }
-        );
+        return fromZodError(error);
       }
 
       const message = error instanceof Error ? error.message : "Erro ao mesclar usuário facade";
-      return NextResponse.json({ message }, { status: 400 });
+      return ApiError.badRequest(message);
     }
   });
 }

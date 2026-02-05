@@ -1,5 +1,6 @@
-import { API_URL, ENDPOINTS } from "@/lib/shared/config/constants";
+import { ENDPOINTS } from "@/lib/shared/config/constants";
 import { apiClient } from "./api-client";
+import { throwApiError } from "@/lib/client/errors";
 
 export type User = {
   id: string;
@@ -64,26 +65,25 @@ export type UserMembership = {
 
 export const usuariosService = {
   getCurrentUser: async (token: string): Promise<User> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.ME}`, {
+    const response = await apiClient(`${ENDPOINTS.ME}`, {
       method: "GET",
-      token, // Still accept token for explicit override if needed
+      token,
     });
 
     if (!response.ok) {
-      throw new Error("Falha ao buscar usuário");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   getBySlug: async (slug: string): Promise<User> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_BY_SLUG(slug)}`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIO_BY_SLUG(slug)}`, {
       method: "GET",
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Usuário não encontrado");
+      await throwApiError(response);
     }
 
     return response.json();
@@ -110,13 +110,13 @@ export const usuariosService = {
       params.append("search", options.search);
     }
 
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}?${params.toString()}`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIOS}?${params.toString()}`, {
       method: "GET",
       token,
     });
 
     if (!response.ok) {
-      throw new Error("Falha ao listar usuários");
+      await throwApiError(response);
     }
 
     return response.json();
@@ -129,13 +129,13 @@ export const usuariosService = {
       params.append("limit", limit.toString());
     }
 
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}?${params.toString()}`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIOS}?${params.toString()}`, {
       method: "GET",
       token,
     });
 
     if (!response.ok) {
-      throw new Error("Falha ao buscar usuários");
+      await throwApiError(response);
     }
 
     return response.json();
@@ -146,32 +146,30 @@ export const usuariosService = {
     papelPlataforma: "USER" | "MASTER_ADMIN",
     token: string
   ): Promise<User> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}/${userId}/role`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIOS}/${userId}/role`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
-      token, // Still accept token for explicit override if needed
+      token,
       body: JSON.stringify({ papelPlataforma }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao atualizar papel do usuário");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   deleteUser: async (userId: string, token: string): Promise<void> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}/${userId}`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIOS}/${userId}`, {
       method: "DELETE",
-      token, // Still accept token for explicit override if needed
+      token,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao deletar usuário");
+      await throwApiError(response);
     }
   },
 
@@ -179,15 +177,14 @@ export const usuariosService = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await apiClient(`${API_URL}${ENDPOINTS.UPLOAD_PHOTO}`, {
+    const response = await apiClient(`${ENDPOINTS.UPLOAD_PHOTO}`, {
       method: "POST",
       token,
       body: formData,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao fazer upload da foto");
+      await throwApiError(response);
     }
 
     // Upload route now returns the updated user object directly
@@ -195,7 +192,7 @@ export const usuariosService = {
   },
 
   updatePhoto: async (urlFotoPerfil: string | null, token: string): Promise<User> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_PHOTO}`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIO_PHOTO}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -205,29 +202,27 @@ export const usuariosService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao atualizar foto de perfil");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   deletePhoto: async (token: string): Promise<User> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_PHOTO}`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIO_PHOTO}`, {
       method: "DELETE",
       token,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao deletar foto de perfil");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   createFacadeUser: async (data: CreateFacadeUserRequest, token: string): Promise<User> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}/facade`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIOS}/facade`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -237,8 +232,7 @@ export const usuariosService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao criar usuário facade");
+      await throwApiError(response);
     }
 
     return response.json();
@@ -249,7 +243,7 @@ export const usuariosService = {
     data: UpdateUserInfoRequest,
     token: string
   ): Promise<User> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}/${userId}/info`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIOS}/${userId}/info`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -259,15 +253,14 @@ export const usuariosService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao atualizar informações do usuário");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   updateUserSlug: async (userId: string, slug: string | null, token: string): Promise<User> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIOS}/${userId}/slug`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIOS}/${userId}/slug`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -277,33 +270,32 @@ export const usuariosService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao atualizar slug");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   getMyMemberships: async (token: string): Promise<UserMembership[]> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_MEMBROS_ME}`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIO_MEMBROS_ME}`, {
       method: "GET",
       token,
     });
 
     if (!response.ok) {
-      throw new Error("Falha ao buscar membros");
+      await throwApiError(response);
     }
 
     return response.json();
   },
 
   getUserMemberships: async (userId: string): Promise<UserMembership[]> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.USUARIO_MEMBROS(userId)}`, {
+    const response = await apiClient(`${ENDPOINTS.USUARIO_MEMBROS(userId)}`, {
       method: "GET",
     });
 
     if (!response.ok) {
-      throw new Error("Falha ao buscar membros");
+      await throwApiError(response);
     }
 
     return response.json();
@@ -320,7 +312,7 @@ export const usuariosService = {
     conflicts: number;
     facadeUserDeleted: boolean;
   }> => {
-    const response = await apiClient(`${API_URL}${ENDPOINTS.MERGE_FACADE_USER}`, {
+    const response = await apiClient(`${ENDPOINTS.MERGE_FACADE_USER}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -334,8 +326,7 @@ export const usuariosService = {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Falha ao mesclar usuário facade");
+      await throwApiError(response);
     }
 
     return response.json();

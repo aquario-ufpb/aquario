@@ -62,15 +62,19 @@ function refreshToken(currentToken: string): Promise<string> {
  * API client with automatic token refresh on 401 errors
  * Automatically uses token and refresh callback from tokenManager
  * You can still override by passing token/onTokenRefresh explicitly
+ *
+ * @param endpoint - The API endpoint (e.g., "/usuarios/me"). API_URL is prepended automatically.
  */
 export async function apiClient(
-  url: string,
+  endpoint: string,
   options: RequestInit & { token?: string | null; onTokenRefresh?: (token: string) => void } = {}
 ): Promise<Response> {
   // Use token from options, or fall back to tokenManager, or null
   const token = options.token ?? tokenManager.getToken();
   const onTokenRefresh = options.onTokenRefresh ?? tokenManager.getRefreshCallback();
   const { token: _, onTokenRefresh: __, ...fetchOptions } = options;
+
+  const url = `${API_URL}${endpoint}`;
 
   // Make initial request
   let response = await fetch(url, {

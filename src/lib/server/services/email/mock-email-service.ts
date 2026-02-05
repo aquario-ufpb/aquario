@@ -1,4 +1,7 @@
 import type { IEmailService } from "./email-service.interface";
+import { createLogger } from "@/lib/server/utils/logger";
+
+const log = createLogger("MockEmail");
 
 /**
  * Mock email service for testing
@@ -16,9 +19,7 @@ export class MockEmailService implements IEmailService {
   }> = [];
 
   sendVerificationEmail(to: string, token: string, nome: string): Promise<void> {
-    console.log(`[MockEmailService] Sending verification email to ${to}`);
-    console.log(`  Token: ${token}`);
-    console.log(`  Nome: ${nome}`);
+    log.info("Sending verification email", { to, token, nome });
 
     this.sentEmails.push({
       type: "verification",
@@ -32,9 +33,7 @@ export class MockEmailService implements IEmailService {
   }
 
   sendPasswordResetEmail(to: string, token: string, nome: string): Promise<void> {
-    console.log(`[MockEmailService] Sending password reset email to ${to}`);
-    console.log(`  Token: ${token}`);
-    console.log(`  Nome: ${nome}`);
+    log.info("Sending password reset email", { to, token, nome });
 
     this.sentEmails.push({
       type: "password-reset",

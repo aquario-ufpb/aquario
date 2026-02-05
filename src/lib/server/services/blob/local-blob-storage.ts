@@ -2,6 +2,9 @@ import { writeFile, mkdir, unlink, access } from "fs/promises";
 import { join, normalize, resolve, dirname } from "path";
 import { existsSync } from "fs";
 import type { IBlobStorage } from "./blob-storage.interface";
+import { createLogger } from "@/lib/server/utils/logger";
+
+const log = createLogger("LocalStorage");
 
 /**
  * Local file system blob storage implementation
@@ -109,7 +112,7 @@ export class LocalBlobStorage implements IBlobStorage {
       await unlink(filePath);
       return true;
     } catch (error) {
-      console.error("Error deleting file:", error);
+      log.error("Error deleting file", error, { path: urlOrPath });
       return false;
     }
   }

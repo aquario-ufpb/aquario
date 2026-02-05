@@ -304,7 +304,6 @@ export function exportCalendarAsImage({
         1.0
       );
     } catch (error) {
-      console.error("Error exporting calendar:", error);
       reject(
         error instanceof Error
           ? error

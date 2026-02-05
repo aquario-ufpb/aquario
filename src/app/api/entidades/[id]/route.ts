@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { withAuth } from "@/lib/server/services/auth/middleware";
+import { ApiError, fromZodError } from "@/lib/server/errors";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -45,7 +46,7 @@ export function PUT(request: Request, context: RouteContext) {
 
       const entidade = await entidadesRepository.findById(id);
       if (!entidade) {
-        return NextResponse.json({ message: "Entidade não encontrada." }, { status: 404 });
+        return ApiError.entidadeNotFound();
       }
 
       // Check if user has permission to edit (admin or member of entidade)
@@ -55,10 +56,7 @@ export function PUT(request: Request, context: RouteContext) {
       );
 
       if (!isAdmin && !isMember) {
-        return NextResponse.json(
-          { message: "Você não tem permissão para editar esta entidade." },
-          { status: 403 }
-        );
+        return ApiError.forbidden("Você não tem permissão para editar esta entidade.");
       }
 
       // Build update data
@@ -106,14 +104,11 @@ export function PUT(request: Request, context: RouteContext) {
       return NextResponse.json({ message: "Entidade atualizada com sucesso." });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { message: error.errors[0]?.message || "Dados inválidos" },
-          { status: 400 }
-        );
+        return fromZodError(error);
       }
 
       const message = error instanceof Error ? error.message : "Erro ao atualizar entidade";
-      return NextResponse.json({ message }, { status: 400 });
+      return ApiError.badRequest(message);
     }
   });
 }

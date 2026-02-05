@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { existsSync, statSync } from "fs";
+import { existsSync, statSync, readdirSync as fsReaddirSync } from "fs";
+import { createLogger } from "@/lib/server/utils/logger";
+
+const log = createLogger("ContentImages");
 
 /**
  * Normalizes a string to a slug (same logic as in local-file-guias-provider)
@@ -52,16 +55,14 @@ function slugToActualName(slug: string, dirPath: string): string | null {
         return entry;
       }
     }
+    return null;
   } catch {
     return null;
   }
-  return null;
 }
 
 function readdirSync(dirPath: string): string[] {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const fs = require("fs");
-  return fs.readdirSync(dirPath);
+  return fsReaddirSync(dirPath, { encoding: "utf-8" });
 }
 
 /**
@@ -197,7 +198,7 @@ export async function GET(_request: unknown, { params }: { params: Promise<{ pat
       },
     });
   } catch (error) {
-    console.error("Error serving image:", error);
+    log.error("Error serving image", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

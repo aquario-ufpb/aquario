@@ -93,8 +93,7 @@ export function PhotoCropDialog({ open, imageUrl, onCancel, onConfirm }: PhotoCr
     try {
       const croppedBlob = await createCroppedImage(imageUrl, croppedAreaPixels);
       onConfirm(croppedBlob);
-    } catch (error) {
-      console.error("Error cropping image:", error);
+    } catch {
       toast.error("Erro ao processar imagem. Tente novamente.");
     } finally {
       setIsProcessing(false);

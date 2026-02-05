@@ -3,11 +3,15 @@ export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { register } from "@/lib/server/services/auth/register";
+import { ApiError, fromZodError } from "@/lib/server/errors";
 
 const registerSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   email: z.string().email("Email inválido"),
-  senha: z.string().min(8, "Senha deve ter pelo menos 8 caracteres"),
+  senha: z
+    .string()
+    .min(8, "Senha deve ter pelo menos 8 caracteres")
+    .max(128, "Senha deve ter no máximo 128 caracteres"),
   centroId: z.string().uuid("Centro inválido"),
   cursoId: z.string().uuid("Curso inválido"),
   urlFotoPerfil: z.string().url().optional(),
@@ -36,13 +40,15 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: error.errors[0]?.message || "Dados inválidos" },
-        { status: 400 }
-      );
+      return fromZodError(error);
     }
 
     const message = error instanceof Error ? error.message : "Erro no cadastro";
-    return NextResponse.json({ message }, { status: 400 });
+
+    if (message === "EMAIL_JA_CADASTRADO") {
+      return ApiError.emailExists();
+    }
+
+    return ApiError.badRequest(message);
   }
 }

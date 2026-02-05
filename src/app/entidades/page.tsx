@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEntidades } from "@/lib/client/hooks";
+import { usePrefetchEntidade } from "@/lib/client/hooks/use-prefetch";
 import type { Entidade } from "@/lib/shared/types";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +14,13 @@ import type { TipoEntidade } from "@/lib/shared/types/entidade.types";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { SearchBar } from "@/components/shared/search-bar";
 
-function EntidadeCard({ entidade }: { entidade: Entidade }) {
+function EntidadeCard({
+  entidade,
+  onPrefetch,
+}: {
+  entidade: Entidade;
+  onPrefetch: (slug: string) => void;
+}) {
   const getBadgeText = () => {
     switch (entidade.tipo) {
       case "LABORATORIO":
@@ -41,7 +48,11 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
   };
 
   return (
-    <Link href={`/entidade/${entidade.slug}`} onClick={handleClick}>
+    <Link
+      href={`/entidade/${entidade.slug}`}
+      onClick={handleClick}
+      onMouseEnter={() => onPrefetch(entidade.slug)}
+    >
       <Card className="hover:bg-accent/20 transition-all duration-200 cursor-pointer h-full border-border/90">
         <CardContent className="p-5">
           <div className="flex gap-4">
@@ -88,6 +99,7 @@ function EntidadeCard({ entidade }: { entidade: Entidade }) {
 
 export default function EntidadesPage() {
   const { data: entidades = [], isLoading } = useEntidades();
+  const prefetchEntidade = usePrefetchEntidade();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
@@ -232,7 +244,11 @@ export default function EntidadesPage() {
                 <h2 className="text-2xl md:text-3xl font-semibold">Laboratórios</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {laboratorios.map(entidade => (
-                    <EntidadeCard key={entidade.id} entidade={entidade} />
+                    <EntidadeCard
+                      key={entidade.id}
+                      entidade={entidade}
+                      onPrefetch={prefetchEntidade}
+                    />
                   ))}
                 </div>
               </div>
@@ -248,7 +264,11 @@ export default function EntidadesPage() {
                 <h2 className="text-2xl md:text-3xl font-semibold">Grupos e Ligas</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {gruposELigas.map(entidade => (
-                    <EntidadeCard key={entidade.id} entidade={entidade} />
+                    <EntidadeCard
+                      key={entidade.id}
+                      entidade={entidade}
+                      onPrefetch={prefetchEntidade}
+                    />
                   ))}
                 </div>
               </div>
@@ -263,7 +283,11 @@ export default function EntidadesPage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {centrosEAtleticas.map(entidade => (
-                    <EntidadeCard key={entidade.id} entidade={entidade} />
+                    <EntidadeCard
+                      key={entidade.id}
+                      entidade={entidade}
+                      onPrefetch={prefetchEntidade}
+                    />
                   ))}
                 </div>
               </div>
@@ -276,7 +300,11 @@ export default function EntidadesPage() {
                 <h2 className="text-2xl md:text-3xl font-semibold">Empresas Parceiras</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {empresasParceiras.map(entidade => (
-                    <EntidadeCard key={entidade.id} entidade={entidade} />
+                    <EntidadeCard
+                      key={entidade.id}
+                      entidade={entidade}
+                      onPrefetch={prefetchEntidade}
+                    />
                   ))}
                 </div>
               </div>

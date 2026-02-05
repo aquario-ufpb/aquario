@@ -76,7 +76,6 @@ export default function CalendarGrid({
         filename: "calendario-alocacao.png",
       });
     } catch (error) {
-      console.error("Error exporting calendar:", error);
       alert(error instanceof Error ? error.message : "Erro ao exportar o calendário");
     } finally {
       setIsExporting(false);
@@ -95,7 +94,6 @@ export default function CalendarGrid({
       const blob = await generateICSFile(selectedClasses);
       downloadICSFile(blob, "calendario-disciplinas.ics");
     } catch (error) {
-      console.error("Error generating ICS file:", error);
       alert(error instanceof Error ? error.message : "Erro ao gerar arquivo de calendário");
     } finally {
       setIsGeneratingICS(false);

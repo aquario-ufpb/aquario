@@ -4,6 +4,10 @@ import { withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { formatUserResponse } from "@/lib/server/utils/format-user-response";
 import { z } from "zod";
+import { createLogger } from "@/lib/server/utils/logger";
+import { ApiError, fromZodError } from "@/lib/server/errors";
+
+const log = createLogger("Photo");
 
 const updatePhotoSchema = z.object({
   urlFotoPerfil: z.string().url().nullable().optional(),
@@ -28,7 +32,10 @@ export async function PATCH(request: Request) {
           await blobStorage.delete(usuario.urlFotoPerfil);
         } catch (error) {
           // Ignore errors when deleting old photo (might be external URL)
-          console.warn("Could not delete old photo:", error);
+          log.warn("Could not delete old photo", {
+            url: usuario.urlFotoPerfil,
+            error: String(error),
+          });
         }
       }
 
@@ -38,23 +45,17 @@ export async function PATCH(request: Request) {
       // Return updated user
       const updatedUser = await usuariosRepository.findById(usuario.id);
       if (!updatedUser) {
-        return NextResponse.json(
-          { message: "Erro ao buscar usuário atualizado." },
-          { status: 500 }
-        );
+        return ApiError.internal("Erro ao buscar usuário atualizado.");
       }
 
       return NextResponse.json(formatUserResponse(updatedUser));
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { message: "Dados inválidos.", errors: error.errors },
-          { status: 400 }
-        );
+        return fromZodError(error);
       }
 
-      console.error("Error updating profile photo:", error);
-      return NextResponse.json({ message: "Erro ao atualizar foto de perfil." }, { status: 500 });
+      log.error("Error updating profile photo", error, { userId: usuario.id });
+      return ApiError.internal("Erro ao atualizar foto de perfil.");
     }
   });
 }
@@ -74,7 +75,7 @@ export async function DELETE(request: Request) {
           await blobStorage.delete(usuario.urlFotoPerfil);
         } catch (error) {
           // Ignore errors when deleting (might be external URL or already deleted)
-          console.warn("Could not delete photo:", error);
+          log.warn("Could not delete photo", { url: usuario.urlFotoPerfil, error: String(error) });
         }
       }
 
@@ -84,16 +85,13 @@ export async function DELETE(request: Request) {
       // Return updated user
       const updatedUser = await usuariosRepository.findById(usuario.id);
       if (!updatedUser) {
-        return NextResponse.json(
-          { message: "Erro ao buscar usuário atualizado." },
-          { status: 500 }
-        );
+        return ApiError.internal("Erro ao buscar usuário atualizado.");
       }
 
       return NextResponse.json(formatUserResponse(updatedUser));
     } catch (error) {
-      console.error("Error deleting profile photo:", error);
-      return NextResponse.json({ message: "Erro ao deletar foto de perfil." }, { status: 500 });
+      log.error("Error deleting profile photo", error, { userId: usuario.id });
+      return ApiError.internal("Erro ao deletar foto de perfil.");
     }
   });
 }

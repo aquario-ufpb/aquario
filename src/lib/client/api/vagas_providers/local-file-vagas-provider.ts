@@ -1,5 +1,6 @@
 import { Vaga, TipoVaga, EntidadeVaga } from "@/lib/shared/types";
 import { VagasDataProvider } from "./vagas-provider.interface";
+import { isValidEntidadeVagaType } from "@/lib/shared/constants/entity-types";
 
 type VagaJson = {
   id: string;
@@ -125,7 +126,6 @@ export class LocalFileVagasProvider implements VagasDataProvider {
 
     // Handle relative paths (assets/Compilada.png) - relative to JSON file location
     if (imagePath.startsWith("assets/")) {
-      console.log("imagePath", imagePath);
       // Convert to API route: assets/Compilada.png -> /api/content-images/aquario-vagas/centro-de-informatica/assets/Compilada.png
       imagePath = `/api/content-images/aquario-vagas/centro-de-informatica/${imagePath}`;
     } else if (imagePath.startsWith("/assets/")) {
@@ -167,9 +167,8 @@ export class LocalFileVagasProvider implements VagasDataProvider {
 
   private normalizeEntidade(value: string): EntidadeVaga {
     const e = value.trim().toLowerCase();
-    const allowed = ["laboratorios", "grupos", "ufpb", "pessoa", "externo", "ligas"];
-    if (allowed.includes(e)) {
-      return e as EntidadeVaga;
+    if (isValidEntidadeVagaType(e)) {
+      return e;
     }
     return "externo";
   }

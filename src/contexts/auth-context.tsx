@@ -77,8 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             eVerificado: userData.eVerificado,
             permissoes: userData.permissoes,
           });
-        } catch (error) {
-          console.error("Falha ao buscar usuário:", error);
+        } catch {
           logout();
         } finally {
           setIsLoading(false);

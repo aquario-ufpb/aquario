@@ -48,12 +48,12 @@ export function GET(request: Request) {
     const search = searchParams.get("search");
 
     if (page || limit) {
-      const pageNum = parseInt(page || "1", 10);
-      const limitNum = parseInt(limit || "25", 10);
+      const pageNum = Math.max(1, parseInt(page || "1", 10) || 1);
+      const limitNum = Math.min(Math.max(1, parseInt(limit || "25", 10) || 25), 100);
       const validFilter = filter && ["all", "facade", "real"].includes(filter) ? filter : "all";
       const { users, total } = await usuariosRepository.findManyPaginated({
         page: pageNum,
-        limit: Math.min(limitNum, 100), // Cap at 100 for safety
+        limit: limitNum,
         filter: validFilter,
         search: search || undefined,
       });
@@ -72,10 +72,11 @@ export function GET(request: Request) {
     // Check if this is a standalone search request
     const searchQuery = searchParams.get("search");
     if (searchQuery) {
-      const limit = parseInt(searchParams.get("limit") || "10", 10);
+      const parsedLimit = parseInt(searchParams.get("limit") || "10", 10) || 10;
+      const searchLimit = Math.min(Math.max(1, parsedLimit), 100);
       const usuarios = await usuariosRepository.search({
         query: searchQuery,
-        limit: Math.min(limit, 100), // Cap at 100 for safety
+        limit: searchLimit,
       });
 
       return NextResponse.json(usuarios.map(mapUserToResponse));
