@@ -1,0 +1,117 @@
+name: Staging Deployment
+
+on:
+  push:
+    branches: [main]
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Reset Neon staging branch
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          # Get all branches
+          BRANCHES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+
+          # Find staging branch
+          STAGING_ID=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "staging") | .id')
+
+          # Find main branch (parent)
+          MAIN_ID=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "main") | .id')
+
+          if [ -n "$STAGING_ID" ]; then
+            echo "Deleting old staging branch..."
+            curl -s -X DELETE -H "Authorization: Bearer $NEON_API_KEY" \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$STAGING_ID"
+            sleep 2
+          fi
+
+          echo "Creating fresh staging branch from main..."
+          RESPONSE=$(curl -s -X POST -H "Authorization: Bearer $NEON_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"branch\": {\"name\": \"staging\", \"parent_id\": \"$MAIN_ID\"}}" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+
+          echo "Staging branch recreated"
+          echo "$RESPONSE" | jq .
+
+      - name: Get staging database URL
+        id: db-url
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          # Wait for branch to be ready
+          sleep 5
+
+          # Get staging branch
+          BRANCHES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+
+          STAGING_ID=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "staging") | .id')
+
+          # Get connection URI
+          CONN=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/connection_uri?branch_id=$STAGING_ID&role_name=neondb_owner")
+
+          DB_URL=$(echo "$CONN" | jq -r '.uri')
+          echo "url=$DB_URL" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ steps.db-url.outputs.url }}
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          DATABASE_URL: ${{ steps.db-url.outputs.url }}
+
+      - name: Deploy to Vercel (Staging)
+        id: deploy
+        run: |
+          # Deploy with staging alias
+          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} \
+            --env DATABASE_URL="${{ steps.db-url.outputs.url }}")
+
+          # Set staging alias
+          vercel alias $URL staging-aquario.vercel.app --token=${{ secrets.VERCEL_TOKEN }} || true
+
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Summary
+        run: |
+          echo "## 🎭 Staging Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
