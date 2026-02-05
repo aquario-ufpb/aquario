@@ -63,6 +63,31 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Ensure staging branch exists
+        if: steps.check-limit.outputs.exists != 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          BRANCHES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+
+          STAGING_EXISTS=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "staging") | .id')
+
+          if [ -z "$STAGING_EXISTS" ]; then
+            echo "Staging branch doesn't exist, creating from main..."
+            MAIN_ID=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "main") | .id')
+
+            curl -s -X POST -H "Authorization: Bearer $NEON_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "{\"branch\": {\"name\": \"staging\", \"parent_id\": \"$MAIN_ID\"}}" \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches"
+
+            echo "✅ Staging branch created"
+            sleep 3
+          else
+            echo "✅ Staging branch exists"
+          fi
+
       - name: Create Neon branch
         id: create-branch
         if: steps.check-limit.outputs.exists != 'true'
@@ -97,7 +122,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
