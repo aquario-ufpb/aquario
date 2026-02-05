@@ -2,6 +2,7 @@ name: Preview Deployment
 
 on:
   pull_request:
+    branches: [staging]
     types: [opened, synchronize, reopened, closed]
 
 permissions:

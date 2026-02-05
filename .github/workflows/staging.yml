@@ -2,7 +2,7 @@ name: Staging Deployment
 
 on:
   push:
-    branches: [main]
+    branches: [staging]
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -137,16 +137,12 @@ jobs:
             --env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
             --build-env DATABASE_URL="${{ steps.db-url.outputs.url }}")
 
-          # Set staging alias to custom domain
-          vercel alias $URL staging.aquarioufpb.com --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }}
-
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Summary
         run: |
           echo "## 🎭 Staging Deployed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** https://staging.aquarioufpb.com" >> $GITHUB_STEP_SUMMARY
-          echo "**Vercel URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
