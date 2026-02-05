@@ -83,3 +83,11 @@ npm run check-all     # Lint + format + types
 npm run db:migrate    # Run migrations
 npm run db:studio     # Prisma Studio
 ```
+
+## Changelog
+
+**Always update `CHANGELOG.md` when completing work.** Add under `[Unreleased]`:
+- **Added** — New features
+- **Changed** — Changes in existing functionality
+- **Removed** — Removed features
+- **Fixed** — Bug fixes

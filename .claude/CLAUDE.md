@@ -130,3 +130,14 @@ npm run setup        # First-time project setup
 - **Unit tests**: Jest (`npm run test`)
 - **Integration tests**: Vitest (`npm run test:integration`)
 - **E2E tests**: Playwright (`npm run test:e2e`)
+
+## Changelog
+
+**Always update `CHANGELOG.md` when completing work.** Add entries under `[Unreleased]` in the appropriate category:
+
+- **Added** — New features
+- **Changed** — Changes in existing functionality
+- **Removed** — Removed features
+- **Fixed** — Bug fixes
+
+Keep entries concise but descriptive. Reference the feature/component affected.

@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- _New features will be listed here_
 - Add/Update user profile image
 - Support for tracking membership `startedAt` and `endedAt` in `MembroEntidade`.
 - Support for "facade" users (placeholders for real people that haven't logged in yet).
@@ -17,12 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Dialog to search and add members to an entity directly from its page.
   - CLI script (`npm run merge-facade-user`) to merge facade accounts into real user profiles while preserving history.
 - Added Cargos: each Entidade can manage its cargos and memberships
+- AI assistant guidelines (`.claude/CLAUDE.md`, `.cursor/rules.md`)
 
 ### Changed
-- _Changes in existing functionality will be listed here_
 - Improved UI for entidades page
+- **Refactored `apiClient`**: Now auto-prepends `API_URL`, simplifying all frontend API calls
+- **Standardized frontend API services**: All services now use `apiClient` instead of raw `fetch()`
+- **Standardized backend error format**: All API routes now throw `ApiError` with machine-readable `ErrorCode`
+
+### Removed
+- **Removed in-memory database implementation**: Deleted unused memory repositories and `DB_PROVIDER` config. PostgreSQL via Docker or cloud is now the only option.
+
 ### Fixed
-- _Bug fixes will be listed here_
+- Fixed `postinstall` script location in package.json (was outside `scripts` block)
 
 ---
 
