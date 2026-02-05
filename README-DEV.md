@@ -5,8 +5,9 @@ Technical documentation for developers working on the Aquário project.
 ## Quick Start
 
 **Prerequisites:**
-- Node.js 18+ and npm installed ([Download Node.js](https://nodejs.org/))
+- Node.js 22+ and npm installed ([Download Node.js](https://nodejs.org/))
 - Docker (optional, for local database) or cloud database
+- GitHub CLI (`gh`) for releases (optional) - `brew install gh`
 
 ```bash
 # 1. Clone repository
@@ -39,11 +40,11 @@ npm run dev
 
 This is an open-source project with different environment configurations:
 
-| Environment | Who             | Database               | Email          | Analytics |
-| ----------- | --------------- | ---------------------- | -------------- | --------- |
-| **Dev**     | Anyone          | Local Docker or Memory | Mock (console) | Disabled  |
-| **Staging** | Project members | Neon (cloud)           | Resend         | Enabled   |
-| **Prod**    | Production      | Neon (cloud)           | Resend         | Enabled   |
+| Environment | Who             | Database             | Email          | Analytics |
+| ----------- | --------------- | -------------------- | -------------- | --------- |
+| **Dev**     | Anyone          | Local Docker         | Mock (console) | Disabled  |
+| **Staging** | Project members | Neon (staging branch)| Resend         | Enabled   |
+| **Prod**    | Production      | Neon (main branch)   | Resend         | Enabled   |
 
 ### Smart Defaults
 
@@ -112,7 +113,7 @@ aquario/
 │   │   └── ui/               # shadcn/ui components
 │   └── lib/
 │       ├── server/            # Server-only code
-│       │   ├── db/           # Repository pattern (Prisma + Memory)
+│       │   ├── db/           # Repository pattern (Prisma)
 │       │   ├── services/     # Business logic
 │       │   └── container/    # Dependency injection
 │       ├── client/            # Client-only code
@@ -121,7 +122,7 @@ aquario/
 │       └── shared/            # Shared types and utilities
 ├── content/                   # Git submodules (guias, entidades, etc.)
 ├── prisma/                    # Database schema and migrations
-└── tests/                     # E2E tests
+└── .github/workflows/         # CI/CD workflows
 ```
 
 ---
@@ -169,17 +170,20 @@ aquario/
 | `npm run test:coverage`       | Unit tests with coverage   |
 | `npm run test:integration`    | Integration tests (Vitest) |
 | `npm run test:integration:ui` | Integration tests with UI  |
-| `npm run test:e2e`            | E2E tests (Playwright)     |
-| `npm run test:e2e:ui`         | E2E tests with UI          |
 | `npm run test:all`            | Run all test suites        |
 
-### Versioning
+### Versioning & Releases
 
-| Command                 | Description                        |
-| ----------------------- | ---------------------------------- |
-| `npm run release:patch` | Bump patch version (1.0.0 → 1.0.1) |
-| `npm run release:minor` | Bump minor version (1.0.0 → 1.1.0) |
-| `npm run release:major` | Bump major version (1.0.0 → 2.0.0) |
+| Command                      | Description                                      |
+| ---------------------------- | ------------------------------------------------ |
+| `npm run release:patch`      | Bump patch version (1.0.0 → 1.0.1)               |
+| `npm run release:minor`      | Bump minor version (1.0.0 → 1.1.0)               |
+| `npm run release:major`      | Bump major version (1.0.0 → 2.0.0)               |
+| `npm run release:patch:push` | Bump, push, and create GitHub Release → **deploys to production** |
+| `npm run release:minor:push` | Bump, push, and create GitHub Release → **deploys to production** |
+| `npm run release:major:push` | Bump, push, and create GitHub Release → **deploys to production** |
+
+> **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
 ---
 
@@ -226,11 +230,10 @@ See `.env.example` for the complete list with detailed comments.
 
 ### Test Types
 
-| Type            | Framework  | Purpose                   | Location                                  |
-| --------------- | ---------- | ------------------------- | ----------------------------------------- |
-| **Unit**        | Jest       | Pure functions, utilities | `src/**/__tests__/*.test.ts`              |
-| **Integration** | Vitest     | React hooks, components   | `src/**/__tests__/*.integration.test.tsx` |
-| **E2E**         | Playwright | Full user flows           | `tests/e2e/*.e2e.test.ts`                 |
+| Type            | Framework | Purpose                   | Location                                  |
+| --------------- | --------- | ------------------------- | ----------------------------------------- |
+| **Unit**        | Jest      | Pure functions, utilities | `src/**/__tests__/*.test.ts`              |
+| **Integration** | Vitest    | React hooks, API routes   | `src/**/__tests__/*.integration.test.tsx` |
 
 ### Writing Tests
 
@@ -259,19 +262,6 @@ describe("useData", () => {
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
-});
-```
-
-**E2E Tests (Playwright):**
-
-```typescript
-// tests/e2e/feature.e2e.test.ts
-import { test, expect } from "@playwright/test";
-
-test("should complete user flow", async ({ page }) => {
-  await page.goto("/feature");
-  await page.click('button:has-text("Submit")');
-  await expect(page.locator(".success")).toBeVisible();
 });
 ```
 
@@ -343,17 +333,77 @@ git submodule update --init --recursive
 
 ---
 
+## CI/CD Workflow
+
+We use GitHub Actions for continuous integration and deployment.
+
+### Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. DEVELOPMENT - Open PR                                        │
+├─────────────────────────────────────────────────────────────────┤
+│  PR opened → main                                                │
+│    → Tests run automatically                                     │
+│    → Neon DB branch created (with seed data)                    │
+│    → Preview deployed to unique Vercel URL                      │
+│    → Comment on PR with preview link                            │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  2. STAGING - PR Merged                                          │
+├─────────────────────────────────────────────────────────────────┤
+│  PR merged → main updated                                        │
+│    → Neon staging branch reset from main                        │
+│    → Deployed to staging.aquarioufpb.com                        │
+│    → PR's Neon branch deleted (cleanup)                         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  3. PRODUCTION - Create Release                                  │
+├─────────────────────────────────────────────────────────────────┤
+│  Release created (e.g., v1.2.3)                                  │
+│    → Migrations run on production DB                            │
+│    → Deployed to www.aquarioufpb.com                            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Environments
+
+| URL | Environment | Updates when |
+|-----|-------------|--------------|
+| `aquario-xxx.vercel.app` | Preview | PR opened/updated |
+| `staging.aquarioufpb.com` | Staging | PR merged to main |
+| `www.aquarioufpb.com` | Production | Release created |
+
+### Neon Database Branches
+
+| Branch | Data | Purpose |
+|--------|------|---------|
+| `main` | Production data | Production database |
+| `staging` | Copy of main | Reset on each merge to main |
+| `pr-123-title` | Seed data only | Per-PR preview (deleted on close) |
+
+> **Security:** Preview deployments only have seed data, never production data.
+
+---
+
 ## Releasing New Versions
 
 1. Update `CHANGELOG.md` with your changes under `[Unreleased]`
-2. Run the appropriate release command:
+2. Run the release command (requires `gh` CLI):
    ```bash
-   npm run release:patch  # Bug fixes (1.0.0 → 1.0.1)
-   npm run release:minor  # New features (1.0.0 → 1.1.0)
-   npm run release:major  # Breaking changes (1.0.0 → 2.0.0)
+   npm run release:patch:push  # Bug fixes → deploys to production
+   npm run release:minor:push  # New features → deploys to production
+   npm run release:major:push  # Breaking changes → deploys to production
    ```
-3. Push the tag: `git push origin --tags`
-4. Create a GitHub Release from the tag
+
+This single command will:
+- Bump version in `package.json`
+- Create commit and tag
+- Push to GitHub
+- Create GitHub Release with auto-generated notes
+- Trigger production deployment
 
 ---
 

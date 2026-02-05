@@ -1,6 +1,6 @@
 # Aquário
 
-[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > **👨‍💻 Developers**: See [README-DEV.md](README-DEV.md) for technical setup | [CHANGELOG](CHANGELOG.md)
@@ -31,11 +31,11 @@ Job listings, internships, research positions, and volunteer opportunities.
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Database**: PostgreSQL + Prisma
-- **Testing**: Jest + Vitest + Playwright
+- **Testing**: Jest + Vitest
 
 ## Quick Start
 
