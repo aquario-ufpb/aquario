@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Removed in-memory database implementation**: Deleted unused memory repositories and `DB_PROVIDER` config. PostgreSQL via Docker or cloud is now the only option.
 - **Removed Playwright E2E tests**: Simplified testing setup to Jest (unit) + Vitest (integration) only.
 
+### Security
+- **Preview deployments now use seed data only**: Prevents exposing production data in public preview URLs. Preview branches reset and seed instead of copying staging data.
+
 ### Fixed
 - Fixed `postinstall` script location in package.json (was outside `scripts` block)
 - Fixed failing unit tests due to error message changes

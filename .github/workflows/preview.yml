@@ -1,8 +1,8 @@
-name: Vercel Preview Deployment
+name: Preview Deployment
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, closed]
 
 permissions:
   contents: read
@@ -11,11 +11,14 @@ permissions:
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
 
 jobs:
+  # Deploy preview on PR open/update
   deploy-preview:
     name: Deploy Preview
     runs-on: ubuntu-latest
+    if: github.event.action != 'closed'
 
     steps:
       - name: Checkout code
@@ -23,25 +26,166 @@ jobs:
         with:
           submodules: true
 
+      - name: Generate branch name
+        id: branch-name
+        run: |
+          TITLE=$(echo "${{ github.event.pull_request.title }}" | \
+            tr '[:upper:]' '[:lower:]' | \
+            sed 's/[^a-z0-9]/-/g' | \
+            sed 's/--*/-/g' | \
+            sed 's/^-//' | \
+            sed 's/-$//' | \
+            cut -c1-20)
+          BRANCH_NAME="pr-${{ github.event.pull_request.number }}-${TITLE}"
+          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Check Neon branch limit
+        id: check-limit
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          BRANCHES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+
+          # Only count branches starting with "pr-" (never touch main or staging)
+          PR_BRANCHES=$(echo "$BRANCHES" | jq '[.branches[] | select(.name | startswith("pr-"))]')
+          PR_BRANCH_COUNT=$(echo "$PR_BRANCHES" | jq 'length')
+          echo "Current PR branches: $PR_BRANCH_COUNT"
+
+          # Check if this PR already has a branch
+          EXISTING=$(echo "$BRANCHES" | jq -r --arg name "${{ steps.branch-name.outputs.name }}" \
+            '.branches[] | select(.name == $name) | .id')
+
+          if [ -n "$EXISTING" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "branch_id=$EXISTING" >> $GITHUB_OUTPUT
+          elif [ "$PR_BRANCH_COUNT" -ge 8 ]; then
+            echo "At branch limit, deleting oldest PR branch..."
+
+            # Get oldest PR branch (by created_at), ONLY from pr-* branches
+            OLDEST=$(echo "$PR_BRANCHES" | jq -r 'sort_by(.created_at) | .[0]')
+            OLDEST_ID=$(echo "$OLDEST" | jq -r '.id')
+            OLDEST_NAME=$(echo "$OLDEST" | jq -r '.name')
+
+            # Safety check: make sure it starts with "pr-"
+            if [[ "$OLDEST_NAME" == pr-* ]]; then
+              echo "Deleting oldest PR branch: $OLDEST_NAME"
+              curl -s -X DELETE -H "Authorization: Bearer $NEON_API_KEY" \
+                "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$OLDEST_ID"
+              echo "✅ Deleted $OLDEST_NAME to make room"
+              sleep 2
+            else
+              echo "::error::Safety check failed - oldest branch is not a PR branch: $OLDEST_NAME"
+              exit 1
+            fi
+
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Ensure staging branch exists
+        if: steps.check-limit.outputs.exists != 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          BRANCHES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+
+          STAGING_EXISTS=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "staging") | .id')
+
+          if [ -z "$STAGING_EXISTS" ]; then
+            echo "Staging branch doesn't exist, creating from main..."
+            MAIN_ID=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "main") | .id')
+
+            curl -s -X POST -H "Authorization: Bearer $NEON_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "{\"branch\": {\"name\": \"staging\", \"parent_id\": \"$MAIN_ID\"}}" \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches"
+
+            echo "✅ Staging branch created"
+            sleep 3
+          else
+            echo "✅ Staging branch exists"
+          fi
+
+      - name: Create Neon branch
+        id: create-branch
+        if: steps.check-limit.outputs.exists != 'true'
+        uses: neondatabase/create-branch-action@v5
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          branch_name: ${{ steps.branch-name.outputs.name }}
+          parent: staging
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Get existing branch connection string
+        id: get-existing
+        if: steps.check-limit.outputs.exists == 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          BRANCH_ID="${{ steps.check-limit.outputs.branch_id }}"
+
+          # Get database and role info
+          DATABASES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$BRANCH_ID/databases")
+          DB_NAME=$(echo "$DATABASES" | jq -r '.databases[0].name')
+
+          ROLES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$BRANCH_ID/roles")
+          ROLE_NAME=$(echo "$ROLES" | jq -r '.roles[] | select(.protected == false) | .name' | head -1)
+
+          echo "Database: $DB_NAME, Role: $ROLE_NAME"
+
+          # Get connection URI
+          CONN=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/connection_uri?branch_id=$BRANCH_ID&role_name=$ROLE_NAME&database_name=$DB_NAME")
+
+          DB_URL=$(echo "$CONN" | jq -r '.uri')
+
+          if [ -z "$DB_URL" ] || [ "$DB_URL" == "null" ]; then
+            echo "::error::Failed to get connection URI"
+            echo "$CONN"
+            exit 1
+          fi
+
+          echo "db_url=$DB_URL" >> $GITHUB_OUTPUT
+
+      - name: Set DATABASE_URL
+        id: db-url
+        run: |
+          if [ "${{ steps.check-limit.outputs.exists }}" == "true" ]; then
+            echo "url=${{ steps.get-existing.outputs.db_url }}" >> $GITHUB_OUTPUT
+          else
+            echo "url=${{ steps.create-branch.outputs.db_url }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Reset database with seed data
+        # Use reset instead of migrate deploy to ensure preview only has seed data
+        # This prevents exposing production data in public preview deployments
+        run: npx prisma migrate reset --force
+        env:
+          DATABASE_URL: ${{ steps.db-url.outputs.url }}
 
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build Project
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-
       - name: Deploy to Vercel
         id: deploy
         run: |
-          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} \
+            --env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
+            --build-env DATABASE_URL="${{ steps.db-url.outputs.url }}")
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Comment Preview URL on PR
@@ -49,16 +193,16 @@ jobs:
         with:
           script: |
             const url = '${{ steps.deploy.outputs.url }}';
+            const branchName = '${{ steps.branch-name.outputs.name }}';
             const body = `## 🚀 Preview Deployment
 
             | Name | Link |
             |------|------|
             | **Preview** | [${url}](${url}) |
-            | **PR** | #${{ github.event.pull_request.number }} |
+            | **DB Branch** | \`${branchName}\` |
 
             _Deployed from commit ${{ github.sha }}_`;
 
-            // Find existing comment
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -84,3 +228,42 @@ jobs:
                 body
               });
             }
+
+  # Cleanup Neon branch on PR close
+  cleanup:
+    name: Cleanup Preview
+    runs-on: ubuntu-latest
+    if: github.event.action == 'closed'
+
+    steps:
+      - name: Generate branch name
+        id: branch-name
+        run: |
+          TITLE=$(echo "${{ github.event.pull_request.title }}" | \
+            tr '[:upper:]' '[:lower:]' | \
+            sed 's/[^a-z0-9]/-/g' | \
+            sed 's/--*/-/g' | \
+            sed 's/^-//' | \
+            sed 's/-$//' | \
+            cut -c1-20)
+          BRANCH_NAME="pr-${{ github.event.pull_request.number }}-${TITLE}"
+          echo "name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Delete Neon branch
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          BRANCHES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+
+          BRANCH_ID=$(echo "$BRANCHES" | jq -r --arg name "${{ steps.branch-name.outputs.name }}" \
+            '.branches[] | select(.name == $name) | .id')
+
+          if [ -n "$BRANCH_ID" ]; then
+            echo "Deleting branch: ${{ steps.branch-name.outputs.name }}"
+            curl -s -X DELETE -H "Authorization: Bearer $NEON_API_KEY" \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$BRANCH_ID"
+            echo "✅ Branch deleted"
+          else
+            echo "Branch not found, nothing to delete"
+          fi
