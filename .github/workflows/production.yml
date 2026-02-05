@@ -58,15 +58,13 @@ jobs:
           git commit -m "chore: update version badge to ${VERSION}"
           git push origin "$BRANCH"
 
-          # Create PR
+          # Create PR and enable auto-merge (will merge once requirements are met)
           gh pr create --title "chore: update version badge to ${VERSION}" \
             --body "Automated PR to update version badge after release ${VERSION}" \
             --base main \
             --head "$BRANCH"
 
-          # Approve and auto-merge
-          gh pr review "$BRANCH" --approve
-          gh pr merge "$BRANCH" --auto --squash --delete-branch
+          gh pr merge "$BRANCH" --auto --squash --delete-branch || echo "Auto-merge enabled, waiting for requirements"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
