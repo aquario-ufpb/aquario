@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -26,18 +27,43 @@ jobs:
       - name: Update version badge in README
         run: |
           VERSION="${{ github.event.release.tag_name }}"
-          # Remove 'v' prefix if present
           VERSION_NUM="${VERSION#v}"
 
-          # Update the version badge in README.md
+          # Update the version badge
           sed -i "s/version-[0-9]*\.[0-9]*\.[0-9]*-blue/version-${VERSION_NUM}-blue/g" README.md
 
-          # Commit and push if there are changes
+          # Check if there are changes
+          if git diff --quiet README.md; then
+            echo "No changes to README.md"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+        id: check_changes
+
+      - name: Create PR for version badge update
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          BRANCH="chore/update-version-badge-${VERSION}"
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
           git add README.md
-          git diff --staged --quiet || git commit -m "chore: update version badge to ${VERSION}"
-          git push
+          git commit -m "chore: update version badge to ${VERSION}"
+          git push origin "$BRANCH"
+
+          # Create and auto-merge PR
+          gh pr create --title "chore: update version badge to ${VERSION}" \
+            --body "Automated PR to update version badge after release ${VERSION}" \
+            --base main \
+            --head "$BRANCH"
+
+          gh pr merge "$BRANCH" --auto --squash --delete-branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Vercel CLI
         run: npm install -g vercel
