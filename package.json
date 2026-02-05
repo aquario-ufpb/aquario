@@ -30,6 +30,9 @@
     "release:patch": "npm version patch -m 'chore(release): %s'",
     "release:minor": "npm version minor -m 'chore(release): %s'",
     "release:major": "npm version major -m 'chore(release): %s'",
+    "release:patch:push": "npm version patch -m 'chore(release): %s' && git push && git push --tags && gh release create $(git describe --tags --abbrev=0) --generate-notes",
+    "release:minor:push": "npm version minor -m 'chore(release): %s' && git push && git push --tags && gh release create $(git describe --tags --abbrev=0) --generate-notes",
+    "release:major:push": "npm version major -m 'chore(release): %s' && git push && git push --tags && gh release create $(git describe --tags --abbrev=0) --generate-notes",
     "postinstall": "prisma generate"
   },
   "dependencies": {
