@@ -56,7 +56,7 @@ jobs:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
         run: |
           # Wait for branch to be ready
-          sleep 5
+          sleep 10
 
           # Get staging branch
           BRANCHES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
@@ -64,11 +64,34 @@ jobs:
 
           STAGING_ID=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "staging") | .id')
 
+          if [ -z "$STAGING_ID" ] || [ "$STAGING_ID" == "null" ]; then
+            echo "::error::Staging branch not found"
+            exit 1
+          fi
+
+          # Get database and role info
+          DATABASES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$STAGING_ID/databases")
+          DB_NAME=$(echo "$DATABASES" | jq -r '.databases[0].name')
+
+          ROLES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$STAGING_ID/roles")
+          ROLE_NAME=$(echo "$ROLES" | jq -r '.roles[] | select(.protected == false) | .name' | head -1)
+
+          echo "Database: $DB_NAME, Role: $ROLE_NAME"
+
           # Get connection URI
           CONN=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
-            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/connection_uri?branch_id=$STAGING_ID&role_name=neondb_owner")
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/connection_uri?branch_id=$STAGING_ID&role_name=$ROLE_NAME&database_name=$DB_NAME")
 
           DB_URL=$(echo "$CONN" | jq -r '.uri')
+
+          if [ -z "$DB_URL" ] || [ "$DB_URL" == "null" ]; then
+            echo "::error::Failed to get connection URI"
+            echo "$CONN"
+            exit 1
+          fi
+
           echo "url=$DB_URL" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
