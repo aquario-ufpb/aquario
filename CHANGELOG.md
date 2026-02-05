@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.9] - 2025-02-05
 
 ### Added
-- Add/Update user profile image
+- Add/Update user profile images
 - Support for tracking membership `startedAt` and `endedAt` in `MembroEntidade`.
 - Support for "facade" users (placeholders for real people that haven't logged in yet).
 - **Admin Functionality**:
