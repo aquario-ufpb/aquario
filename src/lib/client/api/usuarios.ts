@@ -122,7 +122,14 @@ export const usuariosService = {
     return response.json();
   },
 
-  searchUsers: async (token: string, query: string, limit?: number): Promise<User[]> => {
+  searchUsers: async (
+    token: string,
+    query: string,
+    limit?: number
+  ): Promise<{
+    users: User[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }> => {
     const params = new URLSearchParams();
     params.append("search", query);
     if (limit) {

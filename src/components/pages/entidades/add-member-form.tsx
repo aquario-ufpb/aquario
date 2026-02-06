@@ -77,12 +77,15 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
   const [startedAt, setStartedAt] = useState("");
   const [endedAt, setEndedAt] = useState("");
 
-  const { data: filteredUsers = [] } = useSearchUsers(searchQuery, 10);
+  const { data: searchResponse } = useSearchUsers(searchQuery, 10);
   const { data: cargos = [] } = useEntidadeCargos(entidade.id);
   const addMemberMutation = useAddEntidadeMember();
   const queryClient = useQueryClient();
 
   const members = entidade.membros || [];
+
+  // Extract users array from the response object
+  const users = searchResponse?.users || [];
 
   // Check if user is already a member
   const isUserMember = (userId: string): Membro | undefined => {
@@ -146,7 +149,7 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
     }
   };
 
-  const selectedUser = filteredUsers.find(u => u.id === selectedUserId);
+  const selectedUser = users.find(u => u.id === selectedUserId);
   const selectedUserMembership = selectedUserId ? isUserMember(selectedUserId) : undefined;
 
   return (
@@ -172,9 +175,9 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
             />
           </div>
 
-          {searchQuery.trim() && filteredUsers.length > 0 && (
+          {searchQuery.trim() && users.length > 0 && (
             <div className="border rounded-lg mt-2 max-h-48 overflow-y-auto">
-              {filteredUsers.map(user => {
+              {users.map(user => {
                 const membership = isUserMember(user.id);
                 return (
                   <Card
@@ -229,7 +232,7 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
             </div>
           )}
 
-          {searchQuery.trim() && filteredUsers.length === 0 && (
+          {searchQuery.trim() && users.length === 0 && (
             <p className="text-sm text-muted-foreground mt-2">Nenhum usuário encontrado.</p>
           )}
         </div>
