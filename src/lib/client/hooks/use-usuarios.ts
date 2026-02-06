@@ -67,12 +67,12 @@ export const useSearchUsers = (query: string, limit?: number) => {
 
   return useQuery({
     queryKey: queryKeys.usuarios.search(query, limit),
-    queryFn: () => {
+    queryFn: async () => {
       if (!token) {
         throw new Error("No token available");
       }
       if (!query.trim()) {
-        return [];
+        return { users: [], pagination: { page: 1, limit: limit || 10, total: 0, totalPages: 0 } };
       }
       return usuariosService.searchUsers(token, query, limit);
     },
