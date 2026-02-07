@@ -388,7 +388,39 @@ async function importCurriculos(
   let prereqCount = 0;
   let equivCount = 0;
 
-  // Step 3: Create Curriculos + CurriculoDisciplinas + PreRequisitos
+  // Step 3: Create stub disciplinas for all referenced prereq/equiv codes not in our data
+  const missingCodes = new Set<string>();
+  for (const rows of curriculoGroups.values()) {
+    for (const row of rows) {
+      if (row.prerequisites?.trim()) {
+        for (const code of row.prerequisites
+          .split(";")
+          .map(c => c.trim())
+          .filter(Boolean)) {
+          if (!disciplinaIdByCode.has(code)) missingCodes.add(code);
+        }
+      }
+      if (row.equivalences?.trim()) {
+        for (const code of row.equivalences
+          .split(";")
+          .map(c => c.trim())
+          .filter(Boolean)) {
+          if (!disciplinaIdByCode.has(code)) missingCodes.add(code);
+        }
+      }
+    }
+  }
+
+  for (const code of missingCodes) {
+    const stub = await prisma.disciplina.upsert({
+      where: { codigo: code },
+      update: {},
+      create: { codigo: code, nome: code },
+    });
+    disciplinaIdByCode.set(code, stub.id);
+  }
+
+  // Step 4: Create Curriculos + CurriculoDisciplinas + PreRequisitos + Equivalencias
   for (const [key, rows] of curriculoGroups) {
     const [courseName, curriculumCode] = key.split("|");
     const dbCourseName = courseNameMapping[courseName];
@@ -407,8 +439,8 @@ async function importCurriculos(
     });
     curriculoCount++;
 
+    // Create CurriculoDisciplina entries
     const cdIdByDisciplinaCode = new Map<string, string>();
-
     for (const row of rows) {
       const disciplinaId = disciplinaIdByCode.get(row.discipline_code);
       if (!disciplinaId) continue;
@@ -425,73 +457,51 @@ async function importCurriculos(
       cdIdByDisciplinaCode.set(row.discipline_code, cd.id);
     }
 
+    // Batch create PreRequisitos
+    const prereqData: { curriculoDisciplinaId: string; disciplinaRequeridaId: string }[] = [];
     for (const row of rows) {
       if (!row.prerequisites?.trim()) continue;
       const cdId = cdIdByDisciplinaCode.get(row.discipline_code);
       if (!cdId) continue;
 
-      const prereqCodes = row.prerequisites
+      for (const code of row.prerequisites
         .split(";")
         .map(c => c.trim())
-        .filter(Boolean);
-
-      for (const prereqCode of prereqCodes) {
-        let prereqDisciplinaId = disciplinaIdByCode.get(prereqCode);
-        if (!prereqDisciplinaId) {
-          const stub = await prisma.disciplina.upsert({
-            where: { codigo: prereqCode },
-            update: {},
-            create: { codigo: prereqCode, nome: prereqCode },
-          });
-          disciplinaIdByCode.set(prereqCode, stub.id);
-          prereqDisciplinaId = stub.id;
+        .filter(Boolean)) {
+        const prereqId = disciplinaIdByCode.get(code);
+        if (prereqId) {
+          prereqData.push({ curriculoDisciplinaId: cdId, disciplinaRequeridaId: prereqId });
         }
-        await prisma.preRequisitoDisciplina.create({
-          data: { curriculoDisciplinaId: cdId, disciplinaRequeridaId: prereqDisciplinaId },
-        });
-        prereqCount++;
       }
     }
+    if (prereqData.length > 0) {
+      await prisma.preRequisitoDisciplina.createMany({ data: prereqData });
+      prereqCount += prereqData.length;
+    }
 
-    // Step 4: Create Equivalencia entries
+    // Batch create Equivalencias
+    const equivData: { disciplinaOrigemId: string; disciplinaEquivalenteId: string }[] = [];
+    const equivSeen = new Set<string>();
     for (const row of rows) {
       if (!row.equivalences?.trim()) continue;
-
       const disciplinaId = disciplinaIdByCode.get(row.discipline_code);
       if (!disciplinaId) continue;
 
-      const equivCodes = row.equivalences
+      for (const code of row.equivalences
         .split(";")
         .map(c => c.trim())
-        .filter(Boolean);
-
-      for (const equivCode of equivCodes) {
-        let equivDisciplinaId = disciplinaIdByCode.get(equivCode);
-        if (!equivDisciplinaId) {
-          const stub = await prisma.disciplina.upsert({
-            where: { codigo: equivCode },
-            update: {},
-            create: { codigo: equivCode, nome: equivCode },
-          });
-          disciplinaIdByCode.set(equivCode, stub.id);
-          equivDisciplinaId = stub.id;
+        .filter(Boolean)) {
+        const equivId = disciplinaIdByCode.get(code);
+        const dedupeKey = `${disciplinaId}:${equivId}`;
+        if (equivId && !equivSeen.has(dedupeKey)) {
+          equivSeen.add(dedupeKey);
+          equivData.push({ disciplinaOrigemId: disciplinaId, disciplinaEquivalenteId: equivId });
         }
-
-        await prisma.equivalencia.upsert({
-          where: {
-            disciplinaOrigemId_disciplinaEquivalenteId: {
-              disciplinaOrigemId: disciplinaId,
-              disciplinaEquivalenteId: equivDisciplinaId,
-            },
-          },
-          update: {},
-          create: {
-            disciplinaOrigemId: disciplinaId,
-            disciplinaEquivalenteId: equivDisciplinaId,
-          },
-        });
-        equivCount++;
       }
+    }
+    if (equivData.length > 0) {
+      await prisma.equivalencia.createMany({ data: equivData, skipDuplicates: true });
+      equivCount += equivData.length;
     }
   }
 

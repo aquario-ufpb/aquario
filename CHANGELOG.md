@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.1.0] - 2026-02-07
+
 ### Added
 - Curriculo system: `Curriculo`, `Disciplina`, `CurriculoDisciplina`, `PreRequisitoDisciplina`, and `Equivalencia` database tables
 - `NaturezaDisciplina` enum (Obrigatória, Optativa, Complementar Flexiva)
 - Each Curso can have multiple curriculos with one active at a time
-- Seed imports curriculo data from `content/aquario-curriculos/` CSVs (4 courses, 247 disciplinas, 295 prerequisites)
+- Seed imports curriculo data from `content/aquario-curriculos/` CSVs (4 courses, 247 disciplinas, 295 prerequisites, 199 equivalences)
 - Admin "Cursos" page with CRUD management for Campus, Centros, and Cursos
 - Backend CRUD API routes for Campus (`/api/campus`), Centros (`/api/centros`), and Cursos (`/api/cursos`)
 - `ICampusRepository` interface and Prisma implementation
@@ -26,14 +30,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Color-coded nodes: blue (obrigatória), amber (optativa), green (complementar)
   - Hover highlights full dependency chain (prerequisites + dependents)
   - Toggle to show/hide optativas
-  - Detail dialog on click showing ementa, carga horária, equivalências, pré-requisitos
+  - Detail dialog on click with navigation through prerequisites and equivalences
+  - Auto-selects logged-in user's course, or first available
 - `ICurriculosRepository` and `GET /api/curriculos/grade` endpoint for grade data
-- Added Grades Curriculares to ferramentas page and navigation dropdown
+- Added Grades Curriculares to ferramentas page, navigation dropdown, and landing page
+- Production import script (`db:import-prod`) with batched queries for remote databases
 
 ### Changed
 - Delete confirmation in admin Cursos page now uses proper dialog instead of browser `confirm()`
 - DELETE API routes for Campus/Centro/Curso now check for related data and return 409 with descriptive message instead of silently failing
 - Replaced Sistemas de Informação and Matemática Computacional courses with Engenharia de Robôs in seed
+- Landing page hero button changed to "Explore a Grade Curricular"
+- "Novo" badge moved from Mapas to Grades Curriculares on landing page
+
+### Fixed
+- CSV seed parser now trims headers to handle Windows-style line endings (fixes missing ementa/syllabus data)
 
 ---
 
