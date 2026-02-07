@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Curriculo system: `Curriculo`, `Disciplina`, `CurriculoDisciplina`, `PreRequisitoDisciplina`, and `Equivalencia` database tables
+- `NaturezaDisciplina` enum (Obrigatória, Optativa, Complementar Flexiva)
+- Each Curso can have multiple curriculos with one active at a time
+- Seed imports curriculo data from `content/aquario-curriculos/` CSVs (4 courses, 247 disciplinas, 295 prerequisites)
+
+### Changed
+- Replaced Sistemas de Informação and Matemática Computacional courses with Engenharia de Robôs in seed
+
 ---
 
 ## [1.0.15] - 2025-02-06
