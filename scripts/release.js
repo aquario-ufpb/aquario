@@ -72,7 +72,10 @@ function checkGitStatus() {
   exec("git fetch");
 
   // Check if branch is behind remote
-  const behind = exec("git rev-list HEAD..@{u} --count 2>/dev/null", { silent: true, ignoreError: true });
+  const behind = exec("git rev-list HEAD..@{u} --count 2>/dev/null", {
+    silent: true,
+    ignoreError: true,
+  });
   if (behind && behind !== "0" && parseInt(behind, 10) > 0) {
     console.error("❌ Your branch is behind the remote. Please pull or rebase first.");
     console.log(`   Your branch is ${behind} commit(s) behind origin/main`);
@@ -81,7 +84,10 @@ function checkGitStatus() {
   }
 
   // Check if branch is ahead of remote
-  const ahead = exec("git rev-list @{u}..HEAD --count 2>/dev/null", { silent: true, ignoreError: true });
+  const ahead = exec("git rev-list @{u}..HEAD --count 2>/dev/null", {
+    silent: true,
+    ignoreError: true,
+  });
   if (ahead && ahead !== "0" && parseInt(ahead, 10) > 0) {
     console.warn(`⚠️  Your branch is ${ahead} commit(s) ahead of origin/main`);
   }
