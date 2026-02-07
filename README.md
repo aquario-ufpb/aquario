@@ -1,6 +1,6 @@
 # Aquário
 
-[![Version](https://img.shields.io/badge/version-1.0.9-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.11-blue.svg)](CHANGELOG.md)
 [![Changelog](https://img.shields.io/badge/changelog-view-blueviolet)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://github.com/aquario-ufpb/aquario/actions/workflows/tests.yml/badge.svg)](https://github.com/aquario-ufpb/aquario/actions/workflows/tests.yml)
