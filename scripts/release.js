@@ -16,16 +16,17 @@ if (!["patch", "minor", "major"].includes(versionType)) {
 
 function exec(command, options = {}) {
   try {
-    return execSync(command, {
+    const result = execSync(command, {
       encoding: "utf8",
       stdio: options.silent ? "pipe" : "inherit",
       ...options,
-    }).trim();
+    });
+    return result ? result.trim() : "";
   } catch (error) {
     if (!options.ignoreError) {
       throw error;
     }
-    return null;
+    return "";
   }
 }
 
@@ -72,24 +73,26 @@ function checkGitStatus() {
   exec("git fetch");
 
   // Check if branch is behind remote
-  const behind = exec("git rev-list HEAD..@{u} --count 2>/dev/null", {
+  const behind = exec("git rev-list HEAD..@{u} --count", {
     silent: true,
     ignoreError: true,
   });
-  if (behind && behind !== "0" && parseInt(behind, 10) > 0) {
+  const behindCount = behind ? parseInt(behind, 10) : 0;
+  if (behindCount > 0) {
     console.error("❌ Your branch is behind the remote. Please pull or rebase first.");
-    console.log(`   Your branch is ${behind} commit(s) behind origin/main`);
+    console.log(`   Your branch is ${behindCount} commit(s) behind origin/main`);
     console.log("\n   Run: git pull --rebase origin main");
     process.exit(1);
   }
 
   // Check if branch is ahead of remote
-  const ahead = exec("git rev-list @{u}..HEAD --count 2>/dev/null", {
+  const ahead = exec("git rev-list @{u}..HEAD --count", {
     silent: true,
     ignoreError: true,
   });
-  if (ahead && ahead !== "0" && parseInt(ahead, 10) > 0) {
-    console.warn(`⚠️  Your branch is ${ahead} commit(s) ahead of origin/main`);
+  const aheadCount = ahead ? parseInt(ahead, 10) : 0;
+  if (aheadCount > 0) {
+    console.warn(`⚠️  Your branch is ${aheadCount} commit(s) ahead of origin/main`);
   }
 
   console.log("✅ Git status check passed\n");
