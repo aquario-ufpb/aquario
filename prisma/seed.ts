@@ -152,7 +152,7 @@ function parseCsv(content: string): CsvRow[] {
   const lines = content.split("\n").filter(l => l.trim());
   if (lines.length < 2) return [];
 
-  const headers = parseCsvLine(lines[0]);
+  const headers = parseCsvLine(lines[0]).map(h => h.trim());
   const rows: CsvRow[] = [];
 
   for (let i = 1; i < lines.length; i++) {
@@ -239,12 +239,12 @@ async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
 
 async function loadCurriculosFromContent(
   cursoMap: Record<string, string>
-): Promise<{ curriculos: number; disciplinas: number; prereqs: number }> {
+): Promise<{ curriculos: number; disciplinas: number; prereqs: number; equivs: number }> {
   const curriculosDir = path.join(process.cwd(), "content/aquario-curriculos");
 
   if (!fs.existsSync(curriculosDir)) {
     console.log("⚠️  Content aquario-curriculos not found, skipping...");
-    return { curriculos: 0, disciplinas: 0, prereqs: 0 };
+    return { curriculos: 0, disciplinas: 0, prereqs: 0, equivs: 0 };
   }
 
   // Clean existing curriculo data (order matters for FK constraints)
@@ -256,7 +256,7 @@ async function loadCurriculosFromContent(
   const files = fs.readdirSync(curriculosDir).filter(f => f.endsWith(".csv"));
   if (files.length === 0) {
     console.log("⚠️  No CSV files found in aquario-curriculos, skipping...");
-    return { curriculos: 0, disciplinas: 0, prereqs: 0 };
+    return { curriculos: 0, disciplinas: 0, prereqs: 0, equivs: 0 };
   }
 
   // Parse all CSVs and collect all rows
@@ -309,6 +309,7 @@ async function loadCurriculosFromContent(
 
   let curriculoCount = 0;
   let prereqCount = 0;
+  let equivCount = 0;
 
   // Step 3: Create Curriculos + CurriculoDisciplinas
   for (const [key, rows] of curriculoGroups) {
@@ -387,9 +388,55 @@ async function loadCurriculosFromContent(
         prereqCount++;
       }
     }
+
+    // Step 5: Create Equivalencia entries
+    for (const row of rows) {
+      if (!row.equivalences?.trim()) continue;
+
+      const disciplinaId = disciplinaIdByCode.get(row.discipline_code);
+      if (!disciplinaId) continue;
+
+      const equivCodes = row.equivalences
+        .split(";")
+        .map(c => c.trim())
+        .filter(Boolean);
+
+      for (const equivCode of equivCodes) {
+        let equivDisciplinaId = disciplinaIdByCode.get(equivCode);
+        if (!equivDisciplinaId) {
+          const stub = await prisma.disciplina.upsert({
+            where: { codigo: equivCode },
+            update: {},
+            create: { codigo: equivCode, nome: equivCode },
+          });
+          disciplinaIdByCode.set(equivCode, stub.id);
+          equivDisciplinaId = stub.id;
+        }
+
+        await prisma.equivalencia.upsert({
+          where: {
+            disciplinaOrigemId_disciplinaEquivalenteId: {
+              disciplinaOrigemId: disciplinaId,
+              disciplinaEquivalenteId: equivDisciplinaId,
+            },
+          },
+          update: {},
+          create: {
+            disciplinaOrigemId: disciplinaId,
+            disciplinaEquivalenteId: equivDisciplinaId,
+          },
+        });
+        equivCount++;
+      }
+    }
   }
 
-  return { curriculos: curriculoCount, disciplinas: seenDisciplinas.size, prereqs: prereqCount };
+  return {
+    curriculos: curriculoCount,
+    disciplinas: seenDisciplinas.size,
+    prereqs: prereqCount,
+    equivs: equivCount,
+  };
 }
 
 async function main() {
@@ -467,7 +514,7 @@ async function main() {
   const curriculoStats = await loadCurriculosFromContent(cursoMap);
   console.log(
     `✅ Curriculos loaded: ${curriculoStats.curriculos} curriculos, ` +
-      `${curriculoStats.disciplinas} disciplinas, ${curriculoStats.prereqs} prerequisites`
+      `${curriculoStats.disciplinas} disciplinas, ${curriculoStats.prereqs} prerequisites, ${curriculoStats.equivs} equivalences`
   );
 
   // ============================================================================
@@ -574,7 +621,7 @@ async function main() {
 ║  Content Data:                                                 ║
 ║    - Entidades: ${String(entidadeCount).padEnd(3)} (from aquario-entidades)             ║
 ║    - Guias: 3 example guides with sections                     ║
-║    - Curriculos: ${String(curriculoStats.curriculos).padEnd(2)} (${curriculoStats.disciplinas} disciplinas, ${curriculoStats.prereqs} prereqs)   ║
+║    - Curriculos: ${String(curriculoStats.curriculos).padEnd(2)} (${curriculoStats.disciplinas} disc, ${curriculoStats.prereqs} prereqs, ${curriculoStats.equivs} equivs) ║
 ╚════════════════════════════════════════════════════════════════╝
 
 IDs for testing:

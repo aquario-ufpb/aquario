@@ -11,6 +11,7 @@ import type {
 } from "@/lib/server/db/interfaces/guias-repository.interface";
 import type { IMembrosRepository } from "@/lib/server/db/interfaces/membros-repository.interface";
 import type { ICargosRepository } from "@/lib/server/db/interfaces/cargos-repository.interface";
+import type { ICurriculosRepository } from "@/lib/server/db/interfaces/curriculos-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
 import type { IBlobStorage } from "@/lib/server/services/blob/blob-storage.interface";
 
@@ -33,6 +34,7 @@ export type Container = {
   subSecoesGuiaRepository: ISubSecoesGuiaRepository;
   membrosRepository: IMembrosRepository;
   cargosRepository: ICargosRepository;
+  curriculosRepository: ICurriculosRepository;
 
   // Services
   emailService: IEmailService;

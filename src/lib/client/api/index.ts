@@ -9,3 +9,4 @@ export * from "./auth";
 export * from "./usuarios";
 export * from "./entidades";
 export * from "./vagas";
+export * from "./curriculos";

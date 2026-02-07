@@ -104,6 +104,9 @@ function createPrismaContainer(): Container {
   const {
     PrismaCargosRepository,
   } = require("@/lib/server/db/implementations/prisma/prisma-cargos-repository");
+  const {
+    PrismaCurriculosRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-curriculos-repository");
 
   return {
     usuariosRepository: new PrismaUsuariosRepository(),
@@ -117,6 +120,7 @@ function createPrismaContainer(): Container {
     subSecoesGuiaRepository: new PrismaSubSecoesGuiaRepository(),
     membrosRepository: new PrismaMembrosRepository(),
     cargosRepository: new PrismaCargosRepository(),
+    curriculosRepository: new PrismaCurriculosRepository(),
     emailService: getEmailService(),
     blobStorage: getBlobStorage(),
   };

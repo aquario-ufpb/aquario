@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reusable `ConfirmDeleteDialog` component using shadcn AlertDialog
 - Dependency checks (`countDependencies`) on Campus, Centro, and Curso repositories
 - `HAS_DEPENDENCIES` error code for blocked deletions (409 Conflict)
+- "Grades Curriculares" ferramenta: interactive curriculum graph visualization
+  - Course selector dropdown to pick any curso
+  - Visual graph with discipline nodes grouped by period (semester columns)
+  - SVG bezier arrows showing prerequisite chains between disciplines
+  - Color-coded nodes: blue (obrigatória), amber (optativa), green (complementar)
+  - Hover highlights full dependency chain (prerequisites + dependents)
+  - Toggle to show/hide optativas
+  - Detail dialog on click showing ementa, carga horária, equivalências, pré-requisitos
+- `ICurriculosRepository` and `GET /api/curriculos/grade` endpoint for grade data
+- Added Grades Curriculares to ferramentas page and navigation dropdown
 
 ### Changed
 - Delete confirmation in admin Cursos page now uses proper dialog instead of browser `confirm()`

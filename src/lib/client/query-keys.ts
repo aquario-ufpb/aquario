@@ -48,4 +48,7 @@ export const queryKeys = {
     all: ["vagas"] as const,
     byId: (id: string) => ["vagas", id] as const,
   },
+  curriculos: {
+    grade: (cursoId: string) => ["curriculos", "grade", cursoId] as const,
+  },
 } as const;

@@ -154,10 +154,10 @@ function parseCsvLine(line: string): string[] {
 }
 
 function parseCsv(content: string): CsvRow[] {
-  const lines = content.split("\n").filter((l) => l.trim());
+  const lines = content.split("\n").filter(l => l.trim());
   if (lines.length < 2) return [];
 
-  const headers = parseCsvLine(lines[0]);
+  const headers = parseCsvLine(lines[0]).map(h => h.trim());
   const rows: CsvRow[] = [];
 
   for (let i = 1; i < lines.length; i++) {
@@ -184,8 +184,8 @@ function parseIntOrNull(value: string): number | null {
 
 async function confirm(message: string): Promise<boolean> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(`${message} (y/N): `, (answer) => {
+  return new Promise(resolve => {
+    rl.question(`${message} (y/N): `, answer => {
       rl.close();
       resolve(answer.toLowerCase() === "y");
     });
@@ -259,7 +259,7 @@ async function importEntidades(centroId: string): Promise<number> {
     return 0;
   }
 
-  const files = fs.readdirSync(entidadesDir).filter((f) => f.endsWith(".json"));
+  const files = fs.readdirSync(entidadesDir).filter(f => f.endsWith(".json"));
   let count = 0;
 
   for (const file of files) {
@@ -314,13 +314,13 @@ async function importEntidades(centroId: string): Promise<number> {
 
 async function importCurriculos(
   cursoMap: Record<string, string>
-): Promise<{ curriculos: number; disciplinas: number; prereqs: number }> {
+): Promise<{ curriculos: number; disciplinas: number; prereqs: number; equivs: number }> {
   console.log("\n📚 Importing curriculos...");
 
   const curriculosDir = path.join(process.cwd(), "content/aquario-curriculos");
   if (!fs.existsSync(curriculosDir)) {
     console.log("  ⚠️  content/aquario-curriculos not found, skipping");
-    return { curriculos: 0, disciplinas: 0, prereqs: 0 };
+    return { curriculos: 0, disciplinas: 0, prereqs: 0, equivs: 0 };
   }
 
   // Clean existing curriculo data (rebuilds from source CSVs)
@@ -330,10 +330,10 @@ async function importCurriculos(
   await prisma.curriculo.deleteMany();
   console.log("  🗑️  Cleared existing curriculo data");
 
-  const files = fs.readdirSync(curriculosDir).filter((f) => f.endsWith(".csv"));
+  const files = fs.readdirSync(curriculosDir).filter(f => f.endsWith(".csv"));
   if (files.length === 0) {
     console.log("  ⚠️  No CSV files found, skipping");
-    return { curriculos: 0, disciplinas: 0, prereqs: 0 };
+    return { curriculos: 0, disciplinas: 0, prereqs: 0, equivs: 0 };
   }
 
   // Parse all CSVs
@@ -386,6 +386,7 @@ async function importCurriculos(
 
   let curriculoCount = 0;
   let prereqCount = 0;
+  let equivCount = 0;
 
   // Step 3: Create Curriculos + CurriculoDisciplinas + PreRequisitos
   for (const [key, rows] of curriculoGroups) {
@@ -431,7 +432,7 @@ async function importCurriculos(
 
       const prereqCodes = row.prerequisites
         .split(";")
-        .map((c) => c.trim())
+        .map(c => c.trim())
         .filter(Boolean);
 
       for (const prereqCode of prereqCodes) {
@@ -451,12 +452,58 @@ async function importCurriculos(
         prereqCount++;
       }
     }
+
+    // Step 4: Create Equivalencia entries
+    for (const row of rows) {
+      if (!row.equivalences?.trim()) continue;
+
+      const disciplinaId = disciplinaIdByCode.get(row.discipline_code);
+      if (!disciplinaId) continue;
+
+      const equivCodes = row.equivalences
+        .split(";")
+        .map(c => c.trim())
+        .filter(Boolean);
+
+      for (const equivCode of equivCodes) {
+        let equivDisciplinaId = disciplinaIdByCode.get(equivCode);
+        if (!equivDisciplinaId) {
+          const stub = await prisma.disciplina.upsert({
+            where: { codigo: equivCode },
+            update: {},
+            create: { codigo: equivCode, nome: equivCode },
+          });
+          disciplinaIdByCode.set(equivCode, stub.id);
+          equivDisciplinaId = stub.id;
+        }
+
+        await prisma.equivalencia.upsert({
+          where: {
+            disciplinaOrigemId_disciplinaEquivalenteId: {
+              disciplinaOrigemId: disciplinaId,
+              disciplinaEquivalenteId: equivDisciplinaId,
+            },
+          },
+          update: {},
+          create: {
+            disciplinaOrigemId: disciplinaId,
+            disciplinaEquivalenteId: equivDisciplinaId,
+          },
+        });
+        equivCount++;
+      }
+    }
   }
 
   console.log(
-    `  ✅ ${curriculoCount} curriculos, ${seenDisciplinas.size} disciplinas, ${prereqCount} prerequisites`
+    `  ✅ ${curriculoCount} curriculos, ${seenDisciplinas.size} disciplinas, ${prereqCount} prerequisites, ${equivCount} equivalences`
   );
-  return { curriculos: curriculoCount, disciplinas: seenDisciplinas.size, prereqs: prereqCount };
+  return {
+    curriculos: curriculoCount,
+    disciplinas: seenDisciplinas.size,
+    prereqs: prereqCount,
+    equivs: equivCount,
+  };
 }
 
 // ============================================================================
@@ -489,7 +536,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error("❌ Import failed:", e);
     process.exit(1);
   })

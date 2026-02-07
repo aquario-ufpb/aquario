@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Map, BookOpen } from "lucide-react";
+import { Calendar, Map, BookOpen, GitBranch } from "lucide-react";
 
 const ferramentas = [
   {
@@ -21,6 +21,15 @@ const ferramentas = [
     href: "/mapas",
     icon: Map,
     imagePath: "/mapas",
+  },
+  {
+    id: "grades",
+    title: "Grades Curriculares",
+    description:
+      "Visualize a grade curricular do seu curso de forma interativa. Veja disciplinas por período, pré-requisitos e equivalências em um grafo visual.",
+    href: "/grades-curriculares",
+    icon: GitBranch,
+    imagePath: "/grade",
   },
   {
     id: "guias",

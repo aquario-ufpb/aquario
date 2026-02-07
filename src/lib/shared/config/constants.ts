@@ -47,6 +47,9 @@ export const ENDPOINTS = {
   ENTIDADE_MEMBROS: (id: string) => `/entidades/${id}/membros`,
   ENTIDADE_MEMBRO: (id: string, membroId: string) => `/entidades/${id}/membros/${membroId}`,
   ENTIDADE_CARGOS: (id: string) => `/entidades/${id}/cargos`,
+
+  // Curriculos
+  GRADE_CURRICULAR: (cursoId: string) => `/curriculos/grade?cursoId=${cursoId}`,
 } as const;
 
 // External API URLs

@@ -143,8 +143,8 @@ describe("entidadesService", () => {
       const result = await entidadesService.getBySlug("labtech");
 
       expect(result).not.toBeNull();
-      expect(result!.id).toBe("ent-1");
-      expect(result!.membros).toHaveLength(1);
+      expect(result?.id).toBe("ent-1");
+      expect(result?.membros).toHaveLength(1);
     });
 
     it("should return null when not found (404)", async () => {
