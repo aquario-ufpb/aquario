@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.10] - 2025-02-06
+## [1.0.12] - 2025-02-06
+
+### Added
+- Release script. Using it in the release command now.
+
+## [1.0.11] - 2025-02-06
 
 ### Added
 - Default avatars using DiceBear Thumbs API — users without a profile picture now get a unique, deterministic avatar based on their ID
