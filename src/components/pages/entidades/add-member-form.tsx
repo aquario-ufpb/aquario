@@ -192,7 +192,10 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
                       <div className="flex items-center gap-3">
                         <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border/50">
                           <Image
-                            src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id, user.eFacade)}
+                            src={
+                              user.urlFotoPerfil ||
+                              getDefaultAvatarUrl(user.id, user.nome, user.eFacade)
+                            }
                             alt={user.nome}
                             fill
                             className="object-cover"

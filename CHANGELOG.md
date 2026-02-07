@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.15] - 2025-02-06
+
+### Changed
+- DiceBear avatars now use gender-based background colors (purple for female names ending in -a, blue for others)
+- Tuned DiceBear avatar params: scale 70, fixed shape rotation and offset
+
+### Fixed
+- Allowed `api.dicebear.com` hostname and SVG images in Next.js image config
+
+---
+
 ## [1.0.14] - 2025-02-06
 
 ### Fixed

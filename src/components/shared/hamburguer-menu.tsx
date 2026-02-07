@@ -178,7 +178,10 @@ function UserSection({ onClose }: UserSectionProps) {
       <li className="pt-2 border-t border-border/50">
         <div className="flex items-center gap-2 py-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id)} alt={user.nome} />
+            <AvatarImage
+              src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id, user.nome)}
+              alt={user.nome}
+            />
             <AvatarFallback className="text-xs">{getInitials(user.nome)}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">

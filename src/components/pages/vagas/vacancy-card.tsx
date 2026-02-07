@@ -17,7 +17,7 @@ export default function VacancyCard({ vaga }: VacancyCardProps) {
       <div className="flex-shrink-0">
         <Avatar className="h-12 w-12">
           <AvatarImage
-            src={publicador.urlFotoPerfil || getDefaultAvatarUrl(publicador.nome)}
+            src={publicador.urlFotoPerfil || getDefaultAvatarUrl(publicador.nome, publicador.nome)}
             alt={publicador.nome}
           />
           <AvatarFallback>{publicador.nome.charAt(0)}</AvatarFallback>

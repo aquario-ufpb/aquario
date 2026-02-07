@@ -25,7 +25,10 @@ export default function VagaProfileCard({ vaga }: VagaProfileCardProps) {
         <CardTitle className="flex flex-col items-center gap-3">
           <Avatar className="h-16 w-16">
             <AvatarImage
-              src={vaga.publicador.urlFotoPerfil || getDefaultAvatarUrl(vaga.publicador.nome)}
+              src={
+                vaga.publicador.urlFotoPerfil ||
+                getDefaultAvatarUrl(vaga.publicador.nome, vaga.publicador.nome)
+              }
               alt={vaga.publicador.nome}
             />
             <AvatarFallback>{vaga.publicador.nome.charAt(0)}</AvatarFallback>

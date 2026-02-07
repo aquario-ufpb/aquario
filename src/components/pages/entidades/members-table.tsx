@@ -157,7 +157,11 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
                             <Image
                               src={
                                 membro.usuario.urlFotoPerfil ||
-                                getDefaultAvatarUrl(membro.usuario.id, membro.usuario.eFacade)
+                                getDefaultAvatarUrl(
+                                  membro.usuario.id,
+                                  membro.usuario.nome,
+                                  membro.usuario.eFacade
+                                )
                               }
                               alt={membro.usuario.nome}
                               fill

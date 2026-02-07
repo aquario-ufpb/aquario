@@ -231,7 +231,7 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
                         <Image
                           src={
                             merged.usuario.urlFotoPerfil ||
-                            getDefaultAvatarUrl(merged.usuario.id, isFacade)
+                            getDefaultAvatarUrl(merged.usuario.id, merged.usuario.nome, isFacade)
                           }
                           alt={merged.usuario.nome}
                           fill
