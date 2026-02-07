@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,7 +24,7 @@ export default function VagaProfileCard({ vaga }: VagaProfileCardProps) {
       <CardHeader className="flex flex-col items-center pb-0">
         <CardTitle className="flex flex-col items-center gap-3">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={vaga.publicador.urlFotoPerfil || ""} alt={vaga.publicador.nome} />
+            <AvatarImage src={vaga.publicador.urlFotoPerfil || getDefaultAvatarUrl(vaga.publicador.nome)} alt={vaga.publicador.nome} />
             <AvatarFallback>{vaga.publicador.nome.charAt(0)}</AvatarFallback>
           </Avatar>
           <h1>{publicador.nome}</h1>

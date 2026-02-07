@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -154,7 +155,7 @@ const LostAndFoundCard = ({
             </div>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-4">
               <Avatar className="h-6 w-6">
-                <AvatarImage src={autor.urlFotoPerfil || ""} />
+                <AvatarImage src={autor.urlFotoPerfil || getDefaultAvatarUrl(autor.nome)} />
                 <AvatarFallback>{autor.nome[0]}</AvatarFallback>
               </Avatar>
               <span>{autor.nome}</span>

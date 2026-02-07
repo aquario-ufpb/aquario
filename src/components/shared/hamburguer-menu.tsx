@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { User, LogOut, Settings } from "lucide-react";
 
 // ============================================================================
@@ -177,7 +178,7 @@ function UserSection({ onClose }: UserSectionProps) {
       <li className="pt-2 border-t border-border/50">
         <div className="flex items-center gap-2 py-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.urlFotoPerfil || undefined} alt={user.nome} />
+            <AvatarImage src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id)} alt={user.nome} />
             <AvatarFallback className="text-xs">{getInitials(user.nome)}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">

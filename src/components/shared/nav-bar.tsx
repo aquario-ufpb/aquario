@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { Button } from "@/components/ui/button";
 import type { User as UserType } from "@/lib/client/api/usuarios";
 
@@ -152,7 +153,7 @@ function UserDropdownMenu({ user, isDark }: { user: UserType; isDark: boolean })
           className="relative h-8 w-8 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 hover:ring-2 hover:ring-blue-500 dark:hover:ring-blue-400 hover:ring-offset-2 transition-all duration-100"
         >
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.urlFotoPerfil || undefined} alt={user.nome} />
+            <AvatarImage src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id)} alt={user.nome} />
             <AvatarFallback className="text-xs">{getInitials(user.nome)}</AvatarFallback>
           </Avatar>
         </Button>

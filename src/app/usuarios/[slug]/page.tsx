@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -167,7 +168,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
           {/* Avatar */}
           <div className="relative group w-full h-full">
             <Avatar className="w-full h-full">
-              <AvatarImage src={user.urlFotoPerfil || undefined} alt={user.nome} />
+              <AvatarImage src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id, user.eFacade)} alt={user.nome} />
               <AvatarFallback className="text-3xl">{getInitials(user.nome)}</AvatarFallback>
             </Avatar>
 
