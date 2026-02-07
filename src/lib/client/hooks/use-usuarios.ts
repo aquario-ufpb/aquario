@@ -74,7 +74,7 @@ export const useSearchUsers = (query: string, limit?: number) => {
       if (!query.trim()) {
         return { users: [], pagination: { page: 1, limit: limit || 10, total: 0, totalPages: 0 } };
       }
-      return usuariosService.searchUsers(token, query, limit);
+      return await usuariosService.searchUsers(token, query, limit);
     },
     enabled: !!token && !!query.trim(),
     staleTime: 10 * 1000, // 10 seconds for search results

@@ -26,7 +26,10 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
     <Card className="hover:shadow-lg transition-shadow cursor-pointer">
       <CardContent className="flex flex-col items-center text-center p-6">
         <Avatar className="w-24 h-24 mb-4">
-          <AvatarImage src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id, user.eFacade)} alt={user.nome} />
+          <AvatarImage
+            src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id, user.eFacade)}
+            alt={user.nome}
+          />
           <AvatarFallback>{user.nome.charAt(0)}</AvatarFallback>
         </Avatar>
         <h3 className="text-lg font-semibold truncate w-full">{user.nome}</h3>

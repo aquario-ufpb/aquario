@@ -51,7 +51,10 @@ const ProjectCard = ({ projeto }: ProjectCardProps) => {
         {projeto.autor && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-4 pt-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={projeto.autor.urlFotoPerfil || getDefaultAvatarUrl(projeto.autor.id)} alt={projeto.autor.nome} />
+              <AvatarImage
+                src={projeto.autor.urlFotoPerfil || getDefaultAvatarUrl(projeto.autor.id)}
+                alt={projeto.autor.nome}
+              />
               <AvatarFallback>{projeto.autor.nome[0]}</AvatarFallback>
             </Avatar>
             <span>{projeto.autor.nome}</span>

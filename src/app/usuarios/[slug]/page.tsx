@@ -168,7 +168,10 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
           {/* Avatar */}
           <div className="relative group w-full h-full">
             <Avatar className="w-full h-full">
-              <AvatarImage src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id, user.eFacade)} alt={user.nome} />
+              <AvatarImage
+                src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id, user.eFacade)}
+                alt={user.nome}
+              />
               <AvatarFallback className="text-3xl">{getInitials(user.nome)}</AvatarFallback>
             </Avatar>
 

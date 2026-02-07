@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.13] - 2025-02-06
+
+### Fixed
+- Fixed `require-await` lint error in `useSearchUsers` hook that was breaking the build
+
+---
+
 ## [1.0.12] - 2025-02-06
 
 ### Added
