@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.10] - 2025-02-06
+
+### Added
+- Default avatars using DiceBear Thumbs API — users without a profile picture now get a unique, deterministic avatar based on their ID
+- Facade users get a distinct whitish avatar color (`f1f4dc`), normal users get a random color from `0a5b83`, `1c799f`, `69d2e7`
+
+### Changed
+- Merged `constants/entity-types.ts` into `types/vaga.types.ts` — all vaga-related definitions now live in one file
+
+### Removed
+- Deleted `src/lib/shared/constants/` directory (only contained entity types, now in `vaga.types.ts`)
+- Deleted unused `tadea` (lost & found) component
+
+---
+
 ## [1.0.9] - 2025-02-05
 
 ### Added
@@ -148,7 +163,8 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.9...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.10...HEAD
+[1.0.10]: https://github.com/aquario-ufpb/aquario/compare/v1.0.9...v1.0.10
 [1.0.9]: https://github.com/aquario-ufpb/aquario/compare/v1.0.2...v1.0.9
 [1.0.2]: https://github.com/aquario-ufpb/aquario/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/aquario-ufpb/aquario/compare/v1.0.0...v1.0.1
