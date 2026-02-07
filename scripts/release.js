@@ -41,7 +41,7 @@ function checkGitStatus() {
     .split("\n")
     .filter(line => {
       if (!line || line.startsWith("??")) return false;
-      
+
       // Check if it's a modified submodule
       if (line.trim().startsWith("M ")) {
         const file = line.substring(3).trim();
@@ -50,13 +50,15 @@ function checkGitStatus() {
         // If diff is empty, it's just untracked content in the submodule
         if (!submoduleDiff) return false;
       }
-      
+
       return true;
     })
     .join("\n");
-  
+
   if (trackedChanges) {
-    console.error("❌ You have uncommitted changes to tracked files. Please commit or stash them first.");
+    console.error(
+      "❌ You have uncommitted changes to tracked files. Please commit or stash them first."
+    );
     console.log(trackedChanges);
     process.exit(1);
   }
