@@ -1,13 +1,11 @@
 import type { Curso } from "./types";
 
 export type ICursosRepository = {
-  /**
-   * Find a curso by ID
-   */
   findById(id: string): Promise<Curso | null>;
-
-  /**
-   * Find all cursos by centro ID
-   */
   findByCentroId(centroId: string): Promise<Curso[]>;
+  findAll(): Promise<Curso[]>;
+  create(data: { nome: string; centroId: string }): Promise<Curso>;
+  update(id: string, data: { nome: string; centroId: string }): Promise<Curso | null>;
+  delete(id: string): Promise<boolean>;
+  countDependencies(id: string): Promise<{ curriculos: number; guias: number; usuarios: number }>;
 };

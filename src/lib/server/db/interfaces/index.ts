@@ -14,3 +14,4 @@ export type {
 } from "./guias-repository.interface";
 export type { IMembrosRepository } from "./membros-repository.interface";
 export type { ICargosRepository } from "./cargos-repository.interface";
+export type { ICurriculosRepository } from "./curriculos-repository.interface";

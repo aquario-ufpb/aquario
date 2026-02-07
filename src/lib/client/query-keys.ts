@@ -1,4 +1,7 @@
 export const queryKeys = {
+  campus: {
+    all: ["campus"] as const,
+  },
   guias: {
     all: ["guias"] as const,
     secoes: (guiaId: string) => ["guias", "secoes", guiaId] as const,
@@ -44,5 +47,8 @@ export const queryKeys = {
   vagas: {
     all: ["vagas"] as const,
     byId: (id: string) => ["vagas", id] as const,
+  },
+  curriculos: {
+    grade: (cursoId: string) => ["curriculos", "grade", cursoId] as const,
   },
 } as const;

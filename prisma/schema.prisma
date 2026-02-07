@@ -42,6 +42,12 @@ enum StatusGuia {
   RASCUNHO
 }
 
+enum NaturezaDisciplina {
+  OBRIGATORIA
+  OPTATIVA
+  COMPLEMENTAR_FLEXIVA
+}
+
 // ============================================================================
 // CAMPUS & CENTRO & CURSO (Core organizational structure)
 // ============================================================================
@@ -71,9 +77,10 @@ model Curso {
   nome     String @unique
   centroId String
 
-  centro   Centro    @relation(fields: [centroId], references: [id])
-  usuarios Usuario[]
-  guias    Guia[]
+  centro     Centro      @relation(fields: [centroId], references: [id])
+  usuarios   Usuario[]
+  guias      Guia[]
+  curriculos Curriculo[]
 }
 
 // ============================================================================
@@ -248,5 +255,80 @@ model SubSecaoGuia {
   @@index([secaoId])
   @@index([ordem])
   @@index([status])
+}
+
+// ============================================================================
+// CURRICULO & DISCIPLINAS
+// ============================================================================
+
+model Curriculo {
+  id           String   @id @default(uuid())
+  codigo       String
+  ativo        Boolean  @default(false)
+  cursoId      String
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  curso       Curso                @relation(fields: [cursoId], references: [id])
+  disciplinas CurriculoDisciplina[]
+
+  @@unique([cursoId, codigo])
+  @@index([cursoId])
+}
+
+model Disciplina {
+  id                  String  @id @default(uuid())
+  codigo              String  @unique
+  nome                String
+  cargaHorariaTotal   Int?
+  cargaHorariaTeoria  Int?
+  cargaHorariaPratica Int?
+  departamento        String?
+  modalidade          String?
+  ementa              String?
+
+  curriculos           CurriculoDisciplina[]
+  preRequisitoEm       PreRequisitoDisciplina[]
+  equivalenciasOrigem  Equivalencia[] @relation("disciplinaOrigem")
+  equivalenciasDestino Equivalencia[] @relation("disciplinaEquivalente")
+}
+
+model CurriculoDisciplina {
+  id           String              @id @default(uuid())
+  curriculoId  String
+  disciplinaId String
+  natureza     NaturezaDisciplina
+  periodo      Int
+
+  curriculo     Curriculo                @relation(fields: [curriculoId], references: [id], onDelete: Cascade)
+  disciplina    Disciplina               @relation(fields: [disciplinaId], references: [id])
+  preRequisitos PreRequisitoDisciplina[]
+
+  @@unique([curriculoId, disciplinaId])
+  @@index([curriculoId])
+  @@index([disciplinaId])
+}
+
+model PreRequisitoDisciplina {
+  id                    String @id @default(uuid())
+  curriculoDisciplinaId String
+  disciplinaRequeridaId String
+
+  curriculoDisciplina CurriculoDisciplina @relation(fields: [curriculoDisciplinaId], references: [id], onDelete: Cascade)
+  disciplinaRequerida Disciplina          @relation(fields: [disciplinaRequeridaId], references: [id])
+
+  @@unique([curriculoDisciplinaId, disciplinaRequeridaId])
+  @@index([curriculoDisciplinaId])
+}
+
+model Equivalencia {
+  id                      String @id @default(uuid())
+  disciplinaOrigemId      String
+  disciplinaEquivalenteId String
+
+  disciplinaOrigem      Disciplina @relation("disciplinaOrigem", fields: [disciplinaOrigemId], references: [id])
+  disciplinaEquivalente Disciplina @relation("disciplinaEquivalente", fields: [disciplinaEquivalenteId], references: [id])
+
+  @@unique([disciplinaOrigemId, disciplinaEquivalenteId])
 }
 

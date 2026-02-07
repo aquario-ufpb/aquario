@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/client/utils";
-import { LayoutDashboard, Users, Building2 } from "lucide-react";
+import { LayoutDashboard, Users, Building2, GraduationCap } from "lucide-react";
 
 type AdminSidebarProps = {
   currentPath: string;
@@ -24,6 +24,11 @@ const adminNavItems = [
     title: "Entidades",
     href: "/admin/entidades",
     icon: Building2,
+  },
+  {
+    title: "Cursos",
+    href: "/admin/cursos",
+    icon: GraduationCap,
   },
 ];
 

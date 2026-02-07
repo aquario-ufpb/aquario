@@ -92,6 +92,12 @@ function ToolsDropdownContent({ isDark }: { isDark: boolean }) {
       title: "Mapas",
       description: "Localização de salas",
     },
+    {
+      href: "/grades-curriculares",
+      image: isDark ? "/grade/dark.png" : "/grade/light.png",
+      title: "Grades",
+      description: "Grades curriculares",
+    },
   ];
 
   return (
@@ -103,13 +109,15 @@ function ToolsDropdownContent({ isDark }: { isDark: boolean }) {
               href={tool.href}
               className="flex flex-col items-center gap-2 select-none rounded-md p-4 min-w-[180px] no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
             >
-              <Image
-                src={tool.image}
-                alt={tool.title}
-                width={120}
-                height={80}
-                className="object-contain rounded-lg"
-              />
+              {tool.image && (
+                <Image
+                  src={tool.image}
+                  alt={tool.title}
+                  width={120}
+                  height={80}
+                  className="object-contain rounded-lg"
+                />
+              )}
               <div className="text-sm font-medium leading-none text-center">{tool.title}</div>
               <p className="text-xs leading-snug text-muted-foreground text-center">
                 {tool.description}

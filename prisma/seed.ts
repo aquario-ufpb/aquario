@@ -14,6 +14,8 @@ type TipoEntidade =
   | "CENTRO_ACADEMICO"
   | "OUTRO";
 
+type NaturezaDisciplina = "OBRIGATORIA" | "OPTATIVA" | "COMPLEMENTAR_FLEXIVA";
+
 // Map JSON tipos to Prisma enum
 const tipoMapping: Record<string, TipoEntidade> = {
   LABORATORIO: "LABORATORIO",
@@ -28,6 +30,20 @@ const tipoMapping: Record<string, TipoEntidade> = {
   OUTRO: "OUTRO",
 };
 
+const naturezaMapping: Record<string, NaturezaDisciplina> = {
+  Obrigatória: "OBRIGATORIA",
+  Optativa: "OPTATIVA",
+  "Complementar Flexiva": "COMPLEMENTAR_FLEXIVA",
+};
+
+// Map CSV course names to DB curso names
+const courseNameMapping: Record<string, string> = {
+  "CIÊNCIA DA COMPUTAÇÃO": "Ciência da Computação",
+  "ENGENHARIA DA COMPUTAÇÃO": "Engenharia da Computação",
+  "CIÊNCIA DE DADOS E INTELIGÊNCIA ARTIFICIAL": "Ciência de Dados e Inteligência Artificial",
+  "ENGENHARIA DE ROBÔS": "Engenharia de Robôs",
+};
+
 type EntidadeJson = {
   name: string;
   subtitle?: string;
@@ -40,6 +56,23 @@ type EntidadeJson = {
   website?: string;
   location?: string;
   foundingDate?: string;
+};
+
+type CsvRow = {
+  course_name: string;
+  curriculum_code: string;
+  discipline_code: string;
+  discipline_name: string;
+  period: string;
+  type: string;
+  workload_total: string;
+  theory_hours: string;
+  practice_hours: string;
+  department: string;
+  modality: string;
+  prerequisites: string;
+  equivalences: string;
+  syllabus: string;
 };
 
 /**
@@ -82,6 +115,66 @@ function nomeToSlug(nome: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
+}
+
+/**
+ * Parse a CSV line handling quoted fields with commas inside
+ */
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      fields.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  fields.push(current);
+  return fields;
+}
+
+/**
+ * Parse CSV file content into typed rows
+ */
+function parseCsv(content: string): CsvRow[] {
+  const lines = content.split("\n").filter(l => l.trim());
+  if (lines.length < 2) return [];
+
+  const headers = parseCsvLine(lines[0]).map(h => h.trim());
+  const rows: CsvRow[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCsvLine(lines[i]);
+    const row: Record<string, string> = {};
+    for (let j = 0; j < headers.length; j++) {
+      row[headers[j]] = (values[j] || "").trim();
+    }
+    rows.push(row as unknown as CsvRow);
+  }
+
+  return rows;
+}
+
+function parsePeriod(period: string): number {
+  const match = period.match(/^(\d+)/);
+  return match ? parseInt(match[1]) : 0;
+}
+
+function parseIntOrNull(value: string): number | null {
+  const n = parseInt(value);
+  return isNaN(n) ? null : n;
 }
 
 async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
@@ -144,6 +237,208 @@ async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
   return count;
 }
 
+async function loadCurriculosFromContent(
+  cursoMap: Record<string, string>
+): Promise<{ curriculos: number; disciplinas: number; prereqs: number; equivs: number }> {
+  const curriculosDir = path.join(process.cwd(), "content/aquario-curriculos");
+
+  if (!fs.existsSync(curriculosDir)) {
+    console.log("⚠️  Content aquario-curriculos not found, skipping...");
+    return { curriculos: 0, disciplinas: 0, prereqs: 0, equivs: 0 };
+  }
+
+  // Clean existing curriculo data (order matters for FK constraints)
+  await prisma.preRequisitoDisciplina.deleteMany();
+  await prisma.equivalencia.deleteMany();
+  await prisma.curriculoDisciplina.deleteMany();
+  await prisma.curriculo.deleteMany();
+
+  const files = fs.readdirSync(curriculosDir).filter(f => f.endsWith(".csv"));
+  if (files.length === 0) {
+    console.log("⚠️  No CSV files found in aquario-curriculos, skipping...");
+    return { curriculos: 0, disciplinas: 0, prereqs: 0, equivs: 0 };
+  }
+
+  // Parse all CSVs and collect all rows
+  const allRows: CsvRow[] = [];
+  for (const file of files) {
+    const content = fs.readFileSync(path.join(curriculosDir, file), "utf-8");
+    allRows.push(...parseCsv(content));
+  }
+
+  // Step 1: Upsert all unique Disciplinas
+  const seenDisciplinas = new Set<string>();
+  const disciplinaIdByCode = new Map<string, string>();
+
+  for (const row of allRows) {
+    if (seenDisciplinas.has(row.discipline_code)) continue;
+    seenDisciplinas.add(row.discipline_code);
+
+    const disciplina = await prisma.disciplina.upsert({
+      where: { codigo: row.discipline_code },
+      update: {
+        nome: row.discipline_name,
+        cargaHorariaTotal: parseIntOrNull(row.workload_total),
+        cargaHorariaTeoria: parseIntOrNull(row.theory_hours),
+        cargaHorariaPratica: parseIntOrNull(row.practice_hours),
+        departamento: row.department || null,
+        modalidade: row.modality || null,
+        ementa: row.syllabus || null,
+      },
+      create: {
+        codigo: row.discipline_code,
+        nome: row.discipline_name,
+        cargaHorariaTotal: parseIntOrNull(row.workload_total),
+        cargaHorariaTeoria: parseIntOrNull(row.theory_hours),
+        cargaHorariaPratica: parseIntOrNull(row.practice_hours),
+        departamento: row.department || null,
+        modalidade: row.modality || null,
+        ementa: row.syllabus || null,
+      },
+    });
+    disciplinaIdByCode.set(row.discipline_code, disciplina.id);
+  }
+
+  // Step 2: Group rows by curriculo (course + code)
+  const curriculoGroups = new Map<string, CsvRow[]>();
+  for (const row of allRows) {
+    const key = `${row.course_name}|${row.curriculum_code}`;
+    if (!curriculoGroups.has(key)) curriculoGroups.set(key, []);
+    curriculoGroups.get(key)!.push(row);
+  }
+
+  let curriculoCount = 0;
+  let prereqCount = 0;
+  let equivCount = 0;
+
+  // Step 3: Create Curriculos + CurriculoDisciplinas
+  for (const [key, rows] of curriculoGroups) {
+    const [courseName, curriculumCode] = key.split("|");
+    const dbCourseName = courseNameMapping[courseName];
+    if (!dbCourseName) {
+      console.log(`  ⚠️  Unknown course: ${courseName}, skipping...`);
+      continue;
+    }
+    const cursoId = cursoMap[dbCourseName];
+    if (!cursoId) {
+      console.log(`  ⚠️  Curso not found in DB: ${dbCourseName}, skipping...`);
+      continue;
+    }
+
+    const curriculo = await prisma.curriculo.create({
+      data: {
+        codigo: curriculumCode,
+        ativo: true, // Each CSV represents the current/active curriculo
+        cursoId,
+      },
+    });
+    curriculoCount++;
+
+    // Create CurriculoDisciplina entries
+    const cdIdByDisciplinaCode = new Map<string, string>();
+
+    for (const row of rows) {
+      const disciplinaId = disciplinaIdByCode.get(row.discipline_code);
+      if (!disciplinaId) continue;
+
+      const natureza = naturezaMapping[row.type] || "OPTATIVA";
+
+      const cd = await prisma.curriculoDisciplina.create({
+        data: {
+          curriculoId: curriculo.id,
+          disciplinaId,
+          natureza,
+          periodo: parsePeriod(row.period),
+        },
+      });
+      cdIdByDisciplinaCode.set(row.discipline_code, cd.id);
+    }
+
+    // Step 4: Create PreRequisitoDisciplina entries
+    for (const row of rows) {
+      if (!row.prerequisites?.trim()) continue;
+
+      const cdId = cdIdByDisciplinaCode.get(row.discipline_code);
+      if (!cdId) continue;
+
+      const prereqCodes = row.prerequisites
+        .split(";")
+        .map(c => c.trim())
+        .filter(Boolean);
+
+      for (const prereqCode of prereqCodes) {
+        const prereqDisciplinaId = disciplinaIdByCode.get(prereqCode);
+        if (!prereqDisciplinaId) {
+          // Prerequisite discipline not in our data — create a stub
+          const stub = await prisma.disciplina.upsert({
+            where: { codigo: prereqCode },
+            update: {},
+            create: { codigo: prereqCode, nome: prereqCode },
+          });
+          disciplinaIdByCode.set(prereqCode, stub.id);
+
+          await prisma.preRequisitoDisciplina.create({
+            data: { curriculoDisciplinaId: cdId, disciplinaRequeridaId: stub.id },
+          });
+        } else {
+          await prisma.preRequisitoDisciplina.create({
+            data: { curriculoDisciplinaId: cdId, disciplinaRequeridaId: prereqDisciplinaId },
+          });
+        }
+        prereqCount++;
+      }
+    }
+
+    // Step 5: Create Equivalencia entries
+    for (const row of rows) {
+      if (!row.equivalences?.trim()) continue;
+
+      const disciplinaId = disciplinaIdByCode.get(row.discipline_code);
+      if (!disciplinaId) continue;
+
+      const equivCodes = row.equivalences
+        .split(";")
+        .map(c => c.trim())
+        .filter(Boolean);
+
+      for (const equivCode of equivCodes) {
+        let equivDisciplinaId = disciplinaIdByCode.get(equivCode);
+        if (!equivDisciplinaId) {
+          const stub = await prisma.disciplina.upsert({
+            where: { codigo: equivCode },
+            update: {},
+            create: { codigo: equivCode, nome: equivCode },
+          });
+          disciplinaIdByCode.set(equivCode, stub.id);
+          equivDisciplinaId = stub.id;
+        }
+
+        await prisma.equivalencia.upsert({
+          where: {
+            disciplinaOrigemId_disciplinaEquivalenteId: {
+              disciplinaOrigemId: disciplinaId,
+              disciplinaEquivalenteId: equivDisciplinaId,
+            },
+          },
+          update: {},
+          create: {
+            disciplinaOrigemId: disciplinaId,
+            disciplinaEquivalenteId: equivDisciplinaId,
+          },
+        });
+        equivCount++;
+      }
+    }
+  }
+
+  return {
+    curriculos: curriculoCount,
+    disciplinas: seenDisciplinas.size,
+    prereqs: prereqCount,
+    equivs: equivCount,
+  };
+}
+
 async function main() {
   console.log("🌱 Starting database seed...\n");
 
@@ -190,19 +485,20 @@ async function main() {
     create: { nome: "Ciência de Dados e Inteligência Artificial", centroId: ci.id },
   });
 
-  const si = await prisma.curso.upsert({
-    where: { nome: "Sistemas de Informação" },
+  const er = await prisma.curso.upsert({
+    where: { nome: "Engenharia de Robôs" },
     update: {},
-    create: { nome: "Sistemas de Informação", centroId: ci.id },
+    create: { nome: "Engenharia de Robôs", centroId: ci.id },
   });
 
-  const mat = await prisma.curso.upsert({
-    where: { nome: "Matemática Computacional" },
-    update: {},
-    create: { nome: "Matemática Computacional", centroId: ci.id },
-  });
+  console.log("✅ Cursos created (CC, EC, CDIA, ER)");
 
-  console.log("✅ Cursos created (CC, EC, CDIA, SI, Mat. Computacional)");
+  const cursoMap: Record<string, string> = {
+    "Ciência da Computação": cc.id,
+    "Engenharia da Computação": ec.id,
+    "Ciência de Dados e Inteligência Artificial": cdia.id,
+    "Engenharia de Robôs": er.id,
+  };
 
   // ============================================================================
   // ENTIDADES (from aquario-entidades submodule)
@@ -210,6 +506,16 @@ async function main() {
 
   const entidadeCount = await loadEntidadesFromSubmodule(ci.id);
   console.log(`✅ Entidades loaded from submodule: ${entidadeCount}`);
+
+  // ============================================================================
+  // CURRICULOS & DISCIPLINAS (from aquario-curriculos content)
+  // ============================================================================
+
+  const curriculoStats = await loadCurriculosFromContent(cursoMap);
+  console.log(
+    `✅ Curriculos loaded: ${curriculoStats.curriculos} curriculos, ` +
+      `${curriculoStats.disciplinas} disciplinas, ${curriculoStats.prereqs} prerequisites, ${curriculoStats.equivs} equivalences`
+  );
 
   // ============================================================================
   // EXAMPLE GUIAS
@@ -310,11 +616,12 @@ async function main() {
 ║  Reference Data:                                               ║
 ║    - Campus: ${campusI.id.slice(0, 8)}...                                ║
 ║    - Centro (CI): ${ci.id.slice(0, 8)}...                            ║
-║    - Cursos: CC, EC, CDIA, SI, Mat. Comp.                      ║
+║    - Cursos: CC, EC, CDIA, ER                                  ║
 ║                                                                ║
 ║  Content Data:                                                 ║
 ║    - Entidades: ${String(entidadeCount).padEnd(3)} (from aquario-entidades)             ║
 ║    - Guias: 3 example guides with sections                     ║
+║    - Curriculos: ${String(curriculoStats.curriculos).padEnd(2)} (${curriculoStats.disciplinas} disc, ${curriculoStats.prereqs} prereqs, ${curriculoStats.equivs} equivs) ║
 ╚════════════════════════════════════════════════════════════════╝
 
 IDs for testing:
@@ -322,8 +629,7 @@ IDs for testing:
   cursoCC:   ${cc.id}
   cursoEC:   ${ec.id}
   cursoCDIA: ${cdia.id}
-  cursoSI:   ${si.id}
-  cursoMat:  ${mat.id}
+  cursoER:   ${er.id}
 `);
 }
 

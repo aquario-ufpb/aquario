@@ -6,6 +6,7 @@ export * from "./entidade.types";
 export * from "./membro.types";
 export * from "./paas.types";
 export * from "./vaga.types";
+export * from "./curriculo.types";
 
 // Re-export database types for server-side code that needs both
 // These are Prisma-generated types - use with caution on client-side
