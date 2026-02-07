@@ -1,6 +1,6 @@
 import { Vaga, TipoVaga, EntidadeVaga } from "@/lib/shared/types";
 import { VagasDataProvider } from "./vagas-provider.interface";
-import { isValidEntidadeVagaType } from "@/lib/shared/constants/entity-types";
+import { isValidEntidadeVagaType } from "@/lib/shared/types/vaga.types";
 
 type VagaJson = {
   id: string;

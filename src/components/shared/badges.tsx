@@ -4,7 +4,7 @@ import {
   EntidadeVagaType,
   ENTIDADE_VAGA_LABELS,
   ENTIDADE_VAGA_SHORT_LABELS,
-} from "@/lib/shared/constants/entity-types";
+} from "@/lib/shared/types/vaga.types";
 
 type BadgeProps = {
   type: EntidadeVagaType;
