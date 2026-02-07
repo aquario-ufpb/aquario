@@ -27,6 +27,7 @@
     "db:seed": "dotenv -e .env -- tsx prisma/seed.ts",
     "db:studio": "dotenv -e .env -- prisma studio",
     "db:reset": "dotenv -e .env -- prisma migrate reset",
+    "db:import-prod": "dotenv -e .env -- tsx scripts/import-production.ts",
     "release:patch": "npm version patch -m 'chore(release): %s'",
     "release:minor": "npm version minor -m 'chore(release): %s'",
     "release:major": "npm version major -m 'chore(release): %s'",
