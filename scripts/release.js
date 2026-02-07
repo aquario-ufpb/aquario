@@ -34,33 +34,37 @@ function checkGitStatus() {
 
   // Check if there are uncommitted changes (ignore untracked files and submodule untracked content)
   const status = exec("git status --porcelain", { silent: true });
-  // Filter out:
-  // - Untracked files (lines starting with ??)
-  // - Submodules with only untracked content (check with git diff)
-  const trackedChanges = status
-    .split("\n")
-    .filter(line => {
-      if (!line || line.startsWith("??")) return false;
+  if (!status) {
+    console.log("✅ No uncommitted changes\n");
+  } else {
+    // Filter out:
+    // - Untracked files (lines starting with ??)
+    // - Submodules with only untracked content (check with git diff)
+    const trackedChanges = status
+      .split("\n")
+      .filter(line => {
+        if (!line || line.startsWith("??")) return false;
 
-      // Check if it's a modified submodule
-      if (line.trim().startsWith("M ")) {
-        const file = line.substring(3).trim();
-        // Check if submodule has actual commits (not just untracked content)
-        const submoduleDiff = exec(`git diff ${file}`, { silent: true, ignoreError: true });
-        // If diff is empty, it's just untracked content in the submodule
-        if (!submoduleDiff) return false;
-      }
+        // Check if it's a modified submodule
+        if (line.trim().startsWith("M ")) {
+          const file = line.substring(3).trim();
+          // Check if submodule has actual commits (not just untracked content)
+          const submoduleDiff = exec(`git diff ${file}`, { silent: true, ignoreError: true });
+          // If diff is empty or null, it's just untracked content in the submodule
+          if (!submoduleDiff) return false;
+        }
 
-      return true;
-    })
-    .join("\n");
+        return true;
+      })
+      .join("\n");
 
-  if (trackedChanges) {
-    console.error(
-      "❌ You have uncommitted changes to tracked files. Please commit or stash them first."
-    );
-    console.log(trackedChanges);
-    process.exit(1);
+    if (trackedChanges) {
+      console.error(
+        "❌ You have uncommitted changes to tracked files. Please commit or stash them first."
+      );
+      console.log(trackedChanges);
+      process.exit(1);
+    }
   }
 
   // Fetch latest from remote
@@ -68,8 +72,8 @@ function checkGitStatus() {
   exec("git fetch");
 
   // Check if branch is behind remote
-  const behind = exec("git rev-list HEAD..@{u} --count", { silent: true, ignoreError: true });
-  if (behind && parseInt(behind, 10) > 0) {
+  const behind = exec("git rev-list HEAD..@{u} --count 2>/dev/null", { silent: true, ignoreError: true });
+  if (behind && behind !== "0" && parseInt(behind, 10) > 0) {
     console.error("❌ Your branch is behind the remote. Please pull or rebase first.");
     console.log(`   Your branch is ${behind} commit(s) behind origin/main`);
     console.log("\n   Run: git pull --rebase origin main");
@@ -77,8 +81,8 @@ function checkGitStatus() {
   }
 
   // Check if branch is ahead of remote
-  const ahead = exec("git rev-list @{u}..HEAD --count", { silent: true, ignoreError: true });
-  if (ahead && parseInt(ahead, 10) > 0) {
+  const ahead = exec("git rev-list @{u}..HEAD --count 2>/dev/null", { silent: true, ignoreError: true });
+  if (ahead && ahead !== "0" && parseInt(ahead, 10) > 0) {
     console.warn(`⚠️  Your branch is ${ahead} commit(s) ahead of origin/main`);
   }
 
