@@ -4,20 +4,44 @@ import type { Centro } from "@/lib/server/db/interfaces/types";
 
 export class PrismaCentrosRepository implements ICentrosRepository {
   async findById(id: string): Promise<Centro | null> {
-    const centro = await prisma.centro.findUnique({
-      where: { id },
-    });
-
-    return centro;
+    return await prisma.centro.findUnique({ where: { id } });
   }
 
   async findMany(): Promise<Centro[]> {
-    const centros = await prisma.centro.findMany({
-      orderBy: {
-        sigla: "asc",
-      },
-    });
+    return await prisma.centro.findMany({ orderBy: { sigla: "asc" } });
+  }
 
-    return centros;
+  async create(data: {
+    nome: string;
+    sigla: string;
+    descricao: string | null;
+    campusId: string;
+  }): Promise<Centro> {
+    return await prisma.centro.create({ data });
+  }
+
+  async update(
+    id: string,
+    data: { nome: string; sigla: string; descricao: string | null; campusId?: string }
+  ): Promise<Centro | null> {
+    try {
+      return await prisma.centro.update({ where: { id }, data });
+    } catch {
+      return null;
+    }
+  }
+
+  async delete(id: string): Promise<boolean> {
+    try {
+      await prisma.centro.delete({ where: { id } });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async countDependencies(id: string): Promise<{ cursos: number }> {
+    const cursos = await prisma.curso.count({ where: { centroId: id } });
+    return { cursos };
   }
 }

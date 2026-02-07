@@ -1,4 +1,7 @@
 export const queryKeys = {
+  campus: {
+    all: ["campus"] as const,
+  },
   guias: {
     all: ["guias"] as const,
     secoes: (guiaId: string) => ["guias", "secoes", guiaId] as const,

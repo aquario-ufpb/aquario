@@ -12,8 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `NaturezaDisciplina` enum (Obrigatória, Optativa, Complementar Flexiva)
 - Each Curso can have multiple curriculos with one active at a time
 - Seed imports curriculo data from `content/aquario-curriculos/` CSVs (4 courses, 247 disciplinas, 295 prerequisites)
+- Admin "Cursos" page with CRUD management for Campus, Centros, and Cursos
+- Backend CRUD API routes for Campus (`/api/campus`), Centros (`/api/centros`), and Cursos (`/api/cursos`)
+- `ICampusRepository` interface and Prisma implementation
+- Extended `ICentrosRepository` and `ICursosRepository` with create/update/delete methods
+- Reusable `ConfirmDeleteDialog` component using shadcn AlertDialog
+- Dependency checks (`countDependencies`) on Campus, Centro, and Curso repositories
+- `HAS_DEPENDENCIES` error code for blocked deletions (409 Conflict)
 
 ### Changed
+- Delete confirmation in admin Cursos page now uses proper dialog instead of browser `confirm()`
+- DELETE API routes for Campus/Centro/Curso now check for related data and return 409 with descriptive message instead of silently failing
 - Replaced Sistemas de Informação and Matemática Computacional courses with Engenharia de Robôs in seed
 
 ---

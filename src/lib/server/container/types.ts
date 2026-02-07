@@ -1,4 +1,5 @@
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
+import type { ICampusRepository } from "@/lib/server/db/interfaces/campus-repository.interface";
 import type { ICentrosRepository } from "@/lib/server/db/interfaces/centros-repository.interface";
 import type { ICursosRepository } from "@/lib/server/db/interfaces/cursos-repository.interface";
 import type { ITokenVerificacaoRepository } from "@/lib/server/db/interfaces/token-verificacao-repository.interface";
@@ -22,6 +23,7 @@ import type { IBlobStorage } from "@/lib/server/services/blob/blob-storage.inter
 export type Container = {
   // Repositories
   usuariosRepository: IUsuariosRepository;
+  campusRepository: ICampusRepository;
   centrosRepository: ICentrosRepository;
   cursosRepository: ICursosRepository;
   tokenVerificacaoRepository: ITokenVerificacaoRepository;

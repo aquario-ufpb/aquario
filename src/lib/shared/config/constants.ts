@@ -33,6 +33,13 @@ export const ENDPOINTS = {
   USUARIO_MEMBROS_ME: "/usuarios/me/membros",
   MERGE_FACADE_USER: "/usuarios/merge-facade",
 
+  // Admin CRUD
+  CAMPUS: "/campus",
+  CAMPUS_BY_ID: (id: string) => `/campus/${id}`,
+  CENTRO_BY_ID: (id: string) => `/centros/${id}`,
+  CURSOS_ALL: "/cursos",
+  CURSO_BY_ID: (id: string) => `/cursos/${id}`,
+
   // Entidades
   ENTIDADES: "/entidades",
   ENTIDADE_BY_SLUG: (slug: string) => `/entidades/slug/${slug}`,

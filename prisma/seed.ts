@@ -31,8 +31,8 @@ const tipoMapping: Record<string, TipoEntidade> = {
 };
 
 const naturezaMapping: Record<string, NaturezaDisciplina> = {
-  "Obrigatória": "OBRIGATORIA",
-  "Optativa": "OPTATIVA",
+  Obrigatória: "OBRIGATORIA",
+  Optativa: "OPTATIVA",
   "Complementar Flexiva": "COMPLEMENTAR_FLEXIVA",
 };
 
@@ -238,7 +238,7 @@ async function loadEntidadesFromSubmodule(centroId: string): Promise<number> {
 }
 
 async function loadCurriculosFromContent(
-  cursoMap: Record<string, string>,
+  cursoMap: Record<string, string>
 ): Promise<{ curriculos: number; disciplinas: number; prereqs: number }> {
   const curriculosDir = path.join(process.cwd(), "content/aquario-curriculos");
 
@@ -467,7 +467,7 @@ async function main() {
   const curriculoStats = await loadCurriculosFromContent(cursoMap);
   console.log(
     `✅ Curriculos loaded: ${curriculoStats.curriculos} curriculos, ` +
-    `${curriculoStats.disciplinas} disciplinas, ${curriculoStats.prereqs} prerequisites`,
+      `${curriculoStats.disciplinas} disciplinas, ${curriculoStats.prereqs} prerequisites`
   );
 
   // ============================================================================

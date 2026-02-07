@@ -2,6 +2,7 @@
 export * from "./guias";
 export * from "./cursos";
 export * from "./centros";
+export * from "./campus";
 export * from "./paas";
 export * from "./mapas";
 export * from "./auth";
