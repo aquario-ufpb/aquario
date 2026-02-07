@@ -12,6 +12,7 @@ import { type Membro, isUserAdminOfEntidade } from "@/lib/shared/types/membro.ty
 import { ManageMembershipsDialog } from "./manage-memberships-dialog";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import Image from "next/image";
+import { getDefaultAvatarUrl } from "@/lib/client/utils";
 
 type EntidadeMembersSectionProps = {
   entidade: Entidade;
@@ -227,20 +228,15 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
                     {/* Avatar */}
                     <div className="relative">
                       <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-border/30 group-hover:border-border/60 transition-colors">
-                        {merged.usuario.urlFotoPerfil ? (
-                          <Image
-                            src={merged.usuario.urlFotoPerfil}
-                            alt={merged.usuario.nome}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-muted flex items-center justify-center">
-                            <span className="text-xl font-semibold">
-                              {merged.usuario.nome.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
+                        <Image
+                          src={
+                            merged.usuario.urlFotoPerfil ||
+                            getDefaultAvatarUrl(merged.usuario.id, isFacade)
+                          }
+                          alt={merged.usuario.nome}
+                          fill
+                          className="object-cover"
+                        />
                       </div>
                     </div>
 

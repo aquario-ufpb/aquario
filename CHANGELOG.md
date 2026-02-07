@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.14] - 2025-02-06
+
+### Fixed
+- Applied DiceBear default avatars to all remaining user avatar spots (entity members section, add member form, members table)
+
+---
+
 ## [1.0.13] - 2025-02-06
 
 ### Fixed

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
+import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -190,20 +191,12 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
                     <CardContent className="p-3">
                       <div className="flex items-center gap-3">
                         <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border/50">
-                          {user.urlFotoPerfil ? (
-                            <Image
-                              src={user.urlFotoPerfil}
-                              alt={user.nome}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-muted flex items-center justify-center">
-                              <span className="text-sm font-semibold">
-                                {user.nome.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
+                          <Image
+                            src={user.urlFotoPerfil || getDefaultAvatarUrl(user.id, user.eFacade)}
+                            alt={user.nome}
+                            fill
+                            className="object-cover"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">

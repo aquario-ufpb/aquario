@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import type { Membro, Cargo } from "@/lib/shared/types/membro.types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUpdateEntidadeMember, useDeleteEntidadeMember } from "@/lib/client/hooks/use-entidades";
@@ -153,20 +154,15 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <div className="relative w-8 h-8 rounded-full overflow-hidden border border-border/50">
-                            {membro.usuario.urlFotoPerfil ? (
-                              <Image
-                                src={membro.usuario.urlFotoPerfil}
-                                alt={membro.usuario.nome}
-                                fill
-                                className="object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-muted flex items-center justify-center">
-                                <span className="text-xs font-semibold">
-                                  {membro.usuario.nome.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                            )}
+                            <Image
+                              src={
+                                membro.usuario.urlFotoPerfil ||
+                                getDefaultAvatarUrl(membro.usuario.id, membro.usuario.eFacade)
+                              }
+                              alt={membro.usuario.nome}
+                              fill
+                              className="object-cover"
+                            />
                           </div>
                           <div>
                             <p className="text-sm font-medium">{membro.usuario.nome}</p>
