@@ -1,7 +1,8 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getDefaultAvatarUrl } from "@/lib/client/utils";
 
 export type Autor = {
   id: string;
@@ -50,6 +51,7 @@ const ProjectCard = ({ projeto }: ProjectCardProps) => {
         {projeto.autor && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-4 pt-2">
             <Avatar className="h-6 w-6">
+              <AvatarImage src={projeto.autor.urlFotoPerfil || getDefaultAvatarUrl(projeto.autor.id)} alt={projeto.autor.nome} />
               <AvatarFallback>{projeto.autor.nome[0]}</AvatarFallback>
             </Avatar>
             <span>{projeto.autor.nome}</span>
