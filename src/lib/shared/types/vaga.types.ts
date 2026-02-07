@@ -2,8 +2,6 @@
  * Vaga (Job/Opportunity) type definitions
  */
 
-import { EntidadeVagaType } from "@/lib/shared/constants/entity-types";
-
 /**
  * Types of opportunities available
  */
@@ -21,7 +19,49 @@ export type TipoVaga = (typeof TipoVaga)[keyof typeof TipoVaga];
 /**
  * Categories of entities that can post opportunities
  */
+export const ENTIDADE_VAGA_TYPES = [
+  "laboratorios",
+  "grupos",
+  "ufpb",
+  "pessoa",
+  "externo",
+  "ligas",
+] as const;
+
+export type EntidadeVagaType = (typeof ENTIDADE_VAGA_TYPES)[number];
+
 export type EntidadeVaga = EntidadeVagaType;
+
+/**
+ * Display labels for entity vaga types (Portuguese)
+ */
+export const ENTIDADE_VAGA_LABELS: Record<EntidadeVagaType, string> = {
+  laboratorios: "Laboratório",
+  grupos: "Grupo",
+  ufpb: "UFPB",
+  pessoa: "Pessoa",
+  externo: "Externo",
+  ligas: "Liga",
+};
+
+/**
+ * Short labels for entity vaga types (for badges)
+ */
+export const ENTIDADE_VAGA_SHORT_LABELS: Record<EntidadeVagaType, string> = {
+  laboratorios: "LAB",
+  grupos: "GRP",
+  ufpb: "UFPB",
+  pessoa: "PES",
+  externo: "EXT",
+  ligas: "LIGA",
+};
+
+/**
+ * Helper to check if a string is a valid EntidadeVagaType
+ */
+export function isValidEntidadeVagaType(value: string): value is EntidadeVagaType {
+  return ENTIDADE_VAGA_TYPES.includes(value as EntidadeVagaType);
+}
 
 /**
  * Publisher information for an opportunity
