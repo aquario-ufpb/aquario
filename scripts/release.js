@@ -32,11 +32,32 @@ function exec(command, options = {}) {
 function checkGitStatus() {
   console.log("🔍 Checking git status...");
 
-  // Check if there are uncommitted changes
+  // Check if there are uncommitted changes (ignore untracked files and submodule untracked content)
   const status = exec("git status --porcelain", { silent: true });
-  if (status) {
-    console.error("❌ You have uncommitted changes. Please commit or stash them first.");
-    console.log(status);
+  // Filter out:
+  // - Untracked files (lines starting with ??)
+  // - Submodules with only untracked content (check with git diff)
+  const trackedChanges = status
+    .split("\n")
+    .filter(line => {
+      if (!line || line.startsWith("??")) return false;
+      
+      // Check if it's a modified submodule
+      if (line.trim().startsWith("M ")) {
+        const file = line.substring(3).trim();
+        // Check if submodule has actual commits (not just untracked content)
+        const submoduleDiff = exec(`git diff ${file}`, { silent: true, ignoreError: true });
+        // If diff is empty, it's just untracked content in the submodule
+        if (!submoduleDiff) return false;
+      }
+      
+      return true;
+    })
+    .join("\n");
+  
+  if (trackedChanges) {
+    console.error("❌ You have uncommitted changes to tracked files. Please commit or stash them first.");
+    console.log(trackedChanges);
     process.exit(1);
   }
 
