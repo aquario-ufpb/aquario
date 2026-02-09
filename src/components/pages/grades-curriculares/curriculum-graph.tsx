@@ -57,6 +57,11 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
       codeToDisc.set(d.codigo, d);
     }
 
+    // If activeCode is not in visible disciplines, return null
+    if (!codeToDisc.has(activeCode)) {
+      return null;
+    }
+
     const codes = new Set<string>();
     codes.add(activeCode);
 
@@ -117,6 +122,13 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
     return () => window.removeEventListener("resize", handler);
   }, [measureNodes]);
 
+  // Clear clickedCode when it's no longer visible
+  useLayoutEffect(() => {
+    if (clickedCode && !visibleDisciplinas.some(d => d.codigo === clickedCode)) {
+      setClickedCode(null);
+    }
+  }, [clickedCode, visibleDisciplinas]);
+
   const setNodeRef = useCallback((code: string, el: HTMLButtonElement | null) => {
     if (el) {
       nodeRefsMap.current.set(code, el);
@@ -126,7 +138,8 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
   }, []);
 
   const handleNodeClick = useCallback(
-    (disc: GradeDisciplinaNode) => {
+    (disc: GradeDisciplinaNode, e: React.MouseEvent) => {
+      e.stopPropagation();
       if (clickedCode === disc.codigo) {
         setSelectedDisc(disc);
         setDialogOpen(true);
@@ -136,6 +149,10 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
     },
     [clickedCode]
   );
+
+  const handleContainerClick = useCallback(() => {
+    setClickedCode(null);
+  }, []);
 
   const hasOptativas = disciplinas.some(d => d.natureza !== "OBRIGATORIA");
 
@@ -188,7 +205,11 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
         style={{ maxHeight: "70vh" }}
         onScroll={measureNodes}
       >
-        <div ref={containerRef} className="relative flex gap-6 min-w-max p-2">
+        <div
+          ref={containerRef}
+          className="relative flex gap-6 min-w-max p-2"
+          onClick={handleContainerClick}
+        >
           {/* SVG edge overlay */}
           <GraphEdges
             disciplines={visibleDisciplinas}
@@ -214,7 +235,7 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
                   isHighlighted={highlightedCodes !== null && highlightedCodes.has(disc.codigo)}
                   isFaded={highlightedCodes !== null && !highlightedCodes.has(disc.codigo)}
                   isClicked={clickedCode === disc.codigo}
-                  onClick={() => handleNodeClick(disc)}
+                  onClick={e => handleNodeClick(disc, e)}
                   onMouseEnter={() => setHoveredCode(disc.codigo)}
                   onMouseLeave={() => setHoveredCode(null)}
                 />

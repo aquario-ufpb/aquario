@@ -28,7 +28,7 @@ type DisciplineNodeProps = {
   isHighlighted: boolean;
   isFaded: boolean;
   isClicked: boolean;
-  onClick: () => void;
+  onClick?: (e: React.MouseEvent<HTMLElement>) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 };
