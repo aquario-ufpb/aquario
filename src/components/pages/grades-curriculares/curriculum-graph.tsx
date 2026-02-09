@@ -7,14 +7,37 @@ import { GraphEdges } from "./graph-edges";
 import { DisciplineDetailDialog } from "./discipline-detail-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Save, CheckCircle2, ListChecks, Lock, LockOpen, Check, X } from "lucide-react";
 
 type CurriculumGraphProps = {
   disciplinas: GradeDisciplinaNode[];
   cursoNome: string;
   curriculoCodigo: string;
+  completedDisciplinaIds?: Set<string>;
+  selectionMode?: boolean;
+  onSelectionModeChange?: (enabled: boolean) => void;
+  onToggleDisciplina?: (disciplinaId: string) => void;
+  onSave?: () => void;
+  isSaving?: boolean;
+  hasUnsavedChanges?: boolean;
+  isLoggedIn?: boolean;
 };
 
-export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: CurriculumGraphProps) {
+export function CurriculumGraph({
+  disciplinas,
+  cursoNome,
+  curriculoCodigo,
+  completedDisciplinaIds,
+  selectionMode,
+  onSelectionModeChange,
+  onToggleDisciplina,
+  onSave,
+  isSaving,
+  hasUnsavedChanges,
+  isLoggedIn,
+}: CurriculumGraphProps) {
   const [showOptativas, setShowOptativas] = useState(true);
   const [hoveredCode, setHoveredCode] = useState<string | null>(null);
   const [selectedDisc, setSelectedDisc] = useState<GradeDisciplinaNode | null>(null);
@@ -128,6 +151,61 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
     setDialogOpen(true);
   }, []);
 
+  // Compute unlocked & locked disciplines
+  const { unlockedCodes, lockedCodes } = useMemo(() => {
+    if (!completedDisciplinaIds || !selectionMode) {
+      return { unlockedCodes: new Set<string>(), lockedCodes: new Set<string>() };
+    }
+    const completedCodes = new Set<string>();
+    for (const d of disciplinas) {
+      if (completedDisciplinaIds.has(d.disciplinaId)) {
+        completedCodes.add(d.codigo);
+      }
+    }
+    const unlocked = new Set<string>();
+    const locked = new Set<string>();
+    for (const d of disciplinas) {
+      if (completedDisciplinaIds.has(d.disciplinaId)) {
+        continue;
+      }
+      if (d.preRequisitos.length === 0) {
+        continue;
+      }
+      const allMet = d.preRequisitos.every(req => completedCodes.has(req));
+      if (allMet) {
+        unlocked.add(d.codigo);
+      } else {
+        locked.add(d.codigo);
+      }
+    }
+    return { unlockedCodes: unlocked, lockedCodes: locked };
+  }, [disciplinas, completedDisciplinaIds, selectionMode]);
+
+  // Progress stats
+  const progressStats = useMemo(() => {
+    if (!completedDisciplinaIds) {
+      return null;
+    }
+    const obrigatorias = visibleDisciplinas.filter(d => d.natureza === "OBRIGATORIA");
+    const completedObrigatorias = obrigatorias.filter(d => completedDisciplinaIds.has(d.disciplinaId));
+    const totalCompleted = visibleDisciplinas.filter(d => completedDisciplinaIds.has(d.disciplinaId)).length;
+    const totalHorasCompleted = visibleDisciplinas
+      .filter(d => completedDisciplinaIds.has(d.disciplinaId))
+      .reduce((sum, d) => sum + (d.cargaHorariaTotal ?? 0), 0);
+    const totalHoras = obrigatorias.reduce((sum, d) => sum + (d.cargaHorariaTotal ?? 0), 0);
+    return {
+      total: visibleDisciplinas.length,
+      totalCompleted,
+      obrigatorias: obrigatorias.length,
+      completedObrigatorias: completedObrigatorias.length,
+      percentObrigatorias: obrigatorias.length > 0
+        ? Math.round((completedObrigatorias.length / obrigatorias.length) * 100)
+        : 0,
+      totalHorasCompleted,
+      totalHoras,
+    };
+  }, [visibleDisciplinas, completedDisciplinaIds]);
+
   const hasOptativas = disciplinas.some(d => d.natureza !== "OBRIGATORIA");
 
   return (
@@ -138,7 +216,21 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
           <h2 className="text-lg font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">{cursoNome}</h2>
           <p className="text-sm text-muted-foreground">Currículo: {curriculoCodigo}</p>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 flex-wrap">
+          {isLoggedIn && onSelectionModeChange && (
+            <Button
+              variant={selectionMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => onSelectionModeChange(!selectionMode)}
+              className="gap-2"
+            >
+              {selectionMode ? (
+                <><X className="w-4 h-4" /> Sair do modo seleção</>
+              ) : (
+                <><ListChecks className="w-4 h-4" /> Selecionar disciplinas que concluí</>
+              )}
+            </Button>
+          )}
           {hasOptativas && (
             <div className="flex items-center gap-2">
               <Checkbox
@@ -152,26 +244,79 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
             </div>
           )}
           {/* Legend */}
-          <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-sm bg-blue-300 dark:bg-blue-700" />
-              Obrigatória
-            </span>
-            {showOptativas && (
+          <div className="flex items-center gap-3 text-xs flex-wrap">
+            {!selectionMode ? (
               <>
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-sm bg-amber-300 dark:bg-amber-700" />
-                  Optativa
+                  <span className="w-3 h-3 rounded-sm bg-blue-300 dark:bg-blue-700" />
+                  Obrigatória
+                </span>
+                {showOptativas && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <span className="w-3 h-3 rounded-sm bg-amber-300 dark:bg-amber-700" />
+                      Optativa
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-3 h-3 rounded-sm bg-emerald-300 dark:bg-emerald-700" />
+                      Complementar
+                    </span>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <span className="flex items-center gap-1">
+                  <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
+                  Concluída
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-sm bg-emerald-300 dark:bg-emerald-700" />
-                  Complementar
+                  <LockOpen className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
+                  Desbloqueada
+                </span>
+                <span className="flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+                  Trancada
                 </span>
               </>
             )}
           </div>
         </div>
       </div>
+
+      {/* Progress bar + Save */}
+      {selectionMode && progressStats && (
+        <div className="mb-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10">
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <div className="flex items-center gap-4 text-sm">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <strong>{progressStats.completedObrigatorias}</strong>/{progressStats.obrigatorias} obrigatórias ({progressStats.percentObrigatorias}%)
+              </span>
+              <span className="text-muted-foreground">
+                {progressStats.totalHorasCompleted}h / {progressStats.totalHoras}h
+              </span>
+              {progressStats.totalCompleted > progressStats.completedObrigatorias && (
+                <span className="text-muted-foreground">
+                  +{progressStats.totalCompleted - progressStats.completedObrigatorias} optativa(s)
+                </span>
+              )}
+            </div>
+            {onSave && (
+              <Button
+                size="sm"
+                onClick={onSave}
+                disabled={isSaving || !hasUnsavedChanges}
+                className="gap-1.5"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {isSaving ? "Salvando..." : hasUnsavedChanges ? "Salvar progresso" : "Salvo"}
+              </Button>
+            )}
+          </div>
+          <Progress value={progressStats.percentObrigatorias} className="h-2" />
+        </div>
+      )}
 
       {/* Graph container — fixed height, scrollable both axes */}
       <div
@@ -204,7 +349,12 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
                   discipline={disc}
                   isHighlighted={highlightedCodes !== null && highlightedCodes.has(disc.codigo)}
                   isFaded={highlightedCodes !== null && !highlightedCodes.has(disc.codigo)}
+                  isCompleted={completedDisciplinaIds?.has(disc.disciplinaId)}
+                  isUnlocked={selectionMode && unlockedCodes.has(disc.codigo)}
+                  isLocked={selectionMode && lockedCodes.has(disc.codigo)}
+                  selectionMode={selectionMode}
                   onClick={() => handleNodeClick(disc)}
+                  onToggleComplete={() => onToggleDisciplina?.(disc.disciplinaId)}
                   onMouseEnter={() => setHoveredCode(disc.codigo)}
                   onMouseLeave={() => setHoveredCode(null)}
                 />

@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { Check, Lock, LockOpen } from "lucide-react";
 import type { GradeDisciplinaNode, NaturezaDisciplinaType } from "@/lib/shared/types";
 
 const NATUREZA_COLORS: Record<
@@ -26,33 +27,83 @@ type DisciplineNodeProps = {
   discipline: GradeDisciplinaNode;
   isHighlighted: boolean;
   isFaded: boolean;
+  isCompleted?: boolean;
+  isUnlocked?: boolean;
+  isLocked?: boolean;
+  selectionMode?: boolean;
   onClick: () => void;
+  onToggleComplete?: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 };
 
 export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>(
   function DisciplineNode(
-    { discipline, isHighlighted, isFaded, onClick, onMouseEnter, onMouseLeave },
+    {
+      discipline,
+      isHighlighted,
+      isFaded,
+      isCompleted,
+      isUnlocked,
+      isLocked,
+      selectionMode,
+      onClick,
+      onToggleComplete,
+      onMouseEnter,
+      onMouseLeave,
+    },
     ref
   ) {
     const colors = NATUREZA_COLORS[discipline.natureza] ?? NATUREZA_COLORS.OBRIGATORIA;
     const hasPreReqs = discipline.preRequisitos.length > 0;
 
+    const handleClick = () => {
+      if (selectionMode && onToggleComplete) {
+        onToggleComplete();
+      } else {
+        onClick();
+      }
+    };
+
+    // Determine background/border/text based on state
+    let stateClasses: string;
+    if (isCompleted) {
+      stateClasses = "bg-green-50 dark:bg-green-950/40 border-green-400 dark:border-green-700 text-green-900 dark:text-green-100";
+    } else if (isLocked) {
+      stateClasses = "bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500";
+    } else {
+      stateClasses = `${colors.bg} ${colors.border} ${colors.text}`;
+    }
+
     return (
       <button
         ref={ref}
-        onClick={onClick}
+        onClick={handleClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         className={`
-          w-full text-left rounded-md border p-2 transition-all duration-200 cursor-pointer
-          ${colors.bg} ${colors.border} ${colors.text}
+          relative w-full text-left rounded-md border p-2 transition-all duration-200 cursor-pointer
+          ${stateClasses}
           ${isHighlighted ? "ring-2 ring-blue-500 dark:ring-blue-400 shadow-md scale-[1.01] z-10" : ""}
           ${isFaded ? "opacity-30" : ""}
           ${!isHighlighted && !isFaded ? "hover:shadow-sm hover:scale-[1.005]" : ""}
         `}
       >
+        {isCompleted && (
+          <div className="absolute top-1 right-1">
+            <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+          </div>
+        )}
+        {isUnlocked && !isCompleted && (
+          <div className="absolute top-1 right-1">
+            <LockOpen className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
+          </div>
+        )}
+        {isLocked && (
+          <div className="absolute top-1 right-1">
+            <Lock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+          </div>
+        )}
         <div className="text-[10px] font-mono font-semibold leading-tight mb-0.5 opacity-70">
           {discipline.codigo}
         </div>
