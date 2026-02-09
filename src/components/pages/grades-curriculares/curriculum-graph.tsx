@@ -125,14 +125,17 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
     }
   }, []);
 
-  const handleNodeClick = useCallback((disc: GradeDisciplinaNode) => {
-    if (clickedCode === disc.codigo) {
-      setSelectedDisc(disc);
-      setDialogOpen(true);
-    } else {
-      setClickedCode(disc.codigo);
-    }
-  }, [clickedCode]);
+  const handleNodeClick = useCallback(
+    (disc: GradeDisciplinaNode) => {
+      if (clickedCode === disc.codigo) {
+        setSelectedDisc(disc);
+        setDialogOpen(true);
+      } else {
+        setClickedCode(disc.codigo);
+      }
+    },
+    [clickedCode]
+  );
 
   const hasOptativas = disciplinas.some(d => d.natureza !== "OBRIGATORIA");
 
