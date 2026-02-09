@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Disciplinas Concluídas**: users can now mark disciplines as completed on the curriculum grid
+  - New `DisciplinaConcluida` database table linking users to completed disciplines
+  - API endpoints `GET/PUT /api/usuarios/me/disciplinas` for fetching and syncing completed disciplines
+  - Selection mode toggle on the grades curriculares page (available when viewing own course)
+  - Green checkmark visual for completed disciplines, amber ring for unlocked (prereqs met) disciplines
+  - Progress bar showing completed obligatory disciplines count, percentage, and hours
+  - Save button to persist progress to the server
+  - Course progress card on the user profile page with mini progress bar and link to the grade
+
 ---
 
 ## [1.1.0] - 2026-02-07
