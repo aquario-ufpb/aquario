@@ -63,6 +63,21 @@ export type UserMembership = {
   endedAt: string | null;
 };
 
+export type CreateOwnMembershipRequest = {
+  entidadeId: string;
+  papel?: "ADMIN" | "MEMBRO";
+  cargoId?: string | null;
+  startedAt?: string;
+  endedAt?: string | null;
+};
+
+export type UpdateOwnMembershipRequest = {
+  papel?: "ADMIN" | "MEMBRO";
+  cargoId?: string | null;
+  startedAt?: string;
+  endedAt?: string | null;
+};
+
 export const usuariosService = {
   getCurrentUser: async (token: string): Promise<User> => {
     const response = await apiClient(`${ENDPOINTS.ME}`, {
@@ -306,6 +321,58 @@ export const usuariosService = {
     }
 
     return response.json();
+  },
+
+  createOwnMembership: async (
+    data: CreateOwnMembershipRequest,
+    token: string
+  ): Promise<UserMembership> => {
+    const response = await apiClient(`${ENDPOINTS.USUARIO_MEMBROS_ME}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      token,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+
+    return response.json();
+  },
+
+  updateOwnMembership: async (
+    membroId: string,
+    data: UpdateOwnMembershipRequest,
+    token: string
+  ): Promise<UserMembership> => {
+    const response = await apiClient(`${ENDPOINTS.USUARIO_MEMBROS_ME}/${membroId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      token,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+
+    return response.json();
+  },
+
+  deleteOwnMembership: async (membroId: string, token: string): Promise<void> => {
+    const response = await apiClient(`${ENDPOINTS.USUARIO_MEMBROS_ME}/${membroId}`, {
+      method: "DELETE",
+      token,
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
   },
 
   mergeFacadeUser: async (
