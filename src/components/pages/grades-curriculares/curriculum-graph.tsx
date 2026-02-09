@@ -17,6 +17,7 @@ type CurriculumGraphProps = {
 export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: CurriculumGraphProps) {
   const [showOptativas, setShowOptativas] = useState(true);
   const [hoveredCode, setHoveredCode] = useState<string | null>(null);
+  const [clickedCode, setClickedCode] = useState<string | null>(null);
   const [selectedDisc, setSelectedDisc] = useState<GradeDisciplinaNode | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nodeRects, setNodeRects] = useState<Map<string, DOMRect>>(new Map());
@@ -46,7 +47,8 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
 
   // Compute highlighted codes on hover
   const highlightedCodes = useMemo(() => {
-    if (!hoveredCode) {
+    const activeCode = hoveredCode || clickedCode;
+    if (!activeCode) {
       return null;
     }
 
@@ -56,7 +58,7 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
     }
 
     const codes = new Set<string>();
-    codes.add(hoveredCode);
+    codes.add(activeCode);
 
     // Walk up prerequisites (what does this depend on?)
     const walkUp = (code: string) => {
@@ -82,10 +84,10 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
       }
     };
 
-    walkUp(hoveredCode);
-    walkDown(hoveredCode);
+    walkUp(activeCode);
+    walkDown(activeCode);
     return codes;
-  }, [hoveredCode, visibleDisciplinas]);
+  }, [hoveredCode, clickedCode, visibleDisciplinas]);
 
   // Measure node positions for SVG edges
   const measureNodes = useCallback(() => {
@@ -124,9 +126,13 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
   }, []);
 
   const handleNodeClick = useCallback((disc: GradeDisciplinaNode) => {
-    setSelectedDisc(disc);
-    setDialogOpen(true);
-  }, []);
+    if (clickedCode === disc.codigo) {
+      setSelectedDisc(disc);
+      setDialogOpen(true);
+    } else {
+      setClickedCode(disc.codigo);
+    }
+  }, [clickedCode]);
 
   const hasOptativas = disciplinas.some(d => d.natureza !== "OBRIGATORIA");
 
@@ -204,6 +210,7 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
                   discipline={disc}
                   isHighlighted={highlightedCodes !== null && highlightedCodes.has(disc.codigo)}
                   isFaded={highlightedCodes !== null && !highlightedCodes.has(disc.codigo)}
+                  isClicked={clickedCode === disc.codigo}
                   onClick={() => handleNodeClick(disc)}
                   onMouseEnter={() => setHoveredCode(disc.codigo)}
                   onMouseLeave={() => setHoveredCode(null)}
