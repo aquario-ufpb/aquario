@@ -36,7 +36,7 @@ export const useUpdateDisciplinasConcluidas = () => {
       }
       return usuariosService.updateMyDisciplinasConcluidas(token, disciplinaIds);
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.setQueryData(queryKeys.disciplinasConcluidas.me, data);
     },
   });
