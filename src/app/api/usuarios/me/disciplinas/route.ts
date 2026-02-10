@@ -47,7 +47,7 @@ export function PUT(request: Request) {
       const { disciplinaIds } = parsed.data;
 
       // Use a transaction to atomically replace all records
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async tx => {
         // Remove all existing
         await tx.disciplinaConcluida.deleteMany({
           where: { usuarioId: usuario.id },
