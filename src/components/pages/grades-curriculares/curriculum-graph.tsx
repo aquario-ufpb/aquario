@@ -390,7 +390,12 @@ export function CurriculumGraph({
                   isHighlighted={highlightedCodes !== null && highlightedCodes.has(disc.codigo)}
                   isFaded={highlightedCodes !== null && !highlightedCodes.has(disc.codigo)}
                   isClicked={clickedCode === disc.codigo}
+                  isCompleted={!!completedDisciplinaIds?.has(disc.disciplinaId)}
+                  isLocked={lockedCodes.has(disc.codigo)}
+                  isUnlocked={unlockedCodes.has(disc.codigo)}
+                  selectionMode={selectionMode}
                   onClick={e => handleNodeClick(disc, e)}
+                  onToggleComplete={() => onToggleDisciplina?.(disc.disciplinaId)}
                   onMouseEnter={() => setHoveredCode(disc.codigo)}
                   onMouseLeave={() => setHoveredCode(null)}
                 />

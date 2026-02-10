@@ -1,7 +1,6 @@
 import { forwardRef } from "react";
-import { Check, Lock, LockOpen } from "lucide-react";
+import { Check, Eye, Lock, LockOpen } from "lucide-react";
 import type { GradeDisciplinaNode, NaturezaDisciplinaType } from "@/lib/shared/types";
-import { Eye } from "lucide-react";
 
 const NATUREZA_COLORS: Record<
   NaturezaDisciplinaType,
@@ -29,24 +28,42 @@ type DisciplineNodeProps = {
   isHighlighted: boolean;
   isFaded: boolean;
   isClicked: boolean;
+  isCompleted?: boolean;
+  isLocked?: boolean;
+  isUnlocked?: boolean;
+  selectionMode?: boolean;
   onClick?: (e: React.MouseEvent<HTMLElement>) => void;
+  onToggleComplete?: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 };
 
 export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>(
   function DisciplineNode(
-    { discipline, isHighlighted, isFaded, isClicked, onClick, onMouseEnter, onMouseLeave },
+    {
+      discipline,
+      isHighlighted,
+      isFaded,
+      isClicked,
+      isCompleted,
+      isLocked,
+      isUnlocked,
+      selectionMode,
+      onClick,
+      onToggleComplete,
+      onMouseEnter,
+      onMouseLeave,
+    },
     ref
   ) {
     const colors = NATUREZA_COLORS[discipline.natureza] ?? NATUREZA_COLORS.OBRIGATORIA;
     const hasPreReqs = discipline.preRequisitos.length > 0;
 
-    const handleClick = () => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       if (selectionMode && onToggleComplete) {
         onToggleComplete();
       } else {
-        onClick();
+        onClick?.(e);
       }
     };
 
