@@ -187,8 +187,12 @@ export function CurriculumGraph({
       return null;
     }
     const obrigatorias = visibleDisciplinas.filter(d => d.natureza === "OBRIGATORIA");
-    const completedObrigatorias = obrigatorias.filter(d => completedDisciplinaIds.has(d.disciplinaId));
-    const totalCompleted = visibleDisciplinas.filter(d => completedDisciplinaIds.has(d.disciplinaId)).length;
+    const completedObrigatorias = obrigatorias.filter(d =>
+      completedDisciplinaIds.has(d.disciplinaId)
+    );
+    const totalCompleted = visibleDisciplinas.filter(d =>
+      completedDisciplinaIds.has(d.disciplinaId)
+    ).length;
     const totalHorasCompleted = visibleDisciplinas
       .filter(d => completedDisciplinaIds.has(d.disciplinaId))
       .reduce((sum, d) => sum + (d.cargaHorariaTotal ?? 0), 0);
@@ -198,9 +202,10 @@ export function CurriculumGraph({
       totalCompleted,
       obrigatorias: obrigatorias.length,
       completedObrigatorias: completedObrigatorias.length,
-      percentObrigatorias: obrigatorias.length > 0
-        ? Math.round((completedObrigatorias.length / obrigatorias.length) * 100)
-        : 0,
+      percentObrigatorias:
+        obrigatorias.length > 0
+          ? Math.round((completedObrigatorias.length / obrigatorias.length) * 100)
+          : 0,
       totalHorasCompleted,
       totalHoras,
     };
@@ -225,9 +230,13 @@ export function CurriculumGraph({
               className="gap-2"
             >
               {selectionMode ? (
-                <><X className="w-4 h-4" /> Sair do modo seleção</>
+                <>
+                  <X className="w-4 h-4" /> Sair do modo seleção
+                </>
               ) : (
-                <><ListChecks className="w-4 h-4" /> Selecionar disciplinas que concluí</>
+                <>
+                  <ListChecks className="w-4 h-4" /> Selecionar disciplinas que concluí
+                </>
               )}
             </Button>
           )}
@@ -291,7 +300,8 @@ export function CurriculumGraph({
             <div className="flex items-center gap-4 text-sm">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <strong>{progressStats.completedObrigatorias}</strong>/{progressStats.obrigatorias} obrigatórias ({progressStats.percentObrigatorias}%)
+                <strong>{progressStats.completedObrigatorias}</strong>/{progressStats.obrigatorias}{" "}
+                obrigatórias ({progressStats.percentObrigatorias}%)
               </span>
               <span className="text-muted-foreground">
                 {progressStats.totalHorasCompleted}h / {progressStats.totalHoras}h
