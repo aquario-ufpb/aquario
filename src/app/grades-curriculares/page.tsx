@@ -82,7 +82,9 @@ export default function GradesCurricularesPage() {
 
   // Show completed state only when viewing own course and logged in
   const completedIds = useMemo(() => {
-    if (!isOwnCourse) return undefined;
+    if (!isOwnCourse) {
+      return undefined;
+    }
     return localCompleted;
   }, [isOwnCourse, localCompleted]);
 
