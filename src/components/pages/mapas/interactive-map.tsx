@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Building, Room } from "@/lib/client/mapas/types";
 import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
 import { MapFloorSelector } from "@/components/pages/mapas/map-floor-selector";
-
 
 type InteractiveMapProps = {
   building: Building;
@@ -13,7 +12,7 @@ type InteractiveMapProps = {
   onFloorChange?: (floorId: string) => void;
   highlightedRoomId?: string;
   isDark?: boolean;
-  onRoomClick?: (room: Room) => void;
+  onRoomClick: (room: Room) => void;
   className?: string;
 };
 
@@ -32,7 +31,9 @@ export function InteractiveMap({
   );
 
   const isControlled = controlledSelectedFloorId !== undefined;
-  const effectiveSelectedFloorId = isControlled ? controlledSelectedFloorId : internalSelectedFloorId;
+  const effectiveSelectedFloorId = isControlled
+    ? controlledSelectedFloorId
+    : internalSelectedFloorId;
 
   const handleFloorChange = (id: string) => {
     if (!isControlled) {
@@ -42,10 +43,11 @@ export function InteractiveMap({
   };
 
   const displayFloor =
-    building.floors.find((f) => f.id === effectiveSelectedFloorId) ||
-    building.floors[0];
+    building.floors.find(f => f.id === effectiveSelectedFloorId) || building.floors[0];
 
-  if (!displayFloor) return null;
+  if (!displayFloor) {
+    return null;
+  }
 
   return (
     <div className={"flex flex-col gap-6 mt-6" + className}>
@@ -56,7 +58,7 @@ export function InteractiveMap({
             selectedFloorId={displayFloor.id}
             onSelectFloor={handleFloorChange}
             isDark={isDark}
-            roomFloorId={initialFloorId} 
+            roomFloorId={initialFloorId}
           />
         </div>
       </div>
@@ -66,9 +68,7 @@ export function InteractiveMap({
           floor={displayFloor}
           onRoomClick={onRoomClick}
           isDark={isDark}
-          highlightedRoomId={
-            displayFloor.id === initialFloorId ? highlightedRoomId : undefined
-          }
+          highlightedRoomId={displayFloor.id === initialFloorId ? highlightedRoomId : undefined}
           compact={false}
         />
       </div>

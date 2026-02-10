@@ -72,7 +72,6 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
         <EntidadeMapSection entidade={entidade} />
 
         <EntidadeOtherEntitiesSection currentEntidade={entidade} otherEntidades={otherEntidades} />
-        
       </div>
 
       {/* Edit Dialog */}

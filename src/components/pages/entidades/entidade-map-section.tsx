@@ -23,7 +23,9 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const foundLocation = useMemo(() => {
-    if (!mapsData) return null;
+    if (!mapsData) {
+      return null;
+    }
 
     console.log("Searching map for entity:", {
       name: entidade.name,
@@ -35,15 +37,15 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
       for (const floor of building.floors) {
         for (const room of floor.rooms) {
           if (isLabResearch(room)) {
-             if (room.labs?.includes(entidade.slug || "")) {
-                console.log("Found by slug match:", room);
-                return { building, floor, room };
-             }
+            if (room.labs?.includes(entidade.slug || "")) {
+              console.log("Found by slug match:", room);
+              return { building, floor, room };
+            }
           }
-          
+
           if (entidade.location && room.location === entidade.location) {
-             console.log("Found by location match:", room);
-             return { building, floor, room };
+            console.log("Found by location match:", room);
+            return { building, floor, room };
           }
         }
       }
@@ -72,13 +74,13 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
   }
   if (!foundLocation) {
     if (entidade.location) {
-        return null; 
+      return null;
     }
     return null;
   }
 
   const { building, floor: foundFloor, room: foundRoom } = foundLocation;
-  
+
   const currentFloorId = selectedFloorId || foundFloor.id;
   const displayFloor = building.floors.find(f => f.id === currentFloorId) || foundFloor;
 
@@ -91,23 +93,23 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
     <div className="px-6 md:px-8 lg:px-16 py-8 border-t border-border/40">
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <MapPin className="w-6 h-6 text-primary" />
-              Localização
-            </h2>
-            <p className="text-muted-foreground">
-              {building.name} • {displayFloor.name} • Sala {foundRoom.location}
-            </p>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <MapPin className="w-6 h-6 text-primary" />
+            Localização
+          </h2>
+          <p className="text-muted-foreground">
+            {building.name} • {displayFloor.name} • Sala {foundRoom.location}
+          </p>
         </div>
 
         <InteractiveMap
-            building={building}
-            initialFloorId={foundFloor.id}
-            selectedFloorId={currentFloorId}
-            onFloorChange={setSelectedFloorId}
-            highlightedRoomId={foundRoom.id}
-            isDark={isDark}
-            onRoomClick={handleRoomClick}
+          building={building}
+          initialFloorId={foundFloor.id}
+          selectedFloorId={currentFloorId}
+          onFloorChange={setSelectedFloorId}
+          highlightedRoomId={foundRoom.id}
+          isDark={isDark}
+          onRoomClick={handleRoomClick}
         />
       </div>
 
