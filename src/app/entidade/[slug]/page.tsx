@@ -13,6 +13,7 @@ import { EntidadeBackButton } from "@/components/pages/entidades/entidade-back-b
 import { EntidadeHeroSection } from "@/components/pages/entidades/entidade-hero-section";
 import { EntidadeDescriptionSection } from "@/components/pages/entidades/entidade-description-section";
 import { EntidadeOtherEntitiesSection } from "@/components/pages/entidades/entidade-other-entities-section";
+import { EntidadeMapSection } from "@/components/pages/entidades/entidade-map-section";
 import { isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
 
 export default function EntidadeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -68,7 +69,10 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
 
         <EntidadeMembersSection entidade={entidade} />
 
+        <EntidadeMapSection entidade={entidade} />
+
         <EntidadeOtherEntitiesSection currentEntidade={entidade} otherEntidades={otherEntidades} />
+        
       </div>
 
       {/* Edit Dialog */}
