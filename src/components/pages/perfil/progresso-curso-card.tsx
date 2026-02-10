@@ -29,9 +29,10 @@ export function ProgressoCursoCard({ cursoId, cursoNome, isOwnProfile }: Progres
       .filter(d => completedSet.has(d.disciplinaId))
       .reduce((sum, d) => sum + (d.cargaHorariaTotal ?? 0), 0);
     const totalHoras = obrigatorias.reduce((sum, d) => sum + (d.cargaHorariaTotal ?? 0), 0);
-    const percent = obrigatorias.length > 0
-      ? Math.round((completedObrigatorias.length / obrigatorias.length) * 100)
-      : 0;
+    const percent =
+      obrigatorias.length > 0
+        ? Math.round((completedObrigatorias.length / obrigatorias.length) * 100)
+        : 0;
 
     return {
       completedObrigatorias: completedObrigatorias.length,
@@ -77,7 +78,9 @@ export function ProgressoCursoCard({ cursoId, cursoNome, isOwnProfile }: Progres
           <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
           {stats.completedObrigatorias}/{stats.obrigatorias} obrigatórias ({stats.percent}%)
         </span>
-        <span>{stats.totalHorasCompleted}h / {stats.totalHoras}h</span>
+        <span>
+          {stats.totalHorasCompleted}h / {stats.totalHoras}h
+        </span>
       </div>
     </Link>
   );
