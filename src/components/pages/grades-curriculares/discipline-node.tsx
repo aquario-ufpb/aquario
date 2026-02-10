@@ -68,9 +68,11 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
     // Determine background/border/text based on state
     let stateClasses: string;
     if (isCompleted) {
-      stateClasses = "bg-green-50 dark:bg-green-950/40 border-green-400 dark:border-green-700 text-green-900 dark:text-green-100";
+      stateClasses =
+        "bg-green-50 dark:bg-green-950/40 border-green-400 dark:border-green-700 text-green-900 dark:text-green-100";
     } else if (isLocked) {
-      stateClasses = "bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500";
+      stateClasses =
+        "bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500";
     } else {
       stateClasses = `${colors.bg} ${colors.border} ${colors.text}`;
     }
