@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { GradeDisciplinaNode, NaturezaDisciplinaType } from "@/lib/shared/types";
+import { Eye } from "lucide-react";
 
 const NATUREZA_COLORS: Record<
   NaturezaDisciplinaType,
@@ -26,14 +27,15 @@ type DisciplineNodeProps = {
   discipline: GradeDisciplinaNode;
   isHighlighted: boolean;
   isFaded: boolean;
-  onClick: () => void;
+  isClicked: boolean;
+  onClick?: (e: React.MouseEvent<HTMLElement>) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 };
 
 export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>(
   function DisciplineNode(
-    { discipline, isHighlighted, isFaded, onClick, onMouseEnter, onMouseLeave },
+    { discipline, isHighlighted, isFaded, isClicked, onClick, onMouseEnter, onMouseLeave },
     ref
   ) {
     const colors = NATUREZA_COLORS[discipline.natureza] ?? NATUREZA_COLORS.OBRIGATORIA;
@@ -63,6 +65,13 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
         {hasPreReqs && (
           <div className="text-[9px] mt-0.5 opacity-50">
             Req: {discipline.preRequisitos.join(", ")}
+          </div>
+        )}
+        {/* "Ver mais" button when clicked */}
+        {isClicked && (
+          <div className="mt-2 pt-2 border-t border-current/20 flex items-center justify-center gap-1 text-[10px] font-semibold animate-in fade-in duration-200">
+            <Eye className="w-3 h-3" />
+            <span>Ver mais</span>
           </div>
         )}
       </button>

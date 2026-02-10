@@ -17,6 +17,7 @@ type CurriculumGraphProps = {
 export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: CurriculumGraphProps) {
   const [showOptativas, setShowOptativas] = useState(true);
   const [hoveredCode, setHoveredCode] = useState<string | null>(null);
+  const [clickedCode, setClickedCode] = useState<string | null>(null);
   const [selectedDisc, setSelectedDisc] = useState<GradeDisciplinaNode | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nodeRects, setNodeRects] = useState<Map<string, DOMRect>>(new Map());
@@ -46,7 +47,8 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
 
   // Compute highlighted codes on hover
   const highlightedCodes = useMemo(() => {
-    if (!hoveredCode) {
+    const activeCode = hoveredCode || clickedCode;
+    if (!activeCode) {
       return null;
     }
 
@@ -55,8 +57,13 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
       codeToDisc.set(d.codigo, d);
     }
 
+    // If activeCode is not in visible disciplines, return null
+    if (!codeToDisc.has(activeCode)) {
+      return null;
+    }
+
     const codes = new Set<string>();
-    codes.add(hoveredCode);
+    codes.add(activeCode);
 
     // Walk up prerequisites (what does this depend on?)
     const walkUp = (code: string) => {
@@ -82,10 +89,10 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
       }
     };
 
-    walkUp(hoveredCode);
-    walkDown(hoveredCode);
+    walkUp(activeCode);
+    walkDown(activeCode);
     return codes;
-  }, [hoveredCode, visibleDisciplinas]);
+  }, [hoveredCode, clickedCode, visibleDisciplinas]);
 
   // Measure node positions for SVG edges
   const measureNodes = useCallback(() => {
@@ -115,6 +122,13 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
     return () => window.removeEventListener("resize", handler);
   }, [measureNodes]);
 
+  // Clear clickedCode when it's no longer visible
+  useLayoutEffect(() => {
+    if (clickedCode && !visibleDisciplinas.some(d => d.codigo === clickedCode)) {
+      setClickedCode(null);
+    }
+  }, [clickedCode, visibleDisciplinas]);
+
   const setNodeRef = useCallback((code: string, el: HTMLButtonElement | null) => {
     if (el) {
       nodeRefsMap.current.set(code, el);
@@ -123,9 +137,21 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
     }
   }, []);
 
-  const handleNodeClick = useCallback((disc: GradeDisciplinaNode) => {
-    setSelectedDisc(disc);
-    setDialogOpen(true);
+  const handleNodeClick = useCallback(
+    (disc: GradeDisciplinaNode, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (clickedCode === disc.codigo) {
+        setSelectedDisc(disc);
+        setDialogOpen(true);
+      } else {
+        setClickedCode(disc.codigo);
+      }
+    },
+    [clickedCode]
+  );
+
+  const handleContainerClick = useCallback(() => {
+    setClickedCode(null);
   }, []);
 
   const hasOptativas = disciplinas.some(d => d.natureza !== "OBRIGATORIA");
@@ -179,7 +205,11 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
         style={{ maxHeight: "70vh" }}
         onScroll={measureNodes}
       >
-        <div ref={containerRef} className="relative flex gap-6 min-w-max p-2">
+        <div
+          ref={containerRef}
+          className="relative flex gap-6 min-w-max p-2"
+          onClick={handleContainerClick}
+        >
           {/* SVG edge overlay */}
           <GraphEdges
             disciplines={visibleDisciplinas}
@@ -204,7 +234,8 @@ export function CurriculumGraph({ disciplinas, cursoNome, curriculoCodigo }: Cur
                   discipline={disc}
                   isHighlighted={highlightedCodes !== null && highlightedCodes.has(disc.codigo)}
                   isFaded={highlightedCodes !== null && !highlightedCodes.has(disc.codigo)}
-                  onClick={() => handleNodeClick(disc)}
+                  isClicked={clickedCode === disc.codigo}
+                  onClick={e => handleNodeClick(disc, e)}
                   onMouseEnter={() => setHoveredCode(disc.codigo)}
                   onMouseLeave={() => setHoveredCode(null)}
                 />
