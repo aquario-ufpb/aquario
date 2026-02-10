@@ -19,7 +19,9 @@ export function ProgressoCursoCard({ cursoId, cursoNome, isOwnProfile }: Progres
   const { data: concluidasData, isLoading: concluidasLoading } = useDisciplinasConcluidas();
 
   const stats = useMemo(() => {
-    if (!grade || !concluidasData) return null;
+    if (!grade || !concluidasData) {
+      return null;
+    }
 
     const completedSet = new Set(concluidasData.disciplinaIds);
     const obrigatorias = grade.disciplinas.filter(d => d.natureza === "OBRIGATORIA");
@@ -45,7 +47,9 @@ export function ProgressoCursoCard({ cursoId, cursoNome, isOwnProfile }: Progres
   }, [grade, concluidasData]);
 
   // Only show for own profile when there's data
-  if (!isOwnProfile) return null;
+  if (!isOwnProfile) {
+    return null;
+  }
 
   const isLoading = gradeLoading || concluidasLoading;
 
@@ -59,7 +63,9 @@ export function ProgressoCursoCard({ cursoId, cursoNome, isOwnProfile }: Progres
     );
   }
 
-  if (!stats || stats.totalCompleted === 0) return null;
+  if (!stats || stats.totalCompleted === 0) {
+    return null;
+  }
 
   return (
     <Link
