@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-02-11
+
 ### Fixed
 - **User Search API**: `/api/usuarios?search=` now uses `withAuth` instead of `withAdmin`, allowing entity admins to search for users
 
