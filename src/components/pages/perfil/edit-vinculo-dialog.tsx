@@ -33,8 +33,6 @@ type EditVinculoDialogProps = {
 export function EditVinculoDialog({ membership, open, onOpenChange }: EditVinculoDialogProps) {
   const [papel, setPapel] = useState<"ADMIN" | "MEMBRO">(membership.papel);
   const [cargoId, setCargoId] = useState<string | null>(membership.cargo?.id || null);
-  const [cargoCustom, setCargoCustom] = useState("");
-  const [usarCargoCustom, setUsarCargoCustom] = useState(false);
   const [startedAt, setStartedAt] = useState("");
   const [endedAt, setEndedAt] = useState("");
 
@@ -69,9 +67,9 @@ export function EditVinculoDialog({ membership, open, onOpenChange }: EditVincul
         membroId: membership.id,
         data: {
           papel,
-          cargoId: cargoId || undefined,
+          cargoId,
           startedAt: startedAt || undefined,
-          endedAt: endedAt || undefined,
+          endedAt: endedAt || null,
         },
       });
 
@@ -120,48 +118,28 @@ export function EditVinculoDialog({ membership, open, onOpenChange }: EditVincul
               <div className="space-y-2">
                 <Label htmlFor="cargo">Cargo (opcional)</Label>
                 {cargos.length > 0 ? (
-                  <>
-                    <Select
-                      value={usarCargoCustom ? "__custom__" : cargoId || "__none__"}
-                      onValueChange={value => {
-                        if (value === "__custom__") {
-                          setUsarCargoCustom(true);
-                          setCargoId(null);
-                        } else {
-                          setUsarCargoCustom(false);
-                          setCargoId(value === "__none__" ? null : value);
-                        }
-                      }}
-                    >
-                      <SelectTrigger id="cargo">
-                        <SelectValue placeholder="Selecione um cargo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">Nenhum cargo</SelectItem>
-                        {cargos.map(cargo => (
-                          <SelectItem key={cargo.id} value={cargo.id}>
-                            {cargo.nome}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="__custom__">Outro (escrever)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {usarCargoCustom && (
-                      <Input
-                        placeholder="Digite o cargo"
-                        value={cargoCustom}
-                        onChange={e => setCargoCustom(e.target.value)}
-                        className="mt-2"
-                      />
-                    )}
-                  </>
+                  <Select
+                    value={cargoId || "__none__"}
+                    onValueChange={value => {
+                      setCargoId(value === "__none__" ? null : value);
+                    }}
+                  >
+                    <SelectTrigger id="cargo">
+                      <SelectValue placeholder="Selecione um cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Nenhum cargo</SelectItem>
+                      {cargos.map(cargo => (
+                        <SelectItem key={cargo.id} value={cargo.id}>
+                          {cargo.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
-                  <Input
-                    id="cargo"
-                    placeholder="Digite o cargo (ex: Diretor, Membro, etc.)"
-                    value={cargoCustom}
-                    onChange={e => setCargoCustom(e.target.value)}
-                  />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum cargo cadastrado para esta entidade.
+                  </p>
                 )}
               </div>
             </div>
@@ -177,48 +155,28 @@ export function EditVinculoDialog({ membership, open, onOpenChange }: EditVincul
               <div className="space-y-2">
                 <Label htmlFor="cargo">Cargo (opcional)</Label>
                 {cargos.length > 0 ? (
-                  <>
-                    <Select
-                      value={usarCargoCustom ? "__custom__" : cargoId || "__none__"}
-                      onValueChange={value => {
-                        if (value === "__custom__") {
-                          setUsarCargoCustom(true);
-                          setCargoId(null);
-                        } else {
-                          setUsarCargoCustom(false);
-                          setCargoId(value === "__none__" ? null : value);
-                        }
-                      }}
-                    >
-                      <SelectTrigger id="cargo">
-                        <SelectValue placeholder="Selecione um cargo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">Nenhum cargo</SelectItem>
-                        {cargos.map(cargo => (
-                          <SelectItem key={cargo.id} value={cargo.id}>
-                            {cargo.nome}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="__custom__">Outro (escrever)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {usarCargoCustom && (
-                      <Input
-                        placeholder="Digite o cargo"
-                        value={cargoCustom}
-                        onChange={e => setCargoCustom(e.target.value)}
-                        className="mt-2"
-                      />
-                    )}
-                  </>
+                  <Select
+                    value={cargoId || "__none__"}
+                    onValueChange={value => {
+                      setCargoId(value === "__none__" ? null : value);
+                    }}
+                  >
+                    <SelectTrigger id="cargo">
+                      <SelectValue placeholder="Selecione um cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Nenhum cargo</SelectItem>
+                      {cargos.map(cargo => (
+                        <SelectItem key={cargo.id} value={cargo.id}>
+                          {cargo.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
-                  <Input
-                    id="cargo"
-                    placeholder="Digite o cargo (ex: Diretor, Membro, etc.)"
-                    value={cargoCustom}
-                    onChange={e => setCargoCustom(e.target.value)}
-                  />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum cargo cadastrado para esta entidade.
+                  </p>
                 )}
               </div>
             </>

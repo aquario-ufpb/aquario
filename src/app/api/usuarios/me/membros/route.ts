@@ -46,6 +46,11 @@ export async function POST(request: Request) {
 
       const { entidadesRepository, membrosRepository } = getContainer();
 
+      // Only MASTER_ADMIN can set papel to ADMIN
+      if (data.papel === "ADMIN" && usuario.papelPlataforma !== "MASTER_ADMIN") {
+        data.papel = "MEMBRO";
+      }
+
       // Check if entidade exists
       const entidade = await entidadesRepository.findById(data.entidadeId);
       if (!entidade) {

@@ -41,8 +41,6 @@ export function AddVinculoDialog({ open, onOpenChange }: AddVinculoDialogProps) 
   const [selectedEntidadeId, setSelectedEntidadeId] = useState<string | null>(null);
   const [papel, setPapel] = useState<"ADMIN" | "MEMBRO">("MEMBRO");
   const [cargoId, setCargoId] = useState<string | null>(null);
-  const [cargoCustom, setCargoCustom] = useState("");
-  const [usarCargoCustom, setUsarCargoCustom] = useState(false);
   const [startedAt, setStartedAt] = useState("");
   const [endedAt, setEndedAt] = useState("");
 
@@ -89,7 +87,7 @@ export function AddVinculoDialog({ open, onOpenChange }: AddVinculoDialogProps) 
       await createMutation.mutateAsync({
         entidadeId: selectedEntidadeId,
         papel,
-        cargoId: cargoId || undefined,
+        cargoId,
         startedAt: startedAt || undefined,
         endedAt: endedAt || undefined,
       });
@@ -103,8 +101,6 @@ export function AddVinculoDialog({ open, onOpenChange }: AddVinculoDialogProps) 
       setSearchQuery("");
       setPapel("MEMBRO");
       setCargoId(null);
-      setCargoCustom("");
-      setUsarCargoCustom(false);
       setStartedAt("");
       setEndedAt("");
       onOpenChange(false);
@@ -220,61 +216,30 @@ export function AddVinculoDialog({ open, onOpenChange }: AddVinculoDialogProps) 
               <div className="space-y-2">
                 <Label htmlFor="cargo">Cargo (opcional)</Label>
                 {cargos.length > 0 ? (
-                  <>
-                    <Select
-                      value={usarCargoCustom ? "__custom__" : cargoId || "__none__"}
-                      onValueChange={value => {
-                        if (value === "__custom__") {
-                          setUsarCargoCustom(true);
-                          setCargoId(null);
-                        } else {
-                          setUsarCargoCustom(false);
-                          setCargoId(value === "__none__" ? null : value);
-                        }
-                      }}
-                    >
-                      <SelectTrigger id="cargo">
-                        <SelectValue placeholder="Selecione um cargo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">Nenhum cargo</SelectItem>
-                        {cargos.map(cargo => (
-                          <SelectItem key={cargo.id} value={cargo.id}>
-                            {cargo.nome}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="__custom__">Outro (escrever)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {usarCargoCustom && (
-                      <Input
-                        placeholder="Digite o cargo"
-                        value={cargoCustom}
-                        onChange={e => setCargoCustom(e.target.value)}
-                        className="mt-2"
-                      />
-                    )}
-                  </>
+                  <Select
+                    value={cargoId || "__none__"}
+                    onValueChange={value => {
+                      setCargoId(value === "__none__" ? null : value);
+                    }}
+                  >
+                    <SelectTrigger id="cargo">
+                      <SelectValue placeholder="Selecione um cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Nenhum cargo</SelectItem>
+                      {cargos.map(cargo => (
+                        <SelectItem key={cargo.id} value={cargo.id}>
+                          {cargo.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
-                  <Input
-                    id="cargo"
-                    placeholder="Digite o cargo (ex: Diretor, Membro, etc.)"
-                    value={cargoCustom}
-                    onChange={e => setCargoCustom(e.target.value)}
-                  />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum cargo cadastrado para esta entidade.
+                  </p>
                 )}
               </div>
-
-              {/* Informação sobre cargo customizado */}
-              {usarCargoCustom && cargoCustom && (
-                <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>Nota:</strong> O cargo &quot;{cargoCustom}&quot; será adicionado como
-                    informação adicional. Apenas cargos cadastrados pela entidade aparecem na lista
-                    oficial.
-                  </p>
-                </div>
-              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

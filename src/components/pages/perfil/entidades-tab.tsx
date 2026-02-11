@@ -140,7 +140,7 @@ export function EntidadesTab({
             const entidade = membroships[0].entidade;
             const activeMembership = membroships.find(m => !m.endedAt);
             const isActive = !!activeMembership;
-            const membership = membroships[0]; // For actions, use the first membership
+            const membership = activeMembership || membroships[0];
 
             return isOwnProfile ? (
               <div

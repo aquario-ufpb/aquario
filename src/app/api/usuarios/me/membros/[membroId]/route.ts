@@ -34,7 +34,12 @@ export async function PUT(request: Request, context: RouteContext) {
       }
 
       if (membership.usuarioId !== usuario.id) {
-        return ApiError.forbidden("Você só pode editar suas próprias membersias.");
+        return ApiError.forbidden("Você só pode editar suas próprias membresias.");
+      }
+
+      // Only MASTER_ADMIN can change papel
+      if (data.papel !== undefined && usuario.papelPlataforma !== "MASTER_ADMIN") {
+        delete data.papel;
       }
 
       // Validate cargoId if provided
@@ -82,8 +87,9 @@ export async function PUT(request: Request, context: RouteContext) {
       await membrosRepository.update(membroId, updateData);
 
       // Get the updated membership with full entity data
-      const fullMembership = await membrosRepository.findByUsuarioId(usuario.id);
-      const updated = fullMembership.find(m => m.id === membroId);
+      // findByUsuarioId returns MembroWithEntidade (includes entidade relation)
+      const fullMemberships = await membrosRepository.findByUsuarioId(usuario.id);
+      const updated = fullMemberships.find(m => m.id === membroId);
 
       if (!updated) {
         return ApiError.internal("Erro ao buscar membro atualizado");
@@ -123,7 +129,7 @@ export async function DELETE(request: Request, context: RouteContext) {
       }
 
       if (membership.usuarioId !== usuario.id) {
-        return ApiError.forbidden("Você só pode deletar suas próprias membersias.");
+        return ApiError.forbidden("Você só pode deletar suas próprias membresias.");
       }
 
       // Delete the membership
