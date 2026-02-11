@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Grades Curriculares**: on mobile, disable hover-based dependency highlighting (use tap instead) and require double-tap to open detail dialog; on desktop, click opens dialog directly
+
 ### Added
 - **Disciplinas Concluídas**: users can now mark disciplines as completed on the curriculum grid
   - New `DisciplinaConcluida` database table linking users to completed disciplines

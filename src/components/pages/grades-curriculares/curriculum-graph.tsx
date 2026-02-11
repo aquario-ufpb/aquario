@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useLayoutEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useLayoutEffect, useMemo, useEffect } from "react";
 import type { GradeDisciplinaNode } from "@/lib/shared/types";
 import { DisciplineNode } from "./discipline-node";
 import { GraphEdges } from "./graph-edges";
@@ -41,6 +41,11 @@ export function CurriculumGraph({
   const [showOptativas, setShowOptativas] = useState(true);
   const [hoveredCode, setHoveredCode] = useState<string | null>(null);
   const [clickedCode, setClickedCode] = useState<string | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    setIsTouchDevice(!window.matchMedia("(hover: hover)").matches);
+  }, []);
   const [selectedDisc, setSelectedDisc] = useState<GradeDisciplinaNode | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nodeRects, setNodeRects] = useState<Map<string, DOMRect>>(new Map());
@@ -68,7 +73,7 @@ export function CurriculumGraph({
     return Array.from(map.entries()).sort(([a], [b]) => a - b);
   }, [visibleDisciplinas]);
 
-  // Compute highlighted codes on hover
+  // Compute highlighted codes on hover (desktop) or click (mobile)
   const highlightedCodes = useMemo(() => {
     const activeCode = hoveredCode || clickedCode;
     if (!activeCode) {
@@ -163,14 +168,21 @@ export function CurriculumGraph({
   const handleNodeClick = useCallback(
     (disc: GradeDisciplinaNode, e: React.MouseEvent) => {
       e.stopPropagation();
-      if (clickedCode === disc.codigo) {
+      if (isTouchDevice) {
+        // Mobile: first click highlights deps, second click opens dialog
+        if (clickedCode === disc.codigo) {
+          setSelectedDisc(disc);
+          setDialogOpen(true);
+        } else {
+          setClickedCode(disc.codigo);
+        }
+      } else {
+        // Desktop: click opens dialog directly
         setSelectedDisc(disc);
         setDialogOpen(true);
-      } else {
-        setClickedCode(disc.codigo);
       }
     },
-    [clickedCode]
+    [clickedCode, isTouchDevice]
   );
 
   const handleContainerClick = useCallback(() => {
@@ -389,15 +401,15 @@ export function CurriculumGraph({
                   discipline={disc}
                   isHighlighted={highlightedCodes !== null && highlightedCodes.has(disc.codigo)}
                   isFaded={highlightedCodes !== null && !highlightedCodes.has(disc.codigo)}
-                  isClicked={clickedCode === disc.codigo}
+                  isClicked={isTouchDevice && clickedCode === disc.codigo}
                   isCompleted={!!completedDisciplinaIds?.has(disc.disciplinaId)}
                   isLocked={lockedCodes.has(disc.codigo)}
                   isUnlocked={unlockedCodes.has(disc.codigo)}
                   selectionMode={selectionMode}
                   onClick={e => handleNodeClick(disc, e)}
                   onToggleComplete={() => onToggleDisciplina?.(disc.disciplinaId)}
-                  onMouseEnter={() => setHoveredCode(disc.codigo)}
-                  onMouseLeave={() => setHoveredCode(null)}
+                  onMouseEnter={!isTouchDevice ? () => setHoveredCode(disc.codigo) : undefined}
+                  onMouseLeave={!isTouchDevice ? () => setHoveredCode(null) : undefined}
                 />
               ))}
             </div>

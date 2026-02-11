@@ -34,8 +34,8 @@ type DisciplineNodeProps = {
   selectionMode?: boolean;
   onClick?: (e: React.MouseEvent<HTMLElement>) => void;
   onToggleComplete?: () => void;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 };
 
 export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>(
