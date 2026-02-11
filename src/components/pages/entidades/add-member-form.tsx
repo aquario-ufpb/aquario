@@ -124,7 +124,6 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
           endedAt: endedAt || null,
         },
       });
-
       toast.success("Membro adicionado", {
         description: "O membro foi adicionado à entidade com sucesso.",
       });

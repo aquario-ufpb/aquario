@@ -52,7 +52,16 @@ export function GET(request: Request) {
         limit: searchLimit,
       });
 
-      return NextResponse.json(usuarios.map(mapUserToResponse));
+      const mappedUsers = usuarios.map(mapUserToResponse);
+      return NextResponse.json({
+        users: mappedUsers,
+        pagination: {
+          page: 1,
+          limit: searchLimit,
+          total: mappedUsers.length,
+          totalPages: 1,
+        },
+      });
     });
   }
 
