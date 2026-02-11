@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Building2, Plus, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import type { UserMembership } from "@/lib/client/api/usuarios";
+import { formatMonthYear } from "@/lib/shared/date-utils";
 import { AddVinculoDialog } from "./add-vinculo-dialog";
 import { EditVinculoDialog } from "./edit-vinculo-dialog";
 import { useDeleteOwnMembership } from "@/lib/client/hooks/use-usuarios";
@@ -33,25 +34,6 @@ type EntidadesTabProps = {
   emptyMessage?: string;
   isOwnProfile?: boolean;
 };
-
-function formatMonthYear(dateString: string): string {
-  const date = new Date(dateString);
-  const months = [
-    "jan",
-    "fev",
-    "mar",
-    "abr",
-    "mai",
-    "jun",
-    "jul",
-    "ago",
-    "set",
-    "out",
-    "nov",
-    "dez",
-  ];
-  return `${months[date.getMonth()]} ${date.getFullYear()}`;
-}
 
 export function EntidadesTab({
   memberships,

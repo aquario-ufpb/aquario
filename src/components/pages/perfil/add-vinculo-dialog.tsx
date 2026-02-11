@@ -30,6 +30,7 @@ import {
   useCurrentUser,
 } from "@/lib/client/hooks/use-usuarios";
 import { toast } from "sonner";
+import { todayDateString } from "@/lib/shared/date-utils";
 
 type AddVinculoDialogProps = {
   open: boolean;
@@ -66,11 +67,7 @@ export function AddVinculoDialog({ open, onOpenChange }: AddVinculoDialogProps) 
   // Set default startedAt to today when opening
   useEffect(() => {
     if (open && !startedAt) {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      setStartedAt(`${year}-${month}-${day}`);
+      setStartedAt(todayDateString());
     }
   }, [open, startedAt]);
 

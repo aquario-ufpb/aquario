@@ -91,9 +91,7 @@ export async function PUT(request: Request, context: RouteContext) {
       await membrosRepository.update(membroId, updateData);
 
       // Get the updated membership with full entity data
-      // findByUsuarioId returns MembroWithEntidade (includes entidade relation)
-      const fullMemberships = await membrosRepository.findByUsuarioId(usuario.id);
-      const updated = fullMemberships.find(m => m.id === membroId);
+      const updated = await membrosRepository.findByIdWithEntidade(membroId);
 
       if (!updated) {
         return ApiError.internal("Erro ao buscar membro atualizado");

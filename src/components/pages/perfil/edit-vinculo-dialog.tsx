@@ -23,13 +23,7 @@ import { useEntidadeCargos } from "@/lib/client/hooks/use-entidades";
 import { useUpdateOwnMembership, useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { toast } from "sonner";
 import type { UserMembership } from "@/lib/client/api/usuarios";
-
-function toLocalDateString(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+import { toDateInputValue } from "@/lib/shared/date-utils";
 
 type EditVinculoDialogProps = {
   membership: UserMembership;
@@ -55,8 +49,8 @@ export function EditVinculoDialog({ membership, open, onOpenChange }: EditVincul
     if (open) {
       setPapel(membership.papel);
       setCargoId(membership.cargo?.id || null);
-      setStartedAt(toLocalDateString(new Date(membership.startedAt)));
-      setEndedAt(membership.endedAt ? toLocalDateString(new Date(membership.endedAt)) : "");
+      setStartedAt(toDateInputValue(membership.startedAt));
+      setEndedAt(membership.endedAt ? toDateInputValue(membership.endedAt) : "");
     }
   }, [open, membership]);
 

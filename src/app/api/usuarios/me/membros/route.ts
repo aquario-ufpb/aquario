@@ -105,6 +105,8 @@ export async function POST(request: Request) {
         endedAt,
       });
 
+      const { centro } = entidade;
+
       return NextResponse.json({
         id: membro.id,
         entidade: {
@@ -113,13 +115,7 @@ export async function POST(request: Request) {
           slug: entidade.slug,
           tipo: entidade.tipo,
           urlFoto: entidade.urlFoto,
-          centro: entidade.centro
-            ? {
-                id: entidade.centro.id,
-                nome: entidade.centro.nome,
-                sigla: entidade.centro.sigla,
-              }
-            : null,
+          centro: centro ? { id: centro.id, nome: centro.nome, sigla: centro.sigla } : undefined,
         },
         papel: membro.papel,
         cargo: membro.cargo,

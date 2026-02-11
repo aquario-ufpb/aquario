@@ -317,12 +317,8 @@ export const useCreateOwnMembership = () => {
       return usuariosService.createOwnMembership(data, token);
     },
     onSuccess: () => {
-      // Invalidate membership queries - use predicate to match all membership queries
-      queryClient.invalidateQueries({
-        predicate: query =>
-          query.queryKey[0] === "usuarios" &&
-          (query.queryKey.includes("memberships") || query.queryKey.includes("current")),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
     },
   });
 };
@@ -343,12 +339,8 @@ export const useUpdateOwnMembership = () => {
       return usuariosService.updateOwnMembership(membroId, data, token);
     },
     onSuccess: () => {
-      // Invalidate membership queries - use predicate to match all membership queries
-      queryClient.invalidateQueries({
-        predicate: query =>
-          query.queryKey[0] === "usuarios" &&
-          (query.queryKey.includes("memberships") || query.queryKey.includes("current")),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
     },
   });
 };
@@ -369,12 +361,8 @@ export const useDeleteOwnMembership = () => {
       return usuariosService.deleteOwnMembership(membroId, token);
     },
     onSuccess: () => {
-      // Invalidate membership queries - use predicate to match all membership queries
-      queryClient.invalidateQueries({
-        predicate: query =>
-          query.queryKey[0] === "usuarios" &&
-          (query.queryKey.includes("memberships") || query.queryKey.includes("current")),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
     },
   });
 };
