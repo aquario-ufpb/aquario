@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { usuariosService, type UpdateUserInfoRequest } from "@/lib/client/api/usuarios";
+import {
+  usuariosService,
+  type UpdateUserInfoRequest,
+  type CreateOwnMembershipRequest,
+  type UpdateOwnMembershipRequest,
+} from "@/lib/client/api/usuarios";
 import { queryKeys } from "@/lib/client/query-keys";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -292,6 +297,84 @@ export const useMergeFacadeUser = () => {
     onSuccess: () => {
       // Invalidate and refetch users list after merging
       queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+    },
+  });
+};
+
+/**
+ * Hook to create a new membership for the current user
+ * Automatically invalidates membership queries on success
+ */
+export const useCreateOwnMembership = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateOwnMembershipRequest) => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return usuariosService.createOwnMembership(data, token);
+    },
+    onSuccess: () => {
+      // Invalidate membership queries - use predicate to match all membership queries
+      queryClient.invalidateQueries({
+        predicate: query =>
+          query.queryKey[0] === "usuarios" &&
+          (query.queryKey.includes("memberships") || query.queryKey.includes("current")),
+      });
+    },
+  });
+};
+
+/**
+ * Hook to update an existing membership for the current user
+ * Automatically invalidates membership queries on success
+ */
+export const useUpdateOwnMembership = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ membroId, data }: { membroId: string; data: UpdateOwnMembershipRequest }) => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return usuariosService.updateOwnMembership(membroId, data, token);
+    },
+    onSuccess: () => {
+      // Invalidate membership queries - use predicate to match all membership queries
+      queryClient.invalidateQueries({
+        predicate: query =>
+          query.queryKey[0] === "usuarios" &&
+          (query.queryKey.includes("memberships") || query.queryKey.includes("current")),
+      });
+    },
+  });
+};
+
+/**
+ * Hook to delete an existing membership for the current user
+ * Automatically invalidates membership queries on success
+ */
+export const useDeleteOwnMembership = () => {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (membroId: string) => {
+      if (!token) {
+        throw new Error("No token available");
+      }
+      return usuariosService.deleteOwnMembership(membroId, token);
+    },
+    onSuccess: () => {
+      // Invalidate membership queries - use predicate to match all membership queries
+      queryClient.invalidateQueries({
+        predicate: query =>
+          query.queryKey[0] === "usuarios" &&
+          (query.queryKey.includes("memberships") || query.queryKey.includes("current")),
+      });
     },
   });
 };
