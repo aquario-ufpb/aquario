@@ -78,6 +78,7 @@ export type MembroRaw = {
 export type IMembrosRepository = {
   create(data: CreateMembroInput): Promise<MembroWithRelations>;
   findById(id: string): Promise<MembroWithRelations | null>;
+  findByIdWithEntidade(id: string): Promise<MembroWithEntidade | null>;
   findByEntidadeAndMembro(
     entidadeId: string,
     membroId: string

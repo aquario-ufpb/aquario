@@ -52,6 +52,44 @@ export class PrismaMembrosRepository implements IMembrosRepository {
     return membro ? this.mapToMembroWithRelations(membro) : null;
   }
 
+  async findByIdWithEntidade(id: string): Promise<MembroWithEntidade | null> {
+    const membro = await prisma.membroEntidade.findUnique({
+      where: { id },
+      include: membroWithEntidadeInclude,
+    });
+
+    if (!membro) {
+      return null;
+    }
+
+    return {
+      id: membro.id,
+      papel: membro.papel,
+      startedAt: membro.startedAt,
+      endedAt: membro.endedAt,
+      entidade: {
+        id: membro.entidade.id,
+        nome: membro.entidade.nome,
+        slug: membro.entidade.slug,
+        tipo: membro.entidade.tipo,
+        urlFoto: membro.entidade.urlFoto,
+        centro: {
+          id: membro.entidade.centro.id,
+          nome: membro.entidade.centro.nome,
+          sigla: membro.entidade.centro.sigla,
+        },
+      },
+      cargo: membro.cargo
+        ? {
+            id: membro.cargo.id,
+            nome: membro.cargo.nome,
+            descricao: membro.cargo.descricao,
+            ordem: membro.cargo.ordem,
+          }
+        : null,
+    };
+  }
+
   async findByEntidadeAndMembro(
     entidadeId: string,
     membroId: string

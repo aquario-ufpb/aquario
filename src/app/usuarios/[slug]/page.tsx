@@ -314,6 +314,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
                   ? "Você não é membro de nenhuma entidade ainda."
                   : "Este usuário não é membro de nenhuma entidade ainda."
               }
+              isOwnProfile={isOwnProfile}
             />
           </TabsContent>
 
