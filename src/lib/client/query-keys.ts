@@ -51,4 +51,7 @@ export const queryKeys = {
   curriculos: {
     grade: (cursoId: string) => ["curriculos", "grade", cursoId] as const,
   },
+  disciplinasConcluidas: {
+    me: ["disciplinasConcluidas", "me"] as const,
+  },
 } as const;

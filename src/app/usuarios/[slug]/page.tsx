@@ -19,6 +19,7 @@ import { TimelineTab } from "@/components/pages/perfil/timeline-tab";
 import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
+import { ProgressoCursoCard } from "@/components/pages/perfil/progresso-curso-card";
 
 export default function UserProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -281,6 +282,17 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
           </div>
         )}
       </div>
+
+      {/* Course progress */}
+      {user && (
+        <div className="mt-6">
+          <ProgressoCursoCard
+            cursoId={user.curso.id}
+            cursoNome={user.curso.nome}
+            isOwnProfile={isOwnProfile}
+          />
+        </div>
+      )}
 
       {/* Tabs for Entidades and Timeline */}
       <div className="mt-8">

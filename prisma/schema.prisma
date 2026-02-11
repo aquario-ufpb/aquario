@@ -108,8 +108,9 @@ model Usuario {
   centro Centro @relation(fields: [centroId], references: [id])
   curso  Curso  @relation(fields: [cursoId], references: [id])
 
-  membroDeEntidades MembroEntidade[]
-  tokensVerificacao TokenVerificacao[]
+  membroDeEntidades      MembroEntidade[]
+  tokensVerificacao      TokenVerificacao[]
+  disciplinasConcluidas  DisciplinaConcluida[]
 
   @@index([email])
   @@index([matricula])
@@ -291,6 +292,7 @@ model Disciplina {
   preRequisitoEm       PreRequisitoDisciplina[]
   equivalenciasOrigem  Equivalencia[] @relation("disciplinaOrigem")
   equivalenciasDestino Equivalencia[] @relation("disciplinaEquivalente")
+  concluidaPor         DisciplinaConcluida[]
 }
 
 model CurriculoDisciplina {
@@ -332,3 +334,15 @@ model Equivalencia {
   @@unique([disciplinaOrigemId, disciplinaEquivalenteId])
 }
 
+model DisciplinaConcluida {
+  id           String   @id @default(uuid())
+  usuarioId    String
+  disciplinaId String
+  concluidaEm  DateTime @default(now())
+
+  usuario    Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  disciplina Disciplina @relation(fields: [disciplinaId], references: [id])
+
+  @@unique([usuarioId, disciplinaId])
+  @@index([usuarioId])
+}

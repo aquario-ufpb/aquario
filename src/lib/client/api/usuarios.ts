@@ -343,6 +343,19 @@ export const usuariosService = {
     return response.json();
   },
 
+  getMyDisciplinasConcluidas: async (token: string): Promise<{ disciplinaIds: string[] }> => {
+    const response = await apiClient(`${ENDPOINTS.USUARIO_DISCIPLINAS_ME}`, {
+      method: "GET",
+      token,
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+
+    return response.json();
+  },
+
   updateOwnMembership: async (
     membroId: string,
     data: UpdateOwnMembershipRequest,
@@ -355,6 +368,26 @@ export const usuariosService = {
       },
       token,
       body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+
+    return response.json();
+  },
+
+  updateMyDisciplinasConcluidas: async (
+    token: string,
+    disciplinaIds: string[]
+  ): Promise<{ disciplinaIds: string[] }> => {
+    const response = await apiClient(`${ENDPOINTS.USUARIO_DISCIPLINAS_ME}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      token,
+      body: JSON.stringify({ disciplinaIds }),
     });
 
     if (!response.ok) {
