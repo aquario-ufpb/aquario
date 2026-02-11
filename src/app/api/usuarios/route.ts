@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
-import { withAdmin } from "@/lib/server/services/auth/middleware";
+import { withAdmin, withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 
 const mapUserToResponse = (u: {
@@ -37,15 +37,30 @@ const mapUserToResponse = (u: {
 });
 
 export function GET(request: Request) {
-  return withAdmin(request, async req => {
-    const { usuariosRepository } = getContainer();
-    const { searchParams } = new URL(req.url);
+  const { searchParams } = new URL(request.url);
+  const page = searchParams.get("page");
+  const search = searchParams.get("search");
 
-    // Check if this is a paginated request (takes priority over standalone search)
-    const page = searchParams.get("page");
+  // Standalone search (no pagination) only requires authentication
+  if (search && !page) {
+    return withAuth(request, async () => {
+      const { usuariosRepository } = getContainer();
+      const parsedLimit = parseInt(searchParams.get("limit") || "10", 10) || 10;
+      const searchLimit = Math.min(Math.max(1, parsedLimit), 100);
+      const usuarios = await usuariosRepository.search({
+        query: search,
+        limit: searchLimit,
+      });
+
+      return NextResponse.json(usuarios.map(mapUserToResponse));
+    });
+  }
+
+  // Paginated listing and full dump require admin
+  return withAdmin(request, async () => {
+    const { usuariosRepository } = getContainer();
     const limit = searchParams.get("limit");
     const filter = searchParams.get("filter") as "all" | "facade" | "real" | null;
-    const search = searchParams.get("search");
 
     if (page || limit) {
       const pageNum = Math.max(1, parseInt(page || "1", 10) || 1);
@@ -67,19 +82,6 @@ export function GET(request: Request) {
           totalPages: Math.ceil(total / limitNum),
         },
       });
-    }
-
-    // Check if this is a standalone search request
-    const searchQuery = searchParams.get("search");
-    if (searchQuery) {
-      const parsedLimit = parseInt(searchParams.get("limit") || "10", 10) || 10;
-      const searchLimit = Math.min(Math.max(1, parsedLimit), 100);
-      const usuarios = await usuariosRepository.search({
-        query: searchQuery,
-        limit: searchLimit,
-      });
-
-      return NextResponse.json(usuarios.map(mapUserToResponse));
     }
 
     // Default: return all users (for backward compatibility)

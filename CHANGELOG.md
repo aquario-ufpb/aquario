@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **User Search API**: `/api/usuarios?search=` now uses `withAuth` instead of `withAdmin`, allowing entity admins to search for users
+
 ### Changed
 - **Grades Curriculares**: on mobile, disable hover-based dependency highlighting (use tap instead) and require double-tap to open detail dialog; on desktop, click opens dialog directly
 
