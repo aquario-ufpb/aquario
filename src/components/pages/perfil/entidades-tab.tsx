@@ -193,6 +193,7 @@ export function EntidadesTab({
                   <Button
                     variant="outline"
                     size="sm"
+                    aria-label="Editar vínculo"
                     onClick={() => setEditingMembership(membership)}
                   >
                     <Pencil className="w-4 h-4" />
@@ -200,6 +201,7 @@ export function EntidadesTab({
                   <Button
                     variant="outline"
                     size="sm"
+                    aria-label="Remover vínculo"
                     onClick={() => setDeletingMembershipId(membership.id)}
                   >
                     <Trash2 className="w-4 h-4" />

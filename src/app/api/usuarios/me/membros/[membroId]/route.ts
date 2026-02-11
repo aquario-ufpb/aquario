@@ -9,11 +9,15 @@ type RouteContext = {
   params: Promise<{ membroId: string }>;
 };
 
+const dateStringSchema = z
+  .string()
+  .refine(v => !isNaN(Date.parse(v)), { message: "Data inválida" });
+
 const updateOwnMembershipSchema = z.object({
   papel: z.enum(["ADMIN", "MEMBRO"]).optional(),
   cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
-  startedAt: z.string().optional(), // ISO date string
-  endedAt: z.string().nullable().optional(), // ISO date string or null
+  startedAt: dateStringSchema.optional(),
+  endedAt: dateStringSchema.nullable().optional(),
 });
 
 export async function PUT(request: Request, context: RouteContext) {
@@ -69,7 +73,7 @@ export async function PUT(request: Request, context: RouteContext) {
         updateData.cargoId = data.cargoId;
       }
       if (data.startedAt !== undefined) {
-        updateData.startedAt = data.startedAt ? new Date(data.startedAt) : new Date();
+        updateData.startedAt = new Date(data.startedAt);
       }
       if (data.endedAt !== undefined) {
         updateData.endedAt = data.endedAt ? new Date(data.endedAt) : null;

@@ -5,12 +5,16 @@ import { withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 
+const dateStringSchema = z
+  .string()
+  .refine(v => !isNaN(Date.parse(v)), { message: "Data inválida" });
+
 const createOwnMembershipSchema = z.object({
   entidadeId: z.string().uuid("ID de entidade inválido"),
   papel: z.enum(["ADMIN", "MEMBRO"]).optional().default("MEMBRO"),
   cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
-  startedAt: z.string().optional(), // ISO date string
-  endedAt: z.string().nullable().optional(), // ISO date string or null
+  startedAt: dateStringSchema.optional(),
+  endedAt: dateStringSchema.nullable().optional(),
 });
 
 export function GET(request: Request) {
@@ -109,6 +113,13 @@ export async function POST(request: Request) {
           slug: entidade.slug,
           tipo: entidade.tipo,
           urlFoto: entidade.urlFoto,
+          centro: entidade.centro
+            ? {
+                id: entidade.centro.id,
+                nome: entidade.centro.nome,
+                sigla: entidade.centro.sigla,
+              }
+            : null,
         },
         papel: membro.papel,
         cargo: membro.cargo,

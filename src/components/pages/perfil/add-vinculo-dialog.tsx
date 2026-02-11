@@ -66,8 +66,11 @@ export function AddVinculoDialog({ open, onOpenChange }: AddVinculoDialogProps) 
   // Set default startedAt to today when opening
   useEffect(() => {
     if (open && !startedAt) {
-      const today = new Date().toISOString().split("T")[0];
-      setStartedAt(today);
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      setStartedAt(`${year}-${month}-${day}`);
     }
   }, [open, startedAt]);
 
