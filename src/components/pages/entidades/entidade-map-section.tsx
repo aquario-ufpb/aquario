@@ -29,8 +29,8 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
 
     for (const building of mapsData) {
       // Check if location matches building name
-      if (entidade.location && building.name === entidade.name && building.floors.length > 0) {
-        return { building, floor: building.floors[0], room: null };
+      if (building.name === entidade.name && building.floors.length > 0) {
+        return { building, floor: null, room: null };
       }
 
       for (const floor of building.floors) {
@@ -46,10 +46,9 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
           }
         }
       }
-
     }
     return null;
-  }, [mapsData, entidade.slug, entidade.location]);
+  }, [mapsData, entidade.slug, entidade.location, entidade.name]);
 
   if (isLoading) {
     return <Skeleton className="h-64 w-full rounded-xl" />;
@@ -78,7 +77,7 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
 
   const { building, floor: foundFloor, room: foundRoom } = foundLocation;
 
-  const currentFloorId = selectedFloorId || foundFloor.id;
+  const currentFloorId = selectedFloorId || foundFloor?.id;
   const displayFloor = building.floors.find(f => f.id === currentFloorId) || foundFloor;
 
   const handleRoomClick = (room: Room) => {
@@ -95,13 +94,14 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
             Localização
           </h2>
           <p className="text-muted-foreground">
-            {building.name} • {displayFloor.name} {foundRoom ? `• Sala ${foundRoom.location}` : ""}
+            {building.name} {displayFloor?.name ? `• ${displayFloor.name}` : ""}{" "}
+            {foundRoom ? `• Sala ${foundRoom.location}` : ""}
           </p>
         </div>
 
         <InteractiveMap
           building={building}
-          initialFloorId={foundFloor.id}
+          initialFloorId={foundFloor?.id || undefined}
           selectedFloorId={currentFloorId}
           onFloorChange={setSelectedFloorId}
           highlightedRoomId={foundRoom?.id}
@@ -111,7 +111,7 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
       </div>
 
       <RoomDetailsDialog
-        room={displayFloor.rooms.find(r => r.id === selectedRoomId) || null}
+        room={displayFloor?.rooms.find(r => r.id === selectedRoomId) || null}
         buildingId={building.id}
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
