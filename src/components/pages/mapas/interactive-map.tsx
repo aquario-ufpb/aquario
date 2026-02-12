@@ -75,7 +75,11 @@ export function InteractiveMap({
           floor={displayFloor}
           onRoomClick={onRoomClick}
           isDark={isDark}
-          highlightedRoomId={displayFloor.id === initialFloorId ? highlightedRoomId : undefined}
+          highlightedRoomId={
+            initialFloorId === undefined || displayFloor.id === initialFloorId
+              ? highlightedRoomId
+              : undefined
+          }
           onBackgroundClick={onBackgroundClick}
           compact={compact}
         />
