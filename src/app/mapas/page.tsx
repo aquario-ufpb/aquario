@@ -160,7 +160,7 @@ function MapsPageInner() {
             <InteractiveMap
               building={building}
               selectedFloorId={selectedFloors[building.id] || building.floors[0]?.id}
-              initialFloorId={building.floors[0]?.id}
+              initialFloorId={undefined}
               onFloorChange={floorId => handleFloorClick(building.id, floorId)}
               highlightedRoomId={highlightedRoomId ?? undefined}
               isDark={isDark}

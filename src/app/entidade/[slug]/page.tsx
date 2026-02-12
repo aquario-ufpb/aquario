@@ -37,7 +37,7 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
       .slice(0, 8); // Limit to 8 similar entities
   }, [entidade, allEntidades]);
 
-  // Check if user can edit this entidade (only if backend is enabled)
+  
   const canEdit =
     user &&
     (user.papelPlataforma === "MASTER_ADMIN" || isUserAdminOfEntidade(user.id, entidade?.membros));
