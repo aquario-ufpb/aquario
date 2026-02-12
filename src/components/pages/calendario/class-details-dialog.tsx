@@ -7,8 +7,7 @@ import type { ClassWithRoom } from "./types";
 import { useMemo, useState } from "react";
 import { useMapas } from "@/lib/client/hooks/use-mapas";
 import type { Building, Floor, Room as MapRoom } from "@/lib/client/mapas/types";
-import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
-import { MapFloorSelector } from "@/components/pages/mapas/map-floor-selector";
+import { InteractiveMap } from "@/components/pages/mapas/interactive-map";
 import { generateGoogleCalendarLinks } from "@/lib/client/calendario/google-calendar";
 
 type ClassDetailsDialogProps = {
@@ -302,24 +301,16 @@ export default function ClassDetailsDialog({
               Mapa da sala
             </h3>
             <div className="space-y-2">
-              <MapFloorSelector
+              <InteractiveMap
                 building={mapContext.building}
                 selectedFloorId={effectiveFloor.id}
-                onSelectFloor={floorId => setSelectedFloorId(floorId)}
-                isDark={isDark}
-                roomFloorId={mapContext.floor.id}
-                label={`Andares do ${mapContext.building.code || mapContext.building.name}:`}
-              />
-            </div>
-            <div className="mt-3">
-              <BlueprintViewer
-                floor={effectiveFloor}
-                onRoomClick={() => {
-                  // No room details from here; map is for context only
-                }}
-                isDark={isDark}
+                onFloorChange={setSelectedFloorId}
+                initialFloorId={mapContext.floor.id}
                 highlightedRoomId={mapContext.room.id}
-                compact
+                onRoomClick={() => {}}
+                isDark={isDark}
+                compact={true}
+                selectorLabel={`Andares do ${mapContext.building.code || mapContext.building.name}:`}
               />
             </div>
           </div>

@@ -13,6 +13,9 @@ type InteractiveMapProps = {
   highlightedRoomId?: string;
   isDark?: boolean;
   onRoomClick: (room: Room) => void;
+  onBackgroundClick?: () => void;
+  compact?: boolean;
+  selectorLabel?: string;
   className?: string;
 };
 
@@ -24,6 +27,9 @@ export function InteractiveMap({
   highlightedRoomId,
   isDark = false,
   onRoomClick,
+  onBackgroundClick,
+  compact = false,
+  selectorLabel,
   className,
 }: InteractiveMapProps) {
   const [internalSelectedFloorId, setInternalSelectedFloorId] = useState<string | null>(
@@ -50,7 +56,7 @@ export function InteractiveMap({
   }
 
   return (
-    <div className={"flex flex-col gap-6 mt-6" + className}>
+    <div className={`flex flex-col gap-6 mt-6 ${className || ""}`}>
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div className="flex-shrink-0 self-end md:self-auto ml-auto">
           <MapFloorSelector
@@ -59,6 +65,7 @@ export function InteractiveMap({
             onSelectFloor={handleFloorChange}
             isDark={isDark}
             roomFloorId={initialFloorId}
+            label={selectorLabel}
           />
         </div>
       </div>
@@ -69,7 +76,8 @@ export function InteractiveMap({
           onRoomClick={onRoomClick}
           isDark={isDark}
           highlightedRoomId={displayFloor.id === initialFloorId ? highlightedRoomId : undefined}
-          compact={false}
+          onBackgroundClick={onBackgroundClick}
+          compact={compact}
         />
       </div>
     </div>
