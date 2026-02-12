@@ -4,8 +4,9 @@ import React, { Suspense, useEffect, useState, useRef } from "react";
 import { useTheme } from "next-themes";
 import { useSearchParams } from "next/navigation";
 import { Building2 } from "lucide-react";
-import { InteractiveMap } from "@/components/pages/mapas/interactive-map";
+import BlueprintViewer from "@/components/pages/mapas/blueprint-viewer";
 import RoomDetailsDialog from "@/components/pages/mapas/room-details-dialog";
+import { MapFloorSelector } from "@/components/pages/mapas/map-floor-selector";
 import { useMapas } from "@/lib/client/hooks/use-mapas";
 import type { Room } from "@/lib/client/mapas/types";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
@@ -136,7 +137,7 @@ function MapsPageInner() {
       {/* Buildings List */}
       <div className="space-y-16">
         {mapsData.map(building => (
-          <div key={building.id} className="space-y-6 md:px-8 lg:px-64 sm:px-0 mb-16">
+          <div key={building.id} className="space-y-6 md:px-8 lg:px-64 sm:px-0">
             {/* Building Header */}
             <div className="space-y-2 flex flex-col items-center">
               <div
@@ -156,17 +157,32 @@ function MapsPageInner() {
               </div>
             </div>
 
-            {/* Interactive Map Component */}
-            <InteractiveMap
+            {/* Floor Buttons */}
+            <MapFloorSelector
               building={building}
-              selectedFloorId={selectedFloors[building.id] || building.floors[0]?.id}
-              initialFloorId={building.floors[0]?.id}
-              onFloorChange={floorId => handleFloorClick(building.id, floorId)}
-              highlightedRoomId={highlightedRoomId ?? undefined}
+              selectedFloorId={selectedFloors[building.id] ?? null}
+              onSelectFloor={floorId => handleFloorClick(building.id, floorId)}
               isDark={isDark}
-              onRoomClick={room => handleRoomClick(room, building.id)}
-              onBackgroundClick={() => setHighlightedRoomId(null)}
             />
+
+            {/* Blueprint Viewer for Selected Floor */}
+            {selectedFloors[building.id] && (
+              <div className="mt-8">
+                {(() => {
+                  const selectedFloorId = selectedFloors[building.id];
+                  const selectedFloor = building.floors.find(f => f.id === selectedFloorId);
+                  return selectedFloor ? (
+                    <BlueprintViewer
+                      floor={selectedFloor}
+                      onRoomClick={room => handleRoomClick(room, building.id)}
+                      isDark={isDark}
+                      highlightedRoomId={highlightedRoomId}
+                      onBackgroundClick={() => setHighlightedRoomId(null)}
+                    />
+                  ) : null;
+                })()}
+              </div>
+            )}
           </div>
         ))}
       </div>
