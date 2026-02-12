@@ -17,24 +17,6 @@
 
 **Aquário** is an open-source platform for students, professors, and labs at the Centro de Informática (CI) of UFPB. It centralizes academic information and facilitates communication within the community.
 
-## Features
-
-### 📚 Guides (Guias)
-
-Course-specific guides for students - curricular structure, tips, and resources.
-
-### 🔬 Entities (Entidades)
-
-Directory of labs, research groups, and student organizations at CI.
-
-### 📍 Maps
-
-Interactive maps of campus buildings and rooms.
-
-### 💼 Opportunities (Vagas)
-
-Job listings, internships, research positions, and volunteer opportunities.
-
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
