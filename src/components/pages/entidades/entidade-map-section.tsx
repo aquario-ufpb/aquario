@@ -27,7 +27,6 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
       return null;
     }
 
-
     for (const building of mapsData) {
       // Check if location matches building name
       if (entidade.location && building.name === entidade.location && building.floors.length > 0) {
@@ -38,7 +37,6 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
         for (const room of floor.rooms) {
           if (isLabResearch(room)) {
             if (room.labs?.includes(entidade.slug || "")) {
-              
               return { building, floor, room };
             }
           }
