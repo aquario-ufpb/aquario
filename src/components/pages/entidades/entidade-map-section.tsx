@@ -27,30 +27,28 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
       return null;
     }
 
-    console.log("Searching map for entity:", {
-      name: entidade.name,
-      slug: entidade.slug,
-      location: entidade.location,
-    });
 
     for (const building of mapsData) {
+      // Check if location matches building name
+      if (entidade.location && building.name === entidade.location && building.floors.length > 0) {
+        return { building, floor: building.floors[0], room: null };
+      }
+
       for (const floor of building.floors) {
         for (const room of floor.rooms) {
           if (isLabResearch(room)) {
             if (room.labs?.includes(entidade.slug || "")) {
-              console.log("Found by slug match:", room);
+              
               return { building, floor, room };
             }
           }
 
           if (entidade.location && room.location === entidade.location) {
-            console.log("Found by location match:", room);
             return { building, floor, room };
           }
         }
       }
     }
-    console.log("Entidade não encontrada no mapa", entidade);
     return null;
   }, [mapsData, entidade.slug, entidade.location]);
 
@@ -98,7 +96,7 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
             Localização
           </h2>
           <p className="text-muted-foreground">
-            {building.name} • {displayFloor.name} • Sala {foundRoom.location}
+            {building.name} • {displayFloor.name} {foundRoom ? `• Sala ${foundRoom.location}` : ""}
           </p>
         </div>
 
@@ -107,7 +105,7 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
           initialFloorId={foundFloor.id}
           selectedFloorId={currentFloorId}
           onFloorChange={setSelectedFloorId}
-          highlightedRoomId={foundRoom.id}
+          highlightedRoomId={foundRoom?.id}
           isDark={isDark}
           onRoomClick={handleRoomClick}
         />
