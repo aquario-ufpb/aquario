@@ -29,7 +29,7 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
 
     for (const building of mapsData) {
       // Check if location matches building name
-      if (entidade.location && building.name === entidade.location && building.floors.length > 0) {
+      if (entidade.location && building.name === entidade.name && building.floors.length > 0) {
         return { building, floor: building.floors[0], room: null };
       }
 
@@ -46,6 +46,7 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
           }
         }
       }
+
     }
     return null;
   }, [mapsData, entidade.slug, entidade.location]);
