@@ -30,9 +30,8 @@ export default function NotFound() {
         </h1>
 
         <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
-          Você chegou à Zona Abissal. Está escuro, está vazio e esse
-          peixe-lanterna está começando a nos encarar de um jeito estranho.
-          Vamos voltar para a superfície?
+          Você chegou à Zona Abissal. Está escuro, está vazio e esse peixe-lanterna está começando a
+          nos encarar de um jeito estranho. Vamos voltar para a superfície?
         </p>
 
         <Button variant="ghost" asChild>
@@ -47,14 +46,12 @@ export default function NotFound() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center max-w-4xl dark:hidden">
         <div className="flex flex-col gap-4 md:col-start-1 md:row-start-1 md:row-span-3">
           <h1 className="text-2xl sm:text-3xl font-medium text-foreground">
-            <span className="font-bold">404</span>: Essa página se juntou ao
-            cardume
+            <span className="font-bold">404</span>: Essa página se juntou ao cardume
           </h1>
 
           <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-md:hidden">
-            O conteúdo que você procurava encontrou uma janela aberta e foi dar
-            um mergulho no oceano. Nós iríamos atrás dele, mas esquecemos os
-            nossos pés de pato.
+            O conteúdo que você procurava encontrou uma janela aberta e foi dar um mergulho no
+            oceano. Nós iríamos atrás dele, mas esquecemos os nossos pés de pato.
           </p>
 
           <div className="max-md:hidden">
@@ -81,9 +78,8 @@ export default function NotFound() {
         {/* Mobile-only subtext and button (shown below image) */}
         <div className="flex flex-col gap-4 md:hidden">
           <p className="text-muted-foreground text-sm leading-relaxed">
-            O conteúdo que você procurava encontrou uma janela aberta e foi dar
-            um mergulho no oceano. Nós iríamos atrás dele, mas esquecemos os
-            nossos pés de pato.
+            O conteúdo que você procurava encontrou uma janela aberta e foi dar um mergulho no
+            oceano. Nós iríamos atrás dele, mas esquecemos os nossos pés de pato.
           </p>
 
           <Button variant="ghost" asChild className="w-fit">
