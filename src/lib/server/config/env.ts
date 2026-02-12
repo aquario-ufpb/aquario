@@ -88,6 +88,20 @@ export const EMAIL_FROM = process.env.EMAIL_FROM
  */
 export const BLOB_READ_WRITE_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
 
+/**
+ * Path prefix for blob storage, based on deployment environment.
+ * Isolates staging/preview uploads from production within the same blob store.
+ * - Production: "" (no prefix)
+ * - Staging: "staging/"
+ * - Preview: "preview/"
+ */
+export const BLOB_PATH_PREFIX =
+  process.env.NEXT_PUBLIC_IS_STAGING === "true"
+    ? "staging/"
+    : process.env.VERCEL_ENV === "preview"
+      ? "preview/"
+      : "";
+
 // =============================================================================
 // Validation
 // =============================================================================

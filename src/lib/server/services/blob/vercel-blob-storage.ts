@@ -12,18 +12,20 @@ const log = createLogger("BlobStorage");
  */
 export class VercelBlobStorage implements IBlobStorage {
   private readonly token: string;
+  private readonly pathPrefix: string;
 
-  constructor(token: string) {
+  constructor(token: string, pathPrefix: string = "") {
     if (!token) {
       throw new Error("BLOB_READ_WRITE_TOKEN is required for Vercel Blob storage");
     }
     this.token = token;
+    this.pathPrefix = pathPrefix;
   }
 
   async upload(file: Buffer | File, path: string, contentType: string): Promise<string> {
     const buffer = file instanceof File ? Buffer.from(await file.arrayBuffer()) : file;
 
-    const blob = await put(path, buffer, {
+    const blob = await put(this.pathPrefix + path, buffer, {
       access: "public",
       contentType,
       token: this.token,
@@ -37,6 +39,12 @@ export class VercelBlobStorage implements IBlobStorage {
       // Only delete if it's a Vercel Blob URL (contains .blob.vercel-storage.com)
       // Skip local paths or other URLs
       if (!urlOrPath.includes(".blob.vercel-storage.com")) {
+        return false;
+      }
+
+      // In staging/preview, only delete blobs that belong to this environment.
+      // This protects production photos when staging copies the prod database.
+      if (this.pathPrefix && !urlOrPath.includes(`/${this.pathPrefix}`)) {
         return false;
       }
 

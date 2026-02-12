@@ -1,5 +1,5 @@
 import type { Container } from "./types";
-import { EMAIL_ENABLED, BLOB_READ_WRITE_TOKEN } from "@/lib/server/config/env";
+import { EMAIL_ENABLED, BLOB_READ_WRITE_TOKEN, BLOB_PATH_PREFIX } from "@/lib/server/config/env";
 
 // Lazy import implementations to avoid circular dependencies
 // and to allow tree-shaking in production
@@ -58,7 +58,7 @@ function getEmailService() {
 function getBlobStorage() {
   if (BLOB_READ_WRITE_TOKEN) {
     const { VercelBlobStorage } = require("@/lib/server/services/blob/vercel-blob-storage");
-    return new VercelBlobStorage(BLOB_READ_WRITE_TOKEN);
+    return new VercelBlobStorage(BLOB_READ_WRITE_TOKEN, BLOB_PATH_PREFIX);
   }
 
   // No token = local storage (for development)
