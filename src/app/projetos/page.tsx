@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
 export default function Projetos() {
-
   const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { data: user } = useCurrentUser();

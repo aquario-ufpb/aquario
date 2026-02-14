@@ -8,10 +8,7 @@ import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Projeto,
-  formatProjetoTipo,
-} from "@/components/shared/project-card";
+import { Projeto, formatProjetoTipo } from "@/components/shared/project-card";
 import { ArrowLeft, Github, ExternalLink } from "lucide-react";
 
 export default function ProjetoPage({ params }: { params: Promise<{ id: string }> }) {
@@ -34,7 +31,6 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
             setIsLoading(false);
             return;
           }
-
         } catch (err: unknown) {
           if (err instanceof Error) {
             setError(err.message);
