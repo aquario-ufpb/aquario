@@ -20,7 +20,7 @@ export default function Projetos() {
   useEffect(() => {
     const fetchProjetos = async () => {
       try {
-        let projetosMapeados: Projeto[] = [];
+        const projetosMapeados: Projeto[] = [];
 
         // Merge Mock Data with API Data
         // Use MOCK_PROJETOS from the new file

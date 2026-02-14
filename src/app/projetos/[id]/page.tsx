@@ -29,7 +29,6 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
           if (mockProjeto) {
             setProjeto(mockProjeto);
             setIsLoading(false);
-            return;
           }
         } catch (err: unknown) {
           if (err instanceof Error) {
