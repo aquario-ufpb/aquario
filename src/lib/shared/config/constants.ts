@@ -51,6 +51,14 @@ export const ENDPOINTS = {
 
   // Curriculos
   GRADE_CURRICULAR: (cursoId: string) => `/curriculos/grade?cursoId=${cursoId}`,
+
+  // Calendario Academico
+  CALENDARIO_ACADEMICO: "/calendario-academico",
+  CALENDARIO_ACADEMICO_BY_ID: (id: string) => `/calendario-academico/${id}`,
+  CALENDARIO_ACADEMICO_EVENTOS: (id: string) => `/calendario-academico/${id}/eventos`,
+  CALENDARIO_ACADEMICO_EVENTOS_BATCH: (id: string) => `/calendario-academico/${id}/eventos/batch`,
+  CALENDARIO_ACADEMICO_EVENTO: (id: string, eventoId: string) =>
+    `/calendario-academico/${id}/eventos/${eventoId}`,
 } as const;
 
 // External API URLs

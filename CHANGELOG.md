@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Calendário Acadêmico**: Full academic calendar system for UFPB semester events
+  - Database: `SemestreLetivo` and `EventoCalendario` models with `CategoriaEvento` enum (12 categories)
+  - Backend: Repository pattern with Prisma, REST API routes for CRUD on semesters and events (including batch create for CSV import)
+  - Admin page (`/admin/calendario-academico`): Manage semesters and events, CSV upload with auto-category detection, editable category dropdowns
+  - Public page (`/calendario-academico`): Timeline/list view grouped by month and monthly calendar grid view, semester selector, category filter chips, current-day highlighting
+  - Added to nav bar tools dropdown, main page, and ferramentas page
 - **404 Page**: Custom not-found page with themed illustrations — anglerfish for dark mode (centered, glowing text) and empty fishbowl for light mode (side-by-side layout). Responsive design with stacked mobile layout.
 
 ## [1.1.1] - 2026-02-11

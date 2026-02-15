@@ -107,6 +107,9 @@ function createPrismaContainer(): Container {
   const {
     PrismaCurriculosRepository,
   } = require("@/lib/server/db/implementations/prisma/prisma-curriculos-repository");
+  const {
+    PrismaCalendarioRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-calendario-repository");
 
   return {
     usuariosRepository: new PrismaUsuariosRepository(),
@@ -121,6 +124,7 @@ function createPrismaContainer(): Container {
     membrosRepository: new PrismaMembrosRepository(),
     cargosRepository: new PrismaCargosRepository(),
     curriculosRepository: new PrismaCurriculosRepository(),
+    calendarioRepository: new PrismaCalendarioRepository(),
     emailService: getEmailService(),
     blobStorage: getBlobStorage(),
   };
