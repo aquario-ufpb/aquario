@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Map, BookOpen, GitBranch } from "lucide-react";
+import { Calendar, CalendarDays, Map, BookOpen, GitBranch } from "lucide-react";
 
 const ferramentas = [
   {
@@ -30,6 +30,15 @@ const ferramentas = [
     href: "/grades-curriculares",
     icon: GitBranch,
     imagePath: "/grade",
+  },
+  {
+    id: "calendario-academico",
+    title: "Calendário Acadêmico",
+    description:
+      "Visualize os eventos e datas importantes do calendário acadêmico da UFPB. Consulte períodos de matrícula, feriados, exames finais e mais.",
+    href: "/calendario-academico",
+    icon: CalendarDays,
+    imagePath: null,
   },
   {
     id: "guias",

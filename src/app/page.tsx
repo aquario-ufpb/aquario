@@ -7,7 +7,7 @@ import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { useTheme } from "next-themes";
 import { useEffect, useState, useRef, useMemo } from "react";
-import { Github, Map, GitBranch } from "lucide-react";
+import { Github, Map, GitBranch, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEntidades } from "@/lib/client/hooks";
@@ -206,7 +206,7 @@ export default function Home() {
         <section className="py-16">
           <div className="max-w-4xl mx-auto">
             <div className="space-y-6">
-              {/* Calendario and Mapas Section - Side by Side */}
+              {/* Tools Section - Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Mapas Section */}
                 <Link href="/mapas" className="block">
@@ -298,6 +298,66 @@ export default function Home() {
                           height={120}
                           className="object-contain rounded-lg shadow-md"
                         />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+
+                {/* Calendario Academico Section */}
+                <Link href="/calendario-academico" className="block">
+                  <Card
+                    className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
+                      isDark
+                        ? "bg-white/10 border-white/20 hover:bg-white/15"
+                        : "bg-white/60 border-blue-200 hover:bg-white/80"
+                    }`}
+                  >
+                    <CardContent className="p-6 flex items-center gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-3">
+                          <h3
+                            className={`font-display text-xl font-bold ${
+                              isDark ? "text-white" : "text-aquario-primary"
+                            }`}
+                          >
+                            Calendário Acadêmico
+                          </h3>
+                          <Badge
+                            className={
+                              isDark
+                                ? "bg-green-500/20 text-green-400 border-green-500/30"
+                                : "bg-green-500/10 text-green-600 border-green-500/30"
+                            }
+                          >
+                            Novo
+                          </Badge>
+                        </div>
+                        <p
+                          className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
+                        >
+                          Consulte as datas importantes do semestre letivo da UFPB.
+                        </p>
+                        <Button
+                          variant="outline"
+                          className={
+                            isDark
+                              ? "border-white text-white hover:bg-white/20"
+                              : "border-blue-900 text-blue-900 hover:bg-blue-50"
+                          }
+                        >
+                          Ver Calendário
+                        </Button>
+                      </div>
+                      <div className="flex-shrink-0 hidden sm:block">
+                        <div
+                          className={`w-[120px] h-[80px] rounded-lg flex items-center justify-center ${
+                            isDark ? "bg-white/10" : "bg-blue-50"
+                          }`}
+                        >
+                          <CalendarDays
+                            className={`w-12 h-12 ${isDark ? "text-white/60" : "text-blue-400"}`}
+                          />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

@@ -11,3 +11,4 @@ export * from "./use-entidades";
 export * from "./use-vagas";
 export * from "./use-prefetch";
 export * from "./use-grade-curricular";
+export * from "./use-calendario-academico";

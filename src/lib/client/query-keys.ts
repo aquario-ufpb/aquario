@@ -54,4 +54,10 @@ export const queryKeys = {
   disciplinasConcluidas: {
     me: ["disciplinasConcluidas", "me"] as const,
   },
+  calendarioAcademico: {
+    all: ["calendarioAcademico"] as const,
+    ativo: ["calendarioAcademico", "ativo"] as const,
+    byId: (id: string) => ["calendarioAcademico", id] as const,
+    eventos: (semestreId: string) => ["calendarioAcademico", semestreId, "eventos"] as const,
+  },
 } as const;

@@ -606,6 +606,359 @@ async function main() {
   console.log("✅ Example guias created (CC, EC, CDIA)");
 
   // ============================================================================
+  // CALENDÁRIO ACADÊMICO (Semestres + Eventos)
+  // ============================================================================
+
+  // Clean existing calendario data
+  await prisma.eventoCalendario.deleteMany();
+  await prisma.semestreLetivo.deleteMany();
+
+  const sem20251 = await prisma.semestreLetivo.create({
+    data: {
+      nome: "2025.1",
+      dataInicio: new Date("2025-06-02"),
+      dataFim: new Date("2025-10-11"),
+    },
+  });
+
+  const sem20252 = await prisma.semestreLetivo.create({
+    data: {
+      nome: "2025.2",
+      dataInicio: new Date("2025-10-27"),
+      dataFim: new Date("2026-03-14"),
+    },
+  });
+
+  const sem20261 = await prisma.semestreLetivo.create({
+    data: {
+      nome: "2026.1",
+      dataInicio: new Date("2026-03-30"),
+      dataFim: new Date("2026-08-08"),
+    },
+  });
+
+  const sem20262 = await prisma.semestreLetivo.create({
+    data: {
+      nome: "2026.2",
+      dataInicio: new Date("2026-08-17"),
+      dataFim: new Date("2026-12-23"),
+    },
+  });
+
+  // --- 2025.1 Events ---
+  await prisma.eventoCalendario.createMany({
+    data: [
+      {
+        descricao: "Matrícula dos ingressantes 2025.1",
+        dataInicio: new Date("2025-05-26"),
+        dataFim: new Date("2025-05-30"),
+        categoria: "MATRICULA_INGRESSANTES",
+        semestreId: sem20251.id,
+      },
+      {
+        descricao: "Rematrícula dos veteranos 2025.1",
+        dataInicio: new Date("2025-05-19"),
+        dataFim: new Date("2025-05-23"),
+        categoria: "REMATRICULA",
+        semestreId: sem20251.id,
+      },
+      {
+        descricao: "Início do Período Letivo 2025.1",
+        dataInicio: new Date("2025-06-02"),
+        dataFim: new Date("2025-06-02"),
+        categoria: "INICIO_PERIODO_LETIVO",
+        semestreId: sem20251.id,
+      },
+      {
+        descricao: "Feriado - São João",
+        dataInicio: new Date("2025-06-24"),
+        dataFim: new Date("2025-06-24"),
+        categoria: "FERIADO",
+        semestreId: sem20251.id,
+      },
+      {
+        descricao: "Feriado - Independência do Brasil",
+        dataInicio: new Date("2025-09-07"),
+        dataFim: new Date("2025-09-07"),
+        categoria: "FERIADO",
+        semestreId: sem20251.id,
+      },
+      {
+        descricao: "Exames Finais 2025.1",
+        dataInicio: new Date("2025-10-06"),
+        dataFim: new Date("2025-10-11"),
+        categoria: "EXAMES_FINAIS",
+        semestreId: sem20251.id,
+      },
+      {
+        descricao: "Registro de Médias Finais 2025.1",
+        dataInicio: new Date("2025-10-11"),
+        dataFim: new Date("2025-10-11"),
+        categoria: "REGISTRO_MEDIAS_FINAIS",
+        semestreId: sem20251.id,
+      },
+      {
+        descricao: "Término do Período Letivo 2025.1",
+        dataInicio: new Date("2025-10-11"),
+        dataFim: new Date("2025-10-11"),
+        categoria: "TERMINO_PERIODO_LETIVO",
+        semestreId: sem20251.id,
+      },
+    ],
+  });
+
+  // --- 2025.2 Events ---
+  await prisma.eventoCalendario.createMany({
+    data: [
+      {
+        descricao: "Matrícula dos ingressantes 2025.2",
+        dataInicio: new Date("2025-10-20"),
+        dataFim: new Date("2025-10-24"),
+        categoria: "MATRICULA_INGRESSANTES",
+        semestreId: sem20252.id,
+      },
+      {
+        descricao: "Rematrícula dos veteranos 2025.2",
+        dataInicio: new Date("2025-10-13"),
+        dataFim: new Date("2025-10-17"),
+        categoria: "REMATRICULA",
+        semestreId: sem20252.id,
+      },
+      {
+        descricao: "Início do Período Letivo 2025.2",
+        dataInicio: new Date("2025-10-27"),
+        dataFim: new Date("2025-10-27"),
+        categoria: "INICIO_PERIODO_LETIVO",
+        semestreId: sem20252.id,
+      },
+      {
+        descricao: "Feriado - Finados",
+        dataInicio: new Date("2025-11-02"),
+        dataFim: new Date("2025-11-02"),
+        categoria: "FERIADO",
+        semestreId: sem20252.id,
+      },
+      {
+        descricao: "Feriado - Proclamação da República",
+        dataInicio: new Date("2025-11-15"),
+        dataFim: new Date("2025-11-15"),
+        categoria: "FERIADO",
+        semestreId: sem20252.id,
+      },
+      {
+        descricao: "Feriado - Natal",
+        dataInicio: new Date("2025-12-25"),
+        dataFim: new Date("2025-12-25"),
+        categoria: "FERIADO",
+        semestreId: sem20252.id,
+      },
+      {
+        descricao: "Feriado - Ano Novo",
+        dataInicio: new Date("2026-01-01"),
+        dataFim: new Date("2026-01-01"),
+        categoria: "FERIADO",
+        semestreId: sem20252.id,
+      },
+      {
+        descricao: "Feriado - Carnaval",
+        dataInicio: new Date("2026-02-16"),
+        dataFim: new Date("2026-02-17"),
+        categoria: "FERIADO",
+        semestreId: sem20252.id,
+      },
+      {
+        descricao: "Exames Finais 2025.2",
+        dataInicio: new Date("2026-03-09"),
+        dataFim: new Date("2026-03-14"),
+        categoria: "EXAMES_FINAIS",
+        semestreId: sem20252.id,
+      },
+      {
+        descricao: "Registro de Médias Finais 2025.2",
+        dataInicio: new Date("2026-03-14"),
+        dataFim: new Date("2026-03-14"),
+        categoria: "REGISTRO_MEDIAS_FINAIS",
+        semestreId: sem20252.id,
+      },
+      {
+        descricao: "Término do Período Letivo 2025.2",
+        dataInicio: new Date("2026-03-14"),
+        dataFim: new Date("2026-03-14"),
+        categoria: "TERMINO_PERIODO_LETIVO",
+        semestreId: sem20252.id,
+      },
+    ],
+  });
+
+  // --- 2026.1 Events ---
+  await prisma.eventoCalendario.createMany({
+    data: [
+      {
+        descricao: "Matrícula dos ingressantes 2026.1",
+        dataInicio: new Date("2026-03-23"),
+        dataFim: new Date("2026-03-27"),
+        categoria: "MATRICULA_INGRESSANTES",
+        semestreId: sem20261.id,
+      },
+      {
+        descricao: "Rematrícula dos veteranos 2026.1",
+        dataInicio: new Date("2026-03-16"),
+        dataFim: new Date("2026-03-20"),
+        categoria: "REMATRICULA",
+        semestreId: sem20261.id,
+      },
+      {
+        descricao: "Início do Período Letivo 2026.1",
+        dataInicio: new Date("2026-03-30"),
+        dataFim: new Date("2026-03-30"),
+        categoria: "INICIO_PERIODO_LETIVO",
+        semestreId: sem20261.id,
+      },
+      {
+        descricao: "Feriado - Tiradentes",
+        dataInicio: new Date("2026-04-21"),
+        dataFim: new Date("2026-04-21"),
+        categoria: "FERIADO",
+        semestreId: sem20261.id,
+      },
+      {
+        descricao: "Feriado - Dia do Trabalho",
+        dataInicio: new Date("2026-05-01"),
+        dataFim: new Date("2026-05-01"),
+        categoria: "FERIADO",
+        semestreId: sem20261.id,
+      },
+      {
+        descricao: "Feriado - Corpus Christi",
+        dataInicio: new Date("2026-06-04"),
+        dataFim: new Date("2026-06-04"),
+        categoria: "FERIADO",
+        semestreId: sem20261.id,
+      },
+      {
+        descricao: "Feriado - São João",
+        dataInicio: new Date("2026-06-24"),
+        dataFim: new Date("2026-06-24"),
+        categoria: "FERIADO",
+        semestreId: sem20261.id,
+      },
+      {
+        descricao: "Colação de Grau 2026.1",
+        dataInicio: new Date("2026-07-30"),
+        dataFim: new Date("2026-07-30"),
+        categoria: "COLACAO_DE_GRAU",
+        semestreId: sem20261.id,
+      },
+      {
+        descricao: "Exames Finais 2026.1",
+        dataInicio: new Date("2026-08-03"),
+        dataFim: new Date("2026-08-08"),
+        categoria: "EXAMES_FINAIS",
+        semestreId: sem20261.id,
+      },
+      {
+        descricao: "Registro de Médias Finais 2026.1",
+        dataInicio: new Date("2026-08-08"),
+        dataFim: new Date("2026-08-08"),
+        categoria: "REGISTRO_MEDIAS_FINAIS",
+        semestreId: sem20261.id,
+      },
+      {
+        descricao: "Término do Período Letivo 2026.1",
+        dataInicio: new Date("2026-08-08"),
+        dataFim: new Date("2026-08-08"),
+        categoria: "TERMINO_PERIODO_LETIVO",
+        semestreId: sem20261.id,
+      },
+    ],
+  });
+
+  // --- 2026.2 Events ---
+  await prisma.eventoCalendario.createMany({
+    data: [
+      {
+        descricao: "Matrícula dos ingressantes 2026.2",
+        dataInicio: new Date("2026-08-10"),
+        dataFim: new Date("2026-08-14"),
+        categoria: "MATRICULA_INGRESSANTES",
+        semestreId: sem20262.id,
+      },
+      {
+        descricao: "Rematrícula dos veteranos 2026.2",
+        dataInicio: new Date("2026-08-03"),
+        dataFim: new Date("2026-08-07"),
+        categoria: "REMATRICULA",
+        semestreId: sem20262.id,
+      },
+      {
+        descricao: "Início do Período Letivo 2026.2",
+        dataInicio: new Date("2026-08-17"),
+        dataFim: new Date("2026-08-17"),
+        categoria: "INICIO_PERIODO_LETIVO",
+        semestreId: sem20262.id,
+      },
+      {
+        descricao: "Feriado - Independência do Brasil",
+        dataInicio: new Date("2026-09-07"),
+        dataFim: new Date("2026-09-07"),
+        categoria: "FERIADO",
+        semestreId: sem20262.id,
+      },
+      {
+        descricao: "Ponto Facultativo - Dia do Servidor Público",
+        dataInicio: new Date("2026-10-28"),
+        dataFim: new Date("2026-10-28"),
+        categoria: "PONTO_FACULTATIVO",
+        semestreId: sem20262.id,
+      },
+      {
+        descricao: "Feriado - Finados",
+        dataInicio: new Date("2026-11-02"),
+        dataFim: new Date("2026-11-02"),
+        categoria: "FERIADO",
+        semestreId: sem20262.id,
+      },
+      {
+        descricao: "Feriado - Proclamação da República",
+        dataInicio: new Date("2026-11-15"),
+        dataFim: new Date("2026-11-15"),
+        categoria: "FERIADO",
+        semestreId: sem20262.id,
+      },
+      {
+        descricao: "Colação de Grau 2026.2",
+        dataInicio: new Date("2026-12-10"),
+        dataFim: new Date("2026-12-10"),
+        categoria: "COLACAO_DE_GRAU",
+        semestreId: sem20262.id,
+      },
+      {
+        descricao: "Exames Finais 2026.2",
+        dataInicio: new Date("2026-12-16"),
+        dataFim: new Date("2026-12-23"),
+        categoria: "EXAMES_FINAIS",
+        semestreId: sem20262.id,
+      },
+      {
+        descricao: "Registro de Médias Finais 2026.2",
+        dataInicio: new Date("2026-12-23"),
+        dataFim: new Date("2026-12-23"),
+        categoria: "REGISTRO_MEDIAS_FINAIS",
+        semestreId: sem20262.id,
+      },
+      {
+        descricao: "Término do Período Letivo 2026.2",
+        dataInicio: new Date("2026-12-23"),
+        dataFim: new Date("2026-12-23"),
+        categoria: "TERMINO_PERIODO_LETIVO",
+        semestreId: sem20262.id,
+      },
+    ],
+  });
+
+  console.log("✅ Calendário Acadêmico seeded (4 semestres, 41 eventos)");
+
+  // ============================================================================
   // SUMMARY
   // ============================================================================
 
@@ -622,6 +975,7 @@ async function main() {
 ║    - Entidades: ${String(entidadeCount).padEnd(3)} (from aquario-entidades)             ║
 ║    - Guias: 3 example guides with sections                     ║
 ║    - Curriculos: ${String(curriculoStats.curriculos).padEnd(2)} (${curriculoStats.disciplinas} disc, ${curriculoStats.prereqs} prereqs, ${curriculoStats.equivs} equivs) ║
+║    - Calendário: 4 semestres, 41 eventos                     ║
 ╚════════════════════════════════════════════════════════════════╝
 
 IDs for testing:

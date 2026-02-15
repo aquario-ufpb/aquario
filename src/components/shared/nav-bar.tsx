@@ -78,7 +78,7 @@ function ToolsDropdownContent({ isDark }: { isDark: boolean }) {
       href: "/calendario",
       image: isDark ? "/calendario/dark.png" : "/calendario/light.png",
       title: "Calendário",
-      description: "Visualize de horários",
+      description: "Visualize seus horários",
     },
     {
       href: "/guias",
@@ -97,6 +97,12 @@ function ToolsDropdownContent({ isDark }: { isDark: boolean }) {
       image: isDark ? "/grade/dark.png" : "/grade/light.png",
       title: "Grades",
       description: "Grades curriculares",
+    },
+    {
+      href: "/calendario-academico",
+      image: "",
+      title: "Cal. Acadêmico",
+      description: "Calendário acadêmico UFPB",
     },
   ];
 

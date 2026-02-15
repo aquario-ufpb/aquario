@@ -10,3 +10,4 @@ export * from "./usuarios";
 export * from "./entidades";
 export * from "./vagas";
 export * from "./curriculos";
+export * from "./calendario-academico";

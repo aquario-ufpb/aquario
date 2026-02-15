@@ -15,11 +15,14 @@ import type {
   Guia,
   SecaoGuia,
   SubSecaoGuia,
+  SemestreLetivo,
+  EventoCalendario,
   PapelPlataforma,
   TipoToken,
   TipoEntidade,
   PapelMembro,
   StatusGuia,
+  CategoriaEvento,
   Prisma,
 } from "@prisma/client";
 
@@ -36,11 +39,14 @@ export type {
   Guia,
   SecaoGuia,
   SubSecaoGuia,
+  SemestreLetivo,
+  EventoCalendario,
   PapelPlataforma,
   TipoToken,
   TipoEntidade,
   PapelMembro,
   StatusGuia,
+  CategoriaEvento,
 };
 
 // Extended types with relations
