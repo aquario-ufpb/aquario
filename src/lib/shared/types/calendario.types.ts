@@ -1,3 +1,4 @@
+export type { CategoriaEvento } from "@/lib/shared/config/calendario-academico";
 import type { CategoriaEvento } from "@/lib/shared/config/calendario-academico";
 
 export type EventoCalendario = {
