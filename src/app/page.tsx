@@ -7,7 +7,7 @@ import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { useTheme } from "next-themes";
 import { useEffect, useState, useRef, useMemo } from "react";
-import { Github, Map, GitBranch, CalendarDays } from "lucide-react";
+import { Github, Map, GitBranch } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEntidades } from "@/lib/client/hooks";
@@ -349,15 +349,17 @@ export default function Home() {
                         </Button>
                       </div>
                       <div className="flex-shrink-0 hidden sm:block">
-                        <div
-                          className={`w-[120px] h-[80px] rounded-lg flex items-center justify-center ${
-                            isDark ? "bg-white/10" : "bg-blue-50"
-                          }`}
-                        >
-                          <CalendarDays
-                            className={`w-12 h-12 ${isDark ? "text-white/60" : "text-blue-400"}`}
-                          />
-                        </div>
+                        <Image
+                          src={
+                            isDark
+                              ? "/calendario-academico/dark.png"
+                              : "/calendario-academico/light.png"
+                          }
+                          alt="Calendário Acadêmico"
+                          width={220}
+                          height={120}
+                          className="object-contain rounded-lg shadow-md"
+                        />
                       </div>
                     </CardContent>
                   </Card>

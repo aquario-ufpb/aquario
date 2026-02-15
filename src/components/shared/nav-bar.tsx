@@ -100,7 +100,7 @@ function ToolsDropdownContent({ isDark }: { isDark: boolean }) {
     },
     {
       href: "/calendario-academico",
-      image: "",
+      image: isDark ? "/calendario-academico/dark.png" : "/calendario-academico/light.png",
       title: "Cal. Acadêmico",
       description: "Calendário acadêmico UFPB",
     },
