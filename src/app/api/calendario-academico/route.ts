@@ -24,10 +24,15 @@ export async function GET(request: Request) {
   }
 }
 
+const dateString = z
+  .string()
+  .min(1, "Data é obrigatória")
+  .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
+
 const createSemestreSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
-  dataInicio: z.string().min(1, "Data de início é obrigatória"),
-  dataFim: z.string().min(1, "Data de fim é obrigatória"),
+  dataInicio: dateString,
+  dataFim: dateString,
 });
 
 export function POST(request: Request) {

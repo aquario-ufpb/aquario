@@ -46,6 +46,7 @@ export type ICalendarioRepository = {
   findEventosBySemestreId(semestreId: string): Promise<EventoCalendario[]>;
   createEvento(data: CreateEventoInput): Promise<EventoCalendario>;
   createEventosBatch(data: CreateEventoInput[]): Promise<number>;
+  replaceEventosBatch(semestreId: string, data: CreateEventoInput[]): Promise<number>;
   updateEvento(id: string, data: UpdateEventoInput): Promise<EventoCalendario | null>;
   deleteEvento(id: string): Promise<boolean>;
   deleteEventosBySemestreId(semestreId: string): Promise<number>;

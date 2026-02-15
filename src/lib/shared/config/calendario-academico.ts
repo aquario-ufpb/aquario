@@ -1,4 +1,19 @@
-import type { CategoriaEvento } from "@/lib/shared/types/calendario.types";
+export const ALL_CATEGORIAS = [
+  "MATRICULA_INGRESSANTES",
+  "MATRICULA_VETERANOS",
+  "REMATRICULA",
+  "MATRICULA_EXTRAORDINARIA",
+  "PONTO_FACULTATIVO",
+  "FERIADO",
+  "EXAMES_FINAIS",
+  "REGISTRO_MEDIAS_FINAIS",
+  "COLACAO_DE_GRAU",
+  "INICIO_PERIODO_LETIVO",
+  "TERMINO_PERIODO_LETIVO",
+  "OUTRA",
+] as const;
+
+export type CategoriaEvento = (typeof ALL_CATEGORIAS)[number];
 
 export const CATEGORIA_COLORS: Record<CategoriaEvento, string> = {
   MATRICULA_INGRESSANTES: "blue",
@@ -29,21 +44,6 @@ export const CATEGORIA_LABELS: Record<CategoriaEvento, string> = {
   TERMINO_PERIODO_LETIVO: "Término do Período Letivo",
   OUTRA: "Outra",
 };
-
-export const ALL_CATEGORIAS: CategoriaEvento[] = [
-  "MATRICULA_INGRESSANTES",
-  "MATRICULA_VETERANOS",
-  "REMATRICULA",
-  "MATRICULA_EXTRAORDINARIA",
-  "PONTO_FACULTATIVO",
-  "FERIADO",
-  "EXAMES_FINAIS",
-  "REGISTRO_MEDIAS_FINAIS",
-  "COLACAO_DE_GRAU",
-  "INICIO_PERIODO_LETIVO",
-  "TERMINO_PERIODO_LETIVO",
-  "OUTRA",
-];
 
 export function detectCategoria(eventText: string): CategoriaEvento {
   const text = eventText.toUpperCase();
@@ -93,14 +93,27 @@ export type CsvEventRow = {
 };
 
 export function parseCsvDate(dateStr: string): Date {
-  // Remove any extra spaces
   const cleaned = dateStr.trim().replace(/\s+/g, "");
   const parts = cleaned.split("/");
   if (parts.length !== 3) {
-    throw new Error(`Data inválida: ${dateStr}`);
+    throw new Error(`Data inválida (formato esperado DD/MM/YYYY): ${dateStr}`);
   }
-  const [day, month, year] = parts;
-  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+  const day = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  const year = parseInt(parts[2], 10);
+
+  if (!Number.isFinite(day) || !Number.isFinite(month) || !Number.isFinite(year)) {
+    throw new Error(`Data contém valores não numéricos: ${dateStr}`);
+  }
+  if (month < 1 || month > 12) {
+    throw new Error(`Mês inválido (${month}): ${dateStr}`);
+  }
+  if (day < 1 || day > 31) {
+    throw new Error(`Dia inválido (${day}): ${dateStr}`);
+  }
+
+  return new Date(year, month - 1, day);
 }
 
 function parseCsvLine(line: string): string[] {

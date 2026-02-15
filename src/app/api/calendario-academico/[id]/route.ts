@@ -22,10 +22,14 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 }
 
+const dateString = z
+  .string()
+  .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
+
 const updateSemestreSchema = z.object({
   nome: z.string().min(1).optional(),
-  dataInicio: z.string().optional(),
-  dataFim: z.string().optional(),
+  dataInicio: dateString.optional(),
+  dataFim: dateString.optional(),
 });
 
 export function PUT(request: Request, context: RouteContext) {

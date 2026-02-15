@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
+import { ALL_CATEGORIAS } from "@/lib/shared/config/calendario-academico";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -23,26 +24,16 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 }
 
-const categoriaValues = [
-  "MATRICULA_INGRESSANTES",
-  "MATRICULA_VETERANOS",
-  "REMATRICULA",
-  "MATRICULA_EXTRAORDINARIA",
-  "PONTO_FACULTATIVO",
-  "FERIADO",
-  "EXAMES_FINAIS",
-  "REGISTRO_MEDIAS_FINAIS",
-  "COLACAO_DE_GRAU",
-  "INICIO_PERIODO_LETIVO",
-  "TERMINO_PERIODO_LETIVO",
-  "OUTRA",
-] as const;
+const dateString = z
+  .string()
+  .min(1, "Data é obrigatória")
+  .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
 
 const createEventoSchema = z.object({
   descricao: z.string().min(1, "Descrição é obrigatória"),
-  dataInicio: z.string().min(1, "Data de início é obrigatória"),
-  dataFim: z.string().min(1, "Data de fim é obrigatória"),
-  categoria: z.enum(categoriaValues).default("OUTRA"),
+  dataInicio: dateString,
+  dataFim: dateString,
+  categoria: z.enum(ALL_CATEGORIAS).default("OUTRA"),
 });
 
 export function POST(request: Request, context: RouteContext) {

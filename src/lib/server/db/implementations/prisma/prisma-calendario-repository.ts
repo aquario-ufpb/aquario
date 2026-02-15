@@ -121,6 +121,22 @@ export class PrismaCalendarioRepository implements ICalendarioRepository {
     return result.count;
   }
 
+  async replaceEventosBatch(semestreId: string, data: CreateEventoInput[]): Promise<number> {
+    return await prisma.$transaction(async tx => {
+      await tx.eventoCalendario.deleteMany({ where: { semestreId } });
+      const result = await tx.eventoCalendario.createMany({
+        data: data.map(d => ({
+          descricao: d.descricao,
+          dataInicio: d.dataInicio,
+          dataFim: d.dataFim,
+          categoria: d.categoria,
+          semestreId: d.semestreId,
+        })),
+      });
+      return result.count;
+    });
+  }
+
   async updateEvento(id: string, data: UpdateEventoInput): Promise<EventoCalendario | null> {
     const existing = await prisma.eventoCalendario.findUnique({ where: { id } });
     if (!existing) {

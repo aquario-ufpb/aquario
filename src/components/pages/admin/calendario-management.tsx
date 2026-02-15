@@ -74,7 +74,11 @@ function formatDate(dateStr: string): string {
 }
 
 function formatDateForInput(dateStr: string): string {
-  return new Date(dateStr).toISOString().split("T")[0];
+  const d = new Date(dateStr);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function formatDateObjForInput(date: Date): string {
@@ -322,15 +326,19 @@ function CsvImportFlow({
     setEditableEvents(prev => prev.filter((_, i) => i !== index));
   };
 
+  const deleteSemestreMutation = useDeleteSemestre();
+
   const handleImport = async () => {
     if (!nome || !dataInicio || !dataFim) {
       toast.error("Preencha o nome e as datas do semestre");
       return;
     }
 
+    let semestre: { id: string } | null = null;
+
     try {
       // Step 1: Create semester
-      const semestre = await createSemestreMutation.mutateAsync({
+      semestre = await createSemestreMutation.mutateAsync({
         nome,
         dataInicio,
         dataFim,
@@ -353,7 +361,20 @@ function CsvImportFlow({
       toast.success(`Semestre "${nome}" criado com ${editableEvents.length} eventos`);
       onSuccess(semestre.id);
     } catch {
-      toast.error("Erro ao importar calendário");
+      if (semestre) {
+        // Semester was created but events failed — roll back
+        try {
+          await deleteSemestreMutation.mutateAsync(semestre.id);
+          toast.error("Erro ao importar eventos. Semestre foi removido.");
+        } catch {
+          toast.error(
+            `Semestre "${nome}" criado, porém importação de eventos falhou. Remova o semestre manualmente.`
+          );
+          onSuccess(semestre.id);
+        }
+      } else {
+        toast.error("Erro ao criar semestre");
+      }
     }
   };
 

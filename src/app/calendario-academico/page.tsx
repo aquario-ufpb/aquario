@@ -491,6 +491,16 @@ function CalendarGridView({
 
   const [currentMonthIndex, setCurrentMonthIndex] = useState(todayMonthIndex);
 
+  // Sync month index when semester changes (months array may differ)
+  useEffect(() => {
+    setCurrentMonthIndex(prev => Math.min(prev, months.length - 1));
+  }, [months.length]);
+
+  // Reset to today's month when todayMonthIndex changes (new semester selected)
+  useEffect(() => {
+    setCurrentMonthIndex(todayMonthIndex);
+  }, [todayMonthIndex]);
+
   const currentMonth = months[currentMonthIndex];
 
   const goToPrev = useCallback(() => {

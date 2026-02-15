@@ -1,16 +1,4 @@
-export type CategoriaEvento =
-  | "MATRICULA_INGRESSANTES"
-  | "MATRICULA_VETERANOS"
-  | "REMATRICULA"
-  | "MATRICULA_EXTRAORDINARIA"
-  | "PONTO_FACULTATIVO"
-  | "FERIADO"
-  | "EXAMES_FINAIS"
-  | "REGISTRO_MEDIAS_FINAIS"
-  | "COLACAO_DE_GRAU"
-  | "INICIO_PERIODO_LETIVO"
-  | "TERMINO_PERIODO_LETIVO"
-  | "OUTRA";
+import type { CategoriaEvento } from "@/lib/shared/config/calendario-academico";
 
 export type EventoCalendario = {
   id: string;

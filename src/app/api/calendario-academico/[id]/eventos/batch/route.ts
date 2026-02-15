@@ -3,31 +3,22 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
+import { ALL_CATEGORIAS } from "@/lib/shared/config/calendario-academico";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-const categoriaValues = [
-  "MATRICULA_INGRESSANTES",
-  "MATRICULA_VETERANOS",
-  "REMATRICULA",
-  "MATRICULA_EXTRAORDINARIA",
-  "PONTO_FACULTATIVO",
-  "FERIADO",
-  "EXAMES_FINAIS",
-  "REGISTRO_MEDIAS_FINAIS",
-  "COLACAO_DE_GRAU",
-  "INICIO_PERIODO_LETIVO",
-  "TERMINO_PERIODO_LETIVO",
-  "OUTRA",
-] as const;
+const dateString = z
+  .string()
+  .min(1, "Data é obrigatória")
+  .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
 
 const batchCreateSchema = z.object({
   eventos: z.array(
     z.object({
       descricao: z.string().min(1),
-      dataInicio: z.string().min(1),
-      dataFim: z.string().min(1),
-      categoria: z.enum(categoriaValues).default("OUTRA"),
+      dataInicio: dateString,
+      dataFim: dateString,
+      categoria: z.enum(ALL_CATEGORIAS).default("OUTRA"),
     })
   ),
   replace: z.boolean().default(false),
@@ -47,19 +38,17 @@ export function POST(request: Request, context: RouteContext) {
         return ApiError.notFound("Semestre", "SEMESTRE_NOT_FOUND" as never);
       }
 
-      if (data.replace) {
-        await calendarioRepository.deleteEventosBySemestreId(semestreId);
-      }
+      const eventosData = data.eventos.map(e => ({
+        descricao: e.descricao,
+        dataInicio: new Date(e.dataInicio),
+        dataFim: new Date(e.dataFim),
+        categoria: e.categoria,
+        semestreId,
+      }));
 
-      const count = await calendarioRepository.createEventosBatch(
-        data.eventos.map(e => ({
-          descricao: e.descricao,
-          dataInicio: new Date(e.dataInicio),
-          dataFim: new Date(e.dataFim),
-          categoria: e.categoria,
-          semestreId,
-        }))
-      );
+      const count = data.replace
+        ? await calendarioRepository.replaceEventosBatch(semestreId, eventosData)
+        : await calendarioRepository.createEventosBatch(eventosData);
 
       return NextResponse.json({ count }, { status: 201 });
     } catch (error) {
