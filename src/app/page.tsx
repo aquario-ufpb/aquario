@@ -302,69 +302,67 @@ export default function Home() {
                     </CardContent>
                   </Card>
                 </Link>
+              </div>
 
-                {/* Calendario Academico Section */}
-                <Link href="/calendario-academico" className="block">
-                  <Card
-                    className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                      isDark
-                        ? "bg-white/10 border-white/20 hover:bg-white/15"
-                        : "bg-white/60 border-blue-200 hover:bg-white/80"
-                    }`}
-                  >
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-3">
-                          <h3
-                            className={`font-display text-xl font-bold ${
-                              isDark ? "text-white" : "text-aquario-primary"
-                            }`}
-                          >
-                            Calendário Acadêmico
-                          </h3>
-                          <Badge
-                            className={
-                              isDark
-                                ? "bg-green-500/20 text-green-400 border-green-500/30"
-                                : "bg-green-500/10 text-green-600 border-green-500/30"
-                            }
-                          >
-                            Novo
-                          </Badge>
-                        </div>
-                        <p
-                          className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
+              {/* Calendario Academico Section */}
+              <Link href="/calendario-academico" className="block">
+                <Card
+                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
+                    isDark
+                      ? "bg-white/10 border-white/20 hover:bg-white/15"
+                      : "bg-white/60 border-blue-200 hover:bg-white/80"
+                  }`}
+                >
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-3">
+                        <h3
+                          className={`font-display text-xl font-bold ${
+                            isDark ? "text-white" : "text-aquario-primary"
+                          }`}
                         >
-                          Consulte as datas importantes do semestre letivo da UFPB.
-                        </p>
-                        <Button
-                          variant="outline"
+                          Calendário Acadêmico
+                        </h3>
+                        <Badge
                           className={
                             isDark
-                              ? "border-white text-white hover:bg-white/20"
-                              : "border-blue-900 text-blue-900 hover:bg-blue-50"
+                              ? "bg-green-500/20 text-green-400 border-green-500/30"
+                              : "bg-green-500/10 text-green-600 border-green-500/30"
                           }
                         >
-                          Ver Calendário
-                        </Button>
+                          Novo
+                        </Badge>
                       </div>
-                      <div className="flex-shrink-0 hidden sm:block">
-                        <Image
-                          src={
-                            isDark
-                              ? "/calendario-academico/dark.png"
-                              : "/calendario-academico/light.png"
-                          }
-                          alt="Calendário Acadêmico"
-                          width={220}
-                          height={120}
-                          className="object-contain rounded-lg shadow-md"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </div>
+                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
+                        Consulte as datas importantes do semestre letivo da UFPB.
+                      </p>
+                      <Button
+                        variant="outline"
+                        className={
+                          isDark
+                            ? "border-white text-white hover:bg-white/20"
+                            : "border-blue-900 text-blue-900 hover:bg-blue-50"
+                        }
+                      >
+                        Ver Calendário
+                      </Button>
+                    </div>
+                    <div className="flex-shrink-0 hidden sm:block">
+                      <Image
+                        src={
+                          isDark
+                            ? "/calendario-academico/dark.png"
+                            : "/calendario-academico/light.png"
+                        }
+                        alt="Calendário Acadêmico"
+                        width={220}
+                        height={120}
+                        className="object-contain rounded-lg shadow-md"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
 
               {/* Grades Curriculares Section */}
               <Link href="/grades-curriculares" className="block">
