@@ -87,12 +87,12 @@ export default function Projetos() {
           </div>
           {user && (
             <div className="hidden md:flex flex-shrink-0">
-              <Link href="/projetos/novo">
-                <Button className="rounded-full">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Divulgar um projeto
-                </Button>
-              </Link>
+                <Button className="rounded-full" asChild>
+                 <Link href="/projetos/novo">
+                   <Plus className="mr-2 h-4 w-4" />
+                   Divulgar um projeto
+                 </Link>
+               </Button>
             </div>
           )}
         </div>
