@@ -11,9 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Projeto, formatProjetoTipo } from "@/components/shared/project-card";
 import { ArrowLeft, Github, ExternalLink } from "lucide-react";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
+import DOMPurify from "dompurify";
 
 export default function ProjetoPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+  const [id, setId] = useState<string | null>(null);
+  useEffect(() => { 
+    params.then(({ id }) => setId(id));
+   }, [params]);
   const [projeto, setProjeto] = useState<Projeto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,9 +117,8 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
             <Image
               src={projeto.imagem || "/lab.jpg"}
               alt={projeto.nome}
-              layout="fill"
-              objectFit="cover"
-              className="object-center"
+              fill
+              className="object-cover object-center"
             />
           </div>
 
@@ -123,7 +126,7 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
             <h3 className="text-2xl font-semibold mb-4">Sobre o Projeto</h3>
             <div
               className="text-lg text-muted-foreground leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: projeto.descricao }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(projeto.descricao) }}
             />
           </div>
         </div>
