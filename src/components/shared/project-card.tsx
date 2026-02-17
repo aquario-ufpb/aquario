@@ -1,24 +1,38 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users } from "lucide-react";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
+import { Badge } from "@/components/ui/badge";
 
-export type Autor = {
+export type Publicador = {
+  id: string;
+  nome: string;
+  urlFotoPerfil?: string | null;
+  tipo: "USUARIO" | "ENTIDADE";
+};
+
+export type Colaborador = {
   id: string;
   nome: string;
   urlFotoPerfil?: string | null;
 };
 
+export type TipoProjeto = "PESSOAL" | "LABORATORIO" | "ENTIDADE" | "LIGA";
+
 export type Projeto = {
   id: string;
-  titulo: string;
+  nome: string;
   descricao: string;
-  urlFoto?: string | null;
-  autor: Autor;
-  tipo: string;
+  imagem?: string | null;
+  publicador: Publicador;
+  tipo: TipoProjeto;
   tags: string[];
-  membros?: { id: string }[];
+  colaboradores: Colaborador[];
+  linkRepositorio?: string;
+  linkPrototipo?: string;
+  criadoEm: string;
 };
 
 type ProjectCardProps = {
@@ -30,39 +44,71 @@ const stripHtml = (html: string): string => {
   return html.replace(/<[^>]*>/g, "").trim();
 };
 
+export const formatProjetoTipo = (tipo: TipoProjeto) => {
+  switch (tipo) {
+    case "PESSOAL":
+      return "Pessoal";
+    case "LABORATORIO":
+      return "Laboratório";
+    case "ENTIDADE":
+      return "Grupo";
+    case "LIGA":
+      return "Liga";
+    default:
+      return tipo;
+  }
+};
+
 const ProjectCard = ({ projeto }: ProjectCardProps) => {
   return (
-    <Card className="w-full max-w-sm overflow-hidden hover:shadow-xl transition-shadow">
-      <div className="relative h-48 w-full">
+    <Card className="w-full max-w-sm overflow-hidden hover:bg-accent/20 transition-all duration-200 border-border/90 flex flex-col h-full">
+      <div className="relative h-48 w-full border-b border-border/50 shrink-0">
         <Image
-          src={projeto.urlFoto || "/lab.jpg"}
-          alt={projeto.titulo}
+          src={projeto.imagem || "/lab.jpg"}
+          alt={projeto.nome}
           layout="fill"
           objectFit="cover"
         />
+        <div className="absolute top-2 right-2">
+          <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm shadow-sm">
+            {formatProjetoTipo(projeto.tipo)}
+          </Badge>
+        </div>
       </div>
-      <CardHeader>
-        <CardTitle className="truncate">{projeto.titulo}</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="truncate text-lg">{projeto.nome}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground line-clamp-2 h-10">
+      <CardContent className="flex-1 flex flex-col justify-between">
+        <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem] mb-4">
           {stripHtml(projeto.descricao)}
         </p>
-        {projeto.autor && (
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-4 pt-2">
-            <Avatar className="h-6 w-6">
+
+        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+          <div className="flex items-center space-x-2 overflow-hidden">
+            <Avatar className="h-6 w-6 border border-border">
               <AvatarImage
                 src={
-                  projeto.autor.urlFotoPerfil ||
-                  getDefaultAvatarUrl(projeto.autor.id, projeto.autor.nome)
+                  projeto.publicador.urlFotoPerfil ||
+                  getDefaultAvatarUrl(projeto.publicador.id, projeto.publicador.nome)
                 }
-                alt={projeto.autor.nome}
+                alt={projeto.publicador.nome}
               />
-              <AvatarFallback>{projeto.autor.nome[0]}</AvatarFallback>
+              <AvatarFallback>{projeto.publicador.nome[0]}</AvatarFallback>
             </Avatar>
-            <span>{projeto.autor.nome}</span>
+            <span className="text-xs text-muted-foreground truncate max-w-[100px]">
+              {projeto.publicador.nome}
+            </span>
           </div>
-        )}
+          {projeto.colaboradores.length > 0 && (
+            <div
+              className="flex items-center gap-1.5 text-muted-foreground"
+              title={`${projeto.colaboradores.length} colaboradores`}
+            >
+              <Users className="h-4 w-4" />
+              <span className="text-xs font-medium">{projeto.colaboradores.length}</span>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
