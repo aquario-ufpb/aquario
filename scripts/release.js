@@ -132,9 +132,10 @@ function getChangelogNotes(version) {
 
   const contentStart = changelog.indexOf("\n", start) + 1;
   const nextVersion = changelog.indexOf("\n## [", contentStart);
-  const section = nextVersion === -1
-    ? changelog.substring(contentStart)
-    : changelog.substring(contentStart, nextVersion);
+  const section =
+    nextVersion === -1
+      ? changelog.substring(contentStart)
+      : changelog.substring(contentStart, nextVersion);
 
   const trimmed = section.trim();
   return trimmed || null;
