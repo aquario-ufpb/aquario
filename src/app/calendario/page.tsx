@@ -309,6 +309,7 @@ export default function CalendarioPage() {
           conflicts={conflicts}
           isDark={isDark}
           calendarRef={calendarRef}
+          semesterName={data.description?.match(/(\d{4}\.\d)/)?.[1]}
         />
       )}
     </div>
