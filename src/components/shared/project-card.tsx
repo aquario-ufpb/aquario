@@ -66,8 +66,8 @@ const ProjectCard = ({ projeto }: ProjectCardProps) => {
         <Image
           src={projeto.imagem || "/lab.jpg"}
           alt={projeto.nome}
-          layout="fill"
-          objectFit="cover"
+          fill
+          className="object-cover"
         />
         <div className="absolute top-2 right-2">
           <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm shadow-sm">
