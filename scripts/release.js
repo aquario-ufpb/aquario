@@ -118,7 +118,7 @@ function bumpVersion() {
 
 function pushChanges() {
   console.log("🚀 Pushing changes and tags...");
-  exec("git push");
+  exec("git push -u origin HEAD");
   exec("git push --tags");
   console.log("✅ Pushed successfully\n");
 }
