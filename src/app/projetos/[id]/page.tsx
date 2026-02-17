@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Projeto, formatProjetoTipo } from "@/components/shared/project-card";
 import { ArrowLeft, Github, ExternalLink } from "lucide-react";
+import { getDefaultAvatarUrl } from "@/lib/client/utils";
 
 export default function ProjetoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -137,7 +138,7 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage
-                    src={projeto.publicador.urlFotoPerfil || ""}
+                    src={projeto.publicador.urlFotoPerfil || getDefaultAvatarUrl(projeto.publicador.id, projeto.publicador.nome)}
                     alt={projeto.publicador.nome}
                   />
                   <AvatarFallback>{projeto.publicador.nome[0]}</AvatarFallback>
