@@ -6,6 +6,8 @@
  */
 
 const { execSync } = require("node:child_process");
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
 
 const versionType = process.argv[2] || "patch";
 
@@ -15,15 +17,23 @@ if (!["patch", "minor", "major"].includes(versionType)) {
 }
 
 function exec(command, options = {}) {
+  const { silent, ignoreError, input, ...rest } = options;
   try {
-    const result = execSync(command, {
+    const execOptions = {
       encoding: "utf8",
-      stdio: options.silent ? "pipe" : "inherit",
-      ...options,
-    });
+      stdio: silent ? "pipe" : "inherit",
+      ...rest,
+    };
+    if (input != null) {
+      execOptions.input = input;
+      if (silent) {
+        execOptions.stdio = ["pipe", "pipe", "pipe"];
+      }
+    }
+    const result = execSync(command, execOptions);
     return result ? result.trim() : "";
   } catch (error) {
-    if (!options.ignoreError) {
+    if (!ignoreError) {
       throw error;
     }
     return "";
@@ -113,9 +123,38 @@ function pushChanges() {
   console.log("✅ Pushed successfully\n");
 }
 
+function getChangelogNotes(version) {
+  const tag = version.replace(/^v/, "");
+  const changelog = readFileSync(join(__dirname, "..", "CHANGELOG.md"), "utf8");
+  const versionHeader = `## [${tag}]`;
+  const start = changelog.indexOf(versionHeader);
+  if (start === -1) return null;
+
+  const contentStart = changelog.indexOf("\n", start) + 1;
+  const nextVersion = changelog.indexOf("\n## [", contentStart);
+  const section = nextVersion === -1
+    ? changelog.substring(contentStart)
+    : changelog.substring(contentStart, nextVersion);
+
+  const trimmed = section.trim();
+  return trimmed || null;
+}
+
 function createGitHubRelease(version) {
   console.log("📝 Creating GitHub release...");
-  const releaseUrl = exec(`gh release create ${version} --generate-notes`, { silent: true });
+  const changelog = getChangelogNotes(version);
+  // Create with auto-generated notes first
+  exec(`gh release create ${version} --generate-notes`, { silent: true });
+  // Prepend changelog notes if available
+  if (changelog) {
+    const autoNotes = exec(`gh release view ${version} --json body -q .body`, { silent: true });
+    const combined = `${changelog}\n\n---\n\n${autoNotes}`;
+    exec(`gh release edit ${version} --notes-file -`, {
+      silent: true,
+      input: combined,
+    });
+  }
+  const releaseUrl = exec(`gh release view ${version} --json url -q .url`, { silent: true });
   console.log(`✅ Release created: ${releaseUrl}\n`);
 }
 
