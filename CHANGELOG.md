@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0] - 2026-02-17
 
+### Fix
+- Added images for calendario academico that were missing
+
+## [1.2.0] - 2026-02-17
+
 ### Added
 - **Calendário Acadêmico**: Full academic calendar system for UFPB semester events
   - Database: `SemestreLetivo` and `EventoCalendario` models with `CategoriaEvento` enum (12 categories)
