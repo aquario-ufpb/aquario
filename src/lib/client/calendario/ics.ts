@@ -1,6 +1,5 @@
 import { createEvents, EventAttributes } from "ics";
 import { parseHorarioToSlots, groupConsecutiveSlots } from "./utils";
-import { SEMESTER_END_DATE } from "./constants";
 import type { ClassWithRoom } from "@/components/pages/calendario/types";
 
 /**
@@ -14,22 +13,16 @@ const dayNumberToICS = (day: number): number => {
 };
 
 /**
- * Get the next occurrence of a given day of week
- * Returns a date for the next Monday-Friday
+ * Get the first occurrence of a given day of week on or after a base date
  */
-const getNextDateForDay = (dayOfWeek: number): Date => {
-  const today = new Date();
-  const currentDay = today.getDay(); // 0=Sunday, 1=Monday, etc.
-  const targetDay = dayOfWeek === 0 ? 7 : dayOfWeek; // Convert Sunday to 7 for easier math
-  const currentDayAdjusted = currentDay === 0 ? 7 : currentDay;
-
-  let daysUntilTarget = targetDay - currentDayAdjusted;
-  if (daysUntilTarget <= 0) {
-    daysUntilTarget += 7; // Next week
+const getFirstDateForDay = (dayOfWeek: number, baseDate: Date): Date => {
+  const baseDayOfWeek = baseDate.getDay();
+  let daysUntilTarget = dayOfWeek - baseDayOfWeek;
+  if (daysUntilTarget < 0) {
+    daysUntilTarget += 7;
   }
-
-  const targetDate = new Date(today);
-  targetDate.setDate(today.getDate() + daysUntilTarget);
+  const targetDate = new Date(baseDate);
+  targetDate.setDate(baseDate.getDate() + daysUntilTarget);
   return targetDate;
 };
 
@@ -48,20 +41,10 @@ const parseTime = (timeStr: string): { hour: number; minute: number } => {
  */
 export function generateICSFile(
   classes: ClassWithRoom[],
-  _semesterStartDate?: Date,
-  semesterEndDate?: Date
+  semesterStartDate: Date,
+  semesterEndDate: Date
 ): Promise<Blob> {
   const events: EventAttributes[] = [];
-
-  // Use semester end date from constants, or provided date, or fallback to 4 months from now
-  const finalEndDate =
-    semesterEndDate ||
-    SEMESTER_END_DATE ||
-    (() => {
-      const fallback = new Date();
-      fallback.setMonth(fallback.getMonth() + 4);
-      return fallback;
-    })();
 
   classes.forEach(classItem => {
     const slots = parseHorarioToSlots(classItem.horario);
@@ -70,8 +53,8 @@ export function generateICSFile(
     const mergedGroups = groupConsecutiveSlots(slots);
 
     mergedGroups.forEach(({ startSlot, endSlot, day }) => {
-      // Get the first occurrence of this day
-      const firstOccurrence = getNextDateForDay(dayNumberToICS(day));
+      // Get the first occurrence of this day on or after semester start
+      const firstOccurrence = getFirstDateForDay(dayNumberToICS(day), semesterStartDate);
       const startTime = parseTime(startSlot.startTime);
       const endTime = parseTime(endSlot.endTime);
 
@@ -115,7 +98,7 @@ export function generateICSFile(
         location: `${classItem.room.bloco} ${classItem.room.nome}`,
         start: eventStart,
         end: eventEnd,
-        recurrenceRule: `FREQ=WEEKLY;BYDAY=${["SU", "MO", "TU", "WE", "TH", "FR", "SA"][dayNumberToICS(day)]};UNTIL=${finalEndDate.getFullYear()}${String(finalEndDate.getMonth() + 1).padStart(2, "0")}${String(finalEndDate.getDate()).padStart(2, "0")}T235959Z`,
+        recurrenceRule: `FREQ=WEEKLY;BYDAY=${["SU", "MO", "TU", "WE", "TH", "FR", "SA"][dayNumberToICS(day)]};UNTIL=${semesterEndDate.getFullYear()}${String(semesterEndDate.getMonth() + 1).padStart(2, "0")}${String(semesterEndDate.getDate()).padStart(2, "0")}T235959Z`,
         status: "CONFIRMED",
         busyStatus: "BUSY",
       };

@@ -7,6 +7,8 @@ import { exportCalendarAsImage } from "@/lib/client/calendario/export";
 import { generateICSFile, downloadICSFile } from "@/lib/client/calendario/ics";
 import { generateGoogleCalendarLinks } from "@/lib/client/calendario/google-calendar";
 import { trackEvent } from "@/analytics/posthog-client";
+import { toast } from "sonner";
+import { useSemestres } from "@/lib/client/hooks/use-calendario-academico";
 import CalendarLegend from "./calendar-legend";
 import ClassDetailsDialog from "./class-details-dialog";
 import GoogleCalendarDialog from "./google-calendar-dialog";
@@ -24,6 +26,7 @@ type CalendarGridProps = {
   }>;
   isDark: boolean;
   calendarRef: React.RefObject<HTMLDivElement>;
+  semesterName?: string;
 };
 
 export default function CalendarGrid({
@@ -32,6 +35,7 @@ export default function CalendarGrid({
   conflicts,
   isDark,
   calendarRef,
+  semesterName,
 }: CalendarGridProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCellData, setSelectedCellData] = useState<{
@@ -46,6 +50,8 @@ export default function CalendarGrid({
     ReturnType<typeof generateGoogleCalendarLinks>
   >([]);
   const contentRef = useRef<HTMLDivElement>(null);
+  const { data: semestres, isLoading: isLoadingSemestres } = useSemestres();
+  const semestre = semesterName ? semestres?.find(s => s.nome === semesterName) : undefined;
 
   const handleCellClick = (classes: ClassWithRoom[], day: number, timeSlotIndex: number) => {
     if (classes.length === 0) {
@@ -76,7 +82,7 @@ export default function CalendarGrid({
         filename: "calendario-alocacao.png",
       });
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Erro ao exportar o calendário");
+      toast.error(error instanceof Error ? error.message : "Erro ao exportar o calendário");
     } finally {
       setIsExporting(false);
     }
@@ -84,17 +90,23 @@ export default function CalendarGrid({
 
   const handleAddToCalendar = async () => {
     if (selectedClasses.length === 0) {
-      alert("Nenhuma disciplina selecionada para adicionar ao calendário");
+      toast.error("Nenhuma disciplina selecionada para adicionar ao calendário");
+      return;
+    }
+    if (!semestre) {
+      toast.error("Não foi possível obter as datas do semestre atual");
       return;
     }
 
     trackEvent("calendar_export_calendar_click");
     setIsGeneratingICS(true);
     try {
-      const blob = await generateICSFile(selectedClasses);
+      const startDate = new Date(semestre.dataInicio);
+      const endDate = new Date(semestre.dataFim);
+      const blob = await generateICSFile(selectedClasses, startDate, endDate);
       downloadICSFile(blob, "calendario-disciplinas.ics");
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Erro ao gerar arquivo de calendário");
+      toast.error(error instanceof Error ? error.message : "Erro ao gerar arquivo de calendário");
     } finally {
       setIsGeneratingICS(false);
     }
@@ -102,12 +114,18 @@ export default function CalendarGrid({
 
   const handleOpenGoogleCalendar = () => {
     if (selectedClasses.length === 0) {
-      alert("Nenhuma disciplina selecionada para adicionar ao calendário");
+      toast.error("Nenhuma disciplina selecionada para adicionar ao calendário");
+      return;
+    }
+    if (!semestre) {
+      toast.error("Não foi possível obter as datas do semestre atual");
       return;
     }
 
     trackEvent("calendar_add_google_calendar_click");
-    const events = generateGoogleCalendarLinks(selectedClasses);
+    const startDate = new Date(semestre.dataInicio);
+    const endDate = new Date(semestre.dataFim);
+    const events = generateGoogleCalendarLinks(selectedClasses, startDate, endDate);
     setGoogleCalendarEvents(events);
     setGoogleCalendarDialogOpen(true);
   };
@@ -181,6 +199,8 @@ export default function CalendarGrid({
             isDark={isDark}
             day={selectedCellData.day}
             timeSlot={selectedCellData.timeSlot}
+            semesterStartDate={semestre ? new Date(semestre.dataInicio) : undefined}
+            semesterEndDate={semestre ? new Date(semestre.dataFim) : undefined}
           />
         )}
       </Card>
@@ -203,7 +223,9 @@ export default function CalendarGrid({
         </Button>
         <Button
           onClick={handleAddToCalendar}
-          disabled={isGeneratingICS || selectedClasses.length === 0}
+          disabled={
+            isGeneratingICS || selectedClasses.length === 0 || isLoadingSemestres || !semestre
+          }
           variant="outline"
           size="default"
           className="flex items-center gap-2"
@@ -217,7 +239,7 @@ export default function CalendarGrid({
         </Button>
         <Button
           onClick={handleOpenGoogleCalendar}
-          disabled={selectedClasses.length === 0}
+          disabled={selectedClasses.length === 0 || isLoadingSemestres || !semestre}
           variant="outline"
           size="default"
           className="flex items-center gap-2"

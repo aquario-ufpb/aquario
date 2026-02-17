@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Calendário**: Calendar export (ICS and Google Calendar) now uses semester start/end dates from the matching `SemestreLetivo` (based on the period in the PAAS data) instead of hardcoded `SEMESTER_END_DATE` constant and relative-to-today start dates
+- **Calendário**: Replaced `alert()` calls with `toast.error()` from Sonner for consistent UX
+
 ## [1.2.0] - 2026-02-17
 
 ### Fix
