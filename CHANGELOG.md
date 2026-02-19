@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Disciplinas por Semestre**: New `DisciplinaSemestre` table to persist which disciplines (and specific PAAS turmas) a user is taking per semester
+  - API route `GET/PUT /api/usuarios/me/semestres/[semestreId]/disciplinas` with "ativo" shorthand for active semester
+  - Server-side resolution of discipline codes from PAAS to database IDs
+  - Snapshot fields (turma, docente, horario, codigoPaas) preserve volatile PAAS data
+- **Minhas Disciplinas**: New personal semester dashboard at `/calendario` for logged-in users
+  - Side-by-side layout: discipline list (left) + calendar grid (right)
+  - Add/remove disciplines with search, pick PAAS turmas per discipline
+  - Calendar auto-updates as turmas are selected
+  - Non-logged-in users still see the original PAAS explorer with localStorage persistence
+- **Marcar Disciplinas API**: `POST /api/usuarios/me/disciplinas/marcar` — atomic endpoint for setting discipline status (concluída/cursando/none) with mutual exclusivity enforced via transaction
+- **Patch Disciplina Semestre API**: `PATCH /api/usuarios/me/semestres/[semestreId]/disciplinas/[id]` — update turma details on a single enrollment record
+- **Disciplina Search API**: `GET /api/disciplinas/search?q=term` — public search by code or name
+- **Grade Curricular — Dialog Actions**: Clicking a discipline opens a detail dialog with buttons to mark as Concluída or Cursando directly
+- **Grade Curricular — Bulk Selection**: "Selecionar cadeiras" mode with dropdown save (Concluídas or Cursando), replacing the old concluída-only selection
+- **Grade Curricular — Nudge Banner**: When user has cursando disciplines without turma, shows a purple banner linking to `/calendario`
+
 ### Changed
+- **Minhas Disciplinas — Semester Validation**: Uses DB active semester as source of truth; turma selection and calendar are disabled when SACI data doesn't match the current semester, with user-facing warnings
+- **Calendário → Minhas Disciplinas**: Renamed across navigation (desktop dropdown, mobile hamburger, ferramentas page, home page)
+- **Mobile Navigation**: Added "GRADES" link to hamburger menu for direct Grade Curricular access
+- **Grade Curricular**: Unified click interaction model — first click shows dependencies, second click opens dialog (removed hover-based highlighting)
+- **Grade Curricular**: Completed and cursando states now read directly from server data instead of local optimistic copies
 - **Calendário**: Calendar export (ICS and Google Calendar) now uses semester start/end dates from the matching `SemestreLetivo` (based on the period in the PAAS data) instead of hardcoded `SEMESTER_END_DATE` constant and relative-to-today start dates
 - **Calendário**: Replaced `alert()` calls with `toast.error()` from Sonner for consistent UX
 

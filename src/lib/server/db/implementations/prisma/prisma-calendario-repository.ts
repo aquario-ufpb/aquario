@@ -32,13 +32,27 @@ export class PrismaCalendarioRepository implements ICalendarioRepository {
     });
   }
 
-  findSemestreAtivo(): Promise<SemestreLetivo | null> {
+  async findSemestreAtivo(): Promise<SemestreLetivo | null> {
     const now = new Date();
-    return prisma.semestreLetivo.findFirst({
+
+    // Try current semester first (date range contains now)
+    const current = await prisma.semestreLetivo.findFirst({
       where: {
         dataInicio: { lte: now },
         dataFim: { gte: now },
       },
+    });
+
+    if (current) {
+      return current;
+    }
+
+    // Between semesters: fall back to the next upcoming semester
+    return prisma.semestreLetivo.findFirst({
+      where: {
+        dataInicio: { gt: now },
+      },
+      orderBy: { dataInicio: "asc" },
     });
   }
 

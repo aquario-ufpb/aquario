@@ -1,31 +1,35 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { useAllCursos } from "@/lib/client/hooks/use-admin-cursos";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { useGradeCurricular } from "@/lib/client/hooks/use-grade-curricular";
+import { useDisciplinasConcluidas } from "@/lib/client/hooks/use-disciplinas-concluidas";
 import {
-  useDisciplinasConcluidas,
-  useUpdateDisciplinasConcluidas,
-} from "@/lib/client/hooks/use-disciplinas-concluidas";
+  useDisciplinasSemestreAtivo,
+  useMarcarDisciplinas,
+} from "@/lib/client/hooks/use-disciplinas-semestre";
+import { useSemestreAtivo } from "@/lib/client/hooks/use-calendario-academico";
 import { GradeCurricularHeader } from "@/components/pages/grades-curriculares/grade-curricular-header";
 import { CursoSelector } from "@/components/pages/grades-curriculares/curso-selector";
 import { CurriculumGraph } from "@/components/pages/grades-curriculares/curriculum-graph";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BookOpen, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function GradesCurricularesPage() {
   const [selectedCursoId, setSelectedCursoId] = useState<string | null>(null);
   const [autoSelected, setAutoSelected] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
-  const [localCompleted, setLocalCompleted] = useState<Set<string>>(new Set());
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const { data: cursos = [], isLoading: cursosLoading } = useAllCursos();
   const { data: user } = useCurrentUser();
   const { data: grade, isLoading: gradeLoading } = useGradeCurricular(selectedCursoId);
   const { data: concluidasData } = useDisciplinasConcluidas();
-  const updateMutation = useUpdateDisciplinasConcluidas();
+  const { data: semestreData } = useDisciplinasSemestreAtivo();
+  const { data: semestreAtivo } = useSemestreAtivo();
+  const marcarMutation = useMarcarDisciplinas();
 
   const isLoggedIn = !!user;
   const isOwnCourse = isLoggedIn && selectedCursoId === user?.curso?.id;
@@ -45,48 +49,69 @@ export default function GradesCurricularesPage() {
     setAutoSelected(true);
   }, [cursos, user, autoSelected, selectedCursoId]);
 
-  // Sync server data to local state
-  useEffect(() => {
-    if (concluidasData) {
-      setLocalCompleted(new Set(concluidasData.disciplinaIds));
-      setHasUnsavedChanges(false);
-    }
-  }, [concluidasData]);
-
-  const handleToggleDisciplina = useCallback((disciplinaId: string) => {
-    setLocalCompleted(prev => {
-      const next = new Set(prev);
-      if (next.has(disciplinaId)) {
-        next.delete(disciplinaId);
-      } else {
-        next.add(disciplinaId);
-      }
-      return next;
-    });
-    setHasUnsavedChanges(true);
-  }, []);
-
-  const handleSave = useCallback(async () => {
-    try {
-      await updateMutation.mutateAsync(Array.from(localCompleted));
-      setHasUnsavedChanges(false);
-      toast.success("Progresso salvo com sucesso!");
-    } catch {
-      toast.error("Erro ao salvar progresso. Tente novamente.");
-    }
-  }, [localCompleted, updateMutation]);
-
   const handleSelectionModeChange = useCallback((enabled: boolean) => {
     setSelectionMode(enabled);
   }, []);
 
-  // Show completed state only when viewing own course and logged in
+  // Completed IDs directly from server data
   const completedIds = useMemo(() => {
-    if (!isOwnCourse) {
+    if (!isOwnCourse || !concluidasData) {
       return undefined;
     }
-    return localCompleted;
-  }, [isOwnCourse, localCompleted]);
+    return new Set(concluidasData.disciplinaIds);
+  }, [isOwnCourse, concluidasData]);
+
+  // Cursando IDs from active semester
+  const cursandoIds = useMemo(() => {
+    if (!isOwnCourse || !semestreData?.disciplinas?.length) {
+      return undefined;
+    }
+    return new Set(semestreData.disciplinas.map(d => d.disciplinaId));
+  }, [isOwnCourse, semestreData]);
+
+  // Handler for bulk save with status
+  const handleSaveWithStatus = useCallback(
+    async (disciplinaIds: string[], status: "concluida" | "cursando" | "none") => {
+      try {
+        await marcarMutation.mutateAsync({ disciplinaIds, status });
+        const messages: Record<string, string> = {
+          concluida: `${disciplinaIds.length} disciplina(s) marcada(s) como concluída(s)!`,
+          cursando: `${disciplinaIds.length} disciplina(s) marcada(s) como cursando!`,
+          none: `${disciplinaIds.length} disciplina(s) desmarcada(s).`,
+        };
+        toast.success(messages[status]);
+      } catch {
+        toast.error("Erro ao salvar. Tente novamente.");
+      }
+    },
+    [marcarMutation]
+  );
+
+  // Handler for single discipline mark from dialog
+  const handleMarcarDisciplina = useCallback(
+    async (disciplinaId: string, status: "concluida" | "cursando" | "none") => {
+      try {
+        await marcarMutation.mutateAsync({ disciplinaIds: [disciplinaId], status });
+        const messages: Record<string, string> = {
+          concluida: "Marcada como concluída!",
+          cursando: "Marcada como cursando!",
+          none: "Status removido.",
+        };
+        toast.success(messages[status]);
+      } catch {
+        toast.error("Erro ao atualizar disciplina. Tente novamente.");
+      }
+    },
+    [marcarMutation]
+  );
+
+  // Count cursando disciplines without turma for nudge banner
+  const cursandoWithoutTurma = useMemo(() => {
+    if (!isOwnCourse || !semestreData?.disciplinas) {
+      return 0;
+    }
+    return semestreData.disciplinas.filter(d => d.turma === null).length;
+  }, [isOwnCourse, semestreData]);
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
@@ -98,6 +123,26 @@ export default function GradesCurricularesPage() {
         onSelect={setSelectedCursoId}
         isLoading={cursosLoading}
       />
+
+      {/* Nudge banner: cursando disciplines without turma */}
+      {cursandoWithoutTurma > 0 && (
+        <div className="mb-4 p-3 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/50 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-sm text-purple-800 dark:text-purple-200">
+            <BookOpen className="w-4 h-4 flex-shrink-0" />
+            <span>
+              Você tem {cursandoWithoutTurma} disciplina{cursandoWithoutTurma !== 1 ? "s" : ""}{" "}
+              cursando sem turma definida.
+            </span>
+          </div>
+          <Link
+            href="/calendario"
+            className="flex items-center gap-1 text-sm font-medium text-purple-700 dark:text-purple-300 hover:underline whitespace-nowrap"
+          >
+            Definir turmas
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
 
       {/* Loading state */}
       {gradeLoading && selectedCursoId && (
@@ -127,13 +172,14 @@ export default function GradesCurricularesPage() {
           cursoNome={grade.cursoNome}
           curriculoCodigo={grade.curriculoCodigo}
           completedDisciplinaIds={completedIds}
+          cursandoDisciplinaIds={cursandoIds}
           selectionMode={isOwnCourse ? selectionMode : false}
           onSelectionModeChange={handleSelectionModeChange}
-          onToggleDisciplina={handleToggleDisciplina}
-          onSave={handleSave}
-          isSaving={updateMutation.isPending}
-          hasUnsavedChanges={hasUnsavedChanges}
+          onSaveWithStatus={handleSaveWithStatus}
+          onMarcarDisciplina={handleMarcarDisciplina}
+          isSaving={marcarMutation.isPending}
           isLoggedIn={isOwnCourse}
+          activeSemestreNome={semestreAtivo?.nome}
         />
       )}
     </div>

@@ -1,10 +1,13 @@
 import type { GradeDisciplinaNode } from "@/lib/shared/types";
 
+const ARROW_SIZE = 8;
+
 type GraphEdgesProps = {
   disciplines: GradeDisciplinaNode[];
   nodeRefs: Map<string, DOMRect>;
   containerRect: DOMRect | null;
   highlightedCodes: Set<string> | null;
+  hoveredCode: string | null;
 };
 
 export function GraphEdges({
@@ -12,6 +15,7 @@ export function GraphEdges({
   nodeRefs,
   containerRect,
   highlightedCodes,
+  hoveredCode,
 }: GraphEdgesProps) {
   if (!containerRect || nodeRefs.size === 0) {
     return null;
@@ -28,6 +32,7 @@ export function GraphEdges({
     fromCode: string;
     toCode: string;
     highlighted: boolean;
+    hovered: boolean;
   }[] = [];
 
   for (const disc of disciplines) {
@@ -37,10 +42,15 @@ export function GraphEdges({
           highlightedCodes !== null &&
           highlightedCodes.has(disc.codigo) &&
           highlightedCodes.has(reqCode);
+        const hovered =
+          !highlightedCodes &&
+          hoveredCode !== null &&
+          (disc.codigo === hoveredCode || reqCode === hoveredCode);
         edges.push({
           fromCode: reqCode,
           toCode: disc.codigo,
           highlighted,
+          hovered,
         });
       }
     }
@@ -54,21 +64,50 @@ export function GraphEdges({
       style={{ overflow: "visible" }}
     >
       <defs>
-        <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-          <polygon points="0 0, 8 3, 0 6" className="fill-slate-400 dark:fill-slate-500" />
+        <marker
+          id="arrowhead"
+          markerWidth={ARROW_SIZE}
+          markerHeight={ARROW_SIZE}
+          refX={ARROW_SIZE}
+          refY={ARROW_SIZE / 2}
+          orient="auto"
+          markerUnits="userSpaceOnUse"
+        >
+          <polygon
+            points={`0 0, ${ARROW_SIZE} ${ARROW_SIZE / 2}, 0 ${ARROW_SIZE}`}
+            className="fill-slate-400 dark:fill-slate-500"
+          />
+        </marker>
+        <marker
+          id="arrowhead-hovered"
+          markerWidth={ARROW_SIZE}
+          markerHeight={ARROW_SIZE}
+          refX={ARROW_SIZE}
+          refY={ARROW_SIZE / 2}
+          orient="auto"
+          markerUnits="userSpaceOnUse"
+        >
+          <polygon
+            points={`0 0, ${ARROW_SIZE} ${ARROW_SIZE / 2}, 0 ${ARROW_SIZE}`}
+            className="fill-blue-300 dark:fill-blue-400"
+          />
         </marker>
         <marker
           id="arrowhead-highlighted"
-          markerWidth="8"
-          markerHeight="6"
-          refX="8"
-          refY="3"
+          markerWidth={ARROW_SIZE}
+          markerHeight={ARROW_SIZE}
+          refX={ARROW_SIZE}
+          refY={ARROW_SIZE / 2}
           orient="auto"
+          markerUnits="userSpaceOnUse"
         >
-          <polygon points="0 0, 8 3, 0 6" className="fill-blue-500 dark:fill-blue-400" />
+          <polygon
+            points={`0 0, ${ARROW_SIZE} ${ARROW_SIZE / 2}, 0 ${ARROW_SIZE}`}
+            className="fill-blue-500 dark:fill-blue-400"
+          />
         </marker>
       </defs>
-      {edges.map(({ fromCode, toCode, highlighted }) => {
+      {edges.map(({ fromCode, toCode, highlighted, hovered }) => {
         const fromRect = nodeRefs.get(fromCode);
         const toRect = nodeRefs.get(toCode);
         if (!fromRect || !toRect) {
@@ -86,6 +125,12 @@ export function GraphEdges({
 
         const d = `M ${x1} ${y1} C ${x1 + cp} ${y1}, ${x2 - cp} ${y2}, ${x2} ${y2}`;
 
+        const markerId = highlighted
+          ? "arrowhead-highlighted"
+          : hovered
+            ? "arrowhead-hovered"
+            : "arrowhead";
+
         return (
           <path
             key={`${fromCode}-${toCode}`}
@@ -94,11 +139,14 @@ export function GraphEdges({
             className={
               highlighted
                 ? "stroke-blue-500 dark:stroke-blue-400"
-                : "stroke-slate-300 dark:stroke-slate-600"
+                : hovered
+                  ? "stroke-blue-400/60 dark:stroke-blue-400/60"
+                  : "stroke-slate-300 dark:stroke-slate-600"
             }
-            strokeWidth={highlighted ? 2 : 1.5}
+            strokeWidth={highlighted ? 2 : hovered ? 2 : 1.5}
             opacity={highlightedCodes !== null && !highlighted ? 0.15 : 1}
-            markerEnd={highlighted ? "url(#arrowhead-highlighted)" : "url(#arrowhead)"}
+            markerEnd={`url(#${markerId})`}
+            style={{ transition: "stroke 0.15s, stroke-width 0.15s" }}
           />
         );
       })}

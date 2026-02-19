@@ -242,7 +242,8 @@ function UserSection({ onClose }: UserSectionProps) {
 
 const NAV_LINKS = [
   { href: "/sobre", label: "SOBRE" },
-  { href: "/calendario", label: "CALENDÁRIO" },
+  { href: "/calendario", label: "DISCIPLINAS" },
+  { href: "/grades-curriculares", label: "GRADES" },
   { href: "/mapas", label: "MAPAS" },
   { href: "/guias", label: "GUIAS" },
   { href: "/entidades", label: "ENTIDADES" },
