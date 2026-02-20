@@ -36,8 +36,17 @@ jobs:
 
           if [ -n "$STAGING_ID" ]; then
             echo "Deleting old staging branch..."
-            curl -s -X DELETE -H "Authorization: Bearer $NEON_API_KEY" \
-              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$STAGING_ID"
+            DELETE_RESPONSE=$(curl -s -w "\n%{http_code}" -X DELETE -H "Authorization: Bearer $NEON_API_KEY" \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$STAGING_ID")
+
+            HTTP_CODE=$(echo "$DELETE_RESPONSE" | tail -1)
+            if [ "$HTTP_CODE" -ge 400 ]; then
+              echo "::error::Failed to delete staging branch (HTTP $HTTP_CODE)"
+              echo "$DELETE_RESPONSE" | head -n -1
+              exit 1
+            fi
+
+            echo "Staging branch deleted"
             sleep 2
           fi
 
