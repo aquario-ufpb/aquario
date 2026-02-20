@@ -23,15 +23,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Grade Curricular — Dialog Actions**: Clicking a discipline opens a detail dialog with buttons to mark as Concluída or Cursando directly
 - **Grade Curricular — Bulk Selection**: "Selecionar cadeiras" mode with dropdown save (Concluídas or Cursando), replacing the old concluída-only selection
 - **Grade Curricular — Nudge Banner**: When user has cursando disciplines without turma, shows a purple banner linking to `/calendario`
+- **Mobile Navigation**: Added "GRADES" link to hamburger menu for direct Grade Curricular access
 
 ### Changed
 - **Minhas Disciplinas — Semester Validation**: Uses DB active semester as source of truth; turma selection and calendar are disabled when SACI data doesn't match the current semester, with user-facing warnings
 - **Calendário → Minhas Disciplinas**: Renamed across navigation (desktop dropdown, mobile hamburger, ferramentas page, home page)
-- **Mobile Navigation**: Added "GRADES" link to hamburger menu for direct Grade Curricular access
+- **Semester Fallback**: When between semesters, the system now falls back to the next upcoming semester instead of returning nothing
 - **Grade Curricular**: Unified click interaction model — first click shows dependencies, second click opens dialog (removed hover-based highlighting)
 - **Grade Curricular**: Completed and cursando states now read directly from server data instead of local optimistic copies
 - **Calendário**: Calendar export (ICS and Google Calendar) now uses semester start/end dates from the matching `SemestreLetivo` (based on the period in the PAAS data) instead of hardcoded `SEMESTER_END_DATE` constant and relative-to-today start dates
 - **Calendário**: Replaced `alert()` calls with `toast.error()` from Sonner for consistent UX
+
+### Fixed
+- **API Routes**: Malformed JSON request bodies now return 400 instead of 500
 
 ## [1.2.0] - 2026-02-17
 

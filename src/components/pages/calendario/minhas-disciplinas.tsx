@@ -342,6 +342,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="h-8 text-xs pl-8"
+                  aria-label="Buscar disciplina para adicionar"
                 />
               </div>
               {searchQuery.length >= 2 && (

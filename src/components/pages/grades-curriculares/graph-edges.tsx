@@ -89,7 +89,7 @@ export function GraphEdges({
         >
           <polygon
             points={`0 0, ${ARROW_SIZE} ${ARROW_SIZE / 2}, 0 ${ARROW_SIZE}`}
-            className="fill-blue-300 dark:fill-blue-300"
+            className="fill-blue-400/60 dark:fill-blue-400/60"
           />
         </marker>
         <marker

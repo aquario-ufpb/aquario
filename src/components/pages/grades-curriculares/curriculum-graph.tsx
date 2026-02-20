@@ -429,17 +429,17 @@ export function CurriculumGraph({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleSaveAs("concluida")}>
+                  <DropdownMenuItem onClick={() => void handleSaveAs("concluida")}>
                     <Check className="w-3.5 h-3.5 mr-2 text-green-600" />
                     Marcar como Concluídas
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleSaveAs("cursando")}>
+                  <DropdownMenuItem onClick={() => void handleSaveAs("cursando")}>
                     <BookOpen className="w-3.5 h-3.5 mr-2 text-purple-600" />
                     Marcar como Cursando
                     {activeSemestreNome ? ` (${activeSemestreNome})` : ""}
                   </DropdownMenuItem>
                   {hasMarkedInSelection && (
-                    <DropdownMenuItem onClick={() => handleSaveAs("none")}>
+                    <DropdownMenuItem onClick={() => void handleSaveAs("none")}>
                       <XCircle className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
                       Desmarcar
                     </DropdownMenuItem>
