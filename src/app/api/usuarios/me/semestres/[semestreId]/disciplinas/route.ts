@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import { getContainer } from "@/lib/server/container";
-import { prisma } from "@/lib/server/db/prisma";
 import { z } from "zod";
+import type { DisciplinaSemestreWithDisciplina } from "@/lib/server/db/interfaces/disciplina-semestre-repository.interface";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +30,20 @@ async function resolveSemestreId(semestreId: string): Promise<string | null> {
   return semestreId;
 }
 
+function mapToResponse(r: DisciplinaSemestreWithDisciplina) {
+  return {
+    id: r.id,
+    disciplinaId: r.disciplinaId,
+    disciplinaCodigo: r.disciplina.codigo,
+    disciplinaNome: r.disciplina.nome,
+    turma: r.turma,
+    docente: r.docente,
+    horario: r.horario,
+    codigoPaas: r.codigoPaas,
+    criadoEm: r.criadoEm.toISOString(),
+  };
+}
+
 /**
  * GET /api/usuarios/me/semestres/[semestreId]/disciplinas
  * Returns the user's enrolled disciplines for a specific semester.
@@ -45,25 +59,16 @@ export function GET(request: Request, context: RouteContext) {
         return NextResponse.json({ semestreLetivoId: null, disciplinas: [] });
       }
 
-      const records = await prisma.disciplinaSemestre.findMany({
-        where: { usuarioId: usuario.id, semestreLetivoId: resolvedId },
-        include: { disciplina: { select: { codigo: true, nome: true } } },
-        orderBy: { criadoEm: "asc" },
-      });
+      const container = getContainer();
+      const records =
+        await container.disciplinaSemestreRepository.findByUsuarioAndSemestreWithDisciplina(
+          usuario.id,
+          resolvedId
+        );
 
       return NextResponse.json({
         semestreLetivoId: resolvedId,
-        disciplinas: records.map(r => ({
-          id: r.id,
-          disciplinaId: r.disciplinaId,
-          disciplinaCodigo: r.disciplina.codigo,
-          disciplinaNome: r.disciplina.nome,
-          turma: r.turma,
-          docente: r.docente,
-          horario: r.horario,
-          codigoPaas: r.codigoPaas,
-          criadoEm: r.criadoEm.toISOString(),
-        })),
+        disciplinas: records.map(mapToResponse),
       });
     } catch {
       return ApiError.internal("Erro ao buscar disciplinas do semestre");
@@ -99,10 +104,8 @@ export function PUT(request: Request, context: RouteContext) {
 
       // Resolve codigoDisciplina to disciplinaId in bulk
       const codigos = parsed.data.disciplinas.map(d => d.codigoDisciplina);
-      const disciplinas = await prisma.disciplina.findMany({
-        where: { codigo: { in: codigos } },
-        select: { id: true, codigo: true },
-      });
+      const container = getContainer();
+      const disciplinas = await container.disciplinaRepository.findByCodigos(codigos);
       const codigoToId = new Map(disciplinas.map(d => [d.codigo, d.id]));
 
       // Track which codes were not found
@@ -124,7 +127,6 @@ export function PUT(request: Request, context: RouteContext) {
         })
         .filter((r): r is NonNullable<typeof r> => r !== null);
 
-      const container = getContainer();
       await container.disciplinaSemestreRepository.replaceForUsuarioAndSemestre(
         usuario.id,
         resolvedId,
@@ -132,25 +134,15 @@ export function PUT(request: Request, context: RouteContext) {
       );
 
       // Re-fetch with discipline details for consistent response shape
-      const records = await prisma.disciplinaSemestre.findMany({
-        where: { usuarioId: usuario.id, semestreLetivoId: resolvedId },
-        include: { disciplina: { select: { codigo: true, nome: true } } },
-        orderBy: { criadoEm: "asc" },
-      });
+      const records =
+        await container.disciplinaSemestreRepository.findByUsuarioAndSemestreWithDisciplina(
+          usuario.id,
+          resolvedId
+        );
 
       return NextResponse.json({
         semestreLetivoId: resolvedId,
-        disciplinas: records.map(r => ({
-          id: r.id,
-          disciplinaId: r.disciplinaId,
-          disciplinaCodigo: r.disciplina.codigo,
-          disciplinaNome: r.disciplina.nome,
-          turma: r.turma,
-          docente: r.docente,
-          horario: r.horario,
-          codigoPaas: r.codigoPaas,
-          criadoEm: r.criadoEm.toISOString(),
-        })),
+        disciplinas: records.map(mapToResponse),
         ...(skippedCodigos.length > 0 && { skippedCodigos }),
       });
     } catch {

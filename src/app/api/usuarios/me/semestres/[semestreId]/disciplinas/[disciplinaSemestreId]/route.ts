@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import { getContainer } from "@/lib/server/container";
-import { prisma } from "@/lib/server/db/prisma";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -41,12 +40,16 @@ export function PATCH(request: Request, context: RouteContext) {
         return ApiError.notFound("Semestre ativo");
       }
 
-      // Verify the record exists and belongs to this user
-      const record = await prisma.disciplinaSemestre.findUnique({
-        where: { id: disciplinaSemestreId },
-      });
+      const container = getContainer();
 
-      if (!record || record.usuarioId !== usuario.id || record.semestreLetivoId !== resolvedId) {
+      // Verify the record exists and belongs to this user
+      const record = await container.disciplinaSemestreRepository.findOneOwned(
+        disciplinaSemestreId,
+        usuario.id,
+        resolvedId
+      );
+
+      if (!record) {
         return ApiError.notFound("Disciplina do semestre");
       }
 
@@ -61,26 +64,10 @@ export function PATCH(request: Request, context: RouteContext) {
         return ApiError.badRequest("Dados inválidos");
       }
 
-      // Only include fields that were explicitly provided (partial update)
-      const updateData: Record<string, unknown> = {};
-      if (parsed.data.turma !== undefined) {
-        updateData.turma = parsed.data.turma ?? null;
-      }
-      if (parsed.data.docente !== undefined) {
-        updateData.docente = parsed.data.docente ?? null;
-      }
-      if (parsed.data.horario !== undefined) {
-        updateData.horario = parsed.data.horario ?? null;
-      }
-      if (parsed.data.codigoPaas !== undefined) {
-        updateData.codigoPaas = parsed.data.codigoPaas ?? null;
-      }
-
-      const updated = await prisma.disciplinaSemestre.update({
-        where: { id: disciplinaSemestreId },
-        data: updateData,
-        include: { disciplina: { select: { codigo: true, nome: true } } },
-      });
+      const updated = await container.disciplinaSemestreRepository.updateFields(
+        disciplinaSemestreId,
+        parsed.data
+      );
 
       return NextResponse.json({
         id: updated.id,

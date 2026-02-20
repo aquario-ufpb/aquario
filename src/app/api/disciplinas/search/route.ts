@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/server/db/prisma";
+import { getContainer } from "@/lib/server/container";
 import { ApiError } from "@/lib/server/errors";
 
 export const dynamic = "force-dynamic";
@@ -17,17 +17,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ disciplinas: [] });
     }
 
-    const disciplinas = await prisma.disciplina.findMany({
-      where: {
-        OR: [
-          { codigo: { contains: query, mode: "insensitive" } },
-          { nome: { contains: query, mode: "insensitive" } },
-        ],
-      },
-      select: { id: true, codigo: true, nome: true },
-      take: 20,
-      orderBy: { nome: "asc" },
-    });
+    const container = getContainer();
+    const disciplinas = await container.disciplinaRepository.search(query);
 
     return NextResponse.json({ disciplinas });
   } catch {
