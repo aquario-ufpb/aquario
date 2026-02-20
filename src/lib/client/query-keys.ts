@@ -54,6 +54,9 @@ export const queryKeys = {
   disciplinasConcluidas: {
     me: ["disciplinasConcluidas", "me"] as const,
   },
+  disciplinas: {
+    search: (query: string) => ["disciplinas", "search", query] as const,
+  },
   disciplinasSemestre: {
     ativo: ["disciplinasSemestre", "ativo"] as const,
   },

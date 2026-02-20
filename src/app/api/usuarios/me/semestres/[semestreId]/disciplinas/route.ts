@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-export const dynamic = "force-dynamic";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import { getContainer } from "@/lib/server/container";
 import { prisma } from "@/lib/server/db/prisma";
 import { z } from "zod";
+
+export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ semestreId: string }> };
 
@@ -85,7 +86,12 @@ export function PUT(request: Request, context: RouteContext) {
         return ApiError.notFound("Semestre ativo");
       }
 
-      const body = await req.json();
+      let body: unknown;
+      try {
+        body = await req.json();
+      } catch {
+        return ApiError.badRequest("Corpo da requisição inválido");
+      }
       const parsed = saveSchema.safeParse(body);
       if (!parsed.success) {
         return ApiError.badRequest("Dados de disciplinas inválidos");
@@ -99,7 +105,9 @@ export function PUT(request: Request, context: RouteContext) {
       });
       const codigoToId = new Map(disciplinas.map(d => [d.codigo, d.id]));
 
-      // Only save disciplines that have a matching DB record
+      // Track which codes were not found
+      const skippedCodigos = codigos.filter(c => !codigoToId.has(c));
+
       const validRecords = parsed.data.disciplinas
         .map(d => {
           const disciplinaId = codigoToId.get(d.codigoDisciplina);
@@ -117,23 +125,33 @@ export function PUT(request: Request, context: RouteContext) {
         .filter((r): r is NonNullable<typeof r> => r !== null);
 
       const container = getContainer();
-      const records = await container.disciplinaSemestreRepository.replaceForUsuarioAndSemestre(
+      await container.disciplinaSemestreRepository.replaceForUsuarioAndSemestre(
         usuario.id,
         resolvedId,
         validRecords
       );
+
+      // Re-fetch with discipline details for consistent response shape
+      const records = await prisma.disciplinaSemestre.findMany({
+        where: { usuarioId: usuario.id, semestreLetivoId: resolvedId },
+        include: { disciplina: { select: { codigo: true, nome: true } } },
+        orderBy: { criadoEm: "asc" },
+      });
 
       return NextResponse.json({
         semestreLetivoId: resolvedId,
         disciplinas: records.map(r => ({
           id: r.id,
           disciplinaId: r.disciplinaId,
+          disciplinaCodigo: r.disciplina.codigo,
+          disciplinaNome: r.disciplina.nome,
           turma: r.turma,
           docente: r.docente,
           horario: r.horario,
           codigoPaas: r.codigoPaas,
           criadoEm: r.criadoEm.toISOString(),
         })),
+        ...(skippedCodigos.length > 0 && { skippedCodigos }),
       });
     } catch {
       return ApiError.internal("Erro ao salvar disciplinas do semestre");

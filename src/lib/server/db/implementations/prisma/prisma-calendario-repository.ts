@@ -41,6 +41,7 @@ export class PrismaCalendarioRepository implements ICalendarioRepository {
         dataInicio: { lte: now },
         dataFim: { gte: now },
       },
+      orderBy: { dataInicio: "desc" },
     });
 
     if (current) {

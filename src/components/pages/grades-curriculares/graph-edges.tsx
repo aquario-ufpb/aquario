@@ -43,7 +43,7 @@ export function GraphEdges({
           highlightedCodes.has(disc.codigo) &&
           highlightedCodes.has(reqCode);
         const hovered =
-          !highlightedCodes &&
+          highlightedCodes === null &&
           hoveredCode !== null &&
           (disc.codigo === hoveredCode || reqCode === hoveredCode);
         edges.push({
@@ -89,7 +89,7 @@ export function GraphEdges({
         >
           <polygon
             points={`0 0, ${ARROW_SIZE} ${ARROW_SIZE / 2}, 0 ${ARROW_SIZE}`}
-            className="fill-blue-300 dark:fill-blue-400"
+            className="fill-blue-300 dark:fill-blue-300"
           />
         </marker>
         <marker
@@ -143,10 +143,10 @@ export function GraphEdges({
                   ? "stroke-blue-400/60 dark:stroke-blue-400/60"
                   : "stroke-slate-300 dark:stroke-slate-600"
             }
-            strokeWidth={highlighted ? 2 : hovered ? 2 : 1.5}
+            strokeWidth={highlighted || hovered ? 2 : 1.5}
             opacity={highlightedCodes !== null && !highlighted ? 0.15 : 1}
             markerEnd={`url(#${markerId})`}
-            style={{ transition: "stroke 0.15s, stroke-width 0.15s" }}
+            style={{ transition: "stroke 0.15s, stroke-width 0.15s, opacity 0.15s" }}
           />
         );
       })}

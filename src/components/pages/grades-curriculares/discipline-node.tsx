@@ -87,13 +87,13 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
         {/* Selection indicator */}
         {selectionMode && isSelected && (
           <div className="absolute top-1 right-1">
-            <CircleDot className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <CircleDot aria-hidden className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           </div>
         )}
         {/* Lock indicator for locked disciplines */}
-        {!(selectionMode && isSelected) && isLocked && !isCompleted && !isCursando && (
+        {!(selectionMode && isSelected) && isLockedOnly && (
           <div className="absolute top-1 right-1">
-            <Lock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+            <Lock aria-hidden className="w-3 h-3 text-slate-400 dark:text-slate-500" />
           </div>
         )}
         <span className="text-[10px] font-medium leading-tight line-clamp-3">
@@ -102,7 +102,7 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
         {/* "Ver mais" prompt on click */}
         {isClicked && !selectionMode && (
           <div className="absolute bottom-0.5 inset-x-0 flex items-center justify-center gap-0.5 text-[8px] font-semibold text-muted-foreground animate-in fade-in duration-200">
-            <Eye className="w-2 h-2" />
+            <Eye aria-hidden className="w-2 h-2" />
             <span>Ver mais</span>
           </div>
         )}

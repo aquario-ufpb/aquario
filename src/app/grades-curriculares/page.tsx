@@ -69,37 +69,24 @@ export default function GradesCurricularesPage() {
     return new Set(semestreData.disciplinas.map(d => d.disciplinaId));
   }, [isOwnCourse, semestreData]);
 
-  // Handler for bulk save with status
-  const handleSaveWithStatus = useCallback(
+  // Handler for marking disciplines (bulk or single)
+  const handleMarcarDisciplinas = useCallback(
     async (disciplinaIds: string[], status: "concluida" | "cursando" | "none") => {
       try {
         await marcarMutation.mutateAsync({ disciplinaIds, status });
+        const n = disciplinaIds.length;
         const messages: Record<string, string> = {
-          concluida: `${disciplinaIds.length} disciplina(s) marcada(s) como concluída(s)!`,
-          cursando: `${disciplinaIds.length} disciplina(s) marcada(s) como cursando!`,
-          none: `${disciplinaIds.length} disciplina(s) desmarcada(s).`,
+          concluida:
+            n === 1
+              ? "Marcada como concluída!"
+              : `${n} disciplina(s) marcada(s) como concluída(s)!`,
+          cursando:
+            n === 1 ? "Marcada como cursando!" : `${n} disciplina(s) marcada(s) como cursando!`,
+          none: n === 1 ? "Status removido." : `${n} disciplina(s) desmarcada(s).`,
         };
         toast.success(messages[status]);
       } catch {
         toast.error("Erro ao salvar. Tente novamente.");
-      }
-    },
-    [marcarMutation]
-  );
-
-  // Handler for single discipline mark from dialog
-  const handleMarcarDisciplina = useCallback(
-    async (disciplinaId: string, status: "concluida" | "cursando" | "none") => {
-      try {
-        await marcarMutation.mutateAsync({ disciplinaIds: [disciplinaId], status });
-        const messages: Record<string, string> = {
-          concluida: "Marcada como concluída!",
-          cursando: "Marcada como cursando!",
-          none: "Status removido.",
-        };
-        toast.success(messages[status]);
-      } catch {
-        toast.error("Erro ao atualizar disciplina. Tente novamente.");
       }
     },
     [marcarMutation]
@@ -175,8 +162,8 @@ export default function GradesCurricularesPage() {
           cursandoDisciplinaIds={cursandoIds}
           selectionMode={isOwnCourse ? selectionMode : false}
           onSelectionModeChange={handleSelectionModeChange}
-          onSaveWithStatus={handleSaveWithStatus}
-          onMarcarDisciplina={handleMarcarDisciplina}
+          onSaveWithStatus={handleMarcarDisciplinas}
+          onMarcarDisciplina={(id, status) => handleMarcarDisciplinas([id], status)}
           isSaving={marcarMutation.isPending}
           isLoggedIn={isOwnCourse}
           activeSemestreNome={semestreAtivo?.nome}

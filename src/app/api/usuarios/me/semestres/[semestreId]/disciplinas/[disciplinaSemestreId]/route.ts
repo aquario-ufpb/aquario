@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-export const dynamic = "force-dynamic";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import { getContainer } from "@/lib/server/container";
 import { prisma } from "@/lib/server/db/prisma";
 import { z } from "zod";
+
+export const dynamic = "force-dynamic";
 
 type RouteContext = {
   params: Promise<{ semestreId: string; disciplinaSemestreId: string }>;
@@ -49,20 +50,35 @@ export function PATCH(request: Request, context: RouteContext) {
         return ApiError.notFound("Disciplina do semestre");
       }
 
-      const body = await req.json();
+      let body: unknown;
+      try {
+        body = await req.json();
+      } catch {
+        return ApiError.badRequest("Corpo da requisição inválido");
+      }
       const parsed = patchSchema.safeParse(body);
       if (!parsed.success) {
         return ApiError.badRequest("Dados inválidos");
       }
 
+      // Only include fields that were explicitly provided (partial update)
+      const updateData: Record<string, unknown> = {};
+      if (parsed.data.turma !== undefined) {
+        updateData.turma = parsed.data.turma ?? null;
+      }
+      if (parsed.data.docente !== undefined) {
+        updateData.docente = parsed.data.docente ?? null;
+      }
+      if (parsed.data.horario !== undefined) {
+        updateData.horario = parsed.data.horario ?? null;
+      }
+      if (parsed.data.codigoPaas !== undefined) {
+        updateData.codigoPaas = parsed.data.codigoPaas ?? null;
+      }
+
       const updated = await prisma.disciplinaSemestre.update({
         where: { id: disciplinaSemestreId },
-        data: {
-          turma: parsed.data.turma ?? null,
-          docente: parsed.data.docente ?? null,
-          horario: parsed.data.horario ?? null,
-          codigoPaas: parsed.data.codigoPaas ?? null,
-        },
+        data: updateData,
         include: { disciplina: { select: { codigo: true, nome: true } } },
       });
 

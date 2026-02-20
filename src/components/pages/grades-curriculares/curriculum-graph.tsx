@@ -36,7 +36,10 @@ type CurriculumGraphProps = {
   cursandoDisciplinaIds?: Set<string>;
   selectionMode?: boolean;
   onSelectionModeChange?: (enabled: boolean) => void;
-  onSaveWithStatus?: (disciplinaIds: string[], status: "concluida" | "cursando" | "none") => void;
+  onSaveWithStatus?: (
+    disciplinaIds: string[],
+    status: "concluida" | "cursando" | "none"
+  ) => void | Promise<void>;
   onMarcarDisciplina?: (disciplinaId: string, status: "concluida" | "cursando" | "none") => void;
   isSaving?: boolean;
   isLoggedIn?: boolean;
@@ -220,11 +223,11 @@ export function CurriculumGraph({
   }, []);
 
   const handleSaveAs = useCallback(
-    (status: "concluida" | "cursando" | "none") => {
+    async (status: "concluida" | "cursando" | "none") => {
       if (selectionSet.size === 0) {
         return;
       }
-      onSaveWithStatus?.(Array.from(selectionSet), status);
+      await onSaveWithStatus?.(Array.from(selectionSet), status);
       setSelectionSet(new Set());
     },
     [selectionSet, onSaveWithStatus]

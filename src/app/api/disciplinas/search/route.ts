@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/server/db/prisma";
 import { ApiError } from "@/lib/server/errors";
+
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/disciplinas/search?q=term
@@ -18,7 +19,10 @@ export async function GET(req: Request) {
 
     const disciplinas = await prisma.disciplina.findMany({
       where: {
-        OR: [{ codigo: { contains: query } }, { nome: { contains: query, mode: "insensitive" } }],
+        OR: [
+          { codigo: { contains: query, mode: "insensitive" } },
+          { nome: { contains: query, mode: "insensitive" } },
+        ],
       },
       select: { id: true, codigo: true, nome: true },
       take: 20,

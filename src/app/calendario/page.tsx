@@ -1,12 +1,15 @@
 "use client";
 
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { useSemestreAtivo } from "@/lib/client/hooks/use-calendario-academico";
 import { MinhasDisciplinas } from "@/components/pages/calendario/minhas-disciplinas";
 import { PaasExplorer } from "@/components/pages/calendario/paas-explorer";
 
 function MinhasDisciplinasView() {
+  const { data: user } = useCurrentUser();
   const { data: semestreAtivo } = useSemestreAtivo();
+  const centroSigla = user?.centro?.sigla ?? "CI";
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
@@ -23,7 +26,7 @@ function MinhasDisciplinasView() {
           Gerencie suas disciplinas e visualize seu calendário
         </p>
       </div>
-      <MinhasDisciplinas />
+      <MinhasDisciplinas centroSigla={centroSigla} semestreNome={semestreAtivo?.nome} />
     </div>
   );
 }

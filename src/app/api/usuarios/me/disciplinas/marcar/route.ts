@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-export const dynamic = "force-dynamic";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import { getContainer } from "@/lib/server/container";
 import { prisma } from "@/lib/server/db/prisma";
 import { z } from "zod";
+
+export const dynamic = "force-dynamic";
 
 const marcarSchema = z.object({
   disciplinaIds: z.array(z.string().uuid()).min(1),
@@ -19,7 +20,12 @@ const marcarSchema = z.object({
 export function POST(request: Request) {
   return withAuth(request, async (req, usuario) => {
     try {
-      const body = await req.json();
+      let body: unknown;
+      try {
+        body = await req.json();
+      } catch {
+        return ApiError.badRequest("Corpo da requisição inválido");
+      }
       const parsed = marcarSchema.safeParse(body);
       if (!parsed.success) {
         return ApiError.badRequest("disciplinaIds deve ser um array de UUIDs e status válido");

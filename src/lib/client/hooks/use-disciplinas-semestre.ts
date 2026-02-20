@@ -106,7 +106,7 @@ export const usePatchDisciplinaSemestre = () => {
  */
 export const useSearchDisciplinas = (query: string) => {
   return useQuery({
-    queryKey: ["disciplinas", "search", query] as const,
+    queryKey: queryKeys.disciplinas.search(query),
     queryFn: () => disciplinaSemestreService.searchDisciplinas(query),
     enabled: query.length >= 2,
     staleTime: 60 * 1000,

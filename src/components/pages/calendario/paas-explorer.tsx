@@ -12,6 +12,10 @@ import SearchSection from "@/components/pages/calendario/search-section";
 import CalendarGrid from "@/components/pages/calendario/calendar-grid";
 import type { ClassWithRoom } from "@/components/pages/calendario/types";
 
+function removeDiacritics(str: string): string {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 export function PaasExplorer() {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -58,22 +62,12 @@ export function PaasExplorer() {
     if (!searchQuery.trim()) {
       classes = allClasses;
     } else {
-      const query = searchQuery
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+      const query = removeDiacritics(searchQuery.toLowerCase());
 
       classes = allClasses.filter(classItem => {
         const codigo = classItem.codigo.toLowerCase();
-        const nome = classItem.nome
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "");
-        const docente =
-          classItem.docente
-            ?.toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "") || "";
+        const nome = removeDiacritics(classItem.nome.toLowerCase());
+        const docente = removeDiacritics(classItem.docente?.toLowerCase() ?? "");
         const location = `${classItem.room.bloco} ${classItem.room.nome}`.toLowerCase();
         const horario = classItem.horario.toLowerCase();
 
@@ -87,31 +81,18 @@ export function PaasExplorer() {
       });
     }
 
-    // Ordenar alfabeticamente pelo nome da classe
-    classes.sort((a, b) => {
-      const nameA = a.nome
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-      const nameB = b.nome
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-      return nameA.localeCompare(nameB);
-    });
-
-    // Sort: selected classes first, then unselected
+    // Sort: selected classes first, then alphabetically by name
     return classes.sort((a, b) => {
       const aSelected = selectedClassIds.has(a.id);
       const bSelected = selectedClassIds.has(b.id);
 
-      if (aSelected && !bSelected) {
-        return -1;
+      if (aSelected !== bSelected) {
+        return aSelected ? -1 : 1;
       }
-      if (!aSelected && bSelected) {
-        return 1;
-      }
-      return 0; // Keep original order for same selection status
+
+      const nameA = removeDiacritics(a.nome.toLowerCase());
+      const nameB = removeDiacritics(b.nome.toLowerCase());
+      return nameA.localeCompare(nameB);
     });
   }, [allClasses, searchQuery, selectedClassIds]);
 

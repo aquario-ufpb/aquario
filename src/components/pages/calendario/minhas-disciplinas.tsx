@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { usePaasCalendar, useDisciplinasSemestreAtivo } from "@/lib/client/hooks";
-import { useSemestreAtivo } from "@/lib/client/hooks/use-calendario-academico";
 import {
   useMarcarDisciplinas,
   usePatchDisciplinaSemestre,
@@ -27,7 +26,12 @@ import {
 } from "@/components/ui/select";
 import { Search, X, BookOpen, Plus, Loader2, Calendar, AlertTriangle } from "lucide-react";
 
-export function MinhasDisciplinas() {
+type MinhasDisciplinasProps = {
+  centroSigla: string;
+  semestreNome?: string;
+};
+
+export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplinasProps) {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,14 +44,13 @@ export function MinhasDisciplinas() {
   const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
 
   const { data: semestreData, isLoading: semestreLoading } = useDisciplinasSemestreAtivo();
-  const { data: semestreAtivo, isLoading: semestreAtivoLoading } = useSemestreAtivo();
-  const { data: paasData, isLoading: paasLoading } = usePaasCalendar("CI");
+  const { data: paasData } = usePaasCalendar(centroSigla);
   const marcarMutation = useMarcarDisciplinas();
   const patchMutation = usePatchDisciplinaSemestre();
   const { data: searchResults, isLoading: searchLoading } = useSearchDisciplinas(searchQuery);
 
   // DB semester is source of truth; PAAS must match for turma selection
-  const dbSemestreNome = semestreAtivo?.nome;
+  const dbSemestreNome = semestreNome;
   const paasSemestreNome = paasData?.description?.match(/(\d{4}\.\d)/)?.[1];
   const paasMatchesDb =
     !!dbSemestreNome && !!paasSemestreNome && paasSemestreNome === dbSemestreNome;
@@ -209,7 +212,7 @@ export function MinhasDisciplinas() {
     return null;
   }
 
-  if (semestreLoading || semestreAtivoLoading || paasLoading) {
+  if (semestreLoading) {
     return (
       <div className="text-center py-20">
         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-muted-foreground" />
