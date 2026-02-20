@@ -108,16 +108,14 @@ export class PrismaDisciplinaSemestreRepository implements IDisciplinaSemestreRe
     semestreLetivoId: string | null
   ): Promise<void> {
     await prisma.$transaction(async tx => {
+      // Build the disciplinaSemestre delete filter — scoped to semester if available,
+      // otherwise removes across all semesters to prevent inconsistent state
+      const semestreFilter = semestreLetivoId
+        ? { usuarioId, semestreLetivoId, disciplinaId: { in: disciplinaIds } }
+        : { usuarioId, disciplinaId: { in: disciplinaIds } };
+
       if (status === "concluida") {
-        if (semestreLetivoId) {
-          await tx.disciplinaSemestre.deleteMany({
-            where: {
-              usuarioId,
-              semestreLetivoId,
-              disciplinaId: { in: disciplinaIds },
-            },
-          });
-        }
+        await tx.disciplinaSemestre.deleteMany({ where: semestreFilter });
         await tx.disciplinaConcluida.createMany({
           data: disciplinaIds.map(disciplinaId => ({
             usuarioId,
@@ -150,15 +148,7 @@ export class PrismaDisciplinaSemestreRepository implements IDisciplinaSemestreRe
             disciplinaId: { in: disciplinaIds },
           },
         });
-        if (semestreLetivoId) {
-          await tx.disciplinaSemestre.deleteMany({
-            where: {
-              usuarioId,
-              semestreLetivoId,
-              disciplinaId: { in: disciplinaIds },
-            },
-          });
-        }
+        await tx.disciplinaSemestre.deleteMany({ where: semestreFilter });
       }
     });
   }
