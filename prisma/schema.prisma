@@ -126,6 +126,7 @@ model Usuario {
   membroDeEntidades      MembroEntidade[]
   tokensVerificacao      TokenVerificacao[]
   disciplinasConcluidas  DisciplinaConcluida[]
+  disciplinasSemestre    DisciplinaSemestre[]
 
   @@index([email])
   @@index([matricula])
@@ -308,6 +309,7 @@ model Disciplina {
   equivalenciasOrigem  Equivalencia[] @relation("disciplinaOrigem")
   equivalenciasDestino Equivalencia[] @relation("disciplinaEquivalente")
   concluidaPor         DisciplinaConcluida[]
+  emSemestrePor        DisciplinaSemestre[]
 }
 
 model CurriculoDisciplina {
@@ -374,7 +376,8 @@ model SemestreLetivo {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  eventos EventoCalendario[]
+  eventos             EventoCalendario[]
+  disciplinasSemestre DisciplinaSemestre[]
 
   @@index([dataInicio])
   @@index([dataFim])
@@ -395,4 +398,28 @@ model EventoCalendario {
   @@index([semestreId])
   @@index([dataInicio])
   @@index([categoria])
+}
+
+// ============================================================================
+// DISCIPLINA SEMESTRE (User's enrolled disciplines per semester)
+// ============================================================================
+
+model DisciplinaSemestre {
+  id               String   @id @default(uuid())
+  usuarioId        String
+  semestreLetivoId String
+  disciplinaId     String
+  turma            String?
+  docente          String?
+  horario          String?
+  codigoPaas       Int?
+  criadoEm         DateTime @default(now())
+
+  usuario        Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  semestreLetivo SemestreLetivo  @relation(fields: [semestreLetivoId], references: [id])
+  disciplina     Disciplina     @relation(fields: [disciplinaId], references: [id])
+
+  @@unique([usuarioId, semestreLetivoId, disciplinaId])
+  @@index([usuarioId])
+  @@index([usuarioId, semestreLetivoId])
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useLayoutEffect, useMemo, useEffect } from "react";
+import { useState, useRef, useCallback, useLayoutEffect, useMemo } from "react";
 import type { GradeDisciplinaNode } from "@/lib/shared/types";
 import { DisciplineNode } from "./discipline-node";
 import { GraphEdges } from "./graph-edges";
@@ -9,20 +9,41 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Save, CheckCircle2, ListChecks, Lock, LockOpen, Check, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Save,
+  CheckCircle2,
+  ListChecks,
+  Lock,
+  Check,
+  X,
+  XCircle,
+  BookOpen,
+  ChevronDown,
+  CircleDot,
+} from "lucide-react";
 
 type CurriculumGraphProps = {
   disciplinas: GradeDisciplinaNode[];
   cursoNome: string;
   curriculoCodigo: string;
   completedDisciplinaIds?: Set<string>;
+  cursandoDisciplinaIds?: Set<string>;
   selectionMode?: boolean;
   onSelectionModeChange?: (enabled: boolean) => void;
-  onToggleDisciplina?: (disciplinaId: string) => void;
-  onSave?: () => void;
+  onSaveWithStatus?: (
+    disciplinaIds: string[],
+    status: "concluida" | "cursando" | "none"
+  ) => void | Promise<void>;
+  onMarcarDisciplina?: (disciplinaId: string, status: "concluida" | "cursando" | "none") => void;
   isSaving?: boolean;
-  hasUnsavedChanges?: boolean;
   isLoggedIn?: boolean;
+  activeSemestreNome?: string;
 };
 
 export function CurriculumGraph({
@@ -30,29 +51,38 @@ export function CurriculumGraph({
   cursoNome,
   curriculoCodigo,
   completedDisciplinaIds,
+  cursandoDisciplinaIds,
   selectionMode,
   onSelectionModeChange,
-  onToggleDisciplina,
-  onSave,
+  onSaveWithStatus,
+  onMarcarDisciplina,
   isSaving,
-  hasUnsavedChanges,
   isLoggedIn,
+  activeSemestreNome,
 }: CurriculumGraphProps) {
   const [showOptativas, setShowOptativas] = useState(true);
-  const [hoveredCode, setHoveredCode] = useState<string | null>(null);
   const [clickedCode, setClickedCode] = useState<string | null>(null);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-
-  useEffect(() => {
-    setIsTouchDevice(!window.matchMedia("(hover: hover)").matches);
-  }, []);
+  const [hoveredCode, setHoveredCode] = useState<string | null>(null);
   const [selectedDisc, setSelectedDisc] = useState<GradeDisciplinaNode | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nodeRects, setNodeRects] = useState<Map<string, DOMRect>>(new Map());
   const [containerRect, setContainerRect] = useState<DOMRect | null>(null);
+  // Selection set for bulk mode (keyed on disciplinaId)
+  const [selectionSet, setSelectionSet] = useState<Set<string>>(new Set());
 
   const containerRef = useRef<HTMLDivElement>(null);
   const nodeRefsMap = useRef<Map<string, HTMLButtonElement>>(new Map());
+
+  // Clear selection set when exiting selection mode
+  const handleSelectionModeChange = useCallback(
+    (enabled: boolean) => {
+      if (!enabled) {
+        setSelectionSet(new Set());
+      }
+      onSelectionModeChange?.(enabled);
+    },
+    [onSelectionModeChange]
+  );
 
   // Filter disciplines based on optativas toggle
   const visibleDisciplinas = useMemo(() => {
@@ -73,10 +103,9 @@ export function CurriculumGraph({
     return Array.from(map.entries()).sort(([a], [b]) => a - b);
   }, [visibleDisciplinas]);
 
-  // Compute highlighted codes on hover (desktop) or click (mobile)
+  // Compute highlighted codes on click
   const highlightedCodes = useMemo(() => {
-    const activeCode = hoveredCode || clickedCode;
-    if (!activeCode) {
+    if (!clickedCode) {
       return null;
     }
 
@@ -85,15 +114,13 @@ export function CurriculumGraph({
       codeToDisc.set(d.codigo, d);
     }
 
-    // If activeCode is not in visible disciplines, return null
-    if (!codeToDisc.has(activeCode)) {
+    if (!codeToDisc.has(clickedCode)) {
       return null;
     }
 
     const codes = new Set<string>();
-    codes.add(activeCode);
+    codes.add(clickedCode);
 
-    // Walk up prerequisites (what does this depend on?)
     const walkUp = (code: string) => {
       const disc = codeToDisc.get(code);
       if (!disc) {
@@ -107,7 +134,6 @@ export function CurriculumGraph({
       }
     };
 
-    // Walk down dependents (what does this unlock?)
     const walkDown = (code: string) => {
       for (const d of visibleDisciplinas) {
         if (d.preRequisitos.includes(code) && !codes.has(d.codigo)) {
@@ -117,10 +143,10 @@ export function CurriculumGraph({
       }
     };
 
-    walkUp(activeCode);
-    walkDown(activeCode);
+    walkUp(clickedCode);
+    walkDown(clickedCode);
     return codes;
-  }, [hoveredCode, clickedCode, visibleDisciplinas]);
+  }, [clickedCode, visibleDisciplinas]);
 
   // Measure node positions for SVG edges
   const measureNodes = useCallback(() => {
@@ -143,7 +169,6 @@ export function CurriculumGraph({
     measureNodes();
   }, [visibleDisciplinas, measureNodes]);
 
-  // Also re-measure on window resize and scroll (scroll changes getBoundingClientRect)
   useLayoutEffect(() => {
     const handler = () => measureNodes();
     window.addEventListener("resize", handler);
@@ -165,34 +190,66 @@ export function CurriculumGraph({
     }
   }, []);
 
+  // Unified click-based interaction (same for desktop and mobile)
   const handleNodeClick = useCallback(
     (disc: GradeDisciplinaNode, e: React.MouseEvent) => {
       e.stopPropagation();
-      if (isTouchDevice) {
-        // Mobile: first click highlights deps, second click opens dialog
-        if (clickedCode === disc.codigo) {
-          setSelectedDisc(disc);
-          setDialogOpen(true);
-        } else {
-          setClickedCode(disc.codigo);
-        }
-      } else {
-        // Desktop: click opens dialog directly
+      if (clickedCode === disc.codigo) {
+        // Second click: open dialog
         setSelectedDisc(disc);
         setDialogOpen(true);
+      } else {
+        // First click: highlight dependency chain
+        setClickedCode(disc.codigo);
       }
     },
-    [clickedCode, isTouchDevice]
+    [clickedCode]
   );
+
+  const handleToggleSelect = useCallback((disciplinaId: string) => {
+    setSelectionSet(prev => {
+      const next = new Set(prev);
+      if (next.has(disciplinaId)) {
+        next.delete(disciplinaId);
+      } else {
+        next.add(disciplinaId);
+      }
+      return next;
+    });
+  }, []);
 
   const handleContainerClick = useCallback(() => {
     setClickedCode(null);
   }, []);
 
-  // Compute unlocked & locked disciplines
-  const { unlockedCodes, lockedCodes } = useMemo(() => {
-    if (!completedDisciplinaIds || !selectionMode) {
-      return { unlockedCodes: new Set<string>(), lockedCodes: new Set<string>() };
+  const handleSaveAs = useCallback(
+    async (status: "concluida" | "cursando" | "none") => {
+      if (selectionSet.size === 0) {
+        return;
+      }
+      await onSaveWithStatus?.(Array.from(selectionSet), status);
+      setSelectionSet(new Set());
+    },
+    [selectionSet, onSaveWithStatus]
+  );
+
+  // Check if any selected disciplines already have a status (for "Desmarcar" option)
+  const hasMarkedInSelection = useMemo(() => {
+    if (selectionSet.size === 0) {
+      return false;
+    }
+    for (const id of selectionSet) {
+      if (completedDisciplinaIds?.has(id) || cursandoDisciplinaIds?.has(id)) {
+        return true;
+      }
+    }
+    return false;
+  }, [selectionSet, completedDisciplinaIds, cursandoDisciplinaIds]);
+
+  // Compute locked disciplines (prereqs not all completed)
+  const lockedCodes = useMemo(() => {
+    if (!completedDisciplinaIds) {
+      return new Set<string>();
     }
     const completedCodes = new Set<string>();
     for (const d of disciplinas) {
@@ -200,7 +257,6 @@ export function CurriculumGraph({
         completedCodes.add(d.codigo);
       }
     }
-    const unlocked = new Set<string>();
     const locked = new Set<string>();
     for (const d of disciplinas) {
       if (completedDisciplinaIds.has(d.disciplinaId)) {
@@ -209,15 +265,12 @@ export function CurriculumGraph({
       if (d.preRequisitos.length === 0) {
         continue;
       }
-      const allMet = d.preRequisitos.every(req => completedCodes.has(req));
-      if (allMet) {
-        unlocked.add(d.codigo);
-      } else {
+      if (!d.preRequisitos.every(req => completedCodes.has(req))) {
         locked.add(d.codigo);
       }
     }
-    return { unlockedCodes: unlocked, lockedCodes: locked };
-  }, [disciplinas, completedDisciplinaIds, selectionMode]);
+    return locked;
+  }, [disciplinas, completedDisciplinaIds]);
 
   // Progress stats
   const progressStats = useMemo(() => {
@@ -251,6 +304,14 @@ export function CurriculumGraph({
 
   const hasOptativas = disciplinas.some(d => d.natureza !== "OBRIGATORIA");
 
+  // Determine dialog discipline status
+  const dialogIsCompleted = selectedDisc
+    ? !!completedDisciplinaIds?.has(selectedDisc.disciplinaId)
+    : false;
+  const dialogIsCursando = selectedDisc
+    ? !!cursandoDisciplinaIds?.has(selectedDisc.disciplinaId)
+    : false;
+
   return (
     <div>
       {/* Toolbar */}
@@ -264,7 +325,7 @@ export function CurriculumGraph({
             <Button
               variant={selectionMode ? "default" : "outline"}
               size="sm"
-              onClick={() => onSelectionModeChange(!selectionMode)}
+              onClick={() => handleSelectionModeChange(!selectionMode)}
               className="gap-2"
             >
               {selectionMode ? (
@@ -273,7 +334,7 @@ export function CurriculumGraph({
                 </>
               ) : (
                 <>
-                  <ListChecks className="w-4 h-4" /> Selecionar disciplinas que concluí
+                  <ListChecks className="w-4 h-4" /> Selecionar cadeiras
                 </>
               )}
             </Button>
@@ -292,34 +353,31 @@ export function CurriculumGraph({
           )}
           {/* Legend */}
           <div className="flex items-center gap-3 text-xs flex-wrap">
-            {!selectionMode ? (
+            <span className="flex items-center gap-1.5">
+              <span className="w-0.5 h-3 rounded-full bg-blue-400 dark:bg-blue-500" />
+              Obrigatória
+            </span>
+            {showOptativas && (
               <>
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-sm bg-blue-300 dark:bg-blue-700" />
-                  Obrigatória
+                <span className="flex items-center gap-1.5">
+                  <span className="w-0.5 h-3 rounded-full bg-amber-400 dark:bg-amber-500" />
+                  Optativa
                 </span>
-                {showOptativas && (
-                  <>
-                    <span className="flex items-center gap-1">
-                      <span className="w-3 h-3 rounded-sm bg-amber-300 dark:bg-amber-700" />
-                      Optativa
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-3 h-3 rounded-sm bg-emerald-300 dark:bg-emerald-700" />
-                      Complementar
-                    </span>
-                  </>
-                )}
+                <span className="flex items-center gap-1.5">
+                  <span className="w-0.5 h-3 rounded-full bg-teal-400 dark:bg-teal-500" />
+                  Complementar
+                </span>
               </>
-            ) : (
+            )}
+            {isLoggedIn && (
               <>
-                <span className="flex items-center gap-1">
-                  <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
+                <span className="flex items-center gap-1.5">
+                  <span className="w-0.5 h-3 rounded-full bg-green-500 dark:bg-green-400" />
                   Concluída
                 </span>
-                <span className="flex items-center gap-1">
-                  <LockOpen className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
-                  Desbloqueada
+                <span className="flex items-center gap-1.5">
+                  <span className="w-0.5 h-3 rounded-full bg-purple-500 dark:bg-purple-400" />
+                  Cursando
                 </span>
                 <span className="flex items-center gap-1">
                   <Lock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
@@ -327,11 +385,17 @@ export function CurriculumGraph({
                 </span>
               </>
             )}
+            {selectionMode && (
+              <span className="flex items-center gap-1">
+                <CircleDot className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                Selecionada
+              </span>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Progress bar + Save */}
+      {/* Progress bar + Selection action */}
       {selectionMode && progressStats && (
         <div className="mb-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10">
           <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
@@ -350,16 +414,38 @@ export function CurriculumGraph({
                 </span>
               )}
             </div>
-            {onSave && (
-              <Button
-                size="sm"
-                onClick={onSave}
-                disabled={isSaving || !hasUnsavedChanges}
-                className="gap-1.5"
-              >
-                <Save className="w-3.5 h-3.5" />
-                {isSaving ? "Salvando..." : hasUnsavedChanges ? "Salvar progresso" : "Salvo"}
-              </Button>
+            {onSaveWithStatus && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    disabled={isSaving || selectionSet.size === 0}
+                    className="gap-1.5"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    {isSaving ? "Salvando..." : "Salvar"}
+                    {selectionSet.size > 0 && ` (${selectionSet.size})`}
+                    <ChevronDown className="w-3 h-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => void handleSaveAs("concluida")}>
+                    <Check className="w-3.5 h-3.5 mr-2 text-green-600" />
+                    Marcar como Concluídas
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => void handleSaveAs("cursando")}>
+                    <BookOpen className="w-3.5 h-3.5 mr-2 text-purple-600" />
+                    Marcar como Cursando
+                    {activeSemestreNome ? ` (${activeSemestreNome})` : ""}
+                  </DropdownMenuItem>
+                  {hasMarkedInSelection && (
+                    <DropdownMenuItem onClick={() => void handleSaveAs("none")}>
+                      <XCircle className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+                      Desmarcar
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
           <Progress value={progressStats.percentObrigatorias} className="h-2" />
@@ -374,7 +460,7 @@ export function CurriculumGraph({
       >
         <div
           ref={containerRef}
-          className="relative flex gap-6 min-w-max p-2"
+          className="relative flex gap-8 min-w-max p-3"
           onClick={handleContainerClick}
         >
           {/* SVG edge overlay */}
@@ -383,14 +469,12 @@ export function CurriculumGraph({
             nodeRefs={nodeRects}
             containerRect={containerRect}
             highlightedCodes={highlightedCodes}
+            hoveredCode={hoveredCode}
           />
 
           {/* Period columns */}
           {periods.map(([periodo, discs]) => (
-            <div
-              key={periodo}
-              className="relative z-[1] flex flex-col gap-3 min-w-[140px] max-w-[155px]"
-            >
+            <div key={periodo} className="relative z-[1] flex flex-col gap-4 w-[105px]">
               <div className="text-center text-xs font-semibold text-muted-foreground py-2 bg-slate-100 dark:bg-slate-800/50 rounded-md">
                 {periodo}° Período
               </div>
@@ -401,15 +485,16 @@ export function CurriculumGraph({
                   discipline={disc}
                   isHighlighted={highlightedCodes !== null && highlightedCodes.has(disc.codigo)}
                   isFaded={highlightedCodes !== null && !highlightedCodes.has(disc.codigo)}
-                  isClicked={isTouchDevice && clickedCode === disc.codigo}
+                  isClicked={clickedCode === disc.codigo}
                   isCompleted={!!completedDisciplinaIds?.has(disc.disciplinaId)}
+                  isCursando={!!cursandoDisciplinaIds?.has(disc.disciplinaId)}
                   isLocked={lockedCodes.has(disc.codigo)}
-                  isUnlocked={unlockedCodes.has(disc.codigo)}
                   selectionMode={selectionMode}
+                  isSelected={selectionSet.has(disc.disciplinaId)}
                   onClick={e => handleNodeClick(disc, e)}
-                  onToggleComplete={() => onToggleDisciplina?.(disc.disciplinaId)}
-                  onMouseEnter={!isTouchDevice ? () => setHoveredCode(disc.codigo) : undefined}
-                  onMouseLeave={!isTouchDevice ? () => setHoveredCode(null) : undefined}
+                  onMouseEnter={() => setHoveredCode(disc.codigo)}
+                  onMouseLeave={() => setHoveredCode(null)}
+                  onToggleComplete={() => handleToggleSelect(disc.disciplinaId)}
                 />
               ))}
             </div>
@@ -423,6 +508,12 @@ export function CurriculumGraph({
         allDisciplines={disciplinas}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
+        isOwnCourse={isLoggedIn}
+        isCompleted={dialogIsCompleted}
+        isCursando={dialogIsCursando}
+        isMarking={isSaving}
+        activeSemestreNome={activeSemestreNome}
+        onMarcar={onMarcarDisciplina}
       />
     </div>
   );

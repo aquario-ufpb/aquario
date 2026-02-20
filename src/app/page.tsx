@@ -271,13 +271,13 @@ export default function Home() {
                             isDark ? "text-white" : "text-aquario-primary"
                           }`}
                         >
-                          Calendário
+                          Minhas Disciplinas
                         </h3>
                         <p
                           className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
                         >
-                          Crie e visualize seu calendário personalizado com as disciplinas
-                          selecionadas.
+                          Gerencie suas disciplinas cursando e visualize seu calendário
+                          personalizado.
                         </p>
                         <Button
                           variant="outline"
@@ -287,7 +287,7 @@ export default function Home() {
                               : "border-blue-900 text-blue-900 hover:bg-blue-50"
                           }
                         >
-                          Acessar Calendário
+                          Minhas Disciplinas
                         </Button>
                       </div>
                       <div className="flex-shrink-0 hidden sm:block">

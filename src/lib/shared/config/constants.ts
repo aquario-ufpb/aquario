@@ -52,6 +52,14 @@ export const ENDPOINTS = {
   // Curriculos
   GRADE_CURRICULAR: (cursoId: string) => `/curriculos/grade?cursoId=${cursoId}`,
 
+  // Disciplinas
+  DISCIPLINAS_SEARCH: "/disciplinas/search",
+  DISCIPLINAS_MARCAR: "/usuarios/me/disciplinas/marcar",
+  DISCIPLINAS_SEMESTRE_ME: (semestreId: string) =>
+    `/usuarios/me/semestres/${semestreId}/disciplinas`,
+  DISCIPLINA_SEMESTRE_PATCH: (semestreId: string, disciplinaSemestreId: string) =>
+    `/usuarios/me/semestres/${semestreId}/disciplinas/${disciplinaSemestreId}`,
+
   // Calendario Academico
   CALENDARIO_ACADEMICO: "/calendario-academico",
   CALENDARIO_ACADEMICO_BY_ID: (id: string) => `/calendario-academico/${id}`,

@@ -77,8 +77,8 @@ function ToolsDropdownContent({ isDark }: { isDark: boolean }) {
     {
       href: "/calendario",
       image: isDark ? "/calendario/dark.png" : "/calendario/light.png",
-      title: "Calendário",
-      description: "Visualize seus horários",
+      title: "Minhas Disciplinas",
+      description: "Gerencie disciplinas e horários",
     },
     {
       href: "/guias",

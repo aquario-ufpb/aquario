@@ -1,26 +1,11 @@
 import { forwardRef } from "react";
-import { Check, Eye, Lock, LockOpen } from "lucide-react";
+import { Eye, Lock, CircleDot } from "lucide-react";
 import type { GradeDisciplinaNode, NaturezaDisciplinaType } from "@/lib/shared/types";
 
-const NATUREZA_COLORS: Record<
-  NaturezaDisciplinaType,
-  { bg: string; border: string; text: string }
-> = {
-  OBRIGATORIA: {
-    bg: "bg-blue-50 dark:bg-blue-950/40",
-    border: "border-blue-300 dark:border-blue-700",
-    text: "text-blue-900 dark:text-blue-100",
-  },
-  OPTATIVA: {
-    bg: "bg-amber-50 dark:bg-amber-950/40",
-    border: "border-amber-300 dark:border-amber-700",
-    text: "text-amber-900 dark:text-amber-100",
-  },
-  COMPLEMENTAR_FLEXIVA: {
-    bg: "bg-emerald-50 dark:bg-emerald-950/40",
-    border: "border-emerald-300 dark:border-emerald-700",
-    text: "text-emerald-900 dark:text-emerald-100",
-  },
+const NATUREZA_ACCENT: Record<NaturezaDisciplinaType, string> = {
+  OBRIGATORIA: "border-l-blue-400 dark:border-l-blue-500",
+  OPTATIVA: "border-l-amber-400 dark:border-l-amber-500",
+  COMPLEMENTAR_FLEXIVA: "border-l-teal-400 dark:border-l-teal-500",
 };
 
 type DisciplineNodeProps = {
@@ -29,13 +14,14 @@ type DisciplineNodeProps = {
   isFaded: boolean;
   isClicked: boolean;
   isCompleted?: boolean;
+  isCursando?: boolean;
   isLocked?: boolean;
-  isUnlocked?: boolean;
   selectionMode?: boolean;
+  isSelected?: boolean;
   onClick?: (e: React.MouseEvent<HTMLElement>) => void;
-  onToggleComplete?: () => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
+  onToggleComplete?: () => void;
 };
 
 export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>(
@@ -46,18 +32,18 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
       isFaded,
       isClicked,
       isCompleted,
+      isCursando,
       isLocked,
-      isUnlocked,
       selectionMode,
+      isSelected,
       onClick,
-      onToggleComplete,
       onMouseEnter,
       onMouseLeave,
+      onToggleComplete,
     },
     ref
   ) {
-    const colors = NATUREZA_COLORS[discipline.natureza] ?? NATUREZA_COLORS.OBRIGATORIA;
-    const hasPreReqs = discipline.preRequisitos.length > 0;
+    const accent = NATUREZA_ACCENT[discipline.natureza] ?? NATUREZA_ACCENT.OBRIGATORIA;
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       if (selectionMode && onToggleComplete) {
@@ -67,17 +53,17 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
       }
     };
 
-    // Determine background/border/text based on state
-    let stateClasses: string;
+    // Left accent color: status overrides natureza
+    let leftAccent: string;
     if (isCompleted) {
-      stateClasses =
-        "bg-green-50 dark:bg-green-950/40 border-green-400 dark:border-green-700 text-green-900 dark:text-green-100";
-    } else if (isLocked) {
-      stateClasses =
-        "bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500";
+      leftAccent = "border-l-green-500 dark:border-l-green-400";
+    } else if (isCursando) {
+      leftAccent = "border-l-purple-500 dark:border-l-purple-400";
     } else {
-      stateClasses = `${colors.bg} ${colors.border} ${colors.text}`;
+      leftAccent = accent;
     }
+
+    const isLockedOnly = isLocked && !isCompleted && !isCursando;
 
     return (
       <button
@@ -86,44 +72,37 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         className={`
-          relative w-full text-left rounded-md border p-2 transition-all duration-200 cursor-pointer
-          ${stateClasses}
-          ${isHighlighted ? "ring-2 ring-blue-500 dark:ring-blue-400 shadow-md scale-[1.01] z-10" : ""}
-          ${isFaded ? "opacity-30" : ""}
-          ${!isHighlighted && !isFaded ? "hover:shadow-sm hover:scale-[1.005]" : ""}
+          relative h-[84px] rounded-md border border-border border-l-[3px] p-2 overflow-hidden
+          flex items-center justify-center text-center
+          transition-all duration-200 cursor-pointer
+          bg-card text-card-foreground
+          ${leftAccent}
+          ${isLockedOnly ? "opacity-40" : ""}
+          ${selectionMode && isSelected ? "ring-2 ring-blue-500 dark:ring-blue-400 shadow-sm" : ""}
+          ${isHighlighted && !selectionMode ? "ring-2 ring-blue-500/60 dark:ring-blue-400/60 shadow-sm z-10" : ""}
+          ${isFaded && !selectionMode ? "opacity-20" : ""}
+          ${!isHighlighted && !isFaded && !isLockedOnly ? "hover:shadow-md" : ""}
         `}
       >
-        {isCompleted && (
+        {/* Selection indicator */}
+        {selectionMode && isSelected && (
           <div className="absolute top-1 right-1">
-            <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+            <CircleDot aria-hidden className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           </div>
         )}
-        {isUnlocked && !isCompleted && (
+        {/* Lock indicator for locked disciplines */}
+        {!(selectionMode && isSelected) && isLockedOnly && (
           <div className="absolute top-1 right-1">
-            <LockOpen className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
+            <Lock aria-hidden className="w-3 h-3 text-slate-400 dark:text-slate-500" />
           </div>
         )}
-        {isLocked && (
-          <div className="absolute top-1 right-1">
-            <Lock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-          </div>
-        )}
-        <div className="text-[10px] font-mono font-semibold leading-tight mb-0.5 opacity-70">
-          {discipline.codigo}
-        </div>
-        <div className="text-[11px] font-medium leading-tight line-clamp-2">{discipline.nome}</div>
-        {discipline.cargaHorariaTotal !== null && (
-          <div className="text-[9px] mt-0.5 opacity-60">{discipline.cargaHorariaTotal}h</div>
-        )}
-        {hasPreReqs && (
-          <div className="text-[9px] mt-0.5 opacity-50">
-            Req: {discipline.preRequisitos.join(", ")}
-          </div>
-        )}
-        {/* "Ver mais" button when clicked */}
-        {isClicked && (
-          <div className="mt-2 pt-2 border-t border-current/20 flex items-center justify-center gap-1 text-[10px] font-semibold animate-in fade-in duration-200">
-            <Eye className="w-3 h-3" />
+        <span className="text-[10px] font-medium leading-tight line-clamp-3">
+          {discipline.nome}
+        </span>
+        {/* "Ver mais" prompt on click */}
+        {isClicked && !selectionMode && (
+          <div className="absolute bottom-0.5 inset-x-0 flex items-center justify-center gap-0.5 text-[8px] font-semibold text-muted-foreground animate-in fade-in duration-200">
+            <Eye aria-hidden className="w-2 h-2" />
             <span>Ver mais</span>
           </div>
         )}
