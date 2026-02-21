@@ -611,6 +611,7 @@ async function main() {
 
   // Clean existing calendario data
   await prisma.eventoCalendario.deleteMany();
+  await prisma.disciplinaSemestre.deleteMany();
   await prisma.semestreLetivo.deleteMany();
 
   const sem20251 = await prisma.semestreLetivo.create({
