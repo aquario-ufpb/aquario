@@ -13,6 +13,7 @@ type DisciplineNodeProps = {
   isHighlighted: boolean;
   isFaded: boolean;
   isClicked: boolean;
+  isHovered?: boolean;
   isCompleted?: boolean;
   isCursando?: boolean;
   isLocked?: boolean;
@@ -31,6 +32,7 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
       isHighlighted,
       isFaded,
       isClicked,
+      isHovered,
       isCompleted,
       isCursando,
       isLocked,
@@ -99,8 +101,8 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
         <span className="text-[10px] font-medium leading-tight line-clamp-3">
           {discipline.nome}
         </span>
-        {/* "Ver mais" prompt on click */}
-        {isClicked && !selectionMode && (
+        {/* "Ver mais" prompt on click/hover */}
+        {(isClicked || isHovered) && !selectionMode && (
           <div className="absolute bottom-0.5 inset-x-0 flex items-center justify-center gap-0.5 text-[8px] font-semibold text-muted-foreground animate-in fade-in duration-200">
             <Eye aria-hidden className="w-2 h-2" />
             <span>Ver mais</span>

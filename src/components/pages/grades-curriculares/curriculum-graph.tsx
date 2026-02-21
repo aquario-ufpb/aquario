@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useLayoutEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
 import type { GradeDisciplinaNode } from "@/lib/shared/types";
 import { DisciplineNode } from "./discipline-node";
 import { GraphEdges } from "./graph-edges";
@@ -27,6 +27,48 @@ import {
   ChevronDown,
   CircleDot,
 } from "lucide-react";
+
+function computeHighlightChain(
+  code: string,
+  disciplines: GradeDisciplinaNode[]
+): Set<string> | null {
+  const codeToDisc = new Map<string, GradeDisciplinaNode>();
+  for (const d of disciplines) {
+    codeToDisc.set(d.codigo, d);
+  }
+  if (!codeToDisc.has(code)) {
+    return null;
+  }
+
+  const codes = new Set<string>();
+  codes.add(code);
+
+  const walkUp = (c: string) => {
+    const disc = codeToDisc.get(c);
+    if (!disc) {
+      return;
+    }
+    for (const req of disc.preRequisitos) {
+      if (!codes.has(req) && codeToDisc.has(req)) {
+        codes.add(req);
+        walkUp(req);
+      }
+    }
+  };
+
+  const walkDown = (c: string) => {
+    for (const d of disciplines) {
+      if (d.preRequisitos.includes(c) && !codes.has(d.codigo)) {
+        codes.add(d.codigo);
+        walkDown(d.codigo);
+      }
+    }
+  };
+
+  walkUp(code);
+  walkDown(code);
+  return codes;
+}
 
 type CurriculumGraphProps = {
   disciplinas: GradeDisciplinaNode[];
@@ -73,6 +115,12 @@ export function CurriculumGraph({
   const containerRef = useRef<HTMLDivElement>(null);
   const nodeRefsMap = useRef<Map<string, HTMLButtonElement>>(new Map());
 
+  // Detect hover-capable devices (desktop) vs touch-only (mobile)
+  const [canHover, setCanHover] = useState(false);
+  useEffect(() => {
+    setCanHover(window.matchMedia("(hover: hover) and (pointer: fine)").matches);
+  }, []);
+
   // Clear selection set when exiting selection mode
   const handleSelectionModeChange = useCallback(
     (enabled: boolean) => {
@@ -103,50 +151,24 @@ export function CurriculumGraph({
     return Array.from(map.entries()).sort(([a], [b]) => a - b);
   }, [visibleDisciplinas]);
 
-  // Compute highlighted codes on click
-  const highlightedCodes = useMemo(() => {
+  // Compute highlighted codes on click (mobile)
+  const clickHighlightedCodes = useMemo(() => {
     if (!clickedCode) {
       return null;
     }
+    return computeHighlightChain(clickedCode, visibleDisciplinas);
+  }, [clickedCode, visibleDisciplinas]);
 
-    const codeToDisc = new Map<string, GradeDisciplinaNode>();
-    for (const d of visibleDisciplinas) {
-      codeToDisc.set(d.codigo, d);
-    }
-
-    if (!codeToDisc.has(clickedCode)) {
+  // Compute highlighted codes on hover (desktop only)
+  const hoverHighlightedCodes = useMemo(() => {
+    if (!hoveredCode || clickedCode) {
       return null;
     }
+    return computeHighlightChain(hoveredCode, visibleDisciplinas);
+  }, [hoveredCode, clickedCode, visibleDisciplinas]);
 
-    const codes = new Set<string>();
-    codes.add(clickedCode);
-
-    const walkUp = (code: string) => {
-      const disc = codeToDisc.get(code);
-      if (!disc) {
-        return;
-      }
-      for (const req of disc.preRequisitos) {
-        if (!codes.has(req) && codeToDisc.has(req)) {
-          codes.add(req);
-          walkUp(req);
-        }
-      }
-    };
-
-    const walkDown = (code: string) => {
-      for (const d of visibleDisciplinas) {
-        if (d.preRequisitos.includes(code) && !codes.has(d.codigo)) {
-          codes.add(d.codigo);
-          walkDown(d.codigo);
-        }
-      }
-    };
-
-    walkUp(clickedCode);
-    walkDown(clickedCode);
-    return codes;
-  }, [clickedCode, visibleDisciplinas]);
+  // Click highlighting takes priority over hover
+  const activeHighlightedCodes = clickHighlightedCodes ?? hoverHighlightedCodes;
 
   // Measure node positions for SVG edges
   const measureNodes = useCallback(() => {
@@ -165,6 +187,7 @@ export function CurriculumGraph({
     setNodeRects(rects);
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: visibleDisciplinas triggers re-measurement when disciplines change
   useLayoutEffect(() => {
     measureNodes();
   }, [visibleDisciplinas, measureNodes]);
@@ -190,20 +213,23 @@ export function CurriculumGraph({
     }
   }, []);
 
-  // Unified click-based interaction (same for desktop and mobile)
   const handleNodeClick = useCallback(
     (disc: GradeDisciplinaNode, e: React.MouseEvent) => {
       e.stopPropagation();
-      if (clickedCode === disc.codigo) {
-        // Second click: open dialog
+      if (canHover) {
+        // Desktop: hover already shows deps, click opens dialog directly
+        setSelectedDisc(disc);
+        setDialogOpen(true);
+      } else if (clickedCode === disc.codigo) {
+        // Mobile second tap: open dialog
         setSelectedDisc(disc);
         setDialogOpen(true);
       } else {
-        // First click: highlight dependency chain
+        // Mobile first tap: highlight dependency chain
         setClickedCode(disc.codigo);
       }
     },
-    [clickedCode]
+    [canHover, clickedCode]
   );
 
   const handleToggleSelect = useCallback((disciplinaId: string) => {
@@ -468,7 +494,7 @@ export function CurriculumGraph({
             disciplines={visibleDisciplinas}
             nodeRefs={nodeRects}
             containerRect={containerRect}
-            highlightedCodes={highlightedCodes}
+            highlightedCodes={activeHighlightedCodes}
             hoveredCode={hoveredCode}
           />
 
@@ -483,17 +509,30 @@ export function CurriculumGraph({
                   key={disc.id}
                   ref={el => setNodeRef(disc.codigo, el)}
                   discipline={disc}
-                  isHighlighted={highlightedCodes !== null && highlightedCodes.has(disc.codigo)}
-                  isFaded={highlightedCodes !== null && !highlightedCodes.has(disc.codigo)}
+                  isHighlighted={
+                    activeHighlightedCodes !== null && activeHighlightedCodes.has(disc.codigo)
+                  }
+                  isFaded={
+                    activeHighlightedCodes !== null && !activeHighlightedCodes.has(disc.codigo)
+                  }
                   isClicked={clickedCode === disc.codigo}
+                  isHovered={canHover && hoveredCode === disc.codigo}
                   isCompleted={!!completedDisciplinaIds?.has(disc.disciplinaId)}
                   isCursando={!!cursandoDisciplinaIds?.has(disc.disciplinaId)}
                   isLocked={lockedCodes.has(disc.codigo)}
                   selectionMode={selectionMode}
                   isSelected={selectionSet.has(disc.disciplinaId)}
                   onClick={e => handleNodeClick(disc, e)}
-                  onMouseEnter={() => setHoveredCode(disc.codigo)}
-                  onMouseLeave={() => setHoveredCode(null)}
+                  onMouseEnter={() => {
+                    if (canHover) {
+                      setHoveredCode(disc.codigo);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (canHover) {
+                      setHoveredCode(null);
+                    }
+                  }}
                   onToggleComplete={() => handleToggleSelect(disc.disciplinaId)}
                 />
               ))}
