@@ -65,7 +65,7 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
       leftAccent = accent;
     }
 
-    const isLockedOnly = isLocked && !isCompleted && !isCursando;
+    const isLockedOnly = isLocked && !isCompleted && !isCursando && !(selectionMode && isSelected);
 
     return (
       <button

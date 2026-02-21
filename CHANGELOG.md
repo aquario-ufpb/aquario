@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Onboarding System**: Multi-step wizard modal that guides new users through setting up their academic profile
+  - 7-step flow: Welcome, Período Atual, Disciplinas Concluídas, Disciplinas do Semestre, Turmas, Entidades, Tudo Pronto
+  - "Período Atual" step lets users pick their current semester (1–12, 12+, or "Já estou graduado") via button grid
+  - `periodoAtual` string field on Usuario model, `PATCH /api/usuarios/me/periodo` endpoint
+  - Reuses existing `CurriculumGraph` component in selection mode for concluídas/cursando steps
+  - Concluídas step shows single "Salvar como Concluídas" button; cursando step shows "Salvar como Cursando"
+  - Cursando step has two-page flow: intro message then graph selection
+  - Concluídas and cursando steps always show, displaying user's existing selections
+  - Embedded PAAS turma picker for turmas step
+  - Entidades step with expandable cards showing start/end month pickers for membership dates
+  - "Tudo pronto!" final step with links to profile page and /calendario
+  - Per-semester steps (cursando, turmas) reappear each new semester
+  - Uncloseable modal with progress indicator — users must complete or skip each step
+  - `onboardingMetadata` JSON field on Usuario model stores step completion state
+  - `GET/PATCH /api/usuarios/me/onboarding` API endpoints with deep-merge semantics
+  - `useOnboarding` hook handles step resolution, mutations, and PAAS availability checks
+- **Dev Tools Panel**: Toggle MASTER_ADMIN/USER role via `POST /api/dev/promote-admin` (dev-only, auth-protected)
+
 - **Auth Pages Redesign**: Modernized login, registration, forgot-password, and reset-password pages
   - New `AuthLayout` component with split-panel design (branding panel + form panel)
   - New `PasswordInput` component with eye/eye-off visibility toggle
@@ -17,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Registration flow**: Removed Centro dropdown; users now pick from a single flat Curso list (centroId derived automatically)
+- **Dev Tools — Reset Onboarding**: Now also clears disciplinas concluídas, disciplinas do semestre, and período atual for a full reset
+
+### Fixed
+- **Grade Curricular — Transitive Unlocking**: Selecting a discipline now transitively unlocks all dependents (not just one level deep)
+- **Grade Curricular — Locked Discipline Opacity**: Disciplines marked as concluída no longer appear locked/transparent
 
 ### Removed
 - Deleted unused `login-form.tsx` shadcn template component

@@ -1,6 +1,7 @@
 import { ENDPOINTS } from "@/lib/shared/config/constants";
 import { apiClient } from "./api-client";
 import { throwApiError } from "@/lib/client/errors";
+import type { OnboardingMetadata } from "@/lib/shared/types";
 
 export type User = {
   id: string;
@@ -11,6 +12,7 @@ export type User = {
   eVerificado: boolean;
   eFacade?: boolean;
   urlFotoPerfil?: string | null;
+  periodoAtual?: string | null;
   centro: {
     id: string;
     nome: string;
@@ -401,6 +403,78 @@ export const usuariosService = {
     const response = await apiClient(`${ENDPOINTS.USUARIO_MEMBROS_ME}/${membroId}`, {
       method: "DELETE",
       token,
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+  },
+
+  updatePeriodoAtual: async (periodoAtual: string | null, token: string): Promise<void> => {
+    const response = await apiClient(ENDPOINTS.USUARIO_PERIODO_ME, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      token,
+      body: JSON.stringify({ periodoAtual }),
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+  },
+
+  getOnboardingMetadata: async (token: string): Promise<OnboardingMetadata> => {
+    const response = await apiClient(ENDPOINTS.USUARIO_ONBOARDING_ME, {
+      method: "GET",
+      token,
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+
+    return response.json();
+  },
+
+  updateOnboardingMetadata: async (
+    data: Partial<OnboardingMetadata>,
+    token: string
+  ): Promise<OnboardingMetadata> => {
+    const response = await apiClient(ENDPOINTS.USUARIO_ONBOARDING_ME, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      token,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+
+    return response.json();
+  },
+
+  clearOnboardingMetadata: async (token: string): Promise<void> => {
+    const response = await apiClient(ENDPOINTS.DEV_CLEAR_ONBOARDING, {
+      method: "POST",
+      token,
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+  },
+
+  toggleRole: async (role: "USER" | "MASTER_ADMIN", token: string): Promise<void> => {
+    const response = await apiClient(ENDPOINTS.DEV_PROMOTE_ADMIN, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      token,
+      body: JSON.stringify({ role }),
     });
 
     if (!response.ok) {
