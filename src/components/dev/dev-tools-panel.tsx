@@ -6,10 +6,8 @@ import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { usuariosService } from "@/lib/client/api/usuarios";
 import { disciplinaSemestreService } from "@/lib/client/api/disciplina-semestre";
-import { apiClient } from "@/lib/client/api/api-client";
 import { queryKeys } from "@/lib/client/query-keys";
 import { IS_DEV } from "@/lib/shared/config/env";
-import { ENDPOINTS } from "@/lib/shared/config/constants";
 import { Fish, X, RotateCcw, Shield, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -51,15 +49,7 @@ export function DevToolsPanel() {
         throw new Error("No token");
       }
       const targetRole = isAdmin ? "USER" : "MASTER_ADMIN";
-      const response = await apiClient(ENDPOINTS.DEV_PROMOTE_ADMIN, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        token,
-        body: JSON.stringify({ role: targetRole }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to toggle role");
-      }
+      await usuariosService.toggleRole(targetRole, token);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });

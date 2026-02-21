@@ -469,6 +469,19 @@ export const usuariosService = {
     }
   },
 
+  toggleRole: async (role: "USER" | "MASTER_ADMIN", token: string): Promise<void> => {
+    const response = await apiClient(ENDPOINTS.DEV_PROMOTE_ADMIN, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      token,
+      body: JSON.stringify({ role }),
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+  },
+
   mergeFacadeUser: async (
     facadeUserId: string,
     realUserId: string,
