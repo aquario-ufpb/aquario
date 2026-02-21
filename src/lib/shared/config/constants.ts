@@ -33,6 +33,8 @@ export const ENDPOINTS = {
   USUARIO_MEMBROS_ME: "/usuarios/me/membros",
   USUARIO_DISCIPLINAS_ME: "/usuarios/me/disciplinas",
   MERGE_FACADE_USER: "/usuarios/merge-facade",
+  USUARIO_ONBOARDING_ME: "/usuarios/me/onboarding",
+  USUARIO_PERIODO_ME: "/usuarios/me/periodo",
 
   // Admin CRUD
   CAMPUS: "/campus",

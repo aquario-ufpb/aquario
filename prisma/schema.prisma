@@ -113,9 +113,11 @@ model Usuario {
   papelPlataforma   PapelPlataforma  @default(USER)
   eVerificado       Boolean          @default(false)
   eFacade           Boolean          @default(false)
-  urlFotoPerfil     String?
-  criadoEm          DateTime         @default(now())
-  atualizadoEm      DateTime         @updatedAt
+  urlFotoPerfil        String?
+  periodoAtual         String?
+  onboardingMetadata   Json?
+  criadoEm             DateTime         @default(now())
+  atualizadoEm         DateTime         @updatedAt
 
   centroId String
   cursoId  String

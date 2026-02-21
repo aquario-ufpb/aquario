@@ -24,6 +24,7 @@ export const queryKeys = {
     all: ["usuarios"] as const,
     current: ["usuarios", "current"] as const,
     currentMemberships: ["usuarios", "current", "memberships"] as const,
+    onboarding: ["usuarios", "onboarding"] as const,
     byId: (id: string) => ["usuarios", id] as const,
     bySlug: (slug: string) => ["usuarios", "slug", slug] as const,
     memberships: (userId: string) => ["usuarios", userId, "memberships"] as const,

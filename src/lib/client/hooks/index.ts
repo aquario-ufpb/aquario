@@ -14,3 +14,4 @@ export * from "./use-grade-curricular";
 export * from "./use-calendario-academico";
 export * from "./use-disciplinas-semestre";
 export { useAllCursos } from "./use-admin-cursos";
+export * from "./use-onboarding";
