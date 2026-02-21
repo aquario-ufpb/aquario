@@ -1,11 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/server/prisma';
-import { StatusProjeto } from '@prisma/client';
-import {
-  createProjetoSchema,
-  listProjetosSchema,
-} from '@/lib/shared/validations/projeto';
-import type { ProjetosListResponse } from '@/lib/shared/types/projeto';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/server/db/prisma";
+//import { StatusProjeto } from "@prisma/client";
+import { createProjetoSchema, listProjetosSchema } from "@/lib/shared/validations/projeto";
+import type { ProjetosListResponse } from "@/lib/shared/types/projeto";
 
 /**
  * GET /api/projetos
@@ -16,25 +13,24 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const validation = listProjetosSchema.safeParse({
-      page: searchParams.get('page'),
-      limit: searchParams.get('limit'),
-      status: searchParams.get('status'),
-      entidadeId: searchParams.get('entidadeId'),
-      tags: searchParams.get('tags'),
-      search: searchParams.get('search'),
-      orderBy: searchParams.get('orderBy'),
-      order: searchParams.get('order'),
+      page: searchParams.get("page") ?? undefined,
+      limit: searchParams.get("limit") ?? undefined,
+      status: searchParams.get("status") ?? undefined,
+      entidadeId: searchParams.get("entidadeId") ?? undefined,
+      tags: searchParams.get("tags") ?? undefined,
+      search: searchParams.get("search") ?? undefined,
+      orderBy: searchParams.get("orderBy") ?? undefined,
+      order: searchParams.get("order") ?? undefined,
     });
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Parâmetros inválidos', details: validation.error.errors },
+        { error: "Parâmetros inválidos", details: validation.error.errors },
         { status: 400 }
       );
     }
 
-    const { page, limit, status, entidadeId, tags, search, orderBy, order } =
-      validation.data;
+    const { page, limit, status, entidadeId, tags, search, orderBy, order } = validation.data;
     const skip = (page - 1) * limit;
 
     // Build where clause
@@ -49,15 +45,15 @@ export async function GET(request: NextRequest) {
     }
 
     if (tags) {
-      const tagArray = tags.split(',').map((t: string) => t.trim());
+      const tagArray = tags.split(",").map((t: string) => t.trim());
       where.tags = { hasSome: tagArray };
     }
 
     if (search) {
       where.OR = [
-        { titulo: { contains: search, mode: 'insensitive' } },
-        { subtitulo: { contains: search, mode: 'insensitive' } },
-        { descricao: { contains: search, mode: 'insensitive' } },
+        { titulo: { contains: search, mode: "insensitive" } },
+        { subtitulo: { contains: search, mode: "insensitive" } },
+        { descricao: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -87,7 +83,7 @@ export async function GET(request: NextRequest) {
               },
             },
             orderBy: {
-              autorPrincipal: 'desc', // Principais primeiro
+              autorPrincipal: "desc", // Principais primeiro
             },
           },
           entidade: {
@@ -115,11 +111,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching projetos:', error);
-    return NextResponse.json(
-      { error: 'Erro ao buscar projetos' },
-      { status: 500 }
-    );
+    console.error("Error fetching projetos:", error);
+    return NextResponse.json({ error: "Erro ao buscar projetos" }, { status: 500 });
   }
 }
 
@@ -135,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Dados inválidos', details: validation.error.errors },
+        { error: "Dados inválidos", details: validation.error.errors },
         { status: 400 }
       );
     }
@@ -148,7 +141,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingProjeto) {
-      return NextResponse.json({ error: 'Slug já existe' }, { status: 409 });
+      return NextResponse.json({ error: "Slug já existe" }, { status: 409 });
     }
 
     // Verify all usuarios exist
@@ -160,10 +153,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingUsuarios.length !== usuarioIds.length) {
-      return NextResponse.json(
-        { error: 'Um ou mais usuários não existem' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Um ou mais usuários não existem" }, { status: 400 });
     }
 
     // Create projeto with autores
@@ -171,10 +161,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...projetoData,
         autores: {
-          create: autores.map((autor: {
-            usuarioId: string;
-            autorPrincipal: boolean;
-          }) => ({
+          create: autores.map((autor: { usuarioId: string; autorPrincipal: boolean }) => ({
             usuarioId: autor.usuarioId,
             autorPrincipal: autor.autorPrincipal,
           })),
@@ -195,7 +182,7 @@ export async function POST(request: NextRequest) {
             },
           },
           orderBy: {
-            autorPrincipal: 'desc',
+            autorPrincipal: "desc",
           },
         },
         entidade: true,
@@ -204,10 +191,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(projeto, { status: 201 });
   } catch (error) {
-    console.error('Error creating projeto:', error);
-    return NextResponse.json(
-      { error: 'Erro ao criar projeto' },
-      { status: 500 }
-    );
+    console.error("Error creating projeto:", error);
+    return NextResponse.json({ error: "Erro ao criar projeto" }, { status: 500 });
   }
 }

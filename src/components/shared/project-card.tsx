@@ -11,6 +11,7 @@ export type Publicador = {
   nome: string;
   urlFotoPerfil?: string | null;
   tipo: "USUARIO" | "ENTIDADE";
+  entidadeTipo?: "LABORATORIO" | "GRUPO" | "LIGA";
 };
 
 export type Colaborador = {
@@ -19,7 +20,7 @@ export type Colaborador = {
   urlFotoPerfil?: string | null;
 };
 
-export type TipoProjeto = "PESSOAL" | "LABORATORIO" | "ENTIDADE" | "LIGA";
+export type TipoProjeto = "PESSOAL" | "LABORATORIO" | "GRUPO" | "LIGA";
 
 export type Projeto = {
   id: string;
@@ -50,7 +51,7 @@ export const formatProjetoTipo = (tipo: TipoProjeto) => {
       return "Pessoal";
     case "LABORATORIO":
       return "Laboratório";
-    case "ENTIDADE":
+    case "GRUPO":
       return "Grupo";
     case "LIGA":
       return "Liga";
@@ -88,12 +89,12 @@ const ProjectCard = ({ projeto }: ProjectCardProps) => {
             <Avatar className="h-6 w-6 border border-border">
               <AvatarImage
                 src={
-                  projeto.publicador.urlFotoPerfil ||
+                  projeto.publicador?.urlFotoPerfil ||
                   getDefaultAvatarUrl(projeto.publicador.id, projeto.publicador.nome)
                 }
                 alt={projeto.publicador.nome}
               />
-              <AvatarFallback>{projeto.publicador.nome[0]}</AvatarFallback>
+              <AvatarFallback>{projeto.publicador.nome[0] ?? "U"}</AvatarFallback>
             </Avatar>
             <span className="text-xs text-muted-foreground truncate max-w-[100px]">
               {projeto.publicador.nome}
