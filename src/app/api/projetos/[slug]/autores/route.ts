@@ -1,15 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/server/prisma';
-import { updateProjetoAutoresSchema } from '@/lib/shared/validations/projeto';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/server/db/prisma";
+import { updateProjetoAutoresSchema } from "@/lib/shared/validations/projeto";
 
 /**
  * PUT /api/projetos/[slug]/autores
  * Atualiza os autores de um projeto (substitui todos)
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const { slug } = params;
     const body = await request.json();
@@ -18,7 +15,7 @@ export async function PUT(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Dados inválidos', details: validation.error.errors },
+        { error: "Dados inválidos", details: validation.error.errors },
         { status: 400 }
       );
     }
@@ -31,10 +28,7 @@ export async function PUT(
     });
 
     if (!projeto) {
-      return NextResponse.json(
-        { error: 'Projeto não encontrado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
     }
 
     // Verify all usuarios exist
@@ -46,10 +40,7 @@ export async function PUT(
     });
 
     if (existingUsuarios.length !== usuarioIds.length) {
-      return NextResponse.json(
-        { error: 'Um ou mais usuários não existem' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Um ou mais usuários não existem" }, { status: 400 });
     }
 
     // Delete existing autores and create new ones
@@ -58,10 +49,7 @@ export async function PUT(
         where: { projetoId: projeto.id },
       }),
       prisma.projetoAutor.createMany({
-        data: autores.map((autor: {
-          usuarioId: string;
-          autorPrincipal: boolean;
-        }) => ({
+        data: autores.map((autor: { usuarioId: string; autorPrincipal: boolean }) => ({
           projetoId: projeto.id,
           usuarioId: autor.usuarioId,
           autorPrincipal: autor.autorPrincipal,
@@ -87,7 +75,7 @@ export async function PUT(
             },
           },
           orderBy: {
-            autorPrincipal: 'desc',
+            autorPrincipal: "desc",
           },
         },
         entidade: true,
@@ -96,10 +84,7 @@ export async function PUT(
 
     return NextResponse.json(updatedProjeto);
   } catch (error) {
-    console.error('Error updating projeto autores:', error);
-    return NextResponse.json(
-      { error: 'Erro ao atualizar autores do projeto' },
-      { status: 500 }
-    );
+    console.error("Error updating projeto autores:", error);
+    return NextResponse.json({ error: "Erro ao atualizar autores do projeto" }, { status: 500 });
   }
 }

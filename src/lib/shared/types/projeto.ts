@@ -1,10 +1,16 @@
-import { Projeto, ProjetoAutor, Entidade, Usuario } from '@prisma/client';
+import { Projeto, ProjetoAutor, Entidade, Usuario } from "@prisma/client";
+
+export type UsuarioSummary = Pick<
+  Usuario,
+  "id" | "nome" | "email" | "urlFotoPerfil" | "slug" | "matricula"
+>;
+export type EntidadeSummary = Pick<Entidade, "id" | "nome" | "slug" | "tipo">;
 
 /**
  * ProjetoAutor com dados do usuário
  */
 export type ProjetoAutorWithUsuario = ProjetoAutor & {
-  usuario: Usuario;
+  usuario: UsuarioSummary;
 };
 
 /**
@@ -12,7 +18,7 @@ export type ProjetoAutorWithUsuario = ProjetoAutor & {
  */
 export type ProjetoWithAutores = Projeto & {
   autores: ProjetoAutorWithUsuario[];
-  entidade?: Entidade | null;
+  entidade?: EntidadeSummary | null;
 };
 
 /**

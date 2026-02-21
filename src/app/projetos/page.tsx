@@ -20,18 +20,72 @@ export default function Projetos() {
   useEffect(() => {
     const fetchProjetos = async () => {
       try {
-        const projetosMapeados: Projeto[] = [];
+        setIsLoading(true);
 
-        // Merge Mock Data with API Data
-        // Use MOCK_PROJETOS from the new file
-        const { MOCK_PROJETOS } = await import("./mock-data");
-        setProjetos([...MOCK_PROJETOS, ...projetosMapeados]);
+        const response = await fetch("/api/projetos");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar projetos");
+        }
+
+        const data = await response.json();
+
+        const projetosMapeados: Projeto[] = data.projetos.map((p: any) => {
+          let publicador;
+
+          if (p.entidade) {
+            publicador = {
+              id: p.entidade.id,
+              nome: p.entidade.nome,
+              urlFotoPerfil: p.entidade.urlFoto ?? null,
+              tipo: "ENTIDADE",
+              entidadeTipo: p.entidade.tipo,
+            };
+          } else {
+            const autorPrincipalObj = p.autores.find((a: any) => a.autorPrincipal);
+
+            const autorPrincipal = autorPrincipalObj?.usuario;
+
+            publicador = {
+              id: autorPrincipal?.id ?? "0",
+              nome: autorPrincipal?.nome ?? "Usuário",
+              urlFotoPerfil: autorPrincipal?.urlFotoPerfil ?? null,
+              tipo: "USUARIO",
+            };
+          }
+
+          const colaboradores = p.autores
+            .filter((a: any) => !a.autorPrincipal)
+            .map((a: any) => ({
+              id: a.usuario.id,
+              nome: a.usuario.nome,
+              urlFotoPerfil: a.usuario.urlFotoPerfil,
+            }));
+
+          return {
+            id: p.slug,
+            nome: p.titulo,
+            descricao: p.descricao ?? "",
+            imagem: p.urlImagem ?? null,
+            tipo: p.entidade?.tipo ?? "PESSOAL",
+            tags: p.tags ?? [],
+            criadoEm: p.criadoEm,
+
+            publicador,
+
+            colaboradores,
+            linkRepositorio: p.urlRepositorio ?? undefined,
+            linkPrototipo: p.urlDemo ?? undefined,
+          };
+        });
+
+        setProjetos(projetosMapeados);
       } catch (error) {
         console.error(error);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchProjetos();
   }, []);
 
@@ -57,14 +111,13 @@ export default function Projetos() {
           filtered = filtered.filter(p => p.tipo === "LABORATORIO");
           break;
         case "entidades":
-          filtered = filtered.filter(p => p.tipo === "ENTIDADE");
+          filtered = filtered.filter(p => p.tipo === "GRUPO");
           break;
         case "ligas":
           filtered = filtered.filter(p => p.tipo === "LIGA");
           break;
         case "grupos":
-          // Legacy check
-          filtered = filtered.filter(p => p.tipo === "ENTIDADE");
+          filtered = filtered.filter(p => p.tipo === "GRUPO");
           break;
       }
     }
@@ -87,12 +140,12 @@ export default function Projetos() {
           </div>
           {user && (
             <div className="hidden md:flex flex-shrink-0">
-                <Button className="rounded-full" asChild>
-                 <Link href="/projetos/novo">
-                   <Plus className="mr-2 h-4 w-4" />
-                   Divulgar um projeto
-                 </Link>
-               </Button>
+              <Button className="rounded-full" asChild>
+                <Link href="/projetos/novo">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Divulgar um projeto
+                </Link>
+              </Button>
             </div>
           )}
         </div>

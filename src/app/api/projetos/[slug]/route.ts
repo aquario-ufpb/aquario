@@ -1,15 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/server/prisma';
-import { updateProjetoSchema } from '@/lib/shared/validations/projeto';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/server/db/prisma";
+import { updateProjetoSchema } from "@/lib/shared/validations/projeto";
 
 /**
  * GET /api/projetos/[slug]
  * Obtém detalhes de um projeto específico pelo slug
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const { slug } = params;
 
@@ -43,7 +40,7 @@ export async function GET(
             },
           },
           orderBy: {
-            autorPrincipal: 'desc', // Principais primeiro
+            autorPrincipal: "desc", // Principais primeiro
           },
         },
         entidade: {
@@ -61,19 +58,13 @@ export async function GET(
     });
 
     if (!projeto) {
-      return NextResponse.json(
-        { error: 'Projeto não encontrado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
     }
 
     return NextResponse.json(projeto);
   } catch (error) {
-    console.error('Error fetching projeto:', error);
-    return NextResponse.json(
-      { error: 'Erro ao buscar projeto' },
-      { status: 500 }
-    );
+    console.error("Error fetching projeto:", error);
+    return NextResponse.json({ error: "Erro ao buscar projeto" }, { status: 500 });
   }
 }
 
@@ -81,10 +72,7 @@ export async function GET(
  * PATCH /api/projetos/[slug]
  * Atualiza um projeto (não atualiza autores)
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const { slug } = params;
     const body = await request.json();
@@ -93,7 +81,7 @@ export async function PATCH(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Dados inválidos', details: validation.error.errors },
+        { error: "Dados inválidos", details: validation.error.errors },
         { status: 400 }
       );
     }
@@ -106,10 +94,7 @@ export async function PATCH(
     });
 
     if (!existingProjeto) {
-      return NextResponse.json(
-        { error: 'Projeto não encontrado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
     }
 
     // Check if new slug already exists (if changing slug)
@@ -119,7 +104,7 @@ export async function PATCH(
       });
 
       if (slugExists) {
-        return NextResponse.json({ error: 'Slug já existe' }, { status: 409 });
+        return NextResponse.json({ error: "Slug já existe" }, { status: 409 });
       }
     }
 
@@ -141,7 +126,7 @@ export async function PATCH(
             },
           },
           orderBy: {
-            autorPrincipal: 'desc',
+            autorPrincipal: "desc",
           },
         },
         entidade: true,
@@ -150,11 +135,8 @@ export async function PATCH(
 
     return NextResponse.json(projeto);
   } catch (error) {
-    console.error('Error updating projeto:', error);
-    return NextResponse.json(
-      { error: 'Erro ao atualizar projeto' },
-      { status: 500 }
-    );
+    console.error("Error updating projeto:", error);
+    return NextResponse.json({ error: "Erro ao atualizar projeto" }, { status: 500 });
   }
 }
 
@@ -162,10 +144,7 @@ export async function PATCH(
  * DELETE /api/projetos/[slug]
  * Remove um projeto
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const { slug } = params;
 
@@ -175,10 +154,7 @@ export async function DELETE(
     });
 
     if (!projeto) {
-      return NextResponse.json(
-        { error: 'Projeto não encontrado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
     }
 
     // Delete projeto (cascade will delete ProjetoAutor relations)
@@ -188,10 +164,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting projeto:', error);
-    return NextResponse.json(
-      { error: 'Erro ao remover projeto' },
-      { status: 500 }
-    );
+    console.error("Error deleting projeto:", error);
+    return NextResponse.json({ error: "Erro ao remover projeto" }, { status: 500 });
   }
 }

@@ -14,37 +14,85 @@ import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import DOMPurify from "dompurify";
 
 export default function ProjetoPage({ params }: { params: Promise<{ id: string }> }) {
-  const [id, setId] = useState<string | null>(null);
-  useEffect(() => { 
-    params.then(({ id }) => setId(id));
-   }, [params]);
+  const { id } = use(params);
   const [projeto, setProjeto] = useState<Projeto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (id) {
-      const fetchProjeto = async () => {
-        try {
-          // Check Mocks first
-          const { MOCK_PROJETOS } = await import("../mock-data");
-          const mockProjeto = MOCK_PROJETOS.find(p => p.id === id);
+    const fetchProjeto = async () => {
+      try {
+        setIsLoading(true);
 
-          if (mockProjeto) {
-            setProjeto(mockProjeto);
-            setIsLoading(false);
-          }
-        } catch (err: unknown) {
-          if (err instanceof Error) {
-            setError(err.message);
-          } else {
-            setError("Ocorreu um erro desconhecido");
-          }
-        } finally {
-          setIsLoading(false);
+        const response = await fetch(`/api/projetos/${id}`);
+
+        if (!response.ok) {
+          throw new Error("Projeto não encontrado");
         }
-      };
+
+        const data = await response.json();
+
+        let publicador: Projeto["publicador"];
+
+        if (data.entidade) {
+          publicador = {
+            id: data.entidade.id,
+            nome: data.entidade.nome,
+            urlFotoPerfil: data.entidade.urlFoto ?? null,
+            tipo: "ENTIDADE" as const,
+            entidadeTipo: data.entidade.tipo,
+          };
+        } else {
+          const autorPrincipalObj = data.autores.find((a: any) => a.autorPrincipal);
+
+          const autorPrincipal = autorPrincipalObj?.usuario;
+
+          publicador = {
+            id: autorPrincipal?.id ?? "0",
+            nome: autorPrincipal?.nome ?? "Usuário",
+            urlFotoPerfil: autorPrincipal?.urlFotoPerfil ?? null,
+            tipo: "USUARIO" as const,
+          };
+        }
+
+        const colaboradores = data.autores
+          .filter((a: any) => !a.autorPrincipal)
+          .map((a: any) => ({
+            id: a.usuario.id,
+            nome: a.usuario.nome,
+            urlFotoPerfil: a.usuario.urlFotoPerfil,
+          }));
+
+        const projetoMapeado: Projeto = {
+          id: data.slug,
+          nome: data.titulo,
+          descricao: data.descricao ?? "",
+          imagem: data.urlImagem ?? null,
+          tipo: data.entidade?.tipo ?? "PESSOAL",
+          tags: data.tags ?? [],
+          criadoEm: data.criadoEm,
+
+          publicador,
+
+          colaboradores,
+          linkRepositorio: data.urlRepositorio ?? undefined,
+          linkPrototipo: data.urlDemo ?? undefined,
+        };
+
+        setProjeto(projetoMapeado);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Erro ao carregar projeto");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
       fetchProjeto();
     }
   }, [id]);
@@ -141,10 +189,13 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage
-                    src={projeto.publicador.urlFotoPerfil || getDefaultAvatarUrl(projeto.publicador.id, projeto.publicador.nome)}
+                    src={
+                      projeto.publicador.urlFotoPerfil ||
+                      getDefaultAvatarUrl(projeto.publicador.id, projeto.publicador.nome)
+                    }
                     alt={projeto.publicador.nome}
                   />
-                  <AvatarFallback>{projeto.publicador.nome[0]}</AvatarFallback>
+                  <AvatarFallback>{projeto.publicador?.nome[0] ?? "U"}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
                   <span className="font-medium text-foreground">{projeto.publicador.nome}</span>
@@ -166,7 +217,7 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
                   <div key={colaborador.id} className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={colaborador.urlFotoPerfil || ""} alt={colaborador.nome} />
-                      <AvatarFallback>{colaborador.nome.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{colaborador.nome?.[0] ?? "U"}</AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium">{colaborador.nome}</span>
                   </div>
