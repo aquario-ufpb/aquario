@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, FormEvent, useEffect, Suspense } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
@@ -9,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/client/api/auth";
+import { AuthLayout } from "@/components/auth/auth-layout";
+import { PasswordInput } from "@/components/auth/password-input";
 
 function LoginForm() {
   const router = useRouter();
@@ -45,7 +46,6 @@ function LoginForm() {
       router.push("/");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        // Handle specific error codes from backend
         if (err.message === "EMAIL_NAO_ENCONTRADO") {
           setError("Este email não está cadastrado. Verifique o email ou crie uma conta.");
         } else if (err.message === "SENHA_INVALIDA") {
@@ -62,123 +62,96 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex items-center justify-center p-4 mt-20">
-      <div className="w-full max-w-md">
-        {/* Logo and Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
-            <Image
-              src="/logo.png"
-              alt="Logo do Aquário"
-              width={64}
-              height={64}
-              className="rounded-full"
-            />
-          </div>
-          <h1 className="text-3xl font-bold text-aquario-primary dark:text-white mb-2">
-            Bem-vindo de volta
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">Faça login para acessar sua conta</p>
-        </div>
+    <AuthLayout>
+      <div className="text-center mb-8 md:mb-6">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Bem-vindo de volta</h1>
+        <p className="text-muted-foreground">Faça login para acessar sua conta</p>
+      </div>
 
-        {/* Login Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="email"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu.email@academico.ufpb.br"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="h-12 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="password"
-                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Senha
-                  </Label>
-                  <Link
-                    href="/esqueci-senha"
-                    className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                  >
-                    Esqueci minha senha
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Sua senha"
-                  value={senha}
-                  onChange={e => setSenha(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="h-12 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
+      <div className="rounded-2xl border border-border bg-card p-8">
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu.email@academico.ufpb.br"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                className="h-12"
+              />
             </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
-                {error.includes("não verificado") && (
-                  <p className="text-xs text-red-500 dark:text-red-400 text-center mt-2">
-                    Verifique sua caixa de entrada ou{" "}
-                    <Link href="/verificar-email" className="underline">
-                      solicite um novo email de verificação
-                    </Link>
-                  </p>
-                )}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                  Senha
+                </Label>
+                <Link
+                  href="/esqueci-senha"
+                  className="text-sm text-aquario-primary hover:text-aquario-primary/80 transition-colors"
+                >
+                  Esqueci minha senha
+                </Link>
               </div>
-            )}
-
-            {success && (
-              <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                <p className="text-sm text-green-600 dark:text-green-400 text-center">{success}</p>
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Entrando..." : "Entrar"}
-            </Button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-              Não tem uma conta?{" "}
-              <Link
-                href="/registro"
-                className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-              >
-                Criar conta
-              </Link>
-            </p>
+              <PasswordInput
+                id="password"
+                placeholder="Sua senha"
+                value={senha}
+                onChange={e => setSenha(e.target.value)}
+                required
+                disabled={isLoading}
+                className="h-12"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Centro de Informática - UFPB</p>
+          {error && (
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+              {error.includes("não verificado") && (
+                <p className="text-xs text-red-500 dark:text-red-400 text-center mt-2">
+                  Verifique sua caixa de entrada ou{" "}
+                  <Link href="/verificar-email" className="underline">
+                    solicite um novo email de verificação
+                  </Link>
+                </p>
+              )}
+            </div>
+          )}
+
+          {success && (
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-sm text-green-600 dark:text-green-400 text-center">{success}</p>
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-12 bg-aquario-primary hover:bg-aquario-primary/90 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Entrando..." : "Entrar"}
+          </Button>
+        </form>
+
+        <div className="mt-6 pt-6 border-t border-border">
+          <p className="text-center text-sm text-muted-foreground">
+            Não tem uma conta?{" "}
+            <Link
+              href="/registro"
+              className="font-semibold text-aquario-primary hover:text-aquario-primary/80 transition-colors"
+            >
+              Criar conta
+            </Link>
+          </p>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 
@@ -186,14 +159,12 @@ export default function Login() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center p-4 mt-20">
-          <div className="w-full max-w-md">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando...</p>
-            </div>
+        <AuthLayout>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-aquario-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Carregando...</p>
           </div>
-        </div>
+        </AuthLayout>
       }
     >
       <LoginForm />

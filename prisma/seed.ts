@@ -493,6 +493,26 @@ async function main() {
 
   console.log("✅ Cursos created (CC, EC, CDIA, ER)");
 
+  // "Outro" centro + curso for students from other departments
+  const outroC = await prisma.centro.upsert({
+    where: { sigla: "OUTRO" },
+    update: {},
+    create: {
+      nome: "Outro",
+      sigla: "OUTRO",
+      descricao: "Para estudantes de outros centros",
+      campusId: campusI.id,
+    },
+  });
+
+  const outroCurso = await prisma.curso.upsert({
+    where: { nome: "Outro" },
+    update: {},
+    create: { nome: "Outro", centroId: outroC.id },
+  });
+
+  console.log("✅ Centro/Curso 'Outro' created");
+
   const cursoMap: Record<string, string> = {
     "Ciência da Computação": cc.id,
     "Engenharia da Computação": ec.id,
@@ -970,7 +990,8 @@ async function main() {
 ║  Reference Data:                                               ║
 ║    - Campus: ${campusI.id.slice(0, 8)}...                                ║
 ║    - Centro (CI): ${ci.id.slice(0, 8)}...                            ║
-║    - Cursos: CC, EC, CDIA, ER                                  ║
+║    - Centro (Outro): ${outroC.id.slice(0, 8)}...                         ║
+║    - Cursos: CC, EC, CDIA, ER, Outro                           ║
 ║                                                                ║
 ║  Content Data:                                                 ║
 ║    - Entidades: ${String(entidadeCount).padEnd(3)} (from aquario-entidades)             ║
@@ -981,10 +1002,12 @@ async function main() {
 
 IDs for testing:
   centroId:  ${ci.id}
+  centroOutro: ${outroC.id}
   cursoCC:   ${cc.id}
   cursoEC:   ${ec.id}
   cursoCDIA: ${cdia.id}
   cursoER:   ${er.id}
+  cursoOutro: ${outroCurso.id}
 `);
 }
 

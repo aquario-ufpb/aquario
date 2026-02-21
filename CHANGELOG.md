@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Auth Pages Redesign**: Modernized login, registration, forgot-password, and reset-password pages
+  - New `AuthLayout` component with split-panel design (branding panel + form panel)
+  - New `PasswordInput` component with eye/eye-off visibility toggle
+  - Replaced all hardcoded colors with design tokens (`bg-card`, `border-border`, `text-muted-foreground`, `bg-aquario-primary`)
+  - Entrance animation on form container using `tailwindcss-animate`
+- **Seed data**: Added "Outro" Centro and Curso for students from other departments
+
+### Changed
+- **Registration flow**: Removed Centro dropdown; users now pick from a single flat Curso list (centroId derived automatically)
+
+### Removed
+- Deleted unused `login-form.tsx` shadcn template component
+
+### Added
 - **Disciplinas por Semestre**: New `DisciplinaSemestre` table to persist which disciplines (and specific PAAS turmas) a user is taking per semester
   - API route `GET/PUT /api/usuarios/me/semestres/[semestreId]/disciplinas` with "ativo" shorthand for active semester
   - Server-side resolution of discipline codes from PAAS to database IDs

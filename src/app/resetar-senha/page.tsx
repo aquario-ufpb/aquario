@@ -3,11 +3,11 @@
 import React, { useState, FormEvent, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/client/api/auth";
+import { AuthLayout } from "@/components/auth/auth-layout";
+import { PasswordInput } from "@/components/auth/password-input";
 
 function ResetarSenhaForm() {
   const router = useRouter();
@@ -73,142 +73,112 @@ function ResetarSenhaForm() {
 
   if (success) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
-            <div className="text-center">
-              <div className="flex justify-center mb-6">
-                <div className="p-4 bg-green-100 dark:bg-green-900/20 rounded-full">
-                  <svg
-                    className="w-12 h-12 text-green-600 dark:text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
+      <AuthLayout>
+        <div className="rounded-2xl border border-border bg-card p-8">
+          <div className="text-center">
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-green-100 dark:bg-green-900/20 rounded-full">
+                <svg
+                  className="w-12 h-12 text-green-600 dark:text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Senha redefinida!
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Sua senha foi redefinida com sucesso. Redirecionando para o login...
-              </p>
-              <Link href="/login">
-                <Button className="w-full">Ir para o login</Button>
-              </Link>
             </div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Senha redefinida!</h1>
+            <p className="text-muted-foreground mb-6">
+              Sua senha foi redefinida com sucesso. Redirecionando para o login...
+            </p>
+            <Link href="/login">
+              <Button className="w-full bg-aquario-primary hover:bg-aquario-primary/90 text-white">
+                Ir para o login
+              </Button>
+            </Link>
           </div>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <div className="w-full max-w-md">
-        {/* Logo and Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
-            <Image
-              src="/logo.png"
-              alt="Logo do Aquário"
-              width={64}
-              height={64}
-              className="rounded-full"
-            />
-          </div>
-          <h1 className="text-3xl font-bold text-aquario-primary dark:text-white mb-2">
-            Redefinir senha
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">Digite sua nova senha abaixo</p>
-        </div>
+    <AuthLayout>
+      <div className="text-center mb-8 md:mb-6">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Redefinir senha</h1>
+        <p className="text-muted-foreground">Digite sua nova senha abaixo</p>
+      </div>
 
-        {/* Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="novaSenha"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Nova senha
-                </Label>
-                <Input
-                  id="novaSenha"
-                  type="password"
-                  placeholder="Mínimo de 8 caracteres"
-                  value={novaSenha}
-                  onChange={e => setNovaSenha(e.target.value)}
-                  required
-                  disabled={isLoading || !token}
-                  minLength={8}
-                  maxLength={128}
-                  className="h-12 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="confirmarSenha"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Confirmar senha
-                </Label>
-                <Input
-                  id="confirmarSenha"
-                  type="password"
-                  placeholder="Digite a senha novamente"
-                  value={confirmarSenha}
-                  onChange={e => setConfirmarSenha(e.target.value)}
-                  required
-                  disabled={isLoading || !token}
-                  minLength={8}
-                  maxLength={128}
-                  className="h-12 border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
+      <div className="rounded-2xl border border-border bg-card p-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="novaSenha" className="text-sm font-medium text-foreground">
+                Nova senha
+              </Label>
+              <PasswordInput
+                id="novaSenha"
+                placeholder="Mínimo de 8 caracteres"
+                value={novaSenha}
+                onChange={e => setNovaSenha(e.target.value)}
+                required
+                disabled={isLoading || !token}
+                minLength={8}
+                maxLength={128}
+                className="h-12"
+              />
             </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              disabled={isLoading || !token}
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Redefinindo..." : "Redefinir senha"}
-            </Button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-              <Link
-                href="/login"
-                className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-              >
-                Voltar para o login
-              </Link>
-            </p>
+            <div className="space-y-2">
+              <Label htmlFor="confirmarSenha" className="text-sm font-medium text-foreground">
+                Confirmar senha
+              </Label>
+              <PasswordInput
+                id="confirmarSenha"
+                placeholder="Digite a senha novamente"
+                value={confirmarSenha}
+                onChange={e => setConfirmarSenha(e.target.value)}
+                required
+                disabled={isLoading || !token}
+                minLength={8}
+                maxLength={128}
+                className="h-12"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Centro de Informática - UFPB</p>
+          {error && (
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isLoading || !token}
+            className="w-full h-12 bg-aquario-primary hover:bg-aquario-primary/90 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Redefinindo..." : "Redefinir senha"}
+          </Button>
+        </form>
+
+        <div className="mt-6 pt-6 border-t border-border">
+          <p className="text-center text-sm text-muted-foreground">
+            <Link
+              href="/login"
+              className="font-semibold text-aquario-primary hover:text-aquario-primary/80 transition-colors"
+            >
+              Voltar para o login
+            </Link>
+          </p>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 
@@ -216,14 +186,12 @@ export default function ResetarSenha() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center min-h-screen p-4">
-          <div className="w-full max-w-md">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando...</p>
-            </div>
+        <AuthLayout>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-aquario-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Carregando...</p>
           </div>
-        </div>
+        </AuthLayout>
       }
     >
       <ResetarSenhaForm />
