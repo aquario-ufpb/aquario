@@ -69,6 +69,9 @@ export const ENDPOINTS = {
   CALENDARIO_ACADEMICO_EVENTOS_BATCH: (id: string) => `/calendario-academico/${id}/eventos/batch`,
   CALENDARIO_ACADEMICO_EVENTO: (id: string, eventoId: string) =>
     `/calendario-academico/${id}/eventos/${eventoId}`,
+  // Dev-only
+  DEV_CLEAR_ONBOARDING: "/dev/clear-onboarding",
+  DEV_PROMOTE_ADMIN: "/dev/promote-admin",
 } as const;
 
 // External API URLs
