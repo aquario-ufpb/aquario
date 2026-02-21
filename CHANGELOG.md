@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-02-21
+
 ### Added
 - **Onboarding System**: Multi-step wizard modal that guides new users through setting up their academic profile
   - 7-step flow: Welcome, Período Atual, Disciplinas Concluídas, Disciplinas do Semestre, Turmas, Entidades, Tudo Pronto
@@ -336,7 +338,8 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/aquario-ufpb/aquario/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/aquario-ufpb/aquario/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/aquario-ufpb/aquario/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/aquario-ufpb/aquario/compare/v1.0.10...v1.1.0
