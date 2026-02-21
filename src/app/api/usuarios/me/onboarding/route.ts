@@ -60,15 +60,3 @@ export function PATCH(request: Request) {
     }
   });
 }
-
-export function DELETE(request: Request) {
-  return withAuth(request, async (_req, usuario) => {
-    try {
-      const { usuariosRepository } = getContainer();
-      await usuariosRepository.clearOnboardingMetadata(usuario.id);
-      return NextResponse.json({});
-    } catch (error) {
-      return handleError(error, "Erro ao limpar onboarding metadata");
-    }
-  });
-}

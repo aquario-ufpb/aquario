@@ -459,8 +459,8 @@ export const usuariosService = {
   },
 
   clearOnboardingMetadata: async (token: string): Promise<void> => {
-    const response = await apiClient(ENDPOINTS.USUARIO_ONBOARDING_ME, {
-      method: "DELETE",
+    const response = await apiClient("/dev/clear-onboarding", {
+      method: "POST",
       token,
     });
 
