@@ -53,13 +53,12 @@ export default function Projetos() {
             };
           }
 
-          const colaboradores = p.autores
-            .filter((a: any) => !a.autorPrincipal)
-            .map((a: any) => ({
-              id: a.usuario.id,
-              nome: a.usuario.nome,
-              urlFotoPerfil: a.usuario.urlFotoPerfil,
-            }));
+          const colaboradores = p.autores.map((a: any) => ({
+            id: a.usuario.id,
+            nome: a.usuario.nome,
+            urlFotoPerfil: a.usuario.urlFotoPerfil,
+            autorPrincipal: a.autorPrincipal,
+          }));
 
           return {
             id: p.slug,

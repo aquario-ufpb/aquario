@@ -56,13 +56,12 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
           };
         }
 
-        const colaboradores = data.autores
-          .filter((a: any) => !a.autorPrincipal)
-          .map((a: any) => ({
-            id: a.usuario.id,
-            nome: a.usuario.nome,
-            urlFotoPerfil: a.usuario.urlFotoPerfil,
-          }));
+        const colaboradores = data.autores.map((a: any) => ({
+          id: a.usuario.id,
+          nome: a.usuario.nome,
+          urlFotoPerfil: a.usuario.urlFotoPerfil,
+          autorPrincipal: a.autorPrincipal,
+        }));
 
         const projetoMapeado: Projeto = {
           id: data.slug,
@@ -219,7 +218,18 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
                       <AvatarImage src={colaborador.urlFotoPerfil || ""} alt={colaborador.nome} />
                       <AvatarFallback>{colaborador.nome?.[0] ?? "U"}</AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium">{colaborador.nome}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{colaborador.nome}</span>
+
+                      {colaborador.autorPrincipal && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-2 py-0 border-primary text-primary"
+                        >
+                          Autor Principal
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 ))
               ) : (
