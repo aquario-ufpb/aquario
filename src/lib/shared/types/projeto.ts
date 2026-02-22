@@ -4,7 +4,7 @@ export type UsuarioSummary = Pick<
   Usuario,
   "id" | "nome" | "email" | "urlFotoPerfil" | "slug" | "matricula"
 >;
-export type EntidadeSummary = Pick<Entidade, "id" | "nome" | "slug" | "tipo">;
+export type EntidadeSummary = Pick<Entidade, "id" | "nome" | "slug" | "tipo" | "urlFoto">;
 
 /**
  * ProjetoAutor com dados do usuário

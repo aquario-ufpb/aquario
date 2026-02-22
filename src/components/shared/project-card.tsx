@@ -18,6 +18,7 @@ export type Colaborador = {
   id: string;
   nome: string;
   urlFotoPerfil?: string | null;
+  autorPrincipal?: boolean;
 };
 
 export type TipoProjeto = "PESSOAL" | "LABORATORIO" | "GRUPO" | "LIGA";

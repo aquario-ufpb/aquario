@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
       search: searchParams.get("search") ?? undefined,
       orderBy: searchParams.get("orderBy") ?? undefined,
       order: searchParams.get("order") ?? undefined,
+      usuarioId: searchParams.get("usuarioId") ?? undefined,
     });
 
     if (!validation.success) {
@@ -30,10 +31,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { page, limit, status, entidadeId, tags, search, orderBy, order } = validation.data;
+    const { page, limit, status, entidadeId, tags, search, orderBy, order, usuarioId } =
+      validation.data;
+
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {};
 
     if (status) {
@@ -57,11 +59,18 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Build orderBy
+    // FILTRO POR USUÁRIO (autor principal ou colaborador)
+    if (usuarioId) {
+      where.autores = {
+        some: {
+          usuarioId,
+        },
+      };
+    }
+
     const orderByClause: any = {};
     orderByClause[orderBy] = order;
 
-    // Get projetos and total count
     const [projetos, total] = await Promise.all([
       prisma.projeto.findMany({
         where,
@@ -83,7 +92,7 @@ export async function GET(request: NextRequest) {
               },
             },
             orderBy: {
-              autorPrincipal: "desc", // Principais primeiro
+              autorPrincipal: "desc",
             },
           },
           entidade: {
@@ -92,6 +101,7 @@ export async function GET(request: NextRequest) {
               nome: true,
               slug: true,
               tipo: true,
+              urlFoto: true,
             },
           },
         },

@@ -103,6 +103,8 @@ export const listProjetosSchema = z.object({
 
   entidadeId: z.string().uuid().optional(),
 
+  usuarioId: z.string().uuid().optional(),
+
   tags: z.string().optional(),
 
   search: z.string().optional(),
