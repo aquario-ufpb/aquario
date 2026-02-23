@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 export type Publicador = {
   id: string;
   nome: string;
+  slug: string;
   urlFotoPerfil?: string | null;
   tipo: "USUARIO" | "ENTIDADE";
   entidadeTipo?: "LABORATORIO" | "GRUPO" | "LIGA";

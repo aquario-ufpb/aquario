@@ -12,6 +12,7 @@ import { Projeto, formatProjetoTipo } from "@/components/shared/project-card";
 import { ArrowLeft, Github, ExternalLink } from "lucide-react";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import DOMPurify from "dompurify";
+import Link from "next/link";
 
 export default function ProjetoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -39,6 +40,7 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
           publicador = {
             id: data.entidade.id,
             nome: data.entidade.nome,
+            slug: data.entidade.slug,
             urlFotoPerfil: data.entidade.urlFoto ?? null,
             tipo: "ENTIDADE" as const,
             entidadeTipo: data.entidade.tipo,
@@ -51,6 +53,7 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
           publicador = {
             id: autorPrincipal?.id ?? "0",
             nome: autorPrincipal?.nome ?? "Usuário",
+            slug: autorPrincipal?.slug ?? autorPrincipal?.nome,
             urlFotoPerfil: autorPrincipal?.urlFotoPerfil ?? null,
             tipo: "USUARIO" as const,
           };
@@ -185,24 +188,33 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
               <CardTitle>Publicado por</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src={
-                      projeto.publicador.urlFotoPerfil ||
-                      getDefaultAvatarUrl(projeto.publicador.id, projeto.publicador.nome)
-                    }
-                    alt={projeto.publicador.nome}
-                  />
-                  <AvatarFallback>{projeto.publicador?.nome[0] ?? "U"}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="font-medium text-foreground">{projeto.publicador.nome}</span>
-                  <span className="text-xs text-muted-foreground">
-                    Em {new Date(projeto.criadoEm).toLocaleDateString()}
-                  </span>
+              <Link
+                href={
+                  projeto.publicador.entidadeTipo
+                    ? `/entidade/${projeto.publicador.slug}`
+                    : `/usuarios/${projeto.publicador.slug}`
+                }
+                className="flex-1 min-w-0"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage
+                      src={
+                        projeto.publicador.urlFotoPerfil ||
+                        getDefaultAvatarUrl(projeto.publicador.id, projeto.publicador.nome)
+                      }
+                      alt={projeto.publicador.nome}
+                    />
+                    <AvatarFallback>{projeto.publicador?.nome[0] ?? "U"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-foreground">{projeto.publicador.nome}</span>
+                    <span className="text-xs text-muted-foreground">
+                      Em {new Date(projeto.criadoEm).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             </CardContent>
           </Card>
 
@@ -213,24 +225,31 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
             <CardContent className="space-y-4">
               {projeto.colaboradores.length > 0 ? (
                 projeto.colaboradores.map(colaborador => (
-                  <div key={colaborador.id} className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={colaborador.urlFotoPerfil || ""} alt={colaborador.nome} />
-                      <AvatarFallback>{colaborador.nome?.[0] ?? "U"}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{colaborador.nome}</span>
+                  <Link
+                    key={colaborador.id}
+                    href={`/usuarios/${colaborador.nome}`}
+                    className="block"
+                  >
+                    <div className="flex items-center gap-3 hover:bg-muted/50 p-2 rounded-lg transition-colors cursor-pointer">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={colaborador.urlFotoPerfil || ""} alt={colaborador.nome} />
+                        <AvatarFallback>{colaborador.nome?.[0] ?? "U"}</AvatarFallback>
+                      </Avatar>
 
-                      {colaborador.autorPrincipal && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] px-2 py-0 border-primary text-primary"
-                        >
-                          Autor Principal
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{colaborador.nome}</span>
+
+                        {colaborador.autorPrincipal && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-2 py-0 border-primary text-primary"
+                          >
+                            Autor Principal
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground">Nenhum colaborador registrado.</p>

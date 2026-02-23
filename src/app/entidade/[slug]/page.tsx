@@ -91,6 +91,7 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
               entidadeId={entidade.id}
               entidadeNome={entidade.name}
               entidadeImagem={entidade.imagePath}
+              entidadeSlug={entidade.slug}
             />
           </TabsContent>
 
@@ -133,9 +134,10 @@ type ProjetosTabProps = {
   entidadeId: string;
   entidadeNome: string;
   entidadeImagem: string;
+  entidadeSlug: string;
 };
 
-function ProjetosTab({ entidadeId, entidadeNome, entidadeImagem }: ProjetosTabProps) {
+function ProjetosTab({ entidadeId, entidadeNome, entidadeImagem, entidadeSlug }: ProjetosTabProps) {
   const { data: projetos, isLoading } = useProjetosByEntidade(entidadeId);
 
   if (isLoading) {
@@ -168,6 +170,7 @@ function ProjetosTab({ entidadeId, entidadeNome, entidadeImagem }: ProjetosTabPr
     publicador: {
       id: entidadeId,
       nome: entidadeNome,
+      slug: entidadeSlug,
       urlFotoPerfil: entidadeImagem,
       tipo: "ENTIDADE" as const,
     },
