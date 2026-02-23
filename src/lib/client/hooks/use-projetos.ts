@@ -16,8 +16,14 @@ async function fetchProjetos({
 }: FetchProjetosParams): Promise<ProjetoWithAutores[]> {
   const params = new URLSearchParams();
 
-  if (entidadeId) params.append("entidadeId", entidadeId);
-  if (usuarioId) params.append("usuarioId", usuarioId);
+  if (entidadeId) {
+    params.append("entidadeId", entidadeId);
+  }
+
+  if (usuarioId) {
+    params.append("usuarioId", usuarioId);
+  }
+
   params.append("limit", limit.toString());
 
   const res = await fetch(`/api/projetos?${params.toString()}`);

@@ -127,9 +127,7 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
   );
 }
 
-// ---------------------------------------------------------------------------
 // Projetos Tab
-// ---------------------------------------------------------------------------
 
 type ProjetosTabProps = {
   entidadeId: string;
