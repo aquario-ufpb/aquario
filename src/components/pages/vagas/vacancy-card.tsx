@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
+import { mapImagePath } from "@/lib/client/api/entidades";
 import { Monitor, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,7 @@ function formatDataFim(iso?: string): string {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 
@@ -40,7 +42,10 @@ export default function VacancyCard({ vaga, variant = "list" }: VacancyCardProps
   const { titulo, tipoVaga, entidade, dataFinalizacao } = vaga;
   const entidadeLabel = getEntidadeLabel(entidade);
   const entidadeNome = typeof entidade === "object" ? entidade.nome : entidadeLabel;
-  const entidadeAvatarSrc = getDefaultAvatarUrl(entidadeNome, entidadeNome);
+  const entidadeAvatarSrc =
+    typeof entidade === "object"
+      ? mapImagePath("urlFoto" in entidade ? entidade.urlFoto : undefined)
+      : getDefaultAvatarUrl(entidadeNome, entidadeNome);
   const dataFimStr = formatDataFim(dataFinalizacao);
 
   if (variant === "grid") {

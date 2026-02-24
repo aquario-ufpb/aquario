@@ -19,7 +19,7 @@ type ApiVagaResponse = {
   requisitos: string[];
   informacoesAdicionais?: string;
   etapasProcesso: string[];
-  entidade: { id: string; nome: string; slug?: string; tipo?: string };
+  entidade: { id: string; nome: string; slug?: string; tipo?: string; urlFoto?: string };
   publicador: { nome: string; urlFotoPerfil?: string };
 };
 

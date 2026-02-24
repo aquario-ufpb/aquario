@@ -80,6 +80,7 @@ export type VagaEntidadeInfo = {
   nome: string;
   slug?: string;
   tipo?: string;
+  urlFoto?: string;
 };
 
 /**

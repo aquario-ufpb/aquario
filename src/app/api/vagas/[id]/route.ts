@@ -28,6 +28,7 @@ function mapVagaToJson(vaga: VagaWithRelations) {
       nome: vaga.entidade.nome,
       slug: vaga.entidade.slug ?? undefined,
       tipo: vaga.entidade.tipo,
+      urlFoto: vaga.entidade.urlFoto ?? undefined,
     },
     publicador: {
       nome: vaga.criadoPor.nome,

@@ -3,7 +3,7 @@ import type { Vaga, TipoVaga, Entidade, Usuario } from "@prisma/client";
 export type { Vaga, TipoVaga };
 
 export type VagaWithRelations = Vaga & {
-  entidade: Pick<Entidade, "id" | "nome" | "slug" | "tipo">;
+  entidade: Pick<Entidade, "id" | "nome" | "slug" | "tipo" | "urlFoto">;
   criadoPor: Pick<Usuario, "id" | "nome" | "urlFotoPerfil">;
 };
 

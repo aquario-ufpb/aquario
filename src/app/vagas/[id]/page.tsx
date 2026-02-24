@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { vagasService } from "@/lib/client/api/vagas";
 import Link from "next/link";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
+import { mapImagePath } from "@/lib/client/api/entidades";
 import { ENTIDADE_VAGA_LABELS } from "@/lib/shared/types/vaga.types";
 import type { Vaga } from "@/lib/shared/types";
 
@@ -82,6 +83,10 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
 
   const entidadeNome = getEntidadeNome(vaga.entidade);
   const entidadeSlug = getEntidadeSlug(vaga.entidade);
+  const entidadeAvatarSrc =
+    typeof vaga.entidade === "object"
+      ? mapImagePath("urlFoto" in vaga.entidade ? vaga.entidade.urlFoto : undefined)
+      : getDefaultAvatarUrl(entidadeNome, entidadeNome);
   const tipoVagaLabel = getTipoVagaLabel(vaga.tipoVaga);
   const applyLink = vaga.linkInscricao ?? vaga.linkVaga;
 
@@ -145,7 +150,7 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden border border-border/30 shadow-sm flex items-center justify-center bg-muted">
                 <Avatar className="w-full h-full rounded-none">
                   <AvatarImage
-                    src={getDefaultAvatarUrl(entidadeNome, entidadeNome)}
+                    src={entidadeAvatarSrc}
                     alt={entidadeNome}
                     className="object-cover"
                   />
@@ -216,6 +221,7 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
                           day: "2-digit",
                           month: "2-digit",
                           year: "numeric",
+                          timeZone: "UTC",
                         })}
                       </span>
                     </span>
@@ -346,13 +352,17 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {otherVagas.map(v => {
                   const nome = getEntidadeNome(v.entidade);
+                  const otherAvatarSrc =
+                    typeof v.entidade === "object"
+                      ? mapImagePath("urlFoto" in v.entidade ? v.entidade.urlFoto : undefined)
+                      : getDefaultAvatarUrl(nome, nome);
                   return (
                     <Link key={v.id} href={`/vagas/${v.id}`} className="group">
                       <div className="flex gap-3 p-3 rounded-lg border border-border/30 hover:border-border/60 hover:bg-accent/10 transition-all duration-200 h-full">
                         <div className="flex-shrink-0 flex items-center">
                           <Avatar className="w-10 h-10">
                             <AvatarImage
-                              src={getDefaultAvatarUrl(nome, nome)}
+                              src={otherAvatarSrc}
                               alt={nome}
                             />
                             <AvatarFallback>{nome.charAt(0)}</AvatarFallback>

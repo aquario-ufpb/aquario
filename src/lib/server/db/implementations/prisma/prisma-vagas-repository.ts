@@ -7,7 +7,7 @@ import type {
 
 const vagaInclude = {
   entidade: {
-    select: { id: true, nome: true, slug: true, tipo: true },
+    select: { id: true, nome: true, slug: true, tipo: true, urlFoto: true },
   },
   criadoPor: {
     select: { id: true, nome: true, urlFotoPerfil: true },
