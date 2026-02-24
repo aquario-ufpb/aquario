@@ -12,6 +12,7 @@ export const TipoVaga = {
   PESQUISA: "PESQUISA",
   CLT: "CLT",
   PJ: "PJ",
+  OUTRO: "OUTRO",
 } as const;
 
 export type TipoVaga = (typeof TipoVaga)[keyof typeof TipoVaga];
@@ -72,7 +73,19 @@ export type Publicador = {
 };
 
 /**
+ * Entidade info when vaga comes from backend API
+ */
+export type VagaEntidadeInfo = {
+  id: string;
+  nome: string;
+  slug?: string;
+  tipo?: string;
+};
+
+/**
  * Job/Opportunity posting
+ * entidade: legacy string (EntidadeVaga) from file provider, or object from backend
+ * linkVaga: deprecated, use linkInscricao
  */
 export type Vaga = {
   id: string;
@@ -82,13 +95,18 @@ export type Vaga = {
   areas: string[];
   publicador: Publicador;
   criadoEm: string;
-  entidade: EntidadeVaga;
-  prazo: string;
-  salario: string;
-  sobreEmpresa: string;
+  entidade: EntidadeVaga | VagaEntidadeInfo;
+  prazo?: string;
+  salario?: string;
+  sobreEmpresa?: string;
   responsabilidades: string[];
   requisitos: string[];
-  informacoesAdicionais: string;
+  informacoesAdicionais?: string;
   etapasProcesso: string[];
-  linkVaga: string;
+  /** Link para inscrição (preferido) */
+  linkInscricao?: string;
+  /** @deprecated use linkInscricao */
+  linkVaga?: string;
+  /** Data de finalização (ISO string); após esta data a vaga não aparece no mural */
+  dataFinalizacao?: string;
 };

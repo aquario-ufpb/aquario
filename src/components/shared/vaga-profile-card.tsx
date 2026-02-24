@@ -58,7 +58,11 @@ export default function VagaProfileCard({ vaga }: VagaProfileCardProps) {
 
       <CardFooter className="flex justify-center">
         <Button asChild className="w-28 h-8 rounded-full text-[0.75rem]">
-          <a href={`${vaga.linkVaga ?? "#"}`} target="_blank" rel="noopener noreferrer">
+          <a
+            href={vaga.linkInscricao ?? vaga.linkVaga ?? "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Aplicar
           </a>
         </Button>

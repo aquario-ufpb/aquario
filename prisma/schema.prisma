@@ -63,6 +63,16 @@ enum CategoriaEvento {
   OUTRA
 }
 
+enum TipoVaga {
+  ESTAGIO
+  TRAINEE
+  VOLUNTARIO
+  PESQUISA
+  CLT
+  PJ
+  OUTRO
+}
+
 // ============================================================================
 // CAMPUS & CENTRO & CURSO (Core organizational structure)
 // ============================================================================
@@ -127,6 +137,7 @@ model Usuario {
   tokensVerificacao      TokenVerificacao[]
   disciplinasConcluidas  DisciplinaConcluida[]
   disciplinasSemestre    DisciplinaSemestre[]
+  vagasCriadas           Vaga[]
 
   @@index([email])
   @@index([matricula])
@@ -174,6 +185,7 @@ model Entidade {
   centro  Centro           @relation(fields: [centroId], references: [id])
   membros MembroEntidade[]
   cargos  Cargo[]
+  vagas   Vaga[]
 
   @@unique([nome, tipo])
   @@index([slug])
@@ -211,6 +223,40 @@ model MembroEntidade {
   @@index([usuarioId, entidadeId])
   @@index([endedAt])
   @@index([cargoId])
+}
+
+// ============================================================================
+// VAGAS
+// ============================================================================
+
+model Vaga {
+  id                   String    @id @default(uuid())
+  titulo               String
+  descricao             String
+  tipoVaga             TipoVaga
+  entidadeId           String
+  criadoPorUsuarioId   String
+  linkInscricao        String
+  dataFinalizacao      DateTime
+  criadoEm             DateTime  @default(now())
+  atualizadoEm        DateTime  @updatedAt
+  deletadoEm           DateTime?
+
+  areas                String[]  @default([])
+  salario              String?
+  sobreEmpresa         String?
+  responsabilidades    String[]  @default([])
+  requisitos           String[]  @default([])
+  informacoesAdicionais String?
+  etapasProcesso       String[]  @default([])
+
+  entidade   Entidade @relation(fields: [entidadeId], references: [id], onDelete: Cascade)
+  criadoPor  Usuario  @relation(fields: [criadoPorUsuarioId], references: [id], onDelete: Cascade)
+
+  @@index([entidadeId])
+  @@index([dataFinalizacao])
+  @@index([deletadoEm])
+  @@index([criadoEm])
 }
 
 // ============================================================================

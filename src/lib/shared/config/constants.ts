@@ -60,6 +60,10 @@ export const ENDPOINTS = {
   DISCIPLINA_SEMESTRE_PATCH: (semestreId: string, disciplinaSemestreId: string) =>
     `/usuarios/me/semestres/${semestreId}/disciplinas/${disciplinaSemestreId}`,
 
+  // Vagas
+  VAGAS: "/vagas",
+  VAGA_BY_ID: (id: string) => `/vagas/${id}`,
+
   // Calendario Academico
   CALENDARIO_ACADEMICO: "/calendario-academico",
   CALENDARIO_ACADEMICO_BY_ID: (id: string) => `/calendario-academico/${id}`,

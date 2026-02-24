@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Vagas page**: Added list/grid view mode toggle next to search bar; grid mode renders cards in 3-column layout matching the entidades page style
+- **VacancyCard**: Standardized badges to use `Badge variant="outline"` with muted styling matching entity cards; added `variant` prop supporting `"list"` and `"grid"` display modes
+- **Vaga detail page**: Redesigned to match the entidade detail page layout — ghost back button, hero section with entity name as primary identifier, inline meta info (date, deadline, salary), areas as badges, sections with `border-t` separators, and compact "other vagas" grid
+
 ### Added
 - **Auth Pages Redesign**: Modernized login, registration, forgot-password, and reset-password pages
   - New `AuthLayout` component with split-panel design (branding panel + form panel)

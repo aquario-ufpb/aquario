@@ -23,6 +23,8 @@ import type {
   PapelMembro,
   StatusGuia,
   CategoriaEvento,
+  Vaga,
+  TipoVaga,
   Prisma,
 } from "@prisma/client";
 
@@ -47,6 +49,8 @@ export type {
   PapelMembro,
   StatusGuia,
   CategoriaEvento,
+  Vaga,
+  TipoVaga,
 };
 
 // Extended types with relations
