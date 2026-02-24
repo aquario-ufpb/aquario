@@ -17,6 +17,7 @@ import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { mapImagePath } from "@/lib/client/api/entidades";
 import { ENTIDADE_VAGA_LABELS } from "@/lib/shared/types/vaga.types";
 import type { Vaga } from "@/lib/shared/types";
+import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 
 function getEntidadeNome(entidade: Vaga["entidade"]): string {
   if (typeof entidade === "object") return entidade.nome;
@@ -105,40 +106,25 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
           </Button>
 
           {canDelete && (
-            <div className="flex items-center gap-2">
-              {confirmDelete ? (
-                <>
-                  <span className="text-sm text-muted-foreground">Tem certeza?</span>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="rounded-full"
-                  >
-                    {isDeleting ? "Excluindo..." : "Confirmar exclusão"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setConfirmDelete(false)}
-                    disabled={isDeleting}
-                  >
-                    Cancelar
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setConfirmDelete(true)}
-                  className="flex items-center gap-2 text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Excluir vaga
-                </Button>
-              )}
-            </div>
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmDelete(true)}
+                className="flex items-center gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4" />
+                Excluir vaga
+              </Button>
+              <ConfirmDeleteDialog
+                open={confirmDelete}
+                onOpenChange={setConfirmDelete}
+                title="Excluir vaga"
+                description="Tem certeza que deseja excluir esta vaga? Esta ação não pode ser desfeita."
+                onConfirm={handleDelete}
+                isPending={isDeleting}
+              />
+            </>
           )}
         </div>
 
