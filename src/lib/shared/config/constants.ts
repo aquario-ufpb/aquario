@@ -33,6 +33,8 @@ export const ENDPOINTS = {
   USUARIO_MEMBROS_ME: "/usuarios/me/membros",
   USUARIO_DISCIPLINAS_ME: "/usuarios/me/disciplinas",
   MERGE_FACADE_USER: "/usuarios/merge-facade",
+  USUARIO_ONBOARDING_ME: "/usuarios/me/onboarding",
+  USUARIO_PERIODO_ME: "/usuarios/me/periodo",
 
   // Admin CRUD
   CAMPUS: "/campus",
@@ -71,6 +73,9 @@ export const ENDPOINTS = {
   CALENDARIO_ACADEMICO_EVENTOS_BATCH: (id: string) => `/calendario-academico/${id}/eventos/batch`,
   CALENDARIO_ACADEMICO_EVENTO: (id: string, eventoId: string) =>
     `/calendario-academico/${id}/eventos/${eventoId}`,
+  // Dev-only
+  DEV_CLEAR_ONBOARDING: "/dev/clear-onboarding",
+  DEV_PROMOTE_ADMIN: "/dev/promote-admin",
 } as const;
 
 // External API URLs

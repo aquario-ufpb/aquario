@@ -5,7 +5,8 @@ import type {
   UsuarioCreateInput,
   PapelPlataforma,
 } from "@/lib/server/db/interfaces/types";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import type { OnboardingMetadata } from "@/lib/shared/types";
 
 export class PrismaUsuariosRepository implements IUsuariosRepository {
   /**
@@ -372,6 +373,60 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     await prisma.usuario.update({
       where: { id },
       data: { slug: finalSlug },
+    });
+  }
+
+  async updatePeriodoAtual(id: string, periodoAtual: string | null): Promise<void> {
+    await prisma.usuario.update({
+      where: { id },
+      data: { periodoAtual },
+    });
+  }
+
+  async getOnboardingMetadata(userId: string): Promise<OnboardingMetadata | null> {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: userId },
+      select: { onboardingMetadata: true },
+    });
+    return (usuario?.onboardingMetadata as OnboardingMetadata) ?? null;
+  }
+
+  async updateOnboardingMetadata(
+    userId: string,
+    metadata: Partial<OnboardingMetadata>
+  ): Promise<void> {
+    const existing = await this.getOnboardingMetadata(userId);
+    const current = existing ?? {};
+
+    const merged: OnboardingMetadata = {
+      ...current,
+      ...metadata,
+      semesters: {
+        ...current.semesters,
+        ...Object.fromEntries(
+          Object.entries(metadata.semesters ?? {}).map(([key, val]) => [
+            key,
+            { ...current.semesters?.[key], ...val },
+          ])
+        ),
+      },
+    };
+
+    // Remove empty semesters object if it has no keys
+    if (Object.keys(merged.semesters ?? {}).length === 0) {
+      delete merged.semesters;
+    }
+
+    await prisma.usuario.update({
+      where: { id: userId },
+      data: { onboardingMetadata: merged as Prisma.JsonObject },
+    });
+  }
+
+  async clearOnboardingMetadata(userId: string): Promise<void> {
+    await prisma.usuario.update({
+      where: { id: userId },
+      data: { onboardingMetadata: Prisma.JsonNull },
     });
   }
 
