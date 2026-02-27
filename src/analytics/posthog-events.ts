@@ -9,6 +9,7 @@
  */
 
 import { TipoEntidade } from "@/lib/shared/types/entidade.types";
+import { TipoVaga, EntidadeVagaType } from "@/lib/shared/types/vaga.types";
 
 // UI Interaction events
 export type UIInteractionEvent = {
@@ -39,5 +40,31 @@ export type CalendarEvent =
       name: "calendar_add_google_calendar_click";
     };
 
+export type VagasEvent =
+  | {
+      name: "vaga_viewed";
+      vaga_title: string;
+      vaga_type: TipoVaga;
+      vaga_entity: EntidadeVagaType;
+    }
+  | {
+      name: "vaga_apply_clicked";
+      vaga_title: string;
+      vaga_type: TipoVaga;
+      vaga_entity: EntidadeVagaType;
+    };
+
+export type GuiasEvent = {
+  name: "guia_section_viewed";
+  guia_slug: string;
+  section_slug: string;
+  subsection_slug?: string;
+};
+
 // Union of all PostHog events
-export type PostHogEvent = UIInteractionEvent | EntidadesEvent | CalendarEvent;
+export type PostHogEvent =
+  | UIInteractionEvent
+  | EntidadesEvent
+  | CalendarEvent
+  | VagasEvent
+  | GuiasEvent;

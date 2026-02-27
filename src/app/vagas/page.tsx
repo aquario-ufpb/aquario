@@ -12,10 +12,24 @@ import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { useVagas } from "@/lib/client/hooks";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { usePrefetchVaga } from "@/lib/client/hooks/use-prefetch";
+import { trackEvent } from "@/analytics/posthog-client";
 
 function VagasCard({ vaga, onPrefetch }: { vaga: Vaga; onPrefetch: (id: string) => void }) {
+  const handleClick = () => {
+    trackEvent("vaga_viewed", {
+      vaga_title: vaga.titulo,
+      vaga_type: vaga.tipoVaga,
+      vaga_entity: vaga.entidade,
+    });
+  };
+
   return (
-    <Link href={`/vagas/${vaga.id}`} className="block" onMouseEnter={() => onPrefetch(vaga.id)}>
+    <Link
+      href={`/vagas/${vaga.id}`}
+      className="block"
+      onMouseEnter={() => onPrefetch(vaga.id)}
+      onClick={handleClick}
+    >
       <VacancyCard vaga={vaga} />
     </Link>
   );

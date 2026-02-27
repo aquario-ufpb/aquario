@@ -1,3 +1,5 @@
+"use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { Button } from "@/components/ui/button";
@@ -11,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Monitor, CalendarDays } from "lucide-react";
 import type { Vaga } from "@/lib/shared/types";
+import { trackEvent } from "@/analytics/posthog-client";
 
 type VagaProfileCardProps = {
   vaga: Vaga;
@@ -18,6 +21,14 @@ type VagaProfileCardProps = {
 
 export default function VagaProfileCard({ vaga }: VagaProfileCardProps) {
   const { publicador, tipoVaga, criadoEm } = vaga;
+
+  const handleApplyClick = () => {
+    trackEvent("vaga_apply_clicked", {
+      vaga_title: vaga.titulo,
+      vaga_type: vaga.tipoVaga,
+      vaga_entity: vaga.entidade,
+    });
+  };
 
   return (
     <Card className="flex flex-col items-center gap-5 w-60">
@@ -58,7 +69,12 @@ export default function VagaProfileCard({ vaga }: VagaProfileCardProps) {
 
       <CardFooter className="flex justify-center">
         <Button asChild className="w-28 h-8 rounded-full text-[0.75rem]">
-          <a href={`${vaga.linkVaga ?? "#"}`} target="_blank" rel="noopener noreferrer">
+          <a
+            href={`${vaga.linkVaga ?? "#"}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleApplyClick}
+          >
             Aplicar
           </a>
         </Button>
