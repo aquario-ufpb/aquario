@@ -25,7 +25,7 @@ import { trackEvent } from "@/analytics/posthog-client";
 export default function UserProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const { data: user, isLoading, error: queryError } = useUsuarioBySlug(slug);
-  const { data: currentUser } = useCurrentUser();
+  const { data: currentUser, isLoading: isCurrentUserLoading } = useCurrentUser();
   const { data: memberships, isLoading: membershipsLoading } = useUserMemberships(user?.id || "");
   const uploadPhotoMutation = useUploadPhoto();
   const deletePhotoMutation = useDeletePhoto();
@@ -39,10 +39,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
 
   // Track profile views of other users
   useEffect(() => {
-    if (user && !isOwnProfile) {
-      trackEvent("usuario_profile_viewed", { user_slug: slug });
+    if (!user?.id || isCurrentUserLoading || isOwnProfile) {
+      return;
     }
-  }, [slug, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    trackEvent("usuario_profile_viewed", { user_slug: slug });
+  }, [slug, user?.id, isOwnProfile, isCurrentUserLoading]);
 
   // Cleanup object URL on unmount or when URL changes to prevent memory leaks
   useEffect(() => {

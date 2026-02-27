@@ -11,6 +11,7 @@ import { authService } from "@/lib/client/api/auth";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { PasswordInput } from "@/components/auth/password-input";
 import { trackEvent } from "@/analytics/posthog-client";
+import { isApiErrorInstance } from "@/lib/client/errors";
 
 function LoginForm() {
   const router = useRouter();
@@ -49,7 +50,8 @@ function LoginForm() {
       router.push("/");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        trackEvent("login_failed", { error_type: err.message });
+        const errorType = isApiErrorInstance(err) ? err.code : "unknown";
+        trackEvent("login_failed", { error_type: errorType });
         if (err.message === "EMAIL_NAO_ENCONTRADO") {
           setError("Este email não está cadastrado. Verifique o email ou crie uma conta.");
         } else if (err.message === "SENHA_INVALIDA") {

@@ -11,6 +11,7 @@ import { useAllCursos } from "@/lib/client/hooks";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { PasswordInput } from "@/components/auth/password-input";
 import { trackEvent } from "@/analytics/posthog-client";
+import { isApiErrorInstance } from "@/lib/client/errors";
 import {
   cursoIllustrations,
   cursoShortLabels,
@@ -72,7 +73,8 @@ export default function Registro() {
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
-        trackEvent("register_failed", { error_type: err.message });
+        const errorType = isApiErrorInstance(err) ? err.code : "unknown";
+        trackEvent("register_failed", { error_type: errorType });
         setError(err.message);
       } else {
         trackEvent("register_failed", { error_type: "unknown" });
