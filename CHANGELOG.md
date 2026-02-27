@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **PostHog Analytics**: Expanded event tracking across all major user flows
+  - **Auth flows**: `login_attempted`, `login_succeeded`, `login_failed` (with error type), `register_attempted`, `register_succeeded`, `register_failed`, `forgot_password_submitted`, `reset_password_submitted`, `reset_password_succeeded`, `email_verification_succeeded`, `email_verification_resent`
+  - **Onboarding**: `onboarding_step_viewed`, `onboarding_step_completed`, `onboarding_step_skipped` (with `step_id`) — tracked in `OnboardingModal`
+  - **Sobre**: `sobre_contact_clicked` via new `ContactButton` client component (page stays a server component)
+  - **Mapas**: `mapa_room_clicked` (with `room_name` and `building_name`)
+  - **Calendário Acadêmico**: `calendario_academico_view_changed` (lista/calendário toggle), `calendario_academico_semestre_changed`
+  - **Grades Curriculares**: `grade_curricular_curso_selected` (with `curso_nome`)
+  - **Entidades**: `entidade_detail_viewed` (with `entidade_name` and `entidade_type`) on `/entidade/[slug]`
+  - **Usuários**: `usuario_profile_viewed` (with `user_slug`) on `/usuarios/[slug]`, only fires for other users' profiles
+
 ## [1.3.0] - 2026-02-21
 
 ### Added

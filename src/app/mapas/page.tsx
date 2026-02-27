@@ -74,7 +74,7 @@ function MapsPageInner() {
     setIsDialogOpen(true);
     const building = mapsData?.find(b => b.id === buildingId);
     trackEvent("mapa_room_clicked", {
-      room_name: room.name ?? room.id,
+      room_name: room.location ?? room.id,
       building_name: building?.name ?? buildingId,
     });
   };
