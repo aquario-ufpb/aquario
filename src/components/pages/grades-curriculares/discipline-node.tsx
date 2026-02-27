@@ -3,9 +3,9 @@ import { Eye, Lock, CircleDot } from "lucide-react";
 import type { GradeDisciplinaNode, NaturezaDisciplinaType } from "@/lib/shared/types";
 
 const NATUREZA_ACCENT: Record<NaturezaDisciplinaType, string> = {
-  OBRIGATORIA: "border-l-blue-400 dark:border-l-blue-500",
-  OPTATIVA: "border-l-amber-400 dark:border-l-amber-500",
-  COMPLEMENTAR_FLEXIVA: "border-l-teal-400 dark:border-l-teal-500",
+  OBRIGATORIA: "bg-blue-100/70 dark:bg-blue-900/30",
+  OPTATIVA: "bg-amber-100/70 dark:bg-amber-900/30",
+  COMPLEMENTAR_FLEXIVA: "bg-teal-100/70 dark:bg-teal-900/30",
 };
 
 type DisciplineNodeProps = {
@@ -55,14 +55,14 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
       }
     };
 
-    // Left accent color: status overrides natureza
-    let leftAccent: string;
+    // Background accent color: status overrides natureza
+    let bgAccent: string;
     if (isCompleted) {
-      leftAccent = "border-l-green-500 dark:border-l-green-400";
+      bgAccent = "bg-green-100/70 dark:bg-green-900/30";
     } else if (isCursando) {
-      leftAccent = "border-l-purple-500 dark:border-l-purple-400";
+      bgAccent = "bg-purple-100/70 dark:bg-purple-900/30";
     } else {
-      leftAccent = accent;
+      bgAccent = accent;
     }
 
     const isLockedOnly = isLocked && !isCompleted && !isCursando && !(selectionMode && isSelected);
@@ -74,11 +74,11 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         className={`
-          relative h-[84px] rounded-md border border-border border-l-[3px] p-2 overflow-hidden
+          relative h-[84px] rounded-md border border-border p-2 overflow-hidden
           flex items-center justify-center text-center
           transition-all duration-200 cursor-pointer
-          bg-card text-card-foreground
-          ${leftAccent}
+          text-card-foreground
+          ${bgAccent}
           ${isLockedOnly ? "opacity-40" : ""}
           ${selectionMode && isSelected ? "ring-2 ring-blue-500 dark:ring-blue-400 shadow-sm" : ""}
           ${isHighlighted && !selectionMode ? "ring-2 ring-blue-500/60 dark:ring-blue-400/60 shadow-sm z-10" : ""}
