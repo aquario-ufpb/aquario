@@ -9,11 +9,28 @@
  */
 
 import { TipoEntidade } from "@/lib/shared/types/entidade.types";
-import { TipoVaga, EntidadeVagaType } from "@/lib/shared/types/vaga.types";
+import type { OnboardingStepId } from "@/lib/shared/types/onboarding.types";
 
 // UI Interaction events
 export type UIInteractionEvent = {
   name: "github_button_clicked";
+};
+
+export type AuthEvent =
+  | { name: "login_attempted" }
+  | { name: "login_succeeded" }
+  | { name: "login_failed"; error_type: string }
+  | { name: "register_attempted" }
+  | { name: "register_succeeded" }
+  | { name: "register_failed"; error_type: string }
+  | { name: "forgot_password_submitted" }
+  | { name: "reset_password_submitted" }
+  | { name: "reset_password_succeeded" }
+  | { name: "email_verification_succeeded" }
+  | { name: "email_verification_resent" };
+
+export type SobreEvent = {
+  name: "sobre_contact_clicked";
 };
 
 export type EntidadesEvent =
@@ -27,6 +44,11 @@ export type EntidadesEvent =
       entidade_name: string;
       entidade_type: TipoEntidade;
       link_type: "instagram" | "linkedin" | "website";
+    }
+  | {
+      name: "entidade_detail_viewed";
+      entidade_name: string;
+      entidade_type: TipoEntidade;
     };
 
 export type CalendarEvent =
@@ -40,19 +62,20 @@ export type CalendarEvent =
       name: "calendar_add_google_calendar_click";
     };
 
-export type VagasEvent =
-  | {
-      name: "vaga_viewed";
-      vaga_title: string;
-      vaga_type: TipoVaga;
-      vaga_entity: EntidadeVagaType;
-    }
-  | {
-      name: "vaga_apply_clicked";
-      vaga_title: string;
-      vaga_type: TipoVaga;
-      vaga_entity: EntidadeVagaType;
-    };
+export type CalendarioAcademicoEvent =
+  | { name: "calendario_academico_view_changed"; view: "lista" | "calendario" }
+  | { name: "calendario_academico_semestre_changed"; semestre_nome: string };
+
+export type GradesCurricularesEvent = {
+  name: "grade_curricular_curso_selected";
+  curso_nome: string;
+};
+
+export type MapasEvent = {
+  name: "mapa_room_clicked";
+  room_name: string;
+  building_name: string;
+};
 
 export type GuiasEvent = {
   name: "guia_section_viewed";
@@ -61,10 +84,26 @@ export type GuiasEvent = {
   subsection_slug?: string;
 };
 
+export type UsuariosEvent = {
+  name: "usuario_profile_viewed";
+  user_slug: string;
+};
+
+export type OnboardingEvent =
+  | { name: "onboarding_step_viewed"; step_id: OnboardingStepId }
+  | { name: "onboarding_step_completed"; step_id: OnboardingStepId }
+  | { name: "onboarding_step_skipped"; step_id: OnboardingStepId };
+
 // Union of all PostHog events
 export type PostHogEvent =
   | UIInteractionEvent
+  | AuthEvent
+  | SobreEvent
   | EntidadesEvent
   | CalendarEvent
-  | VagasEvent
-  | GuiasEvent;
+  | CalendarioAcademicoEvent
+  | GradesCurricularesEvent
+  | MapasEvent
+  | GuiasEvent
+  | UsuariosEvent
+  | OnboardingEvent;
