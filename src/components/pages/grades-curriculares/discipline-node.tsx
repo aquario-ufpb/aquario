@@ -78,8 +78,7 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
           relative h-[84px] rounded-md border border-border p-2 overflow-hidden
           flex items-center justify-center text-center
           transition-all duration-200 cursor-pointer
-          text-card-foreground
-          ${bgAccent}
+          text-card-foreground bg-card
           ${isLockedOnly ? "opacity-40" : ""}
           ${selectionMode && isSelected ? "ring-2 ring-blue-500 dark:ring-blue-400 shadow-sm" : ""}
           ${isHighlighted && !selectionMode ? "ring-2 ring-blue-500/60 dark:ring-blue-400/60 shadow-sm z-10" : ""}
@@ -87,6 +86,8 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
           ${!isHighlighted && !isFaded && !isLockedOnly ? "hover:shadow-md" : ""}
         `}
       >
+        {/* Accent colour overlay — kept separate so the solid bg-card base blocks arrows behind the node */}
+        <div className={`absolute inset-0 ${bgAccent}`} />
         {/* Selection indicator */}
         {selectionMode && isSelected && (
           <div className="absolute top-1 right-1">
