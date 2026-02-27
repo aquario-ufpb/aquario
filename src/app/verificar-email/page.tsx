@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { authService } from "@/lib/client/api/auth";
 import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
+import { trackEvent } from "@/analytics/posthog-client";
 
 function VerificarEmailForm() {
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,7 @@ function VerificarEmailForm() {
       try {
         const result = await authService.verifyEmail(verifyToken);
         if (result.success) {
+          trackEvent("email_verification_succeeded");
           setSuccess(true);
           // Refresh user data if logged in
           if (token) {
@@ -63,6 +65,7 @@ function VerificarEmailForm() {
 
       try {
         await authService.resendVerification(token);
+        trackEvent("email_verification_resent");
         setResendSuccess(true);
         setError(null);
       } catch (err: unknown) {
@@ -87,6 +90,7 @@ function VerificarEmailForm() {
 
       try {
         await authService.requestResendVerification(email);
+        trackEvent("email_verification_resent");
         setResendSuccess(true);
         setError(null);
       } catch (err: unknown) {

@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/client/api/auth";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { PasswordInput } from "@/components/auth/password-input";
+import { trackEvent } from "@/analytics/posthog-client";
+import { isApiErrorInstance } from "@/lib/client/errors";
 
 function LoginForm() {
   const router = useRouter();
@@ -39,13 +41,17 @@ function LoginForm() {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+    trackEvent("login_attempted");
 
     try {
       const data = await authService.login(email, senha);
       login(data.token);
+      trackEvent("login_succeeded");
       router.push("/");
     } catch (err: unknown) {
       if (err instanceof Error) {
+        const errorType = isApiErrorInstance(err) ? err.code : "unknown";
+        trackEvent("login_failed", { error_type: errorType });
         if (err.message === "EMAIL_NAO_ENCONTRADO") {
           setError("Este email não está cadastrado. Verifique o email ou crie uma conta.");
         } else if (err.message === "SENHA_INVALIDA") {
@@ -54,6 +60,7 @@ function LoginForm() {
           setError(err.message);
         }
       } else {
+        trackEvent("login_failed", { error_type: "unknown" });
         setError("Ocorreu um erro desconhecido");
       }
     } finally {

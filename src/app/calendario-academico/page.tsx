@@ -25,6 +25,7 @@ import {
   ALL_CATEGORIAS,
 } from "@/lib/shared/config/calendario-academico";
 import type { CategoriaEvento, EventoCalendario } from "@/lib/shared/types/calendario.types";
+import { trackEvent } from "@/analytics/posthog-client";
 
 // =============================================================================
 // Helpers
@@ -168,7 +169,16 @@ export default function CalendarioAcademicoPage() {
         {semestresLoading ? (
           <Skeleton className="h-10 w-40" />
         ) : (
-          <Select value={effectiveSemestreId} onValueChange={setSelectedSemestreId}>
+          <Select
+            value={effectiveSemestreId}
+            onValueChange={id => {
+              setSelectedSemestreId(id);
+              const nome = semestres?.find(s => s.id === id)?.nome;
+              if (nome) {
+                trackEvent("calendario_academico_semestre_changed", { semestre_nome: nome });
+              }
+            }}
+          >
             <SelectTrigger className="w-[220px]">
               <SelectValue placeholder="Selecione o semestre" />
             </SelectTrigger>
@@ -194,7 +204,10 @@ export default function CalendarioAcademicoPage() {
             variant={view === "lista" ? "default" : "ghost"}
             size="sm"
             className="rounded-none"
-            onClick={() => setView("lista")}
+            onClick={() => {
+              setView("lista");
+              trackEvent("calendario_academico_view_changed", { view: "lista" });
+            }}
           >
             <List className="w-4 h-4 mr-2" />
             Linha do tempo
@@ -203,7 +216,10 @@ export default function CalendarioAcademicoPage() {
             variant={view === "calendario" ? "default" : "ghost"}
             size="sm"
             className="rounded-none"
-            onClick={() => setView("calendario")}
+            onClick={() => {
+              setView("calendario");
+              trackEvent("calendario_academico_view_changed", { view: "calendario" });
+            }}
           >
             <CalendarDays className="w-4 h-4 mr-2" />
             Calendário
