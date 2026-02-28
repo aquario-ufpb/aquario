@@ -75,6 +75,7 @@ describe("vagasService", () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
+        json: async () => ({ error: "Not found" }),
       } as Response);
 
       const result = await vagasService.getById("nonexistent");

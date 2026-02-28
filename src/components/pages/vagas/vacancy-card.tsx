@@ -12,7 +12,9 @@ type VacancyCardProps = {
 };
 
 function getEntidadeLabel(entidade: Vaga["entidade"]): string {
-  if (typeof entidade === "object") return entidade.nome;
+  if (typeof entidade === "object") {
+    return entidade.nome;
+  }
   const labels: Record<string, string> = {
     laboratorios: "Laboratório",
     grupos: "Grupo",
@@ -29,7 +31,9 @@ function getTipoVagaLabel(tipo: string): string {
 }
 
 function formatDataFim(iso?: string): string {
-  if (!iso) return "";
+  if (!iso) {
+    return "";
+  }
   return new Date(iso).toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "short",

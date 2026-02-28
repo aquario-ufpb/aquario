@@ -58,7 +58,9 @@ export class BackendVagasProvider implements VagasDataProvider {
   async getById(id: string): Promise<Vaga | null> {
     const response = await apiClient(ENDPOINTS.VAGA_BY_ID(id), { method: "GET" });
     if (!response.ok) {
-      if (response.status === 404) return null;
+      if (response.status === 404) {
+        return null;
+      }
       await throwApiError(response);
     }
     const data: ApiVagaResponse = await response.json();
@@ -72,10 +74,22 @@ export class BackendVagasProvider implements VagasDataProvider {
 
   async getByEntidade(entidade: EntidadeVaga): Promise<Vaga[]> {
     const all = await this.getAll();
-    const e = entidade.toLowerCase();
+    const tipoMap: Record<string, string[]> = {
+      laboratorios: ["LABORATORIO"],
+      grupos: ["GRUPO"],
+      ligas: ["LIGA_ACADEMICA"],
+      ufpb: ["CENTRO_ACADEMICO", "ATLETICA", "OUTRO"],
+      externo: ["EMPRESA"],
+    };
+    const tipos = tipoMap[entidade];
     return all.filter(v => {
-      if (typeof v.entidade === "string") return v.entidade.toLowerCase() === e;
-      return v.entidade.nome.toLowerCase() === e || v.entidade.slug?.toLowerCase() === e;
+      if (typeof v.entidade === "string") {
+        return v.entidade === entidade;
+      }
+      if (!tipos || !v.entidade.tipo) {
+        return false;
+      }
+      return tipos.includes(v.entidade.tipo.toUpperCase());
     });
   }
 }

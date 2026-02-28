@@ -20,7 +20,7 @@ const ENTIDADE_FILTER_MAP: Record<string, string[]> = {
   laboratorios: ["LABORATORIO"],
   grupos: ["GRUPO"],
   ligas: ["LIGA_ACADEMICA"],
-  atletica: ["ATLETICA"],
+  ufpb: ["CENTRO_ACADEMICO", "ATLETICA", "OUTRO"],
   externo: ["EMPRESA"],
 };
 
@@ -73,7 +73,9 @@ export default function VagasPage() {
         vaga.publicador.nome.toLowerCase().includes(q) ||
         entidadeStr.includes(q);
 
-      if (selectedCheckboxes.length === 0) return matchesSearch;
+      if (selectedCheckboxes.length === 0) {
+        return matchesSearch;
+      }
 
       const entidadeTipo =
         typeof vaga.entidade === "string" ? undefined : vaga.entidade.tipo?.toUpperCase();

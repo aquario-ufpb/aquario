@@ -6,13 +6,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Monitor, CalendarDays, DollarSign, Clock, ExternalLink, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Monitor,
+  CalendarDays,
+  DollarSign,
+  Clock,
+  ExternalLink,
+  Trash2,
+} from "lucide-react";
 import { useVagaById, useVagas } from "@/lib/client/hooks";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { useAuth } from "@/contexts/auth-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { vagasService } from "@/lib/client/api/vagas";
 import Link from "next/link";
+import { toast } from "sonner";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { mapImagePath } from "@/lib/client/api/entidades";
 import { ENTIDADE_VAGA_LABELS } from "@/lib/shared/types/vaga.types";
@@ -20,12 +29,16 @@ import type { Vaga } from "@/lib/shared/types";
 import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 
 function getEntidadeNome(entidade: Vaga["entidade"]): string {
-  if (typeof entidade === "object") return entidade.nome;
+  if (typeof entidade === "object") {
+    return entidade.nome;
+  }
   return ENTIDADE_VAGA_LABELS[entidade] ?? entidade;
 }
 
 function getEntidadeSlug(entidade: Vaga["entidade"]): string | null {
-  if (typeof entidade === "object" && entidade.slug) return entidade.slug;
+  if (typeof entidade === "object" && entidade.slug) {
+    return entidade.slug;
+  }
   return null;
 }
 
@@ -48,24 +61,31 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const otherVagas = useMemo(() => {
-    if (!vaga) return [];
+    if (!vaga) {
+      return [];
+    }
     return allVagas.filter(v => v.tipoVaga === vaga.tipoVaga && v.id !== vaga.id).slice(0, 8);
   }, [vaga, allVagas]);
 
   const entidadeId = vaga && typeof vaga.entidade === "object" ? vaga.entidade.id : null;
   const isMasterAdmin = user?.papelPlataforma === "MASTER_ADMIN";
   const isAdminOfEntidade =
-    !!entidadeId && memberships.some(m => m.papel === "ADMIN" && !m.endedAt && m.entidade.id === entidadeId);
+    !!entidadeId &&
+    memberships.some(m => m.papel === "ADMIN" && !m.endedAt && m.entidade.id === entidadeId);
   const canDelete = !!(user && (isMasterAdmin || isAdminOfEntidade));
 
   const handleDelete = async () => {
-    if (!token) return;
+    if (!token) {
+      return;
+    }
     setIsDeleting(true);
     try {
       await vagasService.delete(id, token);
       queryClient.invalidateQueries({ queryKey: ["vagas"] });
       router.push("/vagas");
-    } catch {
+    } catch (error) {
+      console.error("vagas.delete failed", error);
+      toast.error("Erro ao excluir vaga. Tente novamente.");
       setIsDeleting(false);
       setConfirmDelete(false);
     }
@@ -96,11 +116,7 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
       <div className="container mx-auto max-w-7xl">
         {/* Back button + actions */}
         <div className="px-6 md:px-8 lg:px-16 pt-8 pb-4 flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="flex items-center gap-2"
-          >
+          <Button variant="ghost" onClick={() => router.back()} className="flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
             Voltar
           </Button>
@@ -192,7 +208,12 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
                   <span>
                     Publicado em{" "}
                     <span className="text-foreground">
-                      {new Date(vaga.criadoEm).toLocaleDateString("pt-BR")}
+                      {new Date(vaga.criadoEm).toLocaleDateString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        timeZone: "UTC",
+                      })}
                     </span>
                   </span>
                 </div>
@@ -242,8 +263,7 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
                   </Button>
                 )}
                 <p className="text-sm text-muted-foreground">
-                  Publicado por{" "}
-                  <span className="text-foreground">{vaga.publicador.nome}</span>
+                  Publicado por <span className="text-foreground">{vaga.publicador.nome}</span>
                 </p>
               </div>
             </div>
@@ -347,10 +367,7 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
                       <div className="flex gap-3 p-3 rounded-lg border border-border/30 hover:border-border/60 hover:bg-accent/10 transition-all duration-200 h-full">
                         <div className="flex-shrink-0 flex items-center">
                           <Avatar className="w-10 h-10">
-                            <AvatarImage
-                              src={otherAvatarSrc}
-                              alt={nome}
-                            />
+                            <AvatarImage src={otherAvatarSrc} alt={nome} />
                             <AvatarFallback>{nome.charAt(0)}</AvatarFallback>
                           </Avatar>
                         </div>

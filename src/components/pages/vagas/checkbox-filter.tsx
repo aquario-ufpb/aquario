@@ -18,26 +18,27 @@ const CheckboxGroup = ({ data, onChange }: CheckboxProps) => {
   }>({});
 
   const handleChange = (category: string, element: string) => {
-    let newState: { [key: string]: { [key: string]: boolean } };
-    setSelectedValues(prev => {
-      const categoryValues = prev[category] || {};
-      newState = {
-        ...prev,
-        [category]: {
-          ...categoryValues,
-          [element]: !categoryValues[element],
-        },
-      };
-      return newState;
-    });
+    const categoryValues = selectedValues[category] || {};
+    const newState = {
+      ...selectedValues,
+      [category]: {
+        ...categoryValues,
+        [element]: !categoryValues[element],
+      },
+    };
+    setSelectedValues(newState);
 
     const selected: string[] = [];
-    Object.values(newState!).forEach(cat =>
+    Object.values(newState).forEach(cat =>
       Object.entries(cat).forEach(([el, checked]) => {
-        if (checked) selected.push(el.toLowerCase());
+        if (checked) {
+          selected.push(el.toLowerCase());
+        }
       })
     );
-    if (onChange) onChange(selected);
+    if (onChange) {
+      onChange(selected);
+    }
   };
 
   return (

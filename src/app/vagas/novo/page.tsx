@@ -53,7 +53,14 @@ type DynamicListProps = {
   placeholder?: string;
 };
 
-function DynamicList({ items, inputValue, onInputChange, onAdd, onRemove, placeholder }: DynamicListProps) {
+function DynamicList({
+  items,
+  inputValue,
+  onInputChange,
+  onAdd,
+  onRemove,
+  placeholder,
+}: DynamicListProps) {
   return (
     <div className="flex flex-col gap-2 max-w-2xl">
       <div className="flex gap-2">
@@ -63,7 +70,9 @@ function DynamicList({ items, inputValue, onInputChange, onAdd, onRemove, placeh
           onKeyDown={e => {
             if (e.key === "Enter") {
               e.preventDefault();
-              if (inputValue.trim()) onAdd();
+              if (inputValue.trim()) {
+                onAdd();
+              }
             }
           }}
           placeholder={placeholder}
@@ -107,7 +116,7 @@ export default function NovaVagaPage() {
   const { token, isLoading: isAuthLoading } = useAuth();
   const { data: user, isLoading: isUserLoading } = useCurrentUser();
   const { data: memberships = [], isLoading: isMembershipsLoading } = useMyMemberships();
-  const { data: allEntidades = [] } = useEntidades();
+  const { data: allEntidades = [], isLoading: isEntidadesLoading } = useEntidades();
   const router = useRouter();
 
   // Required fields
@@ -148,7 +157,8 @@ export default function NovaVagaPage() {
   const selectedEntidade = entidadeOptions.find(e => e.id === entidadeId);
 
   const canPostJob = isMasterAdmin || adminEntidades.length > 0;
-  const isDataLoading = isAuthLoading || isUserLoading || isMembershipsLoading;
+  const isDataLoading =
+    isAuthLoading || isUserLoading || isMembershipsLoading || (isMasterAdmin && isEntidadesLoading);
 
   useEffect(() => {
     if (!isDataLoading && !canPostJob) {
@@ -164,7 +174,14 @@ export default function NovaVagaPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!titulo.trim() || !descricao.trim() || !tipoVaga || !entidadeId || !linkInscricao.trim() || !dataFinalizacao) {
+    if (
+      !titulo.trim() ||
+      !descricao.trim() ||
+      !tipoVaga ||
+      !entidadeId ||
+      !linkInscricao.trim() ||
+      !dataFinalizacao
+    ) {
       setError("Todos os campos obrigatórios devem ser preenchidos.");
       return;
     }
@@ -173,11 +190,13 @@ export default function NovaVagaPage() {
       return;
     }
 
-    const dataFim = new Date(dataFinalizacao);
-    if (dataFim < new Date()) {
+    const hoje = new Date().toISOString().slice(0, 10);
+    if (dataFinalizacao < hoje) {
       setError("A data de finalização deve ser futura.");
       return;
     }
+
+    const dataFim = new Date(dataFinalizacao);
 
     setIsSubmitting(true);
     setError(null);
@@ -223,11 +242,7 @@ export default function NovaVagaPage() {
       <div className="container mx-auto max-w-7xl">
         {/* Back button */}
         <div className="px-6 md:px-8 lg:px-16 pt-8 pb-4">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="flex items-center gap-2"
-          >
+          <Button variant="ghost" onClick={() => router.back()} className="flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
             Voltar
           </Button>
@@ -338,14 +353,17 @@ export default function NovaVagaPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="tipoVaga">Tipo de vaga</Label>
-                    <Select onValueChange={(value: TipoVaga) => setTipoVaga(value)} value={tipoVaga}>
+                    <Select
+                      onValueChange={(value: TipoVaga) => setTipoVaga(value)}
+                      value={tipoVaga}
+                    >
                       <SelectTrigger id="tipoVaga">
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.values(TipoVaga).map(tipo => (
                           <SelectItem key={tipo} value={tipo}>
-                            {tipo.replace("_", " ")}
+                            {tipo.replaceAll("_", " ")}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -395,8 +413,7 @@ export default function NovaVagaPage() {
 
                 <div className="flex flex-col gap-1.5">
                   <Label>
-                    Áreas{" "}
-                    <span className="text-muted-foreground font-normal">(opcional)</span>
+                    Áreas <span className="text-muted-foreground font-normal">(opcional)</span>
                   </Label>
                   <p className="text-xs text-muted-foreground">
                     Selecione as áreas relacionadas à vaga para que ela apareça nos filtros.

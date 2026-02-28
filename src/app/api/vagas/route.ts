@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { withAuth, canManageVagaForEntidade } from "@/lib/server/services/auth/middleware";
 import { ApiError, fromZodError } from "@/lib/server/errors";
-import type { VagaWithRelations } from "@/lib/server/db/interfaces/vagas-repository.interface";
+import { mapVagaToJson } from "@/lib/server/utils/vaga-mapper";
 
 const TIPO_VAGA_VALUES = [
   "ESTAGIO",
@@ -34,36 +34,6 @@ const createVagaSchema = z.object({
   etapasProcesso: z.array(z.string()).optional().default([]),
 });
 
-function mapVagaToJson(vaga: VagaWithRelations) {
-  return {
-    id: vaga.id,
-    titulo: vaga.titulo,
-    descricao: vaga.descricao,
-    tipoVaga: vaga.tipoVaga,
-    areas: vaga.areas,
-    criadoEm: vaga.criadoEm.toISOString(),
-    dataFinalizacao: vaga.dataFinalizacao.toISOString(),
-    linkInscricao: vaga.linkInscricao,
-    salario: vaga.salario ?? undefined,
-    sobreEmpresa: vaga.sobreEmpresa ?? undefined,
-    responsabilidades: vaga.responsabilidades,
-    requisitos: vaga.requisitos,
-    informacoesAdicionais: vaga.informacoesAdicionais ?? undefined,
-    etapasProcesso: vaga.etapasProcesso,
-    entidade: {
-      id: vaga.entidade.id,
-      nome: vaga.entidade.nome,
-      slug: vaga.entidade.slug ?? undefined,
-      tipo: vaga.entidade.tipo,
-      urlFoto: vaga.entidade.urlFoto ?? undefined,
-    },
-    publicador: {
-      nome: vaga.criadoPor.nome,
-      urlFotoPerfil: vaga.criadoPor.urlFotoPerfil ?? undefined,
-    },
-  };
-}
-
 export async function GET() {
   try {
     const { vagasRepository } = getContainer();
@@ -75,7 +45,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  return withAuth(request, async (req, usuario) => {
+  return await withAuth(request, async (req, usuario) => {
     try {
       const body = await req.json();
       const data = createVagaSchema.parse(body);
@@ -84,9 +54,7 @@ export async function POST(request: Request) {
 
       const canManage = await canManageVagaForEntidade(usuario, data.entidadeId);
       if (!canManage) {
-        return ApiError.forbidden(
-          "Você não tem permissão para criar vagas por esta entidade."
-        );
+        return ApiError.forbidden("Você não tem permissão para criar vagas por esta entidade.");
       }
 
       const entidade = await entidadesRepository.findById(data.entidadeId);
@@ -95,7 +63,9 @@ export async function POST(request: Request) {
       }
 
       const dataFinalizacao = new Date(data.dataFinalizacao);
-      if (dataFinalizacao < new Date()) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      if (dataFinalizacao < hoje) {
         return ApiError.badRequest("Data de finalização deve ser futura.");
       }
 
