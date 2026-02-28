@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/client/api/auth";
 import { AuthLayout } from "@/components/auth/auth-layout";
+import { trackEvent } from "@/analytics/posthog-client";
 
 export default function EsqueciSenha() {
   const [email, setEmail] = useState("");
@@ -19,9 +20,11 @@ export default function EsqueciSenha() {
 
     try {
       await authService.forgotPassword(email);
+      trackEvent("forgot_password_submitted");
       setSuccess(true);
     } catch (_err) {
       // Even on error, show success for security (prevent email enumeration)
+      trackEvent("forgot_password_submitted");
       setSuccess(true);
     } finally {
       setIsLoading(false);

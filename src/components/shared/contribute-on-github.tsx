@@ -1,5 +1,8 @@
+"use client";
+
 import { Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/analytics/posthog-client";
 
 type ContributeOnGitHubProps = {
   url: string;
@@ -21,7 +24,13 @@ export function ContributeOnGitHub({
 
   return (
     <Button asChild variant={variant} size={size} className={className || defaultClassName}>
-      <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2"
+        onClick={() => trackEvent("github_button_clicked")}
+      >
         <Github className={size === "lg" ? "w-5 h-5" : "w-4 h-4"} />
         Contribuir no GitHub
       </a>

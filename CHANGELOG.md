@@ -7,10 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
 ### Changed
 - **Vagas page**: Added list/grid view mode toggle next to search bar; grid mode renders cards in 3-column layout matching the entidades page style
 - **VacancyCard**: Standardized badges to use `Badge variant="outline"` with muted styling matching entity cards; added `variant` prop supporting `"list"` and `"grid"` display modes
 - **Vaga detail page**: Redesigned to match the entidade detail page layout — ghost back button, hero section with entity name as primary identifier, inline meta info (date, deadline, salary), areas as badges, sections with `border-t` separators, and compact "other vagas" grid
+
+### Added
+- **PostHog Analytics**: Expanded event tracking across all major user flows
+  - **Auth flows**: `login_attempted`, `login_succeeded`, `login_failed` (with error type), `register_attempted`, `register_succeeded`, `register_failed`, `forgot_password_submitted`, `reset_password_submitted`, `reset_password_succeeded`, `email_verification_succeeded`, `email_verification_resent`
+  - **Onboarding**: `onboarding_step_viewed`, `onboarding_step_completed`, `onboarding_step_skipped` (with `step_id`) — tracked in `OnboardingModal`
+  - **Sobre**: `sobre_contact_clicked` via new `ContactButton` client component (page stays a server component)
+  - **Mapas**: `mapa_room_clicked` (with `room_name` and `building_name`)
+  - **Calendário Acadêmico**: `calendario_academico_view_changed` (lista/calendário toggle), `calendario_academico_semestre_changed`
+  - **Grades Curriculares**: `grade_curricular_curso_selected` (with `curso_nome`)
+  - **Entidades**: `entidade_detail_viewed` (with `entidade_name` and `entidade_type`) on `/entidade/[slug]`
+  - **Usuários**: `usuario_profile_viewed` (with `user_slug`) on `/usuarios/[slug]`, only fires for other users' profiles
+
+## [1.3.0] - 2026-02-21
+
 
 ### Added
 - **Onboarding System**: Multi-step wizard modal that guides new users through setting up their academic profile

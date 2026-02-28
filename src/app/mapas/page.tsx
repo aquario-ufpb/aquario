@@ -9,6 +9,7 @@ import RoomDetailsDialog from "@/components/pages/mapas/room-details-dialog";
 import { useMapas } from "@/lib/client/hooks/use-mapas";
 import type { Room } from "@/lib/client/mapas/types";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
+import { trackEvent } from "@/analytics/posthog-client";
 
 function MapsPageInner() {
   const { theme, resolvedTheme } = useTheme();
@@ -71,6 +72,11 @@ function MapsPageInner() {
     setSelectedRoom(room);
     setSelectedBuildingId(buildingId);
     setIsDialogOpen(true);
+    const building = mapsData?.find(b => b.id === buildingId);
+    trackEvent("mapa_room_clicked", {
+      room_name: room.location ?? room.id,
+      building_name: building?.name ?? buildingId,
+    });
   };
 
   const handleFloorClick = (buildingId: string, floorId: string) => {

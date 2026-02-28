@@ -11,6 +11,7 @@ import { Github, Map, GitBranch } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEntidades } from "@/lib/client/hooks";
+import { trackEvent } from "@/analytics/posthog-client";
 
 export default function Home() {
   const { theme, resolvedTheme } = useTheme();
@@ -187,6 +188,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full md:w-auto"
+                onClick={() => trackEvent("github_button_clicked")}
               >
                 <HoverBorderGradient
                   containerClassName="rounded-full w-full md:w-auto"

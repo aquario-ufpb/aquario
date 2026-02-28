@@ -1,8 +1,8 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, AlertCircle, Mail, Users, Search, Zap } from "lucide-react";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { HeroSection } from "@/components/pages/sobre/hero-section";
+import { ContactButton } from "@/components/pages/sobre/contact-button";
 
 const problemsBefore = [
   { icon: AlertCircle, text: "Falta de informação centralizada" },
@@ -177,9 +177,7 @@ export default function SobrePage() {
                     variant="outline"
                     size="lg"
                   />
-                  <Button asChild variant="outline" size="lg" className="rounded-full">
-                    <a href="mailto:ralf.ferreira@academico.ufpb.br">Entrar em Contato</a>
-                  </Button>
+                  <ContactButton />
                 </div>
               </CardContent>
             </Card>
