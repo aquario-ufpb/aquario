@@ -86,6 +86,8 @@ type CurriculumGraphProps = {
   isSaving?: boolean;
   isLoggedIn?: boolean;
   activeSemestreNome?: string;
+  /** Restrict which save statuses appear in the dropdown. If only one, renders a direct button. */
+  allowedSaveStatuses?: ("concluida" | "cursando" | "none")[];
 };
 
 export function CurriculumGraph({
@@ -101,6 +103,7 @@ export function CurriculumGraph({
   isSaving,
   isLoggedIn,
   activeSemestreNome,
+  allowedSaveStatuses,
 }: CurriculumGraphProps) {
   const [showOptativas, setShowOptativas] = useState(true);
   const [clickedCode, setClickedCode] = useState<string | null>(null);
@@ -272,17 +275,37 @@ export function CurriculumGraph({
     return false;
   }, [selectionSet, completedDisciplinaIds, cursandoDisciplinaIds]);
 
-  // Compute locked disciplines (prereqs not all completed)
+  // Compute locked disciplines (prereqs not all completed or selected)
+  // Propagates transitively: selecting A unlocks B (requires A), which unlocks C (requires B)
   const lockedCodes = useMemo(() => {
     if (!completedDisciplinaIds) {
       return new Set<string>();
     }
-    const completedCodes = new Set<string>();
+    // Seed with completed + selected disciplines
+    const satisfiedCodes = new Set<string>();
     for (const d of disciplinas) {
-      if (completedDisciplinaIds.has(d.disciplinaId)) {
-        completedCodes.add(d.codigo);
+      if (completedDisciplinaIds.has(d.disciplinaId) || selectionSet.has(d.disciplinaId)) {
+        satisfiedCodes.add(d.codigo);
       }
     }
+    // Propagate: any discipline whose prereqs are all satisfied also becomes satisfied
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const d of disciplinas) {
+        if (satisfiedCodes.has(d.codigo)) {
+          continue;
+        }
+        if (d.preRequisitos.length === 0) {
+          continue;
+        }
+        if (d.preRequisitos.every(req => satisfiedCodes.has(req))) {
+          satisfiedCodes.add(d.codigo);
+          changed = true;
+        }
+      }
+    }
+    // Now compute locked: not completed, has prereqs, and prereqs not all satisfied
     const locked = new Set<string>();
     for (const d of disciplinas) {
       if (completedDisciplinaIds.has(d.disciplinaId)) {
@@ -291,12 +314,12 @@ export function CurriculumGraph({
       if (d.preRequisitos.length === 0) {
         continue;
       }
-      if (!d.preRequisitos.every(req => completedCodes.has(req))) {
+      if (!d.preRequisitos.every(req => satisfiedCodes.has(req))) {
         locked.add(d.codigo);
       }
     }
     return locked;
-  }, [disciplinas, completedDisciplinaIds]);
+  }, [disciplinas, completedDisciplinaIds, selectionSet]);
 
   // Progress stats
   const progressStats = useMemo(() => {
@@ -337,6 +360,70 @@ export function CurriculumGraph({
   const dialogIsCursando = selectedDisc
     ? !!cursandoDisciplinaIds?.has(selectedDisc.disciplinaId)
     : false;
+
+  // Determine which save statuses to show
+  const statuses = allowedSaveStatuses ?? ["concluida", "cursando", "none"];
+  const showConcluida = statuses.includes("concluida");
+  const showCursando = statuses.includes("cursando");
+  const showDesmarcar = statuses.includes("none") && hasMarkedInSelection;
+  const singleStatus = statuses.length === 1 ? statuses[0] : null;
+
+  const singleStatusLabel =
+    singleStatus === "concluida"
+      ? "Salvar como Concluídas"
+      : singleStatus === "cursando"
+        ? "Salvar como Cursando"
+        : null;
+
+  const SaveActions = () => {
+    if (singleStatus && singleStatusLabel) {
+      return (
+        <Button
+          size="sm"
+          disabled={isSaving || selectionSet.size === 0}
+          className="gap-1.5"
+          onClick={() => void handleSaveAs(singleStatus)}
+        >
+          <Save className="w-3.5 h-3.5" />
+          {isSaving ? "Salvando..." : singleStatusLabel}
+          {selectionSet.size > 0 && ` (${selectionSet.size})`}
+        </Button>
+      );
+    }
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" disabled={isSaving || selectionSet.size === 0} className="gap-1.5">
+            <Save className="w-3.5 h-3.5" />
+            {isSaving ? "Salvando..." : "Salvar"}
+            {selectionSet.size > 0 && ` (${selectionSet.size})`}
+            <ChevronDown className="w-3 h-3 ml-1" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {showConcluida && (
+            <DropdownMenuItem onClick={() => void handleSaveAs("concluida")}>
+              <Check className="w-3.5 h-3.5 mr-2 text-green-600" />
+              Marcar como Concluídas
+            </DropdownMenuItem>
+          )}
+          {showCursando && (
+            <DropdownMenuItem onClick={() => void handleSaveAs("cursando")}>
+              <BookOpen className="w-3.5 h-3.5 mr-2 text-purple-600" />
+              Marcar como Cursando
+              {activeSemestreNome ? ` (${activeSemestreNome})` : ""}
+            </DropdownMenuItem>
+          )}
+          {showDesmarcar && (
+            <DropdownMenuItem onClick={() => void handleSaveAs("none")}>
+              <XCircle className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+              Desmarcar
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
 
   return (
     <div>
@@ -440,39 +527,7 @@ export function CurriculumGraph({
                 </span>
               )}
             </div>
-            {onSaveWithStatus && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    size="sm"
-                    disabled={isSaving || selectionSet.size === 0}
-                    className="gap-1.5"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    {isSaving ? "Salvando..." : "Salvar"}
-                    {selectionSet.size > 0 && ` (${selectionSet.size})`}
-                    <ChevronDown className="w-3 h-3 ml-1" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => void handleSaveAs("concluida")}>
-                    <Check className="w-3.5 h-3.5 mr-2 text-green-600" />
-                    Marcar como Concluídas
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => void handleSaveAs("cursando")}>
-                    <BookOpen className="w-3.5 h-3.5 mr-2 text-purple-600" />
-                    Marcar como Cursando
-                    {activeSemestreNome ? ` (${activeSemestreNome})` : ""}
-                  </DropdownMenuItem>
-                  {hasMarkedInSelection && (
-                    <DropdownMenuItem onClick={() => void handleSaveAs("none")}>
-                      <XCircle className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-                      Desmarcar
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            {onSaveWithStatus && <SaveActions />}
           </div>
           <Progress value={progressStats.percentObrigatorias} className="h-2" />
         </div>
