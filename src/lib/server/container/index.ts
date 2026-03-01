@@ -111,6 +111,9 @@ function createPrismaContainer(): Container {
     PrismaCalendarioRepository,
   } = require("@/lib/server/db/implementations/prisma/prisma-calendario-repository");
   const {
+    PrismaVagasRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-vagas-repository");
+  const {
     PrismaDisciplinaSemestreRepository,
   } = require("@/lib/server/db/implementations/prisma/prisma-disciplina-semestre-repository");
   const {
@@ -134,6 +137,7 @@ function createPrismaContainer(): Container {
     cargosRepository: new PrismaCargosRepository(),
     curriculosRepository: new PrismaCurriculosRepository(),
     calendarioRepository: new PrismaCalendarioRepository(),
+    vagasRepository: new PrismaVagasRepository(),
     disciplinaSemestreRepository: new PrismaDisciplinaSemestreRepository(),
     disciplinaRepository: new PrismaDisciplinaRepository(),
     disciplinaConcluidaRepository: new PrismaDisciplinaConcluidaRepository(),

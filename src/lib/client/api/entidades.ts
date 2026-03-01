@@ -394,7 +394,7 @@ function normalizeTipo(apiTipo: string): TipoEntidade {
   return validTipos.includes(apiTipo as TipoEntidade) ? (apiTipo as TipoEntidade) : "OUTRO";
 }
 
-function mapImagePath(urlFoto: string | null | undefined): string {
+export function mapImagePath(urlFoto: string | null | undefined): string {
   if (!urlFoto) {
     return "/api/content-images/assets/entidades/default.png";
   }
