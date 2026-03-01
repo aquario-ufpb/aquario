@@ -13,16 +13,9 @@ import { useVagas } from "@/lib/client/hooks";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { usePrefetchVaga } from "@/lib/client/hooks/use-prefetch";
 import { cn } from "@/lib/client/utils";
+import { ENTIDADE_TIPO_MAP } from "@/lib/shared/types/vaga.types";
 
 type ViewMode = "list" | "grid";
-
-const ENTIDADE_FILTER_MAP: Record<string, string[]> = {
-  laboratorios: ["LABORATORIO"],
-  grupos: ["GRUPO"],
-  ligas: ["LIGA_ACADEMICA"],
-  ufpb: ["CENTRO_ACADEMICO", "ATLETICA", "OUTRO"],
-  externo: ["EMPRESA"],
-};
 
 function VagasCard({
   vaga,
@@ -81,7 +74,7 @@ export default function VagasPage() {
         typeof vaga.entidade === "string" ? undefined : vaga.entidade.tipo?.toUpperCase();
 
       const matchesCheckbox = selectedCheckboxes.some(selected => {
-        const entidadeTypes = ENTIDADE_FILTER_MAP[selected];
+        const entidadeTypes = ENTIDADE_TIPO_MAP[selected];
         if (entidadeTypes) {
           return entidadeTipo !== undefined && entidadeTypes.includes(entidadeTipo);
         }

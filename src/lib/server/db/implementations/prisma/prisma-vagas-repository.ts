@@ -3,6 +3,7 @@ import type {
   IVagasRepository,
   VagaWithRelations,
   CreateVagaInput,
+  VagasFilter,
 } from "@/lib/server/db/interfaces/vagas-repository.interface";
 
 const vagaInclude = {
@@ -46,12 +47,19 @@ export class PrismaVagasRepository implements IVagasRepository {
     return (vaga as unknown as VagaWithRelations) ?? null;
   }
 
-  async findManyActive(now: Date = new Date()): Promise<VagaWithRelations[]> {
+  async findManyActive(now: Date = new Date(), filter?: VagasFilter): Promise<VagaWithRelations[]> {
+    const where: Record<string, unknown> = {
+      deletadoEm: null,
+      dataFinalizacao: { gte: now },
+    };
+    if (filter?.tipoVaga) {
+      where.tipoVaga = filter.tipoVaga;
+    }
+    if (filter?.entidadeTipos && filter.entidadeTipos.length > 0) {
+      where.entidade = { tipo: { in: filter.entidadeTipos } };
+    }
     const vagas = await prisma.vaga.findMany({
-      where: {
-        deletadoEm: null,
-        dataFinalizacao: { gte: now },
-      },
+      where,
       include: vagaInclude,
       orderBy: { criadoEm: "desc" },
     });

@@ -15,7 +15,9 @@ export async function GET(_request: Request, context: RouteContext) {
     if (!vaga) {
       return ApiError.notFound("Vaga");
     }
-    return NextResponse.json(mapVagaToJson(vaga));
+    const json = mapVagaToJson(vaga);
+    const isExpired = vaga.dataFinalizacao && new Date(vaga.dataFinalizacao) < new Date();
+    return NextResponse.json({ ...json, expirada: !!isExpired });
   } catch {
     return ApiError.internal("Erro ao buscar vaga");
   }

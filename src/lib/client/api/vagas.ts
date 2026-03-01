@@ -40,12 +40,11 @@ export const vagasService = {
     return await provider.getByEntidade(entidade);
   },
 
-  create: async (data: CreateVagaRequest, token: string): Promise<Vaga> => {
+  create: async (data: CreateVagaRequest): Promise<Vaga> => {
     const response = await apiClient(ENDPOINTS.VAGAS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-      token,
     });
     if (!response.ok) {
       await throwApiError(response);
@@ -54,10 +53,9 @@ export const vagasService = {
     return json as Vaga;
   },
 
-  delete: async (id: string, token: string): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     const response = await apiClient(ENDPOINTS.VAGA_BY_ID(id), {
       method: "DELETE",
-      token,
     });
     if (!response.ok) {
       await throwApiError(response);

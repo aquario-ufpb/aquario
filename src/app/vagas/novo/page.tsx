@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { useEntidades } from "@/lib/client/hooks/use-entidades";
 import { vagasService } from "@/lib/client/api/vagas";
@@ -51,6 +50,8 @@ type DynamicListProps = {
   onAdd: () => void;
   onRemove: (index: number) => void;
   placeholder?: string;
+  maxItems?: number;
+  maxItemLength?: number;
 };
 
 function DynamicList({
@@ -60,7 +61,10 @@ function DynamicList({
   onAdd,
   onRemove,
   placeholder,
+  maxItems,
+  maxItemLength,
 }: DynamicListProps) {
+  const atLimit = maxItems !== undefined && items.length >= maxItems;
   return (
     <div className="flex flex-col gap-2 max-w-2xl">
       <div className="flex gap-2">
@@ -70,25 +74,32 @@ function DynamicList({
           onKeyDown={e => {
             if (e.key === "Enter") {
               e.preventDefault();
-              if (inputValue.trim()) {
+              if (inputValue.trim() && !atLimit) {
                 onAdd();
               }
             }
           }}
-          placeholder={placeholder}
+          placeholder={atLimit ? "Limite atingido" : placeholder}
+          disabled={atLimit}
+          maxLength={maxItemLength}
         />
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={onAdd}
-          disabled={!inputValue.trim()}
+          disabled={!inputValue.trim() || atLimit}
           className="flex-shrink-0 gap-1.5"
         >
           <Plus className="w-3.5 h-3.5" />
           Adicionar
         </Button>
       </div>
+      {maxItems !== undefined && (
+        <p className="text-xs text-muted-foreground text-right">
+          {items.length}/{maxItems}
+        </p>
+      )}
       {items.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-1">
           {items.map((item, i) => (
@@ -113,7 +124,6 @@ function DynamicList({
 }
 
 export default function NovaVagaPage() {
-  const { token, isLoading: isAuthLoading } = useAuth();
   const { data: user, isLoading: isUserLoading } = useCurrentUser();
   const { data: memberships = [], isLoading: isMembershipsLoading } = useMyMemberships();
   const { data: allEntidades = [], isLoading: isEntidadesLoading } = useEntidades();
@@ -158,7 +168,7 @@ export default function NovaVagaPage() {
 
   const canPostJob = isMasterAdmin || adminEntidades.length > 0;
   const isDataLoading =
-    isAuthLoading || isUserLoading || isMembershipsLoading || (isMasterAdmin && isEntidadesLoading);
+    isUserLoading || isMembershipsLoading || (isMasterAdmin && isEntidadesLoading);
 
   useEffect(() => {
     if (!isDataLoading && !canPostJob) {
@@ -185,11 +195,6 @@ export default function NovaVagaPage() {
       setError("Todos os campos obrigatórios devem ser preenchidos.");
       return;
     }
-    if (!token) {
-      setError("Sessão expirada. Faça login novamente.");
-      return;
-    }
-
     const hoje = new Date().toISOString().slice(0, 10);
     if (dataFinalizacao < hoje) {
       setError("A data de finalização deve ser futura.");
@@ -202,24 +207,21 @@ export default function NovaVagaPage() {
     setError(null);
 
     try {
-      await vagasService.create(
-        {
-          titulo: titulo.trim(),
-          descricao: descricao.trim(),
-          tipoVaga,
-          entidadeId,
-          areas,
-          linkInscricao: linkInscricao.trim(),
-          dataFinalizacao: dataFim.toISOString(),
-          salario: salario.trim() || null,
-          sobreEmpresa: sobreEmpresa.trim() || null,
-          responsabilidades,
-          requisitos,
-          etapasProcesso,
-          informacoesAdicionais: informacoesAdicionais.trim() || null,
-        },
-        token
-      );
+      await vagasService.create({
+        titulo: titulo.trim(),
+        descricao: descricao.trim(),
+        tipoVaga,
+        entidadeId,
+        areas,
+        linkInscricao: linkInscricao.trim(),
+        dataFinalizacao: dataFim.toISOString(),
+        salario: salario.trim() || null,
+        sobreEmpresa: sobreEmpresa.trim() || null,
+        responsabilidades,
+        requisitos,
+        etapasProcesso,
+        informacoesAdicionais: informacoesAdicionais.trim() || null,
+      });
       router.push("/vagas");
       router.refresh();
     } catch (err: unknown) {
@@ -347,7 +349,9 @@ export default function NovaVagaPage() {
                     value={titulo}
                     onChange={e => setTitulo(e.target.value)}
                     placeholder="Ex: Desenvolvedor Frontend Jr."
+                    maxLength={200}
                   />
+                  <p className="text-xs text-muted-foreground text-right">{titulo.length}/200</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -394,6 +398,7 @@ export default function NovaVagaPage() {
                       value={linkInscricao}
                       onChange={e => setLinkInscricao(e.target.value)}
                       placeholder="https://..."
+                      maxLength={2048}
                     />
                   </div>
 
@@ -407,6 +412,7 @@ export default function NovaVagaPage() {
                       value={salario}
                       onChange={e => setSalario(e.target.value)}
                       placeholder="Ex: R$ 1.500 / Bolsa"
+                      maxLength={100}
                     />
                   </div>
                 </div>
@@ -461,7 +467,11 @@ export default function NovaVagaPage() {
                 placeholder="Escreva aqui! Seja direto, mas não chato. Boas vagas têm boas descrições."
                 rows={8}
                 className="max-w-2xl"
+                maxLength={10000}
               />
+              <p className="text-xs text-muted-foreground text-right max-w-2xl">
+                {descricao.length}/10000
+              </p>
             </div>
           </div>
 
@@ -481,7 +491,11 @@ export default function NovaVagaPage() {
                 placeholder="Quem somos, o que fazemos, qual o nosso propósito..."
                 rows={4}
                 className="max-w-2xl"
+                maxLength={5000}
               />
+              <p className="text-xs text-muted-foreground text-right max-w-2xl">
+                {sobreEmpresa.length}/5000
+              </p>
             </div>
           </div>
 
@@ -514,6 +528,8 @@ export default function NovaVagaPage() {
                     }}
                     onRemove={i => setResponsabilidades(prev => prev.filter((_, idx) => idx !== i))}
                     placeholder="Ex: Desenvolver e manter features do produto"
+                    maxItems={30}
+                    maxItemLength={500}
                   />
                 </div>
 
@@ -534,6 +550,8 @@ export default function NovaVagaPage() {
                     }}
                     onRemove={i => setRequisitos(prev => prev.filter((_, idx) => idx !== i))}
                     placeholder="Ex: Conhecimento em React"
+                    maxItems={30}
+                    maxItemLength={500}
                   />
                 </div>
 
@@ -554,6 +572,8 @@ export default function NovaVagaPage() {
                     }}
                     onRemove={i => setEtapasProcesso(prev => prev.filter((_, idx) => idx !== i))}
                     placeholder="Ex: Triagem de currículos"
+                    maxItems={20}
+                    maxItemLength={500}
                   />
                 </div>
               </div>
@@ -576,7 +596,11 @@ export default function NovaVagaPage() {
                 placeholder="Vale transporte, horário flexível, trabalho remoto..."
                 rows={4}
                 className="max-w-2xl"
+                maxLength={5000}
               />
+              <p className="text-xs text-muted-foreground text-right max-w-2xl">
+                {informacoesAdicionais.length}/5000
+              </p>
             </div>
           </div>
 

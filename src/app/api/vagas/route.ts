@@ -17,27 +17,45 @@ const TIPO_VAGA_VALUES = [
 ] as const;
 
 const createVagaSchema = z.object({
-  titulo: z.string().min(1, "Título é obrigatório"),
-  descricao: z.string().min(1, "Descrição é obrigatória"),
+  titulo: z.string().min(1, "Título é obrigatório").max(200, "Título muito longo"),
+  descricao: z.string().min(1, "Descrição é obrigatória").max(10000, "Descrição muito longa"),
   tipoVaga: z.enum(TIPO_VAGA_VALUES),
   entidadeId: z.string().uuid("ID de entidade inválido"),
-  linkInscricao: z.string().min(1, "Link para inscrição é obrigatório"),
+  linkInscricao: z
+    .string()
+    .url("Link para inscrição deve ser uma URL válida")
+    .max(2048, "URL muito longa"),
   dataFinalizacao: z.string().refine(v => !isNaN(Date.parse(v)), {
     message: "Data de finalização inválida",
   }),
-  areas: z.array(z.string()).optional().default([]),
-  salario: z.string().nullable().optional(),
-  sobreEmpresa: z.string().nullable().optional(),
-  responsabilidades: z.array(z.string()).optional().default([]),
-  requisitos: z.array(z.string()).optional().default([]),
-  informacoesAdicionais: z.string().nullable().optional(),
-  etapasProcesso: z.array(z.string()).optional().default([]),
+  areas: z.array(z.string().min(1).max(100)).max(20).optional().default([]),
+  salario: z.string().max(100, "Salário muito longo").nullable().optional(),
+  sobreEmpresa: z.string().max(5000, "Texto muito longo").nullable().optional(),
+  responsabilidades: z.array(z.string().min(1).max(500)).max(30).optional().default([]),
+  requisitos: z.array(z.string().min(1).max(500)).max(30).optional().default([]),
+  informacoesAdicionais: z.string().max(5000, "Texto muito longo").nullable().optional(),
+  etapasProcesso: z.array(z.string().min(1).max(500)).max(20).optional().default([]),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const tipoVaga = searchParams.get("tipoVaga");
+    const entidadeTipos = searchParams.get("entidadeTipos");
+
+    const filter: { tipoVaga?: (typeof TIPO_VAGA_VALUES)[number]; entidadeTipos?: string[] } = {};
+    if (tipoVaga && TIPO_VAGA_VALUES.includes(tipoVaga as (typeof TIPO_VAGA_VALUES)[number])) {
+      filter.tipoVaga = tipoVaga as (typeof TIPO_VAGA_VALUES)[number];
+    }
+    if (entidadeTipos) {
+      filter.entidadeTipos = entidadeTipos.split(",").filter(Boolean);
+    }
+
     const { vagasRepository } = getContainer();
-    const vagas = await vagasRepository.findManyActive();
+    const vagas = await vagasRepository.findManyActive(
+      new Date(),
+      Object.keys(filter).length > 0 ? filter : undefined
+    );
     return NextResponse.json(vagas.map(mapVagaToJson));
   } catch {
     return ApiError.internal("Erro ao buscar vagas");
@@ -91,8 +109,8 @@ export async function POST(request: Request) {
       if (error instanceof z.ZodError) {
         return fromZodError(error);
       }
-      const message = error instanceof Error ? error.message : "Erro ao criar vaga";
-      return ApiError.badRequest(message);
+      console.error("Erro ao criar vaga:", error);
+      return ApiError.internal("Erro ao criar vaga");
     }
   });
 }

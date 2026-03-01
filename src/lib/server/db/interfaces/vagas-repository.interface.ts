@@ -24,9 +24,14 @@ export type CreateVagaInput = {
   etapasProcesso?: string[];
 };
 
+export type VagasFilter = {
+  tipoVaga?: TipoVaga;
+  entidadeTipos?: string[];
+};
+
 export type IVagasRepository = {
   create(data: CreateVagaInput): Promise<VagaWithRelations>;
   findById(id: string): Promise<VagaWithRelations | null>;
-  findManyActive(now?: Date): Promise<VagaWithRelations[]>;
+  findManyActive(now?: Date, filter?: VagasFilter): Promise<VagaWithRelations[]>;
   softDelete(id: string): Promise<void>;
 };
