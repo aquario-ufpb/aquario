@@ -8,16 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-### Fixed
-- **Vagas API**: Validate `linkInscricao` as a URL to prevent XSS via `javascript:` URIs
-- **Vagas API**: Return generic 500 instead of leaking internal error messages on POST failure
-- **Vagas API**: Add max length constraints on all string/array input fields
-- **Vagas API**: Return `expirada` flag on detail endpoint for expired vagas; hide apply button on frontend
-- **Vagas API**: Add server-side `tipoVaga`/`entidadeTipos` query param filtering to avoid fetching all vagas client-side
-- **Vagas frontend**: Await `invalidateQueries` before navigating after delete
-- **Vagas frontend**: Remove redundant explicit `token` param from `create`/`delete` (apiClient handles JWT automatically)
-- **Vagas frontend**: Extract duplicated `getTipoVagaLabel`, `getEntidadeDisplayName`, and `ENTIDADE_TIPO_MAP` to shared module
-
 ### Changed
 - **Vagas page**: Added list/grid view mode toggle next to search bar; grid mode renders cards in 3-column layout matching the entidades page style
 - **VacancyCard**: Standardized badges to use `Badge variant="outline"` with muted styling matching entity cards; added `variant` prop supporting `"list"` and `"grid"` display modes
