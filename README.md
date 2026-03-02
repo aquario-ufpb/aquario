@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://github.com/aquario-ufpb/aquario/actions/workflows/tests.yml/badge.svg)](https://github.com/aquario-ufpb/aquario/actions/workflows/tests.yml)
 
-[![Production](https://img.shields.io/badge/production-live-brightgreen)](https://aquarioufpb.com)
+[![Production](https://img.shields.io/uptimerobot/status/m802464136-dde495c0070f5be930d2030d?label=production)](https://stats.uptimerobot.com/oFEH3vglXF)
 [![Staging](https://img.shields.io/badge/staging-live-orange)](https://staging.aquarioufpb.com)
 [![Commits since release](https://img.shields.io/github/commits-since/aquario-ufpb/aquario/latest?label=staging%20ahead)](https://github.com/aquario-ufpb/aquario/compare/latest...main)
 
