@@ -482,6 +482,24 @@ export const usuariosService = {
     }
   },
 
+  toggleEntidadeAdmin: async (
+    entidadeId: string,
+    token: string
+  ): Promise<{ action: "added" | "promoted" | "removed" }> => {
+    const response = await apiClient(ENDPOINTS.DEV_TOGGLE_ENTIDADE_ADMIN, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      token,
+      body: JSON.stringify({ entidadeId }),
+    });
+
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+
+    return response.json();
+  },
+
   mergeFacadeUser: async (
     facadeUserId: string,
     realUserId: string,

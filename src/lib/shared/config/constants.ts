@@ -76,6 +76,7 @@ export const ENDPOINTS = {
   // Dev-only
   DEV_CLEAR_ONBOARDING: "/dev/clear-onboarding",
   DEV_PROMOTE_ADMIN: "/dev/promote-admin",
+  DEV_TOGGLE_ENTIDADE_ADMIN: "/dev/toggle-entidade-admin",
 } as const;
 
 // External API URLs

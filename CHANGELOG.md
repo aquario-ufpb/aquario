@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Dev Tools**: Entity admin toggle — select any entity and become/stop being its admin via dedicated `/api/dev/toggle-entidade-admin` endpoint
 
 ### Changed
 - **Vagas — Nova Vaga**: Logos das entidades exibidos no dropdown de seleção na criação de vagas
