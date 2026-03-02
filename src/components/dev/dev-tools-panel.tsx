@@ -71,13 +71,13 @@ export function DevToolsPanel() {
   });
 
   const toggleEntidadeAdmin = useMutation({
-    mutationFn: async () => {
+    mutationFn: () => {
       if (!token || !selectedEntidadeId) {
         throw new Error("Missing data");
       }
       return usuariosService.toggleEntidadeAdmin(selectedEntidadeId, token);
     },
-    onSuccess: (result) => {
+    onSuccess: result => {
       queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships });
       queryClient.invalidateQueries({ queryKey: queryKeys.entidades.all });
       const entidadeNome = entidades?.find(e => e.id === selectedEntidadeId)?.name ?? "entidade";
@@ -183,7 +183,9 @@ export function DevToolsPanel() {
                 .map(e => (
                   <option key={e.id} value={e.id}>
                     {e.name}
-                    {memberships?.some(m => m.entidade.id === e.id && !m.endedAt && m.papel === "ADMIN")
+                    {memberships?.some(
+                      m => m.entidade.id === e.id && !m.endedAt && m.papel === "ADMIN"
+                    )
                       ? " (Admin)"
                       : memberships?.some(m => m.entidade.id === e.id && !m.endedAt)
                         ? " (Membro)"
