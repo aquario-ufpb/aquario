@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { useEntidades } from "@/lib/client/hooks/use-entidades";
 import { vagasService } from "@/lib/client/api/vagas";
+import { mapImagePath } from "@/lib/client/api/entidades";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +32,7 @@ import { ArrowLeft, ChevronDown, Check, X, Plus } from "lucide-react";
 import { TipoVaga } from "@/lib/shared/types";
 import { cn } from "@/lib/client/utils";
 
-type EntidadeOption = { id: string; nome: string };
+type EntidadeOption = { id: string; nome: string; imagePath: string };
 
 const AREA_OPTIONS = [
   "FrontEnd",
@@ -157,11 +159,15 @@ export default function NovaVagaPage() {
   const adminEntidades = useMemo(() => {
     return memberships
       .filter(m => m.papel === "ADMIN" && !m.endedAt)
-      .map(m => ({ id: m.entidade.id, nome: m.entidade.nome }));
+      .map(m => ({
+        id: m.entidade.id,
+        nome: m.entidade.nome,
+        imagePath: mapImagePath(m.entidade.urlFoto),
+      }));
   }, [memberships]);
 
   const entidadeOptions: EntidadeOption[] = isMasterAdmin
-    ? allEntidades.map(e => ({ id: e.id, nome: e.name }))
+    ? allEntidades.map(e => ({ id: e.id, nome: e.name, imagePath: e.imagePath }))
     : adminEntidades;
 
   const selectedEntidade = entidadeOptions.find(e => e.id === entidadeId);
@@ -277,8 +283,23 @@ export default function NovaVagaPage() {
                         !selectedEntidade && "text-muted-foreground"
                       )}
                     >
-                      <span className="truncate">
-                        {selectedEntidade ? selectedEntidade.nome : "Selecione a entidade"}
+                      <span className="truncate flex items-center gap-2">
+                        {selectedEntidade ? (
+                          <>
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage
+                                src={selectedEntidade.imagePath}
+                                alt={selectedEntidade.nome}
+                              />
+                              <AvatarFallback className="text-[10px]">
+                                {selectedEntidade.nome.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            {selectedEntidade.nome}
+                          </>
+                        ) : (
+                          "Selecione a entidade"
+                        )}
                       </span>
                       <ChevronDown className="h-4 w-4 opacity-50 ml-2 flex-shrink-0" />
                     </button>
@@ -321,6 +342,12 @@ export default function NovaVagaPage() {
                                   entidadeId === ent.id ? "opacity-100" : "opacity-0"
                                 )}
                               />
+                              <Avatar className="h-5 w-5 mr-2 flex-shrink-0">
+                                <AvatarImage src={ent.imagePath} alt={ent.nome} />
+                                <AvatarFallback className="text-[10px]">
+                                  {ent.nome.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
                               {ent.nome}
                             </CommandItem>
                           ))}
