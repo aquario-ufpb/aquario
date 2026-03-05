@@ -295,190 +295,118 @@ export function SearchCommand() {
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100]" onKeyDown={handleKeyDown}>
-      {/* Backdrop (desktop only) */}
-      {!isMobile && (
-        <div
-          className="absolute inset-0 bg-black/50 animate-in fade-in duration-200"
-          onClick={() => setOpen(false)}
-        />
-      )}
+  const showResults = hasQuery || history.length > 0;
 
-      {/* Search container */}
+  // Mobile: fullscreen overlay
+  if (isMobile) {
+    return (
       <div
-        className={
-          isMobile
-            ? "absolute inset-0 bg-background flex flex-col animate-in slide-in-from-top duration-200"
-            : "absolute inset-x-0 top-0 flex flex-col items-center pt-[10vh] animate-in slide-in-from-top-4 duration-200"
-        }
+        className="fixed inset-0 z-[100] bg-background flex flex-col animate-in slide-in-from-top duration-200"
+        onKeyDown={handleKeyDown}
       >
-        {/* Search input */}
-        <div
-          className={
-            isMobile
-              ? "flex items-center gap-3 px-4 py-3 border-b border-border"
-              : "w-full max-w-2xl px-4"
-          }
-        >
-          <div
-            className={`flex items-center gap-3 w-full rounded-xl border border-border bg-background shadow-lg ${
-              isMobile ? "" : "px-4 py-3"
-            }`}
+        {/* Input */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+          <button
+            onClick={() => setOpen(false)}
+            className="shrink-0 p-1 rounded-full hover:bg-accent"
+            aria-label="Fechar pesquisa"
           >
-            {isMobile && (
-              <button
-                onClick={() => setOpen(false)}
-                className="shrink-0 p-1 rounded-full hover:bg-accent"
-                aria-label="Fechar pesquisa"
-              >
-                <X className="h-5 w-5 text-muted-foreground" />
-              </button>
-            )}
-            {!isMobile && <Search className="h-5 w-5 shrink-0 text-muted-foreground" />}
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Pesquisar no Aquario..."
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              aria-label="Pesquisar"
-            />
-            {query && (
-              <button
-                onClick={() => {
-                  setQuery("");
-                  inputRef.current?.focus();
-                }}
-                className="shrink-0 p-1 rounded-full hover:bg-accent"
-                aria-label="Limpar pesquisa"
-              >
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
-            )}
-            {!isMobile && (
-              <kbd className="shrink-0 ml-2 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-muted rounded border border-border">
-                ESC
-              </kbd>
-            )}
-          </div>
+            <X className="h-5 w-5 text-muted-foreground" />
+          </button>
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Pesquisar no Aquario..."
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            aria-label="Pesquisar"
+          />
+          {query && (
+            <button
+              onClick={() => {
+                setQuery("");
+                inputRef.current?.focus();
+              }}
+              className="shrink-0 p-1 rounded-full hover:bg-accent"
+              aria-label="Limpar pesquisa"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
         </div>
 
-        {/* Results dropdown */}
-        <div
-          ref={resultsRef}
-          className={
-            isMobile
-              ? "flex-1 overflow-y-auto"
-              : "w-full max-w-2xl px-4 mt-2"
-          }
-        >
-          <div
-            className={
-              isMobile
-                ? ""
-                : "rounded-xl border border-border bg-background shadow-lg max-h-[60vh] overflow-y-auto"
-            }
-          >
-            {/* Loading */}
-            {hasQuery && isLoading && (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                Buscando...
-              </div>
-            )}
+        {/* Results */}
+        <div ref={resultsRef} className="flex-1 overflow-y-auto">
+          <SearchResults
+            hasQuery={hasQuery}
+            isLoading={isLoading}
+            hasResults={hasResults}
+            data={data}
+            query={query}
+            history={history}
+            selectedIndex={selectedIndex}
+            onSelect={handleSelect}
+            onHistorySelect={handleHistorySelect}
+          />
+        </div>
+      </div>
+    );
+  }
 
-            {/* No results */}
-            {hasQuery && !isLoading && !hasResults && (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                Nenhum resultado para &quot;{query.trim()}&quot;
-              </div>
-            )}
+  // Desktop: dropdown aligned with navbar
+  return (
+    <div className="fixed inset-0 z-[100]" onKeyDown={handleKeyDown}>
+      {/* Invisible backdrop to capture outside clicks */}
+      <div className="absolute inset-0" onClick={() => setOpen(false)} />
 
-            {/* Results grouped by category */}
-            {hasQuery &&
-              !isLoading &&
-              data &&
-              (() => {
-                let globalIndex = 0;
-                return CATEGORY_ORDER.map((kind) => {
-                  const key = RESULTS_KEY_MAP[kind] as keyof typeof data.results;
-                  const items = data.results[key] as SearchResultItem[];
+      {/* Search card — aligned with navbar (max-w-4xl, centered, below nav) */}
+      <div className="absolute inset-x-0 top-[84px] flex justify-center px-6 animate-in slide-in-from-top-2 duration-150">
+        <div className="w-full max-w-4xl">
+          <div className="rounded-xl border border-border bg-background overflow-hidden">
+            {/* Input row */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+              <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Pesquisar no Aquario..."
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                aria-label="Pesquisar"
+              />
+              {query && (
+                <button
+                  onClick={() => {
+                    setQuery("");
+                    inputRef.current?.focus();
+                  }}
+                  className="shrink-0 p-1 rounded-full hover:bg-accent"
+                  aria-label="Limpar pesquisa"
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              )}
+              <kbd className="shrink-0 ml-1 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-muted rounded border border-border">
+                ESC
+              </kbd>
+            </div>
 
-                  if (!items || items.length === 0) return null;
-
-                  const config = CATEGORY_CONFIG[kind];
-                  const Icon = config.icon;
-
-                  return (
-                    <div key={kind} className="py-2">
-                      <div className="flex items-center gap-2 px-4 py-2">
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs font-medium tracking-wider text-muted-foreground">
-                          {config.label}
-                        </span>
-                      </div>
-                      {items.map((item) => {
-                        const idx = globalIndex++;
-                        const isSelected = idx === selectedIndex;
-                        const snippet = getItemSnippet(item);
-
-                        return (
-                          <button
-                            key={`${item.kind}-${item.id}`}
-                            data-search-item
-                            onClick={() => handleSelect(item)}
-                            className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer ${
-                              isSelected
-                                ? "bg-accent"
-                                : "hover:bg-accent/50"
-                            }`}
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium leading-tight">
-                                {highlightMatch(getItemLabel(item), query)}
-                              </div>
-                              {snippet && (
-                                <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                                  {snippet}
-                                </p>
-                              )}
-                            </div>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  );
-                });
-              })()}
-
-            {/* History (shown when no query) */}
-            {!hasQuery && history.length > 0 && (
-              <div className="py-2">
-                <div className="flex items-center gap-2 px-4 py-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs font-medium tracking-wider text-muted-foreground">
-                    RECENTES
-                  </span>
-                </div>
-                {history.map((term, idx) => {
-                  const isSelected = idx === selectedIndex;
-                  return (
-                    <button
-                      key={`history-${term}`}
-                      data-search-item
-                      onClick={() => handleHistorySelect(term)}
-                      className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors cursor-pointer ${
-                        isSelected
-                          ? "bg-accent"
-                          : "hover:bg-accent/50"
-                      }`}
-                    >
-                      <span className="text-sm">{term}</span>
-                    </button>
-                  );
-                })}
+            {/* Results (same card, continuous) */}
+            {showResults && (
+              <div ref={resultsRef} className="max-h-[70vh] overflow-y-auto">
+                <SearchResults
+                  hasQuery={hasQuery}
+                  isLoading={isLoading}
+                  hasResults={hasResults}
+                  data={data}
+                  query={query}
+                  history={history}
+                  selectedIndex={selectedIndex}
+                  onSelect={handleSelect}
+                  onHistorySelect={handleHistorySelect}
+                />
               </div>
             )}
           </div>
@@ -486,4 +414,133 @@ export function SearchCommand() {
       </div>
     </div>
   );
+}
+
+// Extracted results rendering to avoid duplication between mobile/desktop
+function SearchResults({
+  hasQuery,
+  isLoading,
+  hasResults,
+  data,
+  query,
+  history,
+  selectedIndex,
+  onSelect,
+  onHistorySelect,
+}: {
+  hasQuery: boolean;
+  isLoading: boolean;
+  hasResults: boolean;
+  data: { results: Record<string, SearchResultItem[]> } | undefined;
+  query: string;
+  history: string[];
+  selectedIndex: number;
+  onSelect: (item: SearchResultItem) => void;
+  onHistorySelect: (term: string) => void;
+}) {
+  // Loading
+  if (hasQuery && isLoading) {
+    return (
+      <div className="py-8 text-center text-sm text-muted-foreground">
+        Buscando...
+      </div>
+    );
+  }
+
+  // No results
+  if (hasQuery && !isLoading && !hasResults) {
+    return (
+      <div className="py-8 text-center text-sm text-muted-foreground">
+        Nenhum resultado para &quot;{query.trim()}&quot;
+      </div>
+    );
+  }
+
+  // Results
+  if (hasQuery && !isLoading && data) {
+    let globalIndex = 0;
+    return (
+      <>
+        {CATEGORY_ORDER.map((kind) => {
+          const key = RESULTS_KEY_MAP[kind] as keyof typeof data.results;
+          const items = data.results[key] as SearchResultItem[];
+
+          if (!items || items.length === 0) return null;
+
+          const config = CATEGORY_CONFIG[kind];
+          const Icon = config.icon;
+
+          return (
+            <div key={kind} className="py-2">
+              <div className="flex items-center gap-2 px-4 py-2">
+                <Icon className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs font-medium tracking-wider text-muted-foreground">
+                  {config.label}
+                </span>
+              </div>
+              {items.map((item) => {
+                const idx = globalIndex++;
+                const isSelected = idx === selectedIndex;
+                const snippet = getItemSnippet(item);
+
+                return (
+                  <button
+                    key={`${item.kind}-${item.id}`}
+                    data-search-item
+                    onClick={() => onSelect(item)}
+                    className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer ${
+                      isSelected ? "bg-accent" : "hover:bg-accent/50"
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium leading-tight">
+                        {highlightMatch(getItemLabel(item), query)}
+                      </div>
+                      {snippet && (
+                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                          {snippet}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })}
+      </>
+    );
+  }
+
+  // History (no query)
+  if (!hasQuery && history.length > 0) {
+    return (
+      <div className="py-2">
+        <div className="flex items-center gap-2 px-4 py-2">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs font-medium tracking-wider text-muted-foreground">
+            RECENTES
+          </span>
+        </div>
+        {history.map((term, idx) => {
+          const isSelected = idx === selectedIndex;
+          return (
+            <button
+              key={`history-${term}`}
+              data-search-item
+              onClick={() => onHistorySelect(term)}
+              className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors cursor-pointer ${
+                isSelected ? "bg-accent" : "hover:bg-accent/50"
+              }`}
+            >
+              <span className="text-sm">{term}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return null;
 }
