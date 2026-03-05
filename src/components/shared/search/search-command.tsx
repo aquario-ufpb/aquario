@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
@@ -11,16 +11,10 @@ import {
   BookMarked,
   User,
   Clock,
+  X,
+  ChevronRight,
+  Search,
 } from "lucide-react";
-import {
-  CommandDialog,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandSeparator,
-} from "@/components/ui/command";
 import { useSearch } from "@/lib/client/hooks/use-search";
 import type {
   SearchResultItem,
@@ -34,13 +28,13 @@ const CATEGORY_CONFIG: Record<
   SearchResultKind,
   { label: string; icon: React.ElementType }
 > = {
-  pagina: { label: "Paginas", icon: FileText },
-  guia: { label: "Guias", icon: BookOpen },
-  entidade: { label: "Entidades", icon: Building2 },
-  vaga: { label: "Vagas", icon: Briefcase },
-  disciplina: { label: "Disciplinas", icon: BookMarked },
-  curso: { label: "Cursos", icon: GraduationCap },
-  usuario: { label: "Usuarios", icon: User },
+  pagina: { label: "PAGINAS", icon: FileText },
+  guia: { label: "GUIAS", icon: BookOpen },
+  entidade: { label: "ENTIDADES", icon: Building2 },
+  vaga: { label: "VAGAS", icon: Briefcase },
+  disciplina: { label: "DISCIPLINAS", icon: BookMarked },
+  curso: { label: "CURSOS", icon: GraduationCap },
+  usuario: { label: "USUARIOS", icon: User },
 };
 
 const RESULTS_KEY_MAP: Record<SearchResultKind, string> = {
@@ -79,6 +73,25 @@ function getItemLabel(item: SearchResultItem): string {
       return item.nome;
     case "usuario":
       return item.nome;
+  }
+}
+
+function getItemSnippet(item: SearchResultItem): string | null {
+  switch (item.kind) {
+    case "pagina":
+      return item.descricao;
+    case "guia":
+      return item.descricao;
+    case "entidade":
+      return item.tipo.replace(/_/g, " ").toLowerCase();
+    case "vaga":
+      return item.tipoVaga.replace(/_/g, " ").toLowerCase();
+    case "disciplina":
+      return null;
+    case "curso":
+      return null;
+    case "usuario":
+      return null;
   }
 }
 
@@ -147,15 +160,47 @@ function saveHistory(query: string): void {
   }
 }
 
+// Flatten all results into a single list for keyboard navigation
+function flattenResults(
+  data: { results: Record<string, SearchResultItem[]> } | undefined
+): SearchResultItem[] {
+  if (!data) return [];
+  const items: SearchResultItem[] = [];
+  for (const kind of CATEGORY_ORDER) {
+    const key = RESULTS_KEY_MAP[kind];
+    const categoryItems = data.results[key] as SearchResultItem[] | undefined;
+    if (categoryItems) {
+      items.push(...categoryItems);
+    }
+  }
+  return items;
+}
+
 export function SearchCommand() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [history, setHistory] = useState<string[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
   const { data, isLoading } = useSearch(query);
+
+  const flatItems = flattenResults(data);
+  const hasQuery = query.trim().length >= 3;
+  const hasResults = flatItems.length > 0;
 
   useEffect(() => {
     setHistory(loadHistory());
+  }, []);
+
+  // Detect mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   // Keyboard shortcut: Ctrl+K or /
@@ -178,12 +223,31 @@ export function SearchCommand() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Reset query when dialog closes
+  // Focus input when opened, reset when closed
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      // Small delay to ensure DOM is ready after animation
+      const timer = setTimeout(() => inputRef.current?.focus(), 50);
+      document.body.style.overflow = "hidden";
+      return () => clearTimeout(timer);
+    } else {
       setQuery("");
+      setSelectedIndex(-1);
+      document.body.style.overflow = "";
     }
   }, [open]);
+
+  // Reset selection when results change
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [data]);
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (selectedIndex < 0 || !resultsRef.current) return;
+    const items = resultsRef.current.querySelectorAll("[data-search-item]");
+    items[selectedIndex]?.scrollIntoView({ block: "nearest" });
+  }, [selectedIndex]);
 
   const handleSelect = useCallback(
     (item: SearchResultItem) => {
@@ -201,78 +265,225 @@ export function SearchCommand() {
     setQuery(term);
   }, []);
 
-  const hasQuery = query.trim().length >= 3;
-  const hasResults =
-    data && Object.values(data.results).some((arr) => arr.length > 0);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+
+      const totalItems = hasQuery ? flatItems.length : history.length;
+      if (totalItems === 0) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev + 1) % totalItems);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev <= 0 ? totalItems - 1 : prev - 1));
+      } else if (e.key === "Enter" && selectedIndex >= 0) {
+        e.preventDefault();
+        if (hasQuery && flatItems[selectedIndex]) {
+          handleSelect(flatItems[selectedIndex]);
+        } else if (!hasQuery && history[selectedIndex]) {
+          handleHistorySelect(history[selectedIndex]);
+        }
+      }
+    },
+    [hasQuery, flatItems, history, selectedIndex, handleSelect, handleHistorySelect]
+  );
+
+  if (!open) return null;
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput
-        placeholder="Pesquisar no Aquario..."
-        value={query}
-        onValueChange={setQuery}
-      />
-      <CommandList>
-        {hasQuery && isLoading && (
-          <div className="py-6 text-center text-sm text-muted-foreground">
-            Buscando...
+    <div className="fixed inset-0 z-[100]" onKeyDown={handleKeyDown}>
+      {/* Backdrop (desktop only) */}
+      {!isMobile && (
+        <div
+          className="absolute inset-0 bg-black/50 animate-in fade-in duration-200"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Search container */}
+      <div
+        className={
+          isMobile
+            ? "absolute inset-0 bg-background flex flex-col animate-in slide-in-from-top duration-200"
+            : "absolute inset-x-0 top-0 flex flex-col items-center pt-[10vh] animate-in slide-in-from-top-4 duration-200"
+        }
+      >
+        {/* Search input */}
+        <div
+          className={
+            isMobile
+              ? "flex items-center gap-3 px-4 py-3 border-b border-border"
+              : "w-full max-w-2xl px-4"
+          }
+        >
+          <div
+            className={`flex items-center gap-3 w-full rounded-xl border border-border bg-background shadow-lg ${
+              isMobile ? "" : "px-4 py-3"
+            }`}
+          >
+            {isMobile && (
+              <button
+                onClick={() => setOpen(false)}
+                className="shrink-0 p-1 rounded-full hover:bg-accent"
+                aria-label="Fechar pesquisa"
+              >
+                <X className="h-5 w-5 text-muted-foreground" />
+              </button>
+            )}
+            {!isMobile && <Search className="h-5 w-5 shrink-0 text-muted-foreground" />}
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Pesquisar no Aquario..."
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              aria-label="Pesquisar"
+            />
+            {query && (
+              <button
+                onClick={() => {
+                  setQuery("");
+                  inputRef.current?.focus();
+                }}
+                className="shrink-0 p-1 rounded-full hover:bg-accent"
+                aria-label="Limpar pesquisa"
+              >
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+            {!isMobile && (
+              <kbd className="shrink-0 ml-2 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-muted rounded border border-border">
+                ESC
+              </kbd>
+            )}
           </div>
-        )}
+        </div>
 
-        {hasQuery && !isLoading && !hasResults && (
-          <CommandEmpty>
-            Nenhum resultado para &quot;{query.trim()}&quot;
-          </CommandEmpty>
-        )}
+        {/* Results dropdown */}
+        <div
+          ref={resultsRef}
+          className={
+            isMobile
+              ? "flex-1 overflow-y-auto"
+              : "w-full max-w-2xl px-4 mt-2"
+          }
+        >
+          <div
+            className={
+              isMobile
+                ? ""
+                : "rounded-xl border border-border bg-background shadow-lg max-h-[60vh] overflow-y-auto"
+            }
+          >
+            {/* Loading */}
+            {hasQuery && isLoading && (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                Buscando...
+              </div>
+            )}
 
-        {hasQuery &&
-          !isLoading &&
-          data &&
-          CATEGORY_ORDER.map((kind) => {
-            const key = RESULTS_KEY_MAP[kind] as keyof typeof data.results;
-            const items = data.results[key] as SearchResultItem[];
+            {/* No results */}
+            {hasQuery && !isLoading && !hasResults && (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                Nenhum resultado para &quot;{query.trim()}&quot;
+              </div>
+            )}
 
-            if (!items || items.length === 0) return null;
+            {/* Results grouped by category */}
+            {hasQuery &&
+              !isLoading &&
+              data &&
+              (() => {
+                let globalIndex = 0;
+                return CATEGORY_ORDER.map((kind) => {
+                  const key = RESULTS_KEY_MAP[kind] as keyof typeof data.results;
+                  const items = data.results[key] as SearchResultItem[];
 
-            const config = CATEGORY_CONFIG[kind];
-            const Icon = config.icon;
+                  if (!items || items.length === 0) return null;
 
-            return (
-              <CommandGroup key={kind} heading={config.label}>
-                {items.map((item) => (
-                  <CommandItem
-                    key={`${item.kind}-${item.id}`}
-                    value={`${item.kind}-${item.id}-${getItemLabel(item)}`}
-                    onSelect={() => handleSelect(item)}
-                  >
-                    <Icon className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="truncate">
-                      {highlightMatch(getItemLabel(item), query)}
-                    </span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            );
-          })}
+                  const config = CATEGORY_CONFIG[kind];
+                  const Icon = config.icon;
 
-        {!hasQuery && history.length > 0 && (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading="Recentes">
-              {history.map((term) => (
-                <CommandItem
-                  key={`history-${term}`}
-                  value={`history-${term}`}
-                  onSelect={() => handleHistorySelect(term)}
-                >
-                  <Clock className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{term}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
-        )}
-      </CommandList>
-    </CommandDialog>
+                  return (
+                    <div key={kind} className="py-2">
+                      <div className="flex items-center gap-2 px-4 py-2">
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs font-medium tracking-wider text-muted-foreground">
+                          {config.label}
+                        </span>
+                      </div>
+                      {items.map((item) => {
+                        const idx = globalIndex++;
+                        const isSelected = idx === selectedIndex;
+                        const snippet = getItemSnippet(item);
+
+                        return (
+                          <button
+                            key={`${item.kind}-${item.id}`}
+                            data-search-item
+                            onClick={() => handleSelect(item)}
+                            className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer ${
+                              isSelected
+                                ? "bg-accent"
+                                : "hover:bg-accent/50"
+                            }`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium leading-tight">
+                                {highlightMatch(getItemLabel(item), query)}
+                              </div>
+                              {snippet && (
+                                <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                                  {snippet}
+                                </p>
+                              )}
+                            </div>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                });
+              })()}
+
+            {/* History (shown when no query) */}
+            {!hasQuery && history.length > 0 && (
+              <div className="py-2">
+                <div className="flex items-center gap-2 px-4 py-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs font-medium tracking-wider text-muted-foreground">
+                    RECENTES
+                  </span>
+                </div>
+                {history.map((term, idx) => {
+                  const isSelected = idx === selectedIndex;
+                  return (
+                    <button
+                      key={`history-${term}`}
+                      data-search-item
+                      onClick={() => handleHistorySelect(term)}
+                      className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors cursor-pointer ${
+                        isSelected
+                          ? "bg-accent"
+                          : "hover:bg-accent/50"
+                      }`}
+                    >
+                      <span className="text-sm">{term}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
