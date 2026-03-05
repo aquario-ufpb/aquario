@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 
 import LinkHover from "@/components/shared/link-hover";
+import { SearchTrigger } from "@/components/shared/search/search-trigger";
 import { ModeToggle } from "@/components/shared/mode-toggle";
 import Link from "next/link";
 import {
@@ -273,6 +274,17 @@ export default function NavBar() {
         <NavLogo />
         <div className="flex items-center justify-end gap-4">
           <NavLinks isDark={isDark} />
+          <SearchTrigger
+            onClick={() => {
+              window.dispatchEvent(
+                new KeyboardEvent("keydown", {
+                  key: "k",
+                  ctrlKey: true,
+                  bubbles: true,
+                })
+              );
+            }}
+          />
           <AuthSection />
         </div>
       </div>
