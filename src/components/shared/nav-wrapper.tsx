@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 import NavBar from "@/components/shared/nav-bar";
 import HamburgerMenu from "@/components/shared/hamburguer-menu";
+import { SearchCommand } from "@/components/shared/search/search-command";
 
 export default function NavWrapper() {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -27,5 +28,10 @@ export default function NavWrapper() {
   }, []);
 
   // Render the appropriate component based on screen size
-  return isDesktop ? <NavBar></NavBar> : <HamburgerMenu></HamburgerMenu>;
+  return (
+    <>
+      {isDesktop ? <NavBar /> : <HamburgerMenu />}
+      <SearchCommand />
+    </>
+  );
 }
