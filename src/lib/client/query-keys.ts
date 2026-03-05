@@ -67,4 +67,7 @@ export const queryKeys = {
     byId: (id: string) => ["calendarioAcademico", id] as const,
     eventos: (semestreId: string) => ["calendarioAcademico", semestreId, "eventos"] as const,
   },
+  search: {
+    query: (q: string) => ["search", q] as const,
+  },
 } as const;
