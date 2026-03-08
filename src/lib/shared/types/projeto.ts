@@ -1,44 +1,20 @@
-import { Projeto, ProjetoAutor, Entidade, Usuario } from "@prisma/client";
+import type {
+  ProjetoWithRelations,
+  ProjetoAutorPublic,
+} from "@/lib/server/db/interfaces/projetos-repository.interface";
 
-export type UsuarioSummary = Pick<
-  Usuario,
-  "id" | "nome" | "email" | "urlFotoPerfil" | "slug" | "matricula"
->;
-export type EntidadeSummary = Pick<Entidade, "id" | "nome" | "slug" | "tipo" | "urlFoto">;
-
-/**
- * ProjetoAutor com dados do usuário
- */
-export type ProjetoAutorWithUsuario = ProjetoAutor & {
-  usuario: UsuarioSummary;
-};
-
-/**
- * Projeto com autores populados
- */
-export type ProjetoWithAutores = Projeto & {
-  autores: ProjetoAutorWithUsuario[];
-  entidade?: EntidadeSummary | null;
-};
-
-/**
- * Projeto com contagem de autores
- */
-export type ProjetoWithCount = Projeto & {
-  _count: {
-    autores: number;
-  };
-};
+// Re-export repository types for convenience
+export type { ProjetoWithRelations, ProjetoAutorPublic };
 
 /**
  * Response para listagem paginada de projetos
  */
-export interface ProjetosListResponse {
-  projetos: ProjetoWithAutores[];
+export type ProjetosListResponse = {
+  projetos: ProjetoWithRelations[];
   pagination: {
     page: number;
     limit: number;
     total: number;
     totalPages: number;
   };
-}
+};

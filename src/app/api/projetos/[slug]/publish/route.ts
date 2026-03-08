@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/server/db/prisma";
+import { getContainer } from "@/lib/server/container";
 import { StatusProjeto } from "@prisma/client";
+import { ApiError } from "@/lib/server/errors/api-error";
 
 /**
  * POST /api/projetos/[slug]/publish
@@ -9,72 +10,40 @@ import { StatusProjeto } from "@prisma/client";
 export async function POST(request: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const { slug } = params;
+    const { projetosRepository } = getContainer();
 
-    // Check if projeto exists
-    const projeto = await prisma.projeto.findUnique({
-      where: { slug },
-      include: {
-        autores: true,
-      },
-    });
+    // Check if projeto exists with autores
+    const projeto = await projetosRepository.findBySlugWithAutores(slug);
 
     if (!projeto) {
-      return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+      return ApiError.notFound("Projeto");
     }
 
     // Check if projeto is already published
     if (projeto.status === StatusProjeto.PUBLICADO) {
-      return NextResponse.json({ error: "Projeto já está publicado" }, { status: 400 });
+      return ApiError.badRequest("Projeto já está publicado");
     }
 
     // Validate projeto has required fields for publishing
     if (!projeto.titulo || !projeto.descricao) {
-      return NextResponse.json(
-        { error: "Projeto deve ter título e descrição para ser publicado" },
-        { status: 400 }
-      );
+      return ApiError.badRequest("Projeto deve ter título e descrição para ser publicado");
     }
 
     if (projeto.autores.length === 0) {
-      return NextResponse.json(
-        { error: "Projeto deve ter pelo menos um autor para ser publicado" },
-        { status: 400 }
-      );
+      return ApiError.badRequest("Projeto deve ter pelo menos um autor para ser publicado");
     }
 
     // Update projeto status to PUBLICADO
-    const updatedProjeto = await prisma.projeto.update({
-      where: { slug },
-      data: {
-        status: StatusProjeto.PUBLICADO,
-        publicadoEm: new Date(),
-      },
-      include: {
-        autores: {
-          include: {
-            usuario: {
-              select: {
-                id: true,
-                nome: true,
-                email: true,
-                urlFotoPerfil: true,
-                slug: true,
-                matricula: true,
-              },
-            },
-          },
-          orderBy: {
-            autorPrincipal: "desc",
-          },
-        },
-        entidade: true,
-      },
-    });
+    const updatedProjeto = await projetosRepository.updateStatus(
+      slug,
+      StatusProjeto.PUBLICADO,
+      new Date()
+    );
 
     return NextResponse.json(updatedProjeto);
   } catch (error) {
     console.error("Error publishing projeto:", error);
-    return NextResponse.json({ error: "Erro ao publicar projeto" }, { status: 500 });
+    return ApiError.internal("Erro ao publicar projeto");
   }
 }
 
@@ -85,53 +54,30 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
 export async function DELETE(request: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const { slug } = params;
+    const { projetosRepository } = getContainer();
 
     // Check if projeto exists
-    const projeto = await prisma.projeto.findUnique({
-      where: { slug },
-    });
+    const projeto = await projetosRepository.findBySlugBasic(slug);
 
     if (!projeto) {
-      return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+      return ApiError.notFound("Projeto");
     }
 
     // Check if projeto is published
     if (projeto.status !== StatusProjeto.PUBLICADO) {
-      return NextResponse.json({ error: "Projeto não está publicado" }, { status: 400 });
+      return ApiError.badRequest("Projeto não está publicado");
     }
 
     // Update projeto status to RASCUNHO
-    const updatedProjeto = await prisma.projeto.update({
-      where: { slug },
-      data: {
-        status: StatusProjeto.RASCUNHO,
-        publicadoEm: null,
-      },
-      include: {
-        autores: {
-          include: {
-            usuario: {
-              select: {
-                id: true,
-                nome: true,
-                email: true,
-                urlFotoPerfil: true,
-                slug: true,
-                matricula: true,
-              },
-            },
-          },
-          orderBy: {
-            autorPrincipal: "desc",
-          },
-        },
-        entidade: true,
-      },
-    });
+    const updatedProjeto = await projetosRepository.updateStatus(
+      slug,
+      StatusProjeto.RASCUNHO,
+      null
+    );
 
     return NextResponse.json(updatedProjeto);
   } catch (error) {
     console.error("Error unpublishing projeto:", error);
-    return NextResponse.json({ error: "Erro ao despublicar projeto" }, { status: 500 });
+    return ApiError.internal("Erro ao despublicar projeto");
   }
 }

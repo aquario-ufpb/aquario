@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/client/query-keys";
-import type { ProjetoWithAutores } from "@/lib/shared/types/projeto";
+import type { ProjetoWithRelations } from "@/lib/shared/types/projeto";
 
 interface FetchProjetosParams {
   entidadeId?: string;
@@ -13,7 +13,7 @@ async function fetchProjetos({
   entidadeId,
   usuarioId,
   limit = 50,
-}: FetchProjetosParams): Promise<ProjetoWithAutores[]> {
+}: FetchProjetosParams): Promise<ProjetoWithRelations[]> {
   const params = new URLSearchParams();
 
   if (entidadeId) {
@@ -33,7 +33,7 @@ async function fetchProjetos({
   }
 
   const data = await res.json();
-  return data.projetos as ProjetoWithAutores[];
+  return data.projetos as ProjetoWithRelations[];
 }
 
 // Projetos de uma entidade
