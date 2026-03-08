@@ -14,6 +14,11 @@ import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import DOMPurify from "dompurify";
 import Link from "next/link";
 
+type AutorRaw = {
+  autorPrincipal: boolean;
+  usuario: { id: string; nome: string; slug?: string; urlFotoPerfil?: string | null };
+};
+
 export default function ProjetoPage() {
   const { id } = useParams<{ id: string }>();
   const [projeto, setProjeto] = useState<Projeto | null>(null);
@@ -46,7 +51,7 @@ export default function ProjetoPage() {
             entidadeTipo: data.entidade.tipo,
           };
         } else {
-          const autorPrincipalObj = data.autores.find((a: any) => a.autorPrincipal);
+          const autorPrincipalObj = data.autores.find((a: AutorRaw) => a.autorPrincipal);
 
           const autorPrincipal = autorPrincipalObj?.usuario;
 
@@ -59,7 +64,7 @@ export default function ProjetoPage() {
           };
         }
 
-        const colaboradores = data.autores.map((a: any) => ({
+        const colaboradores = data.autores.map((a: AutorRaw) => ({
           id: a.usuario.id,
           nome: a.usuario.nome,
           slug: a.usuario.slug,
