@@ -9,8 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Dev Experience**: Pre-commit hook (via husky + lint-staged) auto-formats staged files with Prettier and fixes ESLint issues; pre-push hook runs `check-all` (lint, format check, type check) before pushing
-
-### Added
 - **Docs**: `REPLICANDO_NA_SUA_UNIVERSIDADE.md` — comprehensive guide for deploying Aquario at other universities, covering all external services (Vercel, Neon, Resend, PostHog, UptimeRobot), CI/CD setup, content adaptation, and branding customization
 - **Dev Tools**: Entity admin toggle — select any entity and become/stop being its admin via dedicated `/api/dev/toggle-entidade-admin` endpoint
 
