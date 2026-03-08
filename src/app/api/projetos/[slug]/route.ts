@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/server/db/prisma";
+import { getContainer } from "@/lib/server/container";
 import { updateProjetoSchema } from "@/lib/shared/validations/projeto";
+import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
 
 /**
  * GET /api/projetos/[slug]
@@ -9,62 +10,18 @@ import { updateProjetoSchema } from "@/lib/shared/validations/projeto";
 export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const { slug } = params;
+    const { projetosRepository } = getContainer();
 
-    const projeto = await prisma.projeto.findUnique({
-      where: { slug },
-      include: {
-        autores: {
-          include: {
-            usuario: {
-              select: {
-                id: true,
-                nome: true,
-                email: true,
-                urlFotoPerfil: true,
-                slug: true,
-                matricula: true,
-                centro: {
-                  select: {
-                    id: true,
-                    nome: true,
-                    sigla: true,
-                  },
-                },
-                curso: {
-                  select: {
-                    id: true,
-                    nome: true,
-                  },
-                },
-              },
-            },
-          },
-          orderBy: {
-            autorPrincipal: "desc", // Principais primeiro
-          },
-        },
-        entidade: {
-          select: {
-            id: true,
-            nome: true,
-            slug: true,
-            tipo: true,
-            urlFoto: true,
-            website: true,
-            descricao: true,
-          },
-        },
-      },
-    });
+    const projeto = await projetosRepository.findBySlug(slug);
 
     if (!projeto) {
-      return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+      return ApiError.notFound("Projeto");
     }
 
     return NextResponse.json(projeto);
   } catch (error) {
     console.error("Error fetching projeto:", error);
-    return NextResponse.json({ error: "Erro ao buscar projeto" }, { status: 500 });
+    return ApiError.internal("Erro ao buscar projeto");
   }
 }
 
@@ -80,63 +37,32 @@ export async function PATCH(request: NextRequest, { params }: { params: { slug: 
     const validation = updateProjetoSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.errors },
-        { status: 400 }
-      );
+      return fromZodError(validation.error);
     }
 
     const data = validation.data;
+    const { projetosRepository } = getContainer();
 
     // Check if projeto exists
-    const existingProjeto = await prisma.projeto.findUnique({
-      where: { slug },
-    });
+    const existingProjeto = await projetosRepository.findBySlugBasic(slug);
 
     if (!existingProjeto) {
-      return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+      return ApiError.notFound("Projeto");
     }
 
     // Check if new slug already exists (if changing slug)
     if (data.slug && data.slug !== slug) {
-      const slugExists = await prisma.projeto.findUnique({
-        where: { slug: data.slug },
-      });
-
-      if (slugExists) {
-        return NextResponse.json({ error: "Slug já existe" }, { status: 409 });
+      if (await projetosRepository.slugExists(data.slug)) {
+        return ApiError.slugExists();
       }
     }
 
-    const projeto = await prisma.projeto.update({
-      where: { slug },
-      data,
-      include: {
-        autores: {
-          include: {
-            usuario: {
-              select: {
-                id: true,
-                nome: true,
-                email: true,
-                urlFotoPerfil: true,
-                slug: true,
-                matricula: true,
-              },
-            },
-          },
-          orderBy: {
-            autorPrincipal: "desc",
-          },
-        },
-        entidade: true,
-      },
-    });
+    const projeto = await projetosRepository.update(slug, data);
 
     return NextResponse.json(projeto);
   } catch (error) {
     console.error("Error updating projeto:", error);
-    return NextResponse.json({ error: "Erro ao atualizar projeto" }, { status: 500 });
+    return ApiError.internal("Erro ao atualizar projeto");
   }
 }
 
@@ -147,24 +73,21 @@ export async function PATCH(request: NextRequest, { params }: { params: { slug: 
 export async function DELETE(request: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const { slug } = params;
+    const { projetosRepository } = getContainer();
 
     // Check if projeto exists
-    const projeto = await prisma.projeto.findUnique({
-      where: { slug },
-    });
+    const projeto = await projetosRepository.findBySlugBasic(slug);
 
     if (!projeto) {
-      return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+      return ApiError.notFound("Projeto");
     }
 
     // Delete projeto (cascade will delete ProjetoAutor relations)
-    await prisma.projeto.delete({
-      where: { slug },
-    });
+    await projetosRepository.delete(slug);
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting projeto:", error);
-    return NextResponse.json({ error: "Erro ao remover projeto" }, { status: 500 });
+    return ApiError.internal("Erro ao remover projeto");
   }
 }
