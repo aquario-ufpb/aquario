@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -14,8 +14,8 @@ import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import DOMPurify from "dompurify";
 import Link from "next/link";
 
-export default function ProjetoPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ProjetoPage() {
+  const { id } = useParams<{ id: string }>();
   const [projeto, setProjeto] = useState<Projeto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
           publicador = {
             id: autorPrincipal?.id ?? "0",
             nome: autorPrincipal?.nome ?? "Usuário",
-            slug: autorPrincipal?.slug ?? autorPrincipal?.nome,
+            slug: autorPrincipal?.slug,
             urlFotoPerfil: autorPrincipal?.urlFotoPerfil ?? null,
             tipo: "USUARIO" as const,
           };
@@ -62,6 +62,7 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
         const colaboradores = data.autores.map((a: any) => ({
           id: a.usuario.id,
           nome: a.usuario.nome,
+          slug: a.usuario.slug,
           urlFotoPerfil: a.usuario.urlFotoPerfil,
           autorPrincipal: a.autorPrincipal,
         }));
@@ -188,33 +189,42 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
               <CardTitle>Publicado por</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Link
-                href={
-                  projeto.publicador.entidadeTipo
-                    ? `/entidade/${projeto.publicador.slug}`
-                    : `/usuarios/${projeto.publicador.slug}`
-                }
-                className="flex-1 min-w-0"
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage
-                      src={
-                        projeto.publicador.urlFotoPerfil ||
-                        getDefaultAvatarUrl(projeto.publicador.id, projeto.publicador.nome)
-                      }
-                      alt={projeto.publicador.nome}
-                    />
-                    <AvatarFallback>{projeto.publicador?.nome[0] ?? "U"}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-foreground">{projeto.publicador.nome}</span>
-                    <span className="text-xs text-muted-foreground">
-                      Em {new Date(projeto.criadoEm).toLocaleDateString()}
-                    </span>
+              {(() => {
+                const publicadorContent = (
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage
+                        src={
+                          projeto.publicador.urlFotoPerfil ||
+                          getDefaultAvatarUrl(projeto.publicador.id, projeto.publicador.nome)
+                        }
+                        alt={projeto.publicador.nome}
+                      />
+                      <AvatarFallback>{projeto.publicador?.nome[0] ?? "U"}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-foreground">{projeto.publicador.nome}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Em {new Date(projeto.criadoEm).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
+                );
+
+                const slug = projeto.publicador.slug;
+                if (slug) {
+                  const href = projeto.publicador.entidadeTipo
+                    ? `/entidade/${slug}`
+                    : `/usuarios/${slug}`;
+                  return (
+                    <Link href={href} className="flex-1 min-w-0">
+                      {publicadorContent}
+                    </Link>
+                  );
+                }
+
+                return <div className="flex-1 min-w-0">{publicadorContent}</div>;
+              })()}
             </CardContent>
           </Card>
 
@@ -227,7 +237,7 @@ export default function ProjetoPage({ params }: { params: Promise<{ id: string }
                 projeto.colaboradores.map(colaborador => (
                   <Link
                     key={colaborador.id}
-                    href={`/usuarios/${colaborador.nome}`}
+                    href={`/usuarios/${colaborador.slug}`}
                     className="block"
                   >
                     <div className="flex items-center gap-3 hover:bg-muted/50 p-2 rounded-lg transition-colors cursor-pointer">
