@@ -138,7 +138,7 @@ type ProjetosTabProps = {
 };
 
 function ProjetosTab({ entidadeId, entidadeNome, entidadeImagem, entidadeSlug }: ProjetosTabProps) {
-  const { data: projetos, isLoading } = useProjetosByEntidade(entidadeId);
+  const { data: projetos, isLoading, error } = useProjetosByEntidade(entidadeId);
 
   if (isLoading) {
     return (
@@ -146,6 +146,14 @@ function ProjetosTab({ entidadeId, entidadeNome, entidadeImagem, entidadeSlug }:
         {[...Array(3)].map((_, i) => (
           <Skeleton key={i} className="h-64 rounded-xl" />
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-20 text-sm text-destructive">
+        Erro ao carregar os projetos desta entidade.
       </div>
     );
   }
@@ -177,6 +185,7 @@ function ProjetosTab({ entidadeId, entidadeNome, entidadeImagem, entidadeSlug }:
     colaboradores: (p.autores ?? []).map(a => ({
       id: a.usuario.id,
       nome: a.usuario.nome,
+      slug: a.usuario.slug ?? a.usuario.id,
       urlFotoPerfil: a.usuario.urlFotoPerfil ?? null,
     })),
     linkRepositorio: p.urlRepositorio ?? undefined,
