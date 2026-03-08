@@ -1,4 +1,4 @@
-import { Search, X, CheckCircle2 } from "lucide-react";
+import { Search, X, CheckCircle2, Save, RotateCcw, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,12 @@ type SearchSectionProps = {
   onShowCalendar: () => void;
   onClearSelection: () => void;
   isDark: boolean;
+  isLoggedIn?: boolean;
+  hasSavedData?: boolean;
+  hasActiveSemestre?: boolean;
+  isSaving?: boolean;
+  onSaveToServer?: () => void;
+  onResetToSaved?: () => void;
 };
 
 export default function SearchSection({
@@ -27,6 +33,12 @@ export default function SearchSection({
   onShowCalendar,
   onClearSelection,
   isDark,
+  isLoggedIn,
+  hasSavedData,
+  hasActiveSemestre,
+  isSaving,
+  onSaveToServer,
+  onResetToSaved,
 }: SearchSectionProps) {
   return (
     <Card className={`mb-8 ${isDark ? "bg-white/5 border-white/20" : "bg-white border-slate-200"}`}>
@@ -90,6 +102,41 @@ export default function SearchSection({
               <X className="w-4 h-4 mr-2" />
               Limpar
             </Button>
+            {isLoggedIn && hasActiveSemestre && onSaveToServer && (
+              <Button
+                onClick={onSaveToServer}
+                disabled={isSaving}
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                style={{
+                  borderColor: isDark ? "rgba(255,255,255,0.2)" : "#e2e8f0",
+                  color: isDark ? "#C8E6FA" : "#0e3a6c",
+                }}
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Salvar meu horário
+              </Button>
+            )}
+            {isLoggedIn && hasSavedData && onResetToSaved && (
+              <Button
+                onClick={onResetToSaved}
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                style={{
+                  borderColor: isDark ? "rgba(255,255,255,0.2)" : "#e2e8f0",
+                  color: isDark ? "#C8E6FA" : "#0e3a6c",
+                }}
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Meu horário
+              </Button>
+            )}
           </div>
         )}
 

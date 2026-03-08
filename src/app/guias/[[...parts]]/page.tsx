@@ -9,16 +9,34 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { AlignJustify } from "lucide-react";
 import { useGuiasPage } from "@/lib/client/hooks";
+import { trackEvent } from "@/analytics/posthog-client";
 
 export default function GuiasPage() {
   const params = useParams<{ parts?: string[] }>();
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const parts = params?.parts as string[] | undefined;
+  const partsPath = parts?.join("/") ?? "";
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!parts || parts.length < 2) {
+      return;
+    }
+    const [guiaSlug, secaoSlug, subSlug] = parts;
+    if (guiaSlug && secaoSlug) {
+      trackEvent("guia_section_viewed", {
+        guia_slug: guiaSlug,
+        section_slug: secaoSlug,
+        ...(subSlug ? { subsection_slug: subSlug } : {}),
+      });
+    }
+    // partsPath is used as the stable dep to avoid re-tracking when array ref changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partsPath]);
 
   const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
 

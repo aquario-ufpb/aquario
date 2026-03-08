@@ -110,6 +110,26 @@ vi.mock("@/lib/client/api/vagas_providers/local-file-vagas-provider", () => {
   };
 });
 
+// Mock BackendVagasProvider so tests using vagasService don't hit the API
+vi.mock("@/lib/client/api/vagas_providers/backend-vagas-provider", () => {
+  return {
+    BackendVagasProvider: class MockBackendVagasProvider {
+      getAll() {
+        return Promise.resolve([]);
+      }
+      getById() {
+        return Promise.resolve(null);
+      }
+      getByTipo() {
+        return Promise.resolve([]);
+      }
+      getByEntidade() {
+        return Promise.resolve([]);
+      }
+    },
+  };
+});
+
 // Mock the LocalFileMapasProvider to avoid content submodule issues
 vi.mock("@/lib/client/api/mapas_providers/local-file-mapas-provider", () => {
   return {

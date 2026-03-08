@@ -13,6 +13,7 @@ export function formatUserResponse(user: UsuarioWithRelations) {
     papelPlataforma: user.papelPlataforma,
     eVerificado: user.eVerificado,
     urlFotoPerfil: user.urlFotoPerfil,
+    periodoAtual: user.periodoAtual ?? null,
     centro: {
       id: user.centro.id,
       nome: user.centro.nome,

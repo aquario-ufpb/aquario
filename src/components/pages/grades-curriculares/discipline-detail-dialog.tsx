@@ -6,7 +6,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, Check, BookOpen } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import type { GradeDisciplinaNode } from "@/lib/shared/types";
 
@@ -15,6 +16,12 @@ type DisciplineDetailDialogProps = {
   allDisciplines: GradeDisciplinaNode[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isOwnCourse?: boolean;
+  isCompleted?: boolean;
+  isCursando?: boolean;
+  isMarking?: boolean;
+  activeSemestreNome?: string;
+  onMarcar?: (disciplinaId: string, status: "concluida" | "cursando" | "none") => void;
 };
 
 const NATUREZA_LABELS: Record<string, string> = {
@@ -34,11 +41,16 @@ export function DisciplineDetailDialog({
   allDisciplines,
   open,
   onOpenChange,
+  isOwnCourse,
+  isCompleted,
+  isCursando,
+  isMarking,
+  activeSemestreNome,
+  onMarcar,
 }: DisciplineDetailDialogProps) {
   const [history, setHistory] = useState<GradeDisciplinaNode[]>([]);
   const [current, setCurrent] = useState<GradeDisciplinaNode | null>(null);
 
-  // Reset when the dialog opens with a new root discipline
   useEffect(() => {
     if (open && discipline) {
       setCurrent(discipline);
@@ -71,6 +83,9 @@ export function DisciplineDetailDialog({
   if (!current) {
     return null;
   }
+
+  // Only show actions for the root discipline (not when navigating to prereqs)
+  const showActions = isOwnCourse && onMarcar && history.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -107,7 +122,6 @@ export function DisciplineDetailDialog({
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
-          {/* Carga horária breakdown */}
           {(current.cargaHorariaTeoria !== null || current.cargaHorariaPratica !== null) && (
             <div>
               <h4 className="text-sm font-semibold mb-1">Carga Horária</h4>
@@ -122,7 +136,6 @@ export function DisciplineDetailDialog({
             </div>
           )}
 
-          {/* Departamento */}
           {current.departamento && (
             <div>
               <h4 className="text-sm font-semibold mb-1">Departamento</h4>
@@ -130,7 +143,6 @@ export function DisciplineDetailDialog({
             </div>
           )}
 
-          {/* Modalidade */}
           {current.modalidade && (
             <div>
               <h4 className="text-sm font-semibold mb-1">Modalidade</h4>
@@ -138,7 +150,6 @@ export function DisciplineDetailDialog({
             </div>
           )}
 
-          {/* Ementa */}
           {current.ementa && (
             <div>
               <h4 className="text-sm font-semibold mb-1">Ementa</h4>
@@ -146,7 +157,6 @@ export function DisciplineDetailDialog({
             </div>
           )}
 
-          {/* Pré-requisitos */}
           {current.preRequisitos.length > 0 && (
             <div>
               <h4 className="text-sm font-semibold mb-1">Pré-requisitos</h4>
@@ -168,7 +178,6 @@ export function DisciplineDetailDialog({
             </div>
           )}
 
-          {/* Equivalências */}
           {current.equivalencias.length > 0 && (
             <div>
               <h4 className="text-sm font-semibold mb-1">Equivalências</h4>
@@ -190,6 +199,60 @@ export function DisciplineDetailDialog({
             </div>
           )}
         </div>
+
+        {/* Actions for logged-in user viewing own course */}
+        {showActions && (
+          <div className="mt-6 pt-4 border-t border-border flex flex-wrap gap-2">
+            {isCompleted ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isMarking}
+                onClick={() => onMarcar(current.disciplinaId, "none")}
+                className="gap-2 border-green-300 text-green-700 dark:border-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30"
+              >
+                <Check className="w-3.5 h-3.5" />
+                {isMarking ? "Salvando..." : "Remover Concluída"}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isMarking}
+                onClick={() => onMarcar(current.disciplinaId, "concluida")}
+                className="gap-2"
+              >
+                <Check className="w-3.5 h-3.5" />
+                {isMarking ? "Salvando..." : "Marcar como Concluída"}
+              </Button>
+            )}
+            {isCursando ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isMarking}
+                onClick={() => onMarcar(current.disciplinaId, "none")}
+                className="gap-2 border-purple-300 text-purple-700 dark:border-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                {isMarking ? "Salvando..." : "Remover Cursando"}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isMarking}
+                onClick={() => onMarcar(current.disciplinaId, "cursando")}
+                className="gap-2"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                {isMarking
+                  ? "Salvando..."
+                  : `Marcar como Cursando${activeSemestreNome ? ` (${activeSemestreNome})` : ""}`}
+              </Button>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -9,6 +9,10 @@ permissions:
   contents: read
   pull-requests: write
 
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -85,31 +89,6 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Ensure staging branch exists
-        if: steps.check-limit.outputs.exists != 'true'
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-        run: |
-          BRANCHES=$(curl -s -H "Authorization: Bearer $NEON_API_KEY" \
-            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
-
-          STAGING_EXISTS=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "staging") | .id')
-
-          if [ -z "$STAGING_EXISTS" ]; then
-            echo "Staging branch doesn't exist, creating from main with endpoint..."
-            MAIN_ID=$(echo "$BRANCHES" | jq -r '.branches[] | select(.name == "main") | .id')
-
-            curl -s -X POST -H "Authorization: Bearer $NEON_API_KEY" \
-              -H "Content-Type: application/json" \
-              -d "{\"branch\": {\"name\": \"staging\", \"parent_id\": \"$MAIN_ID\"}, \"endpoints\": [{\"type\": \"read_write\"}]}" \
-              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches"
-
-            echo "✅ Staging branch created"
-            sleep 5
-          else
-            echo "✅ Staging branch exists"
-          fi
-
       - name: Create Neon branch
         id: create-branch
         if: steps.check-limit.outputs.exists != 'true'
@@ -117,7 +96,7 @@ jobs:
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID }}
           branch_name: ${{ steps.branch-name.outputs.name }}
-          parent: staging
+          parent: main
           api_key: ${{ secrets.NEON_API_KEY }}
 
       - name: Get existing branch connection string

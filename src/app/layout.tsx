@@ -8,6 +8,8 @@ import { ThemeProvider } from "@/components/shared/theme-provider";
 import { ReactQueryProvider } from "@/providers/react-query-provider";
 import { PostHogProvider } from "@/providers/posthog-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { OnboardingProvider } from "@/components/onboarding/onboarding-provider";
+import { DevToolsPanel } from "@/components/dev/dev-tools-panel";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -54,11 +56,14 @@ export default function RootLayout({
                 enableSystem
                 disableTransitionOnChange
               >
-                <div className="flex flex-1 flex-col bg-white dark:bg-transparent">
-                  <NavWrapper />
-                  <div className="pt-0">{children}</div>
-                </div>
+                <OnboardingProvider>
+                  <div className="flex flex-1 flex-col bg-white dark:bg-transparent">
+                    <NavWrapper />
+                    <div className="pt-0">{children}</div>
+                  </div>
+                </OnboardingProvider>
                 <Toaster />
+                <DevToolsPanel />
               </ThemeProvider>
             </AuthProvider>
           </ReactQueryProvider>

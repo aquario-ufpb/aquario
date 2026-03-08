@@ -7,16 +7,32 @@ import VacancyCard from "@/components/pages/vagas/vacancy-card";
 import type { Vaga } from "@/lib/shared/types";
 import { SearchBar1 } from "@/components/ui/searchbar1";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, List, LayoutGrid } from "lucide-react";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { useVagas } from "@/lib/client/hooks";
-import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
+import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { usePrefetchVaga } from "@/lib/client/hooks/use-prefetch";
+import { cn } from "@/lib/client/utils";
+import { ENTIDADE_TIPO_MAP } from "@/lib/shared/types/vaga.types";
 
-function VagasCard({ vaga, onPrefetch }: { vaga: Vaga; onPrefetch: (id: string) => void }) {
+type ViewMode = "list" | "grid";
+
+function VagasCard({
+  vaga,
+  variant,
+  onPrefetch,
+}: {
+  vaga: Vaga;
+  variant: ViewMode;
+  onPrefetch: (id: string) => void;
+}) {
   return (
-    <Link href={`/vagas/${vaga.id}`} className="block" onMouseEnter={() => onPrefetch(vaga.id)}>
-      <VacancyCard vaga={vaga} />
+    <Link
+      href={`/vagas/${vaga.id}`}
+      className={variant === "grid" ? "block h-full" : "block"}
+      onMouseEnter={() => onPrefetch(vaga.id)}
+    >
+      <VacancyCard vaga={vaga} variant={variant} />
     </Link>
   );
 }
@@ -24,37 +40,45 @@ function VagasCard({ vaga, onPrefetch }: { vaga: Vaga; onPrefetch: (id: string) 
 export default function VagasPage() {
   const { data: vagas = [] } = useVagas();
   const { data: user } = useCurrentUser();
+  const { data: memberships = [] } = useMyMemberships();
   const prefetchVaga = usePrefetchVaga();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
-  const canPostJob = !!(
-    user &&
-    (user.permissoes.includes("ADMIN") || user.papelPlataforma === "MASTER_ADMIN")
-  );
+  const isMasterAdmin = user?.papelPlataforma === "MASTER_ADMIN";
+  const isAdminOfSomeEntidade = memberships.some(m => m.papel === "ADMIN" && !m.endedAt);
+  const canPostJob = !!(user && (isMasterAdmin || isAdminOfSomeEntidade));
 
-  // Filters
   const vagasFiltradas = useMemo(() => {
     return vagas.filter(vaga => {
       const q = searchQuery.toLowerCase();
-      const entidade = vaga.entidade.toLowerCase();
+      const entidadeStr =
+        typeof vaga.entidade === "string"
+          ? vaga.entidade.toLowerCase()
+          : vaga.entidade.nome.toLowerCase();
       const tipo = vaga.tipoVaga.toLowerCase();
       const areas = vaga.areas?.map(a => a.toLowerCase()) ?? [];
 
-      // Text filters
       const matchesSearch =
         !searchQuery.trim() ||
         vaga.titulo.toLowerCase().includes(q) ||
         vaga.publicador.nome.toLowerCase().includes(q) ||
-        entidade.includes(q);
+        entidadeStr.includes(q);
 
-      // Checkbox filters
       if (selectedCheckboxes.length === 0) {
         return matchesSearch;
       }
 
+      const entidadeTipo =
+        typeof vaga.entidade === "string" ? undefined : vaga.entidade.tipo?.toUpperCase();
+
       const matchesCheckbox = selectedCheckboxes.some(selected => {
-        return selected === entidade || selected === tipo || areas.includes(selected);
+        const entidadeTypes = ENTIDADE_TIPO_MAP[selected];
+        if (entidadeTypes) {
+          return entidadeTipo !== undefined && entidadeTypes.includes(entidadeTipo);
+        }
+        return selected === tipo || areas.includes(selected);
       });
 
       return matchesSearch && matchesCheckbox;
@@ -78,20 +102,6 @@ export default function VagasPage() {
               className="rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
             />
           </div>
-
-          {canPostJob && (
-            <Button
-              asChild
-              variant="default"
-              size="sm"
-              className="hidden md:flex rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal flex-shrink-0"
-            >
-              <Link href="/vagas/novo" className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Divulgar vaga
-              </Link>
-            </Button>
-          )}
         </div>
 
         {/* Main Layout */}
@@ -119,35 +129,89 @@ export default function VagasPage() {
                 },
                 {
                   titulo: "Tipo",
-                  elementos: ["Estagio", "Voluntario", "CLT", "PJ", "Pesquisa", "Trainee"],
+                  elementos: ["Estagio", "Voluntario", "CLT", "PJ", "Pesquisa", "Trainee", "Outro"],
                 },
               ]}
               onChange={handleCheckboxChange}
             />
           </div>
 
-          {/* Right column – Search + Jobs  */}
+          {/* Right column – Search + Jobs */}
           <div className="w-full md:w-3/4 flex flex-col">
-            <div className="mb-6 w-full">
-              <SearchBar1
-                type="search"
-                placeholder="Pesquisar"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
+            {/* Search row */}
+            <div className="mb-6 flex items-center gap-2">
+              <div className="flex-1">
+                <SearchBar1
+                  type="search"
+                  placeholder="Pesquisar"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {/* Divulgar vaga */}
+              {canPostJob && (
+                <Button
+                  asChild
+                  variant="default"
+                  size="sm"
+                  className="hidden md:flex rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal flex-shrink-0"
+                >
+                  <Link href="/vagas/novo" className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Divulgar vaga
+                  </Link>
+                </Button>
+              )}
+
+              {/* View mode toggle */}
+              <div className="flex items-center border border-border rounded-full p-1 gap-0.5 flex-shrink-0">
+                <button
+                  onClick={() => setViewMode("list")}
+                  aria-label="Visualização em lista"
+                  className={cn(
+                    "p-2 rounded-full transition-colors",
+                    viewMode === "list"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("grid")}
+                  aria-label="Visualização em grade"
+                  className={cn(
+                    "p-2 rounded-full transition-colors",
+                    viewMode === "grid"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {vagasFiltradas.length > 0 ? (
-                vagasFiltradas.map(vaga => (
-                  <VagasCard key={vaga.id} vaga={vaga} onPrefetch={prefetchVaga} />
-                ))
+            {vagasFiltradas.length > 0 ? (
+              viewMode === "list" ? (
+                <div className="space-y-2">
+                  {vagasFiltradas.map(vaga => (
+                    <VagasCard key={vaga.id} vaga={vaga} variant="list" onPrefetch={prefetchVaga} />
+                  ))}
+                </div>
               ) : (
-                <p className="text-center text-muted-foreground py-12">
-                  Nenhuma vaga encontrada com os filtros selecionados.
-                </p>
-              )}
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {vagasFiltradas.map(vaga => (
+                    <VagasCard key={vaga.id} vaga={vaga} variant="grid" onPrefetch={prefetchVaga} />
+                  ))}
+                </div>
+              )
+            ) : (
+              <p className="text-center text-muted-foreground py-12">
+                Nenhuma vaga encontrada com os filtros selecionados.
+              </p>
+            )}
           </div>
         </div>
       </div>

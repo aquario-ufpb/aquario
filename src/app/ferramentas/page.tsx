@@ -6,9 +6,9 @@ import { Calendar, CalendarDays, Map, BookOpen, GitBranch } from "lucide-react";
 const ferramentas = [
   {
     id: "calendario",
-    title: "Calendário de Alocação",
+    title: "Minhas Disciplinas",
     description:
-      "Crie e visualize seu calendário personalizado com as disciplinas selecionadas. Busque por código, nome, professor ou localização e veja sua grade horária de forma visual e organizada.",
+      "Gerencie suas disciplinas cursando, escolha turmas e visualize seu calendário personalizado. Busque por código, nome, professor ou localização.",
     href: "/calendario",
     icon: Calendar,
     imagePath: "/calendario",

@@ -33,6 +33,8 @@ export const ENDPOINTS = {
   USUARIO_MEMBROS_ME: "/usuarios/me/membros",
   USUARIO_DISCIPLINAS_ME: "/usuarios/me/disciplinas",
   MERGE_FACADE_USER: "/usuarios/merge-facade",
+  USUARIO_ONBOARDING_ME: "/usuarios/me/onboarding",
+  USUARIO_PERIODO_ME: "/usuarios/me/periodo",
 
   // Admin CRUD
   CAMPUS: "/campus",
@@ -52,6 +54,18 @@ export const ENDPOINTS = {
   // Curriculos
   GRADE_CURRICULAR: (cursoId: string) => `/curriculos/grade?cursoId=${cursoId}`,
 
+  // Disciplinas
+  DISCIPLINAS_SEARCH: "/disciplinas/search",
+  DISCIPLINAS_MARCAR: "/usuarios/me/disciplinas/marcar",
+  DISCIPLINAS_SEMESTRE_ME: (semestreId: string) =>
+    `/usuarios/me/semestres/${semestreId}/disciplinas`,
+  DISCIPLINA_SEMESTRE_PATCH: (semestreId: string, disciplinaSemestreId: string) =>
+    `/usuarios/me/semestres/${semestreId}/disciplinas/${disciplinaSemestreId}`,
+
+  // Vagas
+  VAGAS: "/vagas",
+  VAGA_BY_ID: (id: string) => `/vagas/${id}`,
+
   // Calendario Academico
   CALENDARIO_ACADEMICO: "/calendario-academico",
   CALENDARIO_ACADEMICO_BY_ID: (id: string) => `/calendario-academico/${id}`,
@@ -59,6 +73,10 @@ export const ENDPOINTS = {
   CALENDARIO_ACADEMICO_EVENTOS_BATCH: (id: string) => `/calendario-academico/${id}/eventos/batch`,
   CALENDARIO_ACADEMICO_EVENTO: (id: string, eventoId: string) =>
     `/calendario-academico/${id}/eventos/${eventoId}`,
+  // Dev-only
+  DEV_CLEAR_ONBOARDING: "/dev/clear-onboarding",
+  DEV_PROMOTE_ADMIN: "/dev/promote-admin",
+  DEV_TOGGLE_ENTIDADE_ADMIN: "/dev/toggle-entidade-admin",
 } as const;
 
 // External API URLs

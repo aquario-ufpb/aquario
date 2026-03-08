@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Monitor, CalendarDays } from "lucide-react";
 import type { Vaga } from "@/lib/shared/types";
+import { getTipoVagaLabel, sanitizeExternalUrl } from "@/lib/shared/types/vaga.types";
 
 type VagaProfileCardProps = {
   vaga: Vaga;
@@ -43,7 +44,7 @@ export default function VagaProfileCard({ vaga }: VagaProfileCardProps) {
       <CardContent className="flex flex-col items-center pb-0 text-xs">
         <div className="flex justify-between gap-1">
           <Monitor className="w-4" />
-          <p className="self-center">{tipoVaga.replace("_", " ")}</p>
+          <p className="self-center">{getTipoVagaLabel(tipoVaga)}</p>
         </div>
         <div className="flex justify-between gap-1">
           <CalendarDays className="w-4" />
@@ -57,11 +58,17 @@ export default function VagaProfileCard({ vaga }: VagaProfileCardProps) {
       <hr className="w-44" />
 
       <CardFooter className="flex justify-center">
-        <Button asChild className="w-28 h-8 rounded-full text-[0.75rem]">
-          <a href={`${vaga.linkVaga ?? "#"}`} target="_blank" rel="noopener noreferrer">
-            Aplicar
-          </a>
-        </Button>
+        {sanitizeExternalUrl(vaga.linkInscricao ?? vaga.linkVaga) && (
+          <Button asChild className="w-28 h-8 rounded-full text-[0.75rem]">
+            <a
+              href={sanitizeExternalUrl(vaga.linkInscricao ?? vaga.linkVaga)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Aplicar
+            </a>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

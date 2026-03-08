@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, use } from "react";
+import { useState, useMemo, use, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEntidadeBySlug, useEntidades } from "@/lib/client/hooks";
@@ -20,6 +20,7 @@ import { isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
 import ProjectCard, { type Projeto as ProjetoCard } from "@/components/shared/project-card";
 import { Layers } from "lucide-react";
 import Link from "next/link";
+import { trackEvent } from "@/analytics/posthog-client";
 
 export default function EntidadeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -45,6 +46,15 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
   const canEdit =
     user &&
     (user.papelPlataforma === "MASTER_ADMIN" || isUserAdminOfEntidade(user.id, entidade?.membros));
+
+  useEffect(() => {
+    if (entidade) {
+      trackEvent("entidade_detail_viewed", {
+        entidade_name: entidade.name,
+        entidade_type: entidade.tipo,
+      });
+    }
+  }, [entidade?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) {
     return <Skeleton className="h-screen w-full" />;

@@ -22,11 +22,12 @@ import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
 import { ProgressoCursoCard } from "@/components/pages/perfil/progresso-curso-card";
 import { useProjetosByUsuario } from "@/lib/client/hooks/use-projetos";
 import ProjectCard, { type Projeto as ProjetoCard } from "@/components/shared/project-card";
+import { trackEvent } from "@/analytics/posthog-client";
 
 export default function UserProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const { data: user, isLoading, error: queryError } = useUsuarioBySlug(slug);
-  const { data: currentUser } = useCurrentUser();
+  const { data: currentUser, isLoading: isCurrentUserLoading } = useCurrentUser();
   const { data: memberships, isLoading: membershipsLoading } = useUserMemberships(user?.id || "");
   const uploadPhotoMutation = useUploadPhoto();
   const deletePhotoMutation = useDeletePhoto();
@@ -38,6 +39,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
 
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser?.id === user?.id;
+
+  // Track profile views of other users
+  useEffect(() => {
+    if (!user?.id || isCurrentUserLoading || isOwnProfile) {
+      return;
+    }
+    trackEvent("usuario_profile_viewed", { user_slug: slug });
+  }, [slug, user?.id, isOwnProfile, isCurrentUserLoading]);
 
   // Cleanup object URL on unmount or when URL changes to prevent memory leaks
   useEffect(() => {
