@@ -8,6 +8,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Docs**: `REPLICANDO_NA_SUA_UNIVERSIDADE.md` — comprehensive guide for deploying Aquario at other universities, covering all external services (Vercel, Neon, Resend, PostHog, UptimeRobot), CI/CD setup, content adaptation, and branding customization
+- **Dev Tools**: Entity admin toggle — select any entity and become/stop being its admin via dedicated `/api/dev/toggle-entidade-admin` endpoint
+
+### Changed
+- **Vagas — Nova Vaga**: Logos das entidades exibidos no dropdown de seleção na criação de vagas
+- **Vagas page**: Added list/grid view mode toggle next to search bar; grid mode renders cards in 3-column layout matching the entidades page style
+- **VacancyCard**: Standardized badges to use `Badge variant="outline"` with muted styling matching entity cards; added `variant` prop supporting `"list"` and `"grid"` display modes
+- **Vaga detail page**: Redesigned to match the entidade detail page layout — ghost back button, hero section with entity name as primary identifier, inline meta info (date, deadline, salary), areas as badges, sections with `border-t` separators, and compact "other vagas" grid
+
+### Added
+- **PostHog Analytics**: Expanded event tracking across all major user flows
+  - **Auth flows**: `login_attempted`, `login_succeeded`, `login_failed` (with error type), `register_attempted`, `register_succeeded`, `register_failed`, `forgot_password_submitted`, `reset_password_submitted`, `reset_password_succeeded`, `email_verification_succeeded`, `email_verification_resent`
+  - **Onboarding**: `onboarding_step_viewed`, `onboarding_step_completed`, `onboarding_step_skipped` (with `step_id`) — tracked in `OnboardingModal`
+  - **Sobre**: `sobre_contact_clicked` via new `ContactButton` client component (page stays a server component)
+  - **Mapas**: `mapa_room_clicked` (with `room_name` and `building_name`)
+  - **Calendário Acadêmico**: `calendario_academico_view_changed` (lista/calendário toggle), `calendario_academico_semestre_changed`
+  - **Grades Curriculares**: `grade_curricular_curso_selected` (with `curso_nome`)
+  - **Entidades**: `entidade_detail_viewed` (with `entidade_name` and `entidade_type`) on `/entidade/[slug]`
+  - **Usuários**: `usuario_profile_viewed` (with `user_slug`) on `/usuarios/[slug]`, only fires for other users' profiles
+
+## [1.3.0] - 2026-02-21
+
+
+### Added
+- **Onboarding System**: Multi-step wizard modal that guides new users through setting up their academic profile
+  - 7-step flow: Welcome, Período Atual, Disciplinas Concluídas, Disciplinas do Semestre, Turmas, Entidades, Tudo Pronto
+  - "Período Atual" step lets users pick their current semester (1–12, 12+, or "Já estou graduado") via button grid
+  - `periodoAtual` string field on Usuario model, `PATCH /api/usuarios/me/periodo` endpoint
+  - Reuses existing `CurriculumGraph` component in selection mode for concluídas/cursando steps
+  - Concluídas step shows single "Salvar como Concluídas" button; cursando step shows "Salvar como Cursando"
+  - Cursando step has two-page flow: intro message then graph selection
+  - Concluídas and cursando steps always show, displaying user's existing selections
+  - Embedded PAAS turma picker for turmas step
+  - Entidades step with expandable cards showing start/end month pickers for membership dates
+  - "Tudo pronto!" final step with links to profile page and /calendario
+  - Per-semester steps (cursando, turmas) reappear each new semester
+  - Uncloseable modal with progress indicator — users must complete or skip each step
+  - `onboardingMetadata` JSON field on Usuario model stores step completion state
+  - `GET/PATCH /api/usuarios/me/onboarding` API endpoints with deep-merge semantics
+  - `useOnboarding` hook handles step resolution, mutations, and PAAS availability checks
+- **Dev Tools Panel**: Toggle MASTER_ADMIN/USER role via `POST /api/dev/promote-admin` (dev-only, auth-protected)
+
+- **Auth Pages Redesign**: Modernized login, registration, forgot-password, and reset-password pages
+  - New `AuthLayout` component with split-panel design (branding panel + form panel)
+  - New `PasswordInput` component with eye/eye-off visibility toggle
+  - Replaced all hardcoded colors with design tokens (`bg-card`, `border-border`, `text-muted-foreground`, `bg-aquario-primary`)
+  - Entrance animation on form container using `tailwindcss-animate`
+- **Seed data**: Added "Outro" Centro and Curso for students from other departments
+
+### Changed
+- **Registration flow**: Removed Centro dropdown; users now pick from a single flat Curso list (centroId derived automatically)
+- **Dev Tools — Reset Onboarding**: Now also clears disciplinas concluídas, disciplinas do semestre, and período atual for a full reset
+
+### Fixed
+- **Grade Curricular — Transitive Unlocking**: Selecting a discipline now transitively unlocks all dependents (not just one level deep)
+- **Grade Curricular — Locked Discipline Opacity**: Disciplines marked as concluída no longer appear locked/transparent
+
+### Removed
+- Deleted unused `login-form.tsx` shadcn template component
+
+### Added
+- **Disciplinas por Semestre**: New `DisciplinaSemestre` table to persist which disciplines (and specific PAAS turmas) a user is taking per semester
+  - API route `GET/PUT /api/usuarios/me/semestres/[semestreId]/disciplinas` with "ativo" shorthand for active semester
+  - Server-side resolution of discipline codes from PAAS to database IDs
+  - Snapshot fields (turma, docente, horario, codigoPaas) preserve volatile PAAS data
+- **Minhas Disciplinas**: New personal semester dashboard at `/calendario` for logged-in users
+  - Side-by-side layout: discipline list (left) + calendar grid (right)
+  - Add/remove disciplines with search, pick PAAS turmas per discipline
+  - Calendar auto-updates as turmas are selected
+  - Non-logged-in users still see the original PAAS explorer with localStorage persistence
+- **Marcar Disciplinas API**: `POST /api/usuarios/me/disciplinas/marcar` — atomic endpoint for setting discipline status (concluída/cursando/none) with mutual exclusivity enforced via transaction
+- **Patch Disciplina Semestre API**: `PATCH /api/usuarios/me/semestres/[semestreId]/disciplinas/[id]` — update turma details on a single enrollment record
+- **Disciplina Search API**: `GET /api/disciplinas/search?q=term` — public search by code or name
+- **Grade Curricular — Dialog Actions**: Clicking a discipline opens a detail dialog with buttons to mark as Concluída or Cursando directly
+- **Grade Curricular — Bulk Selection**: "Selecionar cadeiras" mode with dropdown save (Concluídas or Cursando), replacing the old concluída-only selection
+- **Grade Curricular — Nudge Banner**: When user has cursando disciplines without turma, shows a purple banner linking to `/calendario`
+- **Mobile Navigation**: Added "GRADES" link to hamburger menu for direct Grade Curricular access
+
+### Changed
+- **Minhas Disciplinas — Semester Validation**: Uses DB active semester as source of truth; turma selection and calendar are disabled when SACI data doesn't match the current semester, with user-facing warnings
+- **Calendário → Minhas Disciplinas**: Renamed across navigation (desktop dropdown, mobile hamburger, ferramentas page, home page)
+- **Semester Fallback**: When between semesters, the system now falls back to the next upcoming semester instead of returning nothing
+- **Grade Curricular**: Unified click interaction model — first click shows dependencies, second click opens dialog (removed hover-based highlighting)
+- **Grade Curricular**: Completed and cursando states now read directly from server data instead of local optimistic copies
+- **Calendário**: Calendar export (ICS and Google Calendar) now uses semester start/end dates from the matching `SemestreLetivo` (based on the period in the PAAS data) instead of hardcoded `SEMESTER_END_DATE` constant and relative-to-today start dates
+- **Calendário**: Replaced `alert()` calls with `toast.error()` from Sonner for consistent UX
+
+### Fixed
+- **API Routes**: Malformed JSON request bodies now return 400 instead of 500
+
+## [1.2.0] - 2026-02-17
+
+### Fix
+- Added images for calendario academico that were missing
+
+## [1.2.0] - 2026-02-17
+
+### Added
 - **Calendário Acadêmico**: Full academic calendar system for UFPB semester events
   - Database: `SemestreLetivo` and `EventoCalendario` models with `CategoriaEvento` enum (12 categories)
   - Backend: Repository pattern with Prisma, REST API routes for CRUD on semesters and events (including batch create for CSV import)
@@ -15,6 +113,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Public page (`/calendario-academico`): Timeline/list view grouped by month and monthly calendar grid view, semester selector, category filter chips, current-day highlighting
   - Added to nav bar tools dropdown, main page, and ferramentas page
 - **404 Page**: Custom not-found page with themed illustrations — anglerfish for dark mode (centered, glowing text) and empty fishbowl for light mode (side-by-side layout). Responsive design with stacked mobile layout.
+
+### Changed
+- **Release script**: GitHub Releases now include changelog notes from `CHANGELOG.md` alongside auto-generated commit notes
 
 ## [1.1.1] - 2026-02-11
 
@@ -259,7 +360,11 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.0.10...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/aquario-ufpb/aquario/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/aquario-ufpb/aquario/compare/v1.1.1...v1.2.0
+[1.1.1]: https://github.com/aquario-ufpb/aquario/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/aquario-ufpb/aquario/compare/v1.0.10...v1.1.0
 [1.0.10]: https://github.com/aquario-ufpb/aquario/compare/v1.0.9...v1.0.10
 [1.0.9]: https://github.com/aquario-ufpb/aquario/compare/v1.0.2...v1.0.9
 [1.0.2]: https://github.com/aquario-ufpb/aquario/compare/v1.0.1...v1.0.2

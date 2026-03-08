@@ -1,4 +1,5 @@
 import type { UsuarioWithRelations, UsuarioCreateInput, PapelPlataforma } from "./types";
+import type { OnboardingMetadata } from "@/lib/shared/types";
 
 export type IUsuariosRepository = {
   /**
@@ -75,6 +76,26 @@ export type IUsuariosRepository = {
    * Update user's slug
    */
   updateSlug(id: string, slug: string | null): Promise<void>;
+
+  /**
+   * Update user's periodo atual
+   */
+  updatePeriodoAtual(id: string, periodoAtual: string | null): Promise<void>;
+
+  /**
+   * Get user's onboarding metadata
+   */
+  getOnboardingMetadata(userId: string): Promise<OnboardingMetadata | null>;
+
+  /**
+   * Deep-merge partial onboarding metadata into existing
+   */
+  updateOnboardingMetadata(userId: string, metadata: Partial<OnboardingMetadata>): Promise<void>;
+
+  /**
+   * Clear onboarding metadata (set to null)
+   */
+  clearOnboardingMetadata(userId: string): Promise<void>;
 
   /**
    * Delete a user

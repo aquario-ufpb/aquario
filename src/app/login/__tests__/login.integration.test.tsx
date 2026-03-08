@@ -75,7 +75,7 @@ describe("Login Page", () => {
     await renderLogin();
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/senha/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/sua senha/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /entrar/i })).toBeInTheDocument();
   });
 
@@ -85,7 +85,7 @@ describe("Login Page", () => {
     await renderLogin();
 
     const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/senha/i);
+    const passwordInput = screen.getByPlaceholderText(/sua senha/i);
     const submitButton = screen.getByRole("button", { name: /entrar/i });
 
     await userEvent.type(emailInput, "test@academico.ufpb.br");
@@ -103,7 +103,7 @@ describe("Login Page", () => {
     await renderLogin();
 
     const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/senha/i);
+    const passwordInput = screen.getByPlaceholderText(/sua senha/i);
     const submitButton = screen.getByRole("button", { name: /entrar/i });
 
     await userEvent.type(emailInput, "test@academico.ufpb.br");

@@ -87,3 +87,19 @@ export async function getOptionalUser(request: Request): Promise<UsuarioWithRela
   const { usuariosRepository } = getContainer();
   return await usuariosRepository.findById(payload.sub);
 }
+
+/**
+ * Check if user can create or delete a vaga for the given entidade.
+ * Allowed: MASTER_ADMIN or ADMIN of that entidade (active membership).
+ */
+export async function canManageVagaForEntidade(
+  usuario: UsuarioWithRelations,
+  entidadeId: string
+): Promise<boolean> {
+  if (usuario.papelPlataforma === "MASTER_ADMIN") {
+    return true;
+  }
+  const { membrosRepository } = getContainer();
+  const membership = await membrosRepository.findActiveByUsuarioAndEntidade(usuario.id, entidadeId);
+  return membership?.papel === "ADMIN";
+}

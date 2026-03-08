@@ -9,6 +9,7 @@ import { useMapas } from "@/lib/client/hooks/use-mapas";
 import type { Building, Floor, Room as MapRoom } from "@/lib/client/mapas/types";
 import { InteractiveMap } from "@/components/pages/mapas/interactive-map";
 import { generateGoogleCalendarLinks } from "@/lib/client/calendario/google-calendar";
+import { toast } from "sonner";
 
 type ClassDetailsDialogProps = {
   classes: ClassWithRoom[];
@@ -17,6 +18,8 @@ type ClassDetailsDialogProps = {
   isDark: boolean;
   day: string;
   timeSlot: string;
+  semesterStartDate?: Date;
+  semesterEndDate?: Date;
 };
 
 export default function ClassDetailsDialog({
@@ -26,6 +29,8 @@ export default function ClassDetailsDialog({
   isDark,
   day,
   timeSlot,
+  semesterStartDate,
+  semesterEndDate,
 }: ClassDetailsDialogProps) {
   const hasConflict = classes.length > 1;
 
@@ -76,7 +81,11 @@ export default function ClassDetailsDialog({
   }, [mapContext, selectedFloorId]);
 
   const handleOpenGoogleCalendar = (classItem: ClassWithRoom) => {
-    const events = generateGoogleCalendarLinks([classItem]);
+    if (!semesterStartDate || !semesterEndDate) {
+      toast.error("Não foi possível obter as datas do semestre atual");
+      return;
+    }
+    const events = generateGoogleCalendarLinks([classItem], semesterStartDate, semesterEndDate);
     // Open all events in new tabs
     events.forEach(event => {
       window.open(event.url, "_blank", "noopener,noreferrer");

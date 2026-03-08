@@ -75,6 +75,16 @@ enum TipoConteudo {
   TEXTO_SIMPLES
 }
 
+enum TipoVaga {
+  ESTAGIO
+  TRAINEE
+  VOLUNTARIO
+  PESQUISA
+  CLT
+  PJ
+  OUTRO
+}
+
 // ============================================================================
 // CAMPUS & CENTRO & CURSO (Core organizational structure)
 // ============================================================================
@@ -125,9 +135,11 @@ model Usuario {
   papelPlataforma   PapelPlataforma  @default(USER)
   eVerificado       Boolean          @default(false)
   eFacade           Boolean          @default(false)
-  urlFotoPerfil     String?
-  criadoEm          DateTime         @default(now())
-  atualizadoEm      DateTime         @updatedAt
+  urlFotoPerfil        String?
+  periodoAtual         String?
+  onboardingMetadata   Json?
+  criadoEm             DateTime         @default(now())
+  atualizadoEm         DateTime         @updatedAt
 
   centroId String
   cursoId  String
@@ -139,6 +151,8 @@ model Usuario {
   tokensVerificacao      TokenVerificacao[]
   disciplinasConcluidas  DisciplinaConcluida[]
   projetosAutor          ProjetoAutor[]
+  disciplinasSemestre    DisciplinaSemestre[]
+  vagasCriadas           Vaga[]
 
   @@index([email])
   @@index([matricula])
@@ -187,6 +201,7 @@ model Entidade {
   membros MembroEntidade[]
   cargos  Cargo[]
   projetos Projeto[]
+  vagas   Vaga[]
 
   @@unique([nome, tipo])
   @@index([slug])
@@ -224,6 +239,40 @@ model MembroEntidade {
   @@index([usuarioId, entidadeId])
   @@index([endedAt])
   @@index([cargoId])
+}
+
+// ============================================================================
+// VAGAS
+// ============================================================================
+
+model Vaga {
+  id                   String    @id @default(uuid())
+  titulo               String
+  descricao             String
+  tipoVaga             TipoVaga
+  entidadeId           String
+  criadoPorUsuarioId   String
+  linkInscricao        String
+  dataFinalizacao      DateTime
+  criadoEm             DateTime  @default(now())
+  atualizadoEm        DateTime  @updatedAt
+  deletadoEm           DateTime?
+
+  areas                String[]  @default([])
+  salario              String?
+  sobreEmpresa         String?
+  responsabilidades    String[]  @default([])
+  requisitos           String[]  @default([])
+  informacoesAdicionais String?
+  etapasProcesso       String[]  @default([])
+
+  entidade   Entidade @relation(fields: [entidadeId], references: [id], onDelete: Cascade)
+  criadoPor  Usuario  @relation(fields: [criadoPorUsuarioId], references: [id], onDelete: Cascade)
+
+  @@index([entidadeId])
+  @@index([dataFinalizacao])
+  @@index([deletadoEm])
+  @@index([criadoEm])
 }
 
 // ============================================================================
@@ -322,6 +371,7 @@ model Disciplina {
   equivalenciasOrigem  Equivalencia[] @relation("disciplinaOrigem")
   equivalenciasDestino Equivalencia[] @relation("disciplinaEquivalente")
   concluidaPor         DisciplinaConcluida[]
+  emSemestrePor        DisciplinaSemestre[]
 }
 
 model CurriculoDisciplina {
@@ -388,7 +438,8 @@ model SemestreLetivo {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  eventos EventoCalendario[]
+  eventos             EventoCalendario[]
+  disciplinasSemestre DisciplinaSemestre[]
 
   @@index([dataInicio])
   @@index([dataFim])
@@ -461,4 +512,26 @@ model ProjetoAutor {
   @@index([autorPrincipal])
 }
 
+// ============================================================================
+// DISCIPLINA SEMESTRE (User's enrolled disciplines per semester)
+// ============================================================================
 
+model DisciplinaSemestre {
+  id               String   @id @default(uuid())
+  usuarioId        String
+  semestreLetivoId String
+  disciplinaId     String
+  turma            String?
+  docente          String?
+  horario          String?
+  codigoPaas       Int?
+  criadoEm         DateTime @default(now())
+
+  usuario        Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  semestreLetivo SemestreLetivo  @relation(fields: [semestreLetivoId], references: [id])
+  disciplina     Disciplina     @relation(fields: [disciplinaId], references: [id])
+
+  @@unique([usuarioId, semestreLetivoId, disciplinaId])
+  @@index([usuarioId])
+  @@index([usuarioId, semestreLetivoId])
+}

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-export const dynamic = "force-dynamic";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
-import { prisma } from "@/lib/server/db/prisma";
+import { getContainer } from "@/lib/server/container";
 import { z } from "zod";
+
+export const dynamic = "force-dynamic";
 
 const updateSchema = z.object({
   disciplinaIds: z.array(z.string().uuid()),
@@ -16,12 +17,9 @@ const updateSchema = z.object({
 export function GET(request: Request) {
   return withAuth(request, async (_req, usuario) => {
     try {
-      const concluidas = await prisma.disciplinaConcluida.findMany({
-        where: { usuarioId: usuario.id },
-        select: { disciplinaId: true },
-      });
+      const container = getContainer();
+      const disciplinaIds = await container.disciplinaConcluidaRepository.findByUsuario(usuario.id);
 
-      const disciplinaIds = concluidas.map(d => d.disciplinaId);
       return NextResponse.json({ disciplinaIds });
     } catch {
       return ApiError.internal("Erro ao buscar disciplinas concluídas");
@@ -46,24 +44,8 @@ export function PUT(request: Request) {
 
       const { disciplinaIds } = parsed.data;
 
-      // Use a transaction to atomically replace all records
-      await prisma.$transaction(async tx => {
-        // Remove all existing
-        await tx.disciplinaConcluida.deleteMany({
-          where: { usuarioId: usuario.id },
-        });
-
-        // Insert new ones (if any)
-        if (disciplinaIds.length > 0) {
-          await tx.disciplinaConcluida.createMany({
-            data: disciplinaIds.map(disciplinaId => ({
-              usuarioId: usuario.id,
-              disciplinaId,
-            })),
-            skipDuplicates: true,
-          });
-        }
-      });
+      const container = getContainer();
+      await container.disciplinaConcluidaRepository.replaceForUsuario(usuario.id, disciplinaIds);
 
       return NextResponse.json({ disciplinaIds });
     } catch {
