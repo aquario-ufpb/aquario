@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/server/db/prisma";
+import { getContainer } from "@/lib/server/container";
 import { updateProjetoAutoresSchema } from "@/lib/shared/validations/projeto";
+import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
 
 /**
  * PUT /api/projetos/[slug]/autores
@@ -14,77 +15,31 @@ export async function PUT(request: NextRequest, { params }: { params: { slug: st
     const validation = updateProjetoAutoresSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.errors },
-        { status: 400 }
-      );
+      return fromZodError(validation.error);
     }
 
     const { autores } = validation.data;
+    const { projetosRepository } = getContainer();
 
     // Check if projeto exists
-    const projeto = await prisma.projeto.findUnique({
-      where: { slug },
-    });
+    const projeto = await projetosRepository.findBySlugBasic(slug);
 
     if (!projeto) {
-      return NextResponse.json({ error: "Projeto não encontrado" }, { status: 404 });
+      return ApiError.notFound("Projeto");
     }
 
     // Verify all usuarios exist
-    const usuarioIds = autores.map((a: { usuarioId: string }) => a.usuarioId);
-
-    const existingUsuarios = await prisma.usuario.findMany({
-      where: { id: { in: usuarioIds } },
-      select: { id: true },
-    });
-
-    if (existingUsuarios.length !== usuarioIds.length) {
-      return NextResponse.json({ error: "Um ou mais usuários não existem" }, { status: 400 });
+    const usuarioIds = autores.map(a => a.usuarioId);
+    if (!(await projetosRepository.usuariosExist(usuarioIds))) {
+      return ApiError.badRequest("Um ou mais usuários não existem");
     }
 
-    // Delete existing autores and create new ones
-    await prisma.$transaction([
-      prisma.projetoAutor.deleteMany({
-        where: { projetoId: projeto.id },
-      }),
-      prisma.projetoAutor.createMany({
-        data: autores.map((autor: { usuarioId: string; autorPrincipal: boolean }) => ({
-          projetoId: projeto.id,
-          usuarioId: autor.usuarioId,
-          autorPrincipal: autor.autorPrincipal,
-        })),
-      }),
-    ]);
-
-    // Fetch updated projeto
-    const updatedProjeto = await prisma.projeto.findUnique({
-      where: { slug },
-      include: {
-        autores: {
-          include: {
-            usuario: {
-              select: {
-                id: true,
-                nome: true,
-                email: true,
-                urlFotoPerfil: true,
-                slug: true,
-                matricula: true,
-              },
-            },
-          },
-          orderBy: {
-            autorPrincipal: "desc",
-          },
-        },
-        entidade: true,
-      },
-    });
+    // Replace all autores
+    const updatedProjeto = await projetosRepository.replaceAutores(projeto.id, slug, autores);
 
     return NextResponse.json(updatedProjeto);
   } catch (error) {
     console.error("Error updating projeto autores:", error);
-    return NextResponse.json({ error: "Erro ao atualizar autores do projeto" }, { status: 500 });
+    return ApiError.internal("Erro ao atualizar autores do projeto");
   }
 }

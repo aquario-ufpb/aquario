@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/server/db/prisma";
-//import { StatusProjeto } from "@prisma/client";
+import { getContainer } from "@/lib/server/container";
 import { createProjetoSchema, listProjetosSchema } from "@/lib/shared/validations/projeto";
+import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
 import type { ProjetosListResponse } from "@/lib/shared/types/projeto";
 
 /**
@@ -25,89 +25,13 @@ export async function GET(request: NextRequest) {
     });
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Parâmetros inválidos", details: validation.error.errors },
-        { status: 400 }
-      );
+      return fromZodError(validation.error);
     }
 
-    const { page, limit, status, entidadeId, tags, search, orderBy, order, usuarioId } =
-      validation.data;
+    const { projetosRepository } = getContainer();
 
-    const skip = (page - 1) * limit;
-
-    const where: any = {};
-
-    if (status) {
-      where.status = status;
-    }
-
-    if (entidadeId) {
-      where.entidadeId = entidadeId;
-    }
-
-    if (tags) {
-      const tagArray = tags.split(",").map((t: string) => t.trim());
-      where.tags = { hasSome: tagArray };
-    }
-
-    if (search) {
-      where.OR = [
-        { titulo: { contains: search, mode: "insensitive" } },
-        { subtitulo: { contains: search, mode: "insensitive" } },
-        { descricao: { contains: search, mode: "insensitive" } },
-      ];
-    }
-
-    // FILTRO POR USUÁRIO (autor principal ou colaborador)
-    if (usuarioId) {
-      where.autores = {
-        some: {
-          usuarioId,
-        },
-      };
-    }
-
-    const orderByClause: any = {};
-    orderByClause[orderBy] = order;
-
-    const [projetos, total] = await Promise.all([
-      prisma.projeto.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: orderByClause,
-        include: {
-          autores: {
-            include: {
-              usuario: {
-                select: {
-                  id: true,
-                  nome: true,
-                  email: true,
-                  urlFotoPerfil: true,
-                  slug: true,
-                  matricula: true,
-                },
-              },
-            },
-            orderBy: {
-              autorPrincipal: "desc",
-            },
-          },
-          entidade: {
-            select: {
-              id: true,
-              nome: true,
-              slug: true,
-              tipo: true,
-              urlFoto: true,
-            },
-          },
-        },
-      }),
-      prisma.projeto.count({ where }),
-    ]);
+    const { page, limit } = validation.data;
+    const { projetos, total } = await projetosRepository.findMany(validation.data);
 
     const response: ProjetosListResponse = {
       projetos,
@@ -122,7 +46,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error fetching projetos:", error);
-    return NextResponse.json({ error: "Erro ao buscar projetos" }, { status: 500 });
+    return ApiError.internal("Erro ao buscar projetos");
   }
 }
 
@@ -137,71 +61,29 @@ export async function POST(request: NextRequest) {
     const validation = createProjetoSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Dados inválidos", details: validation.error.errors },
-        { status: 400 }
-      );
+      return fromZodError(validation.error);
     }
 
     const { autores, ...projetoData } = validation.data;
+    const { projetosRepository } = getContainer();
 
     // Check if slug already exists
-    const existingProjeto = await prisma.projeto.findUnique({
-      where: { slug: projetoData.slug },
-    });
-
-    if (existingProjeto) {
-      return NextResponse.json({ error: "Slug já existe" }, { status: 409 });
+    if (await projetosRepository.slugExists(projetoData.slug)) {
+      return ApiError.slugExists();
     }
 
     // Verify all usuarios exist
-    const usuarioIds = autores.map((a: { usuarioId: string }) => a.usuarioId);
-
-    const existingUsuarios = await prisma.usuario.findMany({
-      where: { id: { in: usuarioIds } },
-      select: { id: true },
-    });
-
-    if (existingUsuarios.length !== usuarioIds.length) {
-      return NextResponse.json({ error: "Um ou mais usuários não existem" }, { status: 400 });
+    const usuarioIds = autores.map(a => a.usuarioId);
+    if (!(await projetosRepository.usuariosExist(usuarioIds))) {
+      return ApiError.badRequest("Um ou mais usuários não existem");
     }
 
     // Create projeto with autores
-    const projeto = await prisma.projeto.create({
-      data: {
-        ...projetoData,
-        autores: {
-          create: autores.map((autor: { usuarioId: string; autorPrincipal: boolean }) => ({
-            usuarioId: autor.usuarioId,
-            autorPrincipal: autor.autorPrincipal,
-          })),
-        },
-      },
-      include: {
-        autores: {
-          include: {
-            usuario: {
-              select: {
-                id: true,
-                nome: true,
-                email: true,
-                urlFotoPerfil: true,
-                slug: true,
-                matricula: true,
-              },
-            },
-          },
-          orderBy: {
-            autorPrincipal: "desc",
-          },
-        },
-        entidade: true,
-      },
-    });
+    const projeto = await projetosRepository.create(projetoData, autores);
 
     return NextResponse.json(projeto, { status: 201 });
   } catch (error) {
     console.error("Error creating projeto:", error);
-    return NextResponse.json({ error: "Erro ao criar projeto" }, { status: 500 });
+    return ApiError.internal("Erro ao criar projeto");
   }
 }
