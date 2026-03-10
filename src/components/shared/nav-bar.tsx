@@ -255,12 +255,7 @@ function AuthSection() {
     return <UserDropdownMenu user={user} isDark={isDark} />;
   }
 
-  return (
-    <>
-      <LinkHover href="/login">ENTRAR</LinkHover>
-      <ModeToggle />
-    </>
-  );
+  return <LinkHover href="/login">ENTRAR</LinkHover>;
 }
 
 // Main NavBar Component
@@ -274,6 +269,7 @@ export default function NavBar() {
         <NavLogo />
         <div className="flex items-center justify-end gap-4">
           <NavLinks isDark={isDark} />
+          <AuthSection />
           <SearchTrigger
             onClick={() => {
               window.dispatchEvent(
@@ -285,7 +281,7 @@ export default function NavBar() {
               );
             }}
           />
-          <AuthSection />
+          <ModeToggle />
         </div>
       </div>
     </nav>
