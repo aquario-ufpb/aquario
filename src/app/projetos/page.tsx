@@ -138,16 +138,14 @@ export default function Projetos() {
               liga ou pessoa.
             </p>
           </div>
-          {user && (
-            <div className="hidden md:flex flex-shrink-0">
-              <Button className="rounded-full" asChild>
-                <Link href="/projetos/novo">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Divulgar um projeto
-                </Link>
-              </Button>
-            </div>
-          )}
+          <div className="hidden md:flex flex-shrink-0">
+            <Button className="rounded-full" asChild>
+              <Link href="/projetos/novo">
+                <Plus className="mr-2 h-4 w-4" />
+                Divulgar um projeto
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -193,6 +191,16 @@ export default function Projetos() {
           )}
         </div>
       )}
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-8 left-8 z-50">
+        <Link href="/projetos/novo">
+          <Button size="icon" className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all">
+            <Plus className="h-6 w-6" />
+            <span className="sr-only">Divulgar um projeto</span>
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }
