@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Docs**: `REPLICANDO_NA_SUA_UNIVERSIDADE.md` — comprehensive guide for deploying Aquario at other universities, covering all external services (Vercel, Neon, Resend, PostHog, UptimeRobot), CI/CD setup, content adaptation, and branding customization
 - **Dev Tools**: Entity admin toggle — select any entity and become/stop being its admin via dedicated `/api/dev/toggle-entidade-admin` endpoint
 
+### Fixed
+- **Search**: Sanitize `limit` query parameter as bounded integer to prevent invalid SQL LIMIT values
+- **Search**: Guard against null `entidade.slug` to prevent navigation to `/entidade/null`
+- **Search**: Fix Prettier formatting and ESLint curly-brace violations across search files
+
 ### Changed
 - **Vagas — Nova Vaga**: Logos das entidades exibidos no dropdown de seleção na criação de vagas
 - **Vagas page**: Added list/grid view mode toggle next to search bar; grid mode renders cards in 3-column layout matching the entidades page style
