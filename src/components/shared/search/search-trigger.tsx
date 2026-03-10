@@ -1,7 +1,6 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 type SearchTriggerProps = {
   onClick: () => void;
@@ -9,14 +8,13 @@ type SearchTriggerProps = {
 
 export function SearchTrigger({ onClick }: SearchTriggerProps) {
   return (
-    <Button
-      variant="ghost"
-      size="sm"
+    <div
       onClick={onClick}
-      className="h-8 w-8 p-0 rounded-full"
+      className="inline-flex items-center justify-center rounded-full h-[2.1rem] w-[2.1rem] min-w-[2.1rem] min-h-[2.1rem] border border-input bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors"
+      role="button"
       aria-label="Pesquisar (Ctrl+K)"
     >
-      <Search className="h-4 w-4" />
-    </Button>
+      <Search className="h-[1.2rem] w-[1.2rem] min-w-[1.2rem] min-h-[1.2rem]" />
+    </div>
   );
 }
