@@ -14,7 +14,8 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q")?.trim();
-    const limit = Math.min(Number(searchParams.get("limit")) || 5, 20);
+    const rawLimit = Number.parseInt(searchParams.get("limit") ?? "", 10);
+    const limit = Number.isNaN(rawLimit) ? 5 : Math.min(Math.max(rawLimit, 1), 20);
 
     if (!query || query.length < 3) {
       const empty: SearchResponse = {
@@ -35,16 +36,15 @@ export async function GET(req: Request) {
     const container = getContainer();
     const repo = container.searchRepository;
 
-    const [paginas, guias, entidades, vagas, disciplinas, cursos, usuarios] =
-      await Promise.all([
-        searchStaticPages(query, limit),
-        repo.searchGuias(query, limit),
-        repo.searchEntidades(query, limit),
-        repo.searchVagas(query, limit),
-        repo.searchDisciplinas(query, limit),
-        repo.searchCursos(query, limit),
-        repo.searchUsuarios(query, limit),
-      ]);
+    const [paginas, guias, entidades, vagas, disciplinas, cursos, usuarios] = await Promise.all([
+      searchStaticPages(query, limit),
+      repo.searchGuias(query, limit),
+      repo.searchEntidades(query, limit),
+      repo.searchVagas(query, limit),
+      repo.searchDisciplinas(query, limit),
+      repo.searchCursos(query, limit),
+      repo.searchUsuarios(query, limit),
+    ]);
 
     const response: SearchResponse = {
       query,
