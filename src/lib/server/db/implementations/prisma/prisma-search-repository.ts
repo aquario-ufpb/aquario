@@ -27,7 +27,7 @@ export class PrismaSearchRepository implements ISearchRepository {
       LIMIT ${limit}
     `);
 
-    return results.map((r) => ({ kind: "guia" as const, ...r }));
+    return results.map(r => ({ kind: "guia" as const, ...r }));
   }
 
   async searchEntidades(query: string, limit: number): Promise<SearchResultEntidade[]> {
@@ -45,7 +45,7 @@ export class PrismaSearchRepository implements ISearchRepository {
       LIMIT ${limit}
     `);
 
-    return results.map((r) => ({ kind: "entidade" as const, ...r }));
+    return results.map(r => ({ kind: "entidade" as const, ...r }));
   }
 
   async searchVagas(query: string, limit: number): Promise<SearchResultVaga[]> {
@@ -64,7 +64,7 @@ export class PrismaSearchRepository implements ISearchRepository {
       LIMIT ${limit}
     `);
 
-    return results.map((r) => ({ kind: "vaga" as const, ...r }));
+    return results.map(r => ({ kind: "vaga" as const, ...r }));
   }
 
   async searchDisciplinas(query: string, limit: number): Promise<SearchResultDisciplina[]> {
@@ -82,13 +82,11 @@ export class PrismaSearchRepository implements ISearchRepository {
       LIMIT ${limit}
     `);
 
-    return results.map((r) => ({ kind: "disciplina" as const, ...r }));
+    return results.map(r => ({ kind: "disciplina" as const, ...r }));
   }
 
   async searchCursos(query: string, limit: number): Promise<SearchResultCurso[]> {
-    const results = await prisma.$queryRaw<
-      Array<{ id: string; nome: string }>
-    >(Prisma.sql`
+    const results = await prisma.$queryRaw<Array<{ id: string; nome: string }>>(Prisma.sql`
       SELECT id, nome
       FROM "Curso"
       WHERE to_tsvector('portuguese', immutable_unaccent(nome))
@@ -100,7 +98,7 @@ export class PrismaSearchRepository implements ISearchRepository {
       LIMIT ${limit}
     `);
 
-    return results.map((r) => ({ kind: "curso" as const, ...r }));
+    return results.map(r => ({ kind: "curso" as const, ...r }));
   }
 
   async searchUsuarios(query: string, limit: number): Promise<SearchResultUsuario[]> {
@@ -119,6 +117,6 @@ export class PrismaSearchRepository implements ISearchRepository {
       LIMIT ${limit}
     `);
 
-    return results.map((r) => ({ kind: "usuario" as const, ...r }));
+    return results.map(r => ({ kind: "usuario" as const, ...r }));
   }
 }
