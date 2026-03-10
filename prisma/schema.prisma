@@ -63,6 +63,18 @@ enum CategoriaEvento {
   OUTRA
 }
 
+enum StatusProjeto {
+  RASCUNHO
+  PUBLICADO
+  ARQUIVADO
+}
+
+enum TipoConteudo {
+  MARKDOWN
+  HTML
+  TEXTO_SIMPLES
+}
+
 enum TipoVaga {
   ESTAGIO
   TRAINEE
@@ -138,6 +150,7 @@ model Usuario {
   membroDeEntidades      MembroEntidade[]
   tokensVerificacao      TokenVerificacao[]
   disciplinasConcluidas  DisciplinaConcluida[]
+  projetosAutor          ProjetoAutor[]
   disciplinasSemestre    DisciplinaSemestre[]
   vagasCriadas           Vaga[]
 
@@ -187,6 +200,7 @@ model Entidade {
   centro  Centro           @relation(fields: [centroId], references: [id])
   membros MembroEntidade[]
   cargos  Cargo[]
+  projetos Projeto[]
   vagas   Vaga[]
 
   @@unique([nome, tipo])
@@ -446,6 +460,56 @@ model EventoCalendario {
   @@index([semestreId])
   @@index([dataInicio])
   @@index([categoria])
+}
+
+// ============================================================================
+// PROJETOS E AUTORES
+// ============================================================================
+
+model Projeto {
+  id             String        @id @default(uuid())
+  titulo         String
+  slug           String        @unique
+  subtitulo      String?
+  descricao      String?
+  textContent    String?
+  tipoConteudo   TipoConteudo  @default(MARKDOWN)
+  urlImagem      String?
+  status         StatusProjeto @default(RASCUNHO)
+  tags           String[]      @default([])
+  dataInicio     DateTime?
+  dataFim        DateTime?
+  urlRepositorio String?
+  urlDemo        String?
+  urlPublicacao  String?
+  criadoEm       DateTime      @default(now())
+  atualizadoEm   DateTime      @updatedAt
+  publicadoEm    DateTime?
+
+  autores    ProjetoAutor[]
+  entidadeId String?
+  entidade   Entidade?      @relation(fields: [entidadeId], references: [id])
+
+  @@index([slug])
+  @@index([status])
+  @@index([entidadeId])
+  @@index([criadoEm])
+  @@index([publicadoEm])
+}
+
+model ProjetoAutor {
+  id              String   @id @default(uuid())
+  projetoId       String
+  usuarioId       String   // ID do Usuario (autor interno)
+  autorPrincipal  Boolean  @default(false)
+
+  projeto Projeto  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  usuario Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([projetoId, usuarioId])
+  @@index([projetoId])
+  @@index([usuarioId])
+  @@index([autorPrincipal])
 }
 
 // ============================================================================
