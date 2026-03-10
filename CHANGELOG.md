@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-03-08
+
 ### Added
 - **Search**: Global search command palette (Ctrl+K) with unified search across pages, guides, entities, jobs, disciplines, courses, and user profiles
 - **Search**: PostgreSQL Full-Text Search with `unaccent` extension for accent-insensitive Brazilian Portuguese search, ranked by relevance with `ts_rank`
@@ -26,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Vaga detail page**: Redesigned to match the entidade detail page layout — ghost back button, hero section with entity name as primary identifier, inline meta info (date, deadline, salary), areas as badges, sections with `border-t` separators, and compact "other vagas" grid
 
 ### Added
+- **Dev Experience**: Pre-commit hook (via husky + lint-staged) auto-formats staged files with Prettier and fixes ESLint issues; pre-push hook runs `check-all` (lint, format check, type check) before pushing
+- **Docs**: `REPLICANDO_NA_SUA_UNIVERSIDADE.md` — comprehensive guide for deploying Aquario at other universities, covering all external services (Vercel, Neon, Resend, PostHog, UptimeRobot), CI/CD setup, content adaptation, and branding customization
+- **Dev Tools**: Entity admin toggle — select any entity and become/stop being its admin via dedicated `/api/dev/toggle-entidade-admin` endpoint
 - **PostHog Analytics**: Expanded event tracking across all major user flows
   - **Auth flows**: `login_attempted`, `login_succeeded`, `login_failed` (with error type), `register_attempted`, `register_succeeded`, `register_failed`, `forgot_password_submitted`, `reset_password_submitted`, `reset_password_succeeded`, `email_verification_succeeded`, `email_verification_resent`
   - **Onboarding**: `onboarding_step_viewed`, `onboarding_step_completed`, `onboarding_step_skipped` (with `step_id`) — tracked in `OnboardingModal`
@@ -35,6 +40,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Grades Curriculares**: `grade_curricular_curso_selected` (with `curso_nome`)
   - **Entidades**: `entidade_detail_viewed` (with `entidade_name` and `entidade_type`) on `/entidade/[slug]`
   - **Usuários**: `usuario_profile_viewed` (with `user_slug`) on `/usuarios/[slug]`, only fires for other users' profiles
+
+### Changed
+- **Vagas — Nova Vaga**: Logos das entidades exibidos no dropdown de seleção na criação de vagas
+- **Vagas page**: Added list/grid view mode toggle next to search bar; grid mode renders cards in 3-column layout matching the entidades page style
+- **VacancyCard**: Standardized badges to use `Badge variant="outline"` with muted styling matching entity cards; added `variant` prop supporting `"list"` and `"grid"` display modes
+- **Vaga detail page**: Redesigned to match the entidade detail page layout — ghost back button, hero section with entity name as primary identifier, inline meta info (date, deadline, salary), areas as badges, sections with `border-t` separators, and compact "other vagas" grid
 
 ## [1.3.0] - 2026-02-21
 
@@ -368,7 +379,8 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/aquario-ufpb/aquario/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/aquario-ufpb/aquario/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/aquario-ufpb/aquario/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/aquario-ufpb/aquario/compare/v1.1.0...v1.1.1
