@@ -47,8 +47,7 @@ const STATIC_PAGES: StaticPage[] = [
   {
     id: "entidades",
     titulo: "Entidades",
-    descricao:
-      "Laboratorios, grupos de pesquisa, ligas academicas e centros academicos",
+    descricao: "Laboratorios, grupos de pesquisa, ligas academicas e centros academicos",
     url: "/entidades",
   },
   {
@@ -72,18 +71,15 @@ function normalize(text: string): string {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-export function searchStaticPages(
-  query: string,
-  limit: number,
-): SearchResultPagina[] {
+export function searchStaticPages(query: string, limit: number): SearchResultPagina[] {
   const normalizedQuery = normalize(query);
 
-  return STATIC_PAGES.filter((page) => {
+  return STATIC_PAGES.filter(page => {
     const haystack = normalize(`${page.titulo} ${page.descricao}`);
     return haystack.includes(normalizedQuery);
   })
     .slice(0, limit)
-    .map((page) => ({
+    .map(page => ({
       kind: "pagina" as const,
       id: page.id,
       titulo: page.titulo,
