@@ -16,18 +16,12 @@ import {
   Search,
 } from "lucide-react";
 import { useSearch } from "@/lib/client/hooks/use-search";
-import type {
-  SearchResultItem,
-  SearchResultKind,
-} from "@/lib/shared/types/search.types";
+import type { SearchResultItem, SearchResultKind } from "@/lib/shared/types/search.types";
 
 const HISTORY_KEY = "aquario:searchHistory";
 const MAX_HISTORY = 8;
 
-const CATEGORY_CONFIG: Record<
-  SearchResultKind,
-  { label: string; icon: React.ElementType }
-> = {
+const CATEGORY_CONFIG: Record<SearchResultKind, { label: string; icon: React.ElementType }> = {
   pagina: { label: "PAGINAS", icon: FileText },
   guia: { label: "GUIAS", icon: BookOpen },
   entidade: { label: "ENTIDADES", icon: Building2 },
@@ -102,7 +96,7 @@ function getItemRoute(item: SearchResultItem): string {
     case "guia":
       return `/guias/${item.slug}`;
     case "entidade":
-      return `/entidade/${item.slug}`;
+      return item.slug ? `/entidade/${item.slug}` : "/entidades";
     case "vaga":
       return `/vagas/${item.id}`;
     case "disciplina":
@@ -115,16 +109,23 @@ function getItemRoute(item: SearchResultItem): string {
 }
 
 function highlightMatch(text: string, query: string): React.ReactNode {
-  if (!query || query.length < 3) return text;
+  if (!query || query.length < 3) {
+    return text;
+  }
 
   const normalize = (s: string) =>
-    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
 
   const normalizedText = normalize(text);
   const normalizedQuery = normalize(query);
   const index = normalizedText.indexOf(normalizedQuery);
 
-  if (index === -1) return text;
+  if (index === -1) {
+    return text;
+  }
 
   const before = text.slice(0, index);
   const match = text.slice(index, index + query.length);
@@ -150,10 +151,7 @@ function loadHistory(): string[] {
 function saveHistory(query: string): void {
   try {
     const existing = loadHistory();
-    const next = [query, ...existing.filter((item) => item !== query)].slice(
-      0,
-      MAX_HISTORY
-    );
+    const next = [query, ...existing.filter(item => item !== query)].slice(0, MAX_HISTORY);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
   } catch {
     // Ignore localStorage errors
@@ -164,7 +162,9 @@ function saveHistory(query: string): void {
 function flattenResults(
   data: { results: Record<string, SearchResultItem[]> } | undefined
 ): SearchResultItem[] {
-  if (!data) return [];
+  if (!data) {
+    return [];
+  }
   const items: SearchResultItem[] = [];
   for (const kind of CATEGORY_ORDER) {
     const key = RESULTS_KEY_MAP[kind];
@@ -209,13 +209,11 @@ export function SearchCommand() {
       const isCmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
       const isSlash =
         e.key === "/" &&
-        !["INPUT", "TEXTAREA", "SELECT"].includes(
-          (e.target as HTMLElement)?.tagName
-        );
+        !["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement)?.tagName);
 
       if (isCmdK || isSlash) {
         e.preventDefault();
-        setOpen((prev) => !prev);
+        setOpen(prev => !prev);
       }
     };
 
@@ -244,7 +242,9 @@ export function SearchCommand() {
 
   // Scroll selected item into view
   useEffect(() => {
-    if (selectedIndex < 0 || !resultsRef.current) return;
+    if (selectedIndex < 0 || !resultsRef.current) {
+      return;
+    }
     const items = resultsRef.current.querySelectorAll("[data-search-item]");
     items[selectedIndex]?.scrollIntoView({ block: "nearest" });
   }, [selectedIndex]);
@@ -273,14 +273,16 @@ export function SearchCommand() {
       }
 
       const totalItems = hasQuery ? flatItems.length : history.length;
-      if (totalItems === 0) return;
+      if (totalItems === 0) {
+        return;
+      }
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev + 1) % totalItems);
+        setSelectedIndex(prev => (prev + 1) % totalItems);
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev <= 0 ? totalItems - 1 : prev - 1));
+        setSelectedIndex(prev => (prev <= 0 ? totalItems - 1 : prev - 1));
       } else if (e.key === "Enter" && selectedIndex >= 0) {
         e.preventDefault();
         if (hasQuery && flatItems[selectedIndex]) {
@@ -293,7 +295,9 @@ export function SearchCommand() {
     [hasQuery, flatItems, history, selectedIndex, handleSelect, handleHistorySelect]
   );
 
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   const showResults = hasQuery || history.length > 0;
 
@@ -317,7 +321,7 @@ export function SearchCommand() {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={e => setQuery(e.target.value)}
             placeholder="Pesquisar no Aquario..."
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             aria-label="Pesquisar"
@@ -371,7 +375,7 @@ export function SearchCommand() {
                 ref={inputRef}
                 type="text"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={e => setQuery(e.target.value)}
                 placeholder="Pesquisar no Aquario..."
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 aria-label="Pesquisar"
@@ -440,11 +444,7 @@ function SearchResults({
 }) {
   // Loading
   if (hasQuery && isLoading) {
-    return (
-      <div className="py-8 text-center text-sm text-muted-foreground">
-        Buscando...
-      </div>
-    );
+    return <div className="py-8 text-center text-sm text-muted-foreground">Buscando...</div>;
   }
 
   // No results
@@ -461,11 +461,13 @@ function SearchResults({
     let globalIndex = 0;
     return (
       <>
-        {CATEGORY_ORDER.map((kind) => {
+        {CATEGORY_ORDER.map(kind => {
           const key = RESULTS_KEY_MAP[kind] as keyof typeof data.results;
           const items = data.results[key] as SearchResultItem[];
 
-          if (!items || items.length === 0) return null;
+          if (!items || items.length === 0) {
+            return null;
+          }
 
           const config = CATEGORY_CONFIG[kind];
           const Icon = config.icon;
@@ -478,7 +480,7 @@ function SearchResults({
                   {config.label}
                 </span>
               </div>
-              {items.map((item) => {
+              {items.map(item => {
                 const idx = globalIndex++;
                 const isSelected = idx === selectedIndex;
                 const snippet = getItemSnippet(item);
@@ -519,9 +521,7 @@ function SearchResults({
       <div className="py-2">
         <div className="flex items-center gap-2 px-4 py-2">
           <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-xs font-medium tracking-wider text-muted-foreground">
-            RECENTES
-          </span>
+          <span className="text-xs font-medium tracking-wider text-muted-foreground">RECENTES</span>
         </div>
         {history.map((term, idx) => {
           const isSelected = idx === selectedIndex;
