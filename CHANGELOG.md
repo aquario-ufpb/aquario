@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Search**: Global search command palette (Ctrl+K) with unified search across pages, guides, entities, jobs, disciplines, courses, and user profiles
+- **Search**: PostgreSQL Full-Text Search with `unaccent` extension for accent-insensitive Brazilian Portuguese search, ranked by relevance with `ts_rank`
+- **Search**: Recent search history stored in localStorage (up to 8 items)
+
+### Fixed
+- **Search**: Sanitize `limit` query parameter as bounded integer to prevent invalid SQL LIMIT values
+- **Search**: Guard against null `entidade.slug` to prevent navigation to `/entidade/null`
+- **Search**: Fix Prettier formatting and ESLint curly-brace violations across search files
+
 ## [1.4.0] - 2026-03-08
 
 ### Added

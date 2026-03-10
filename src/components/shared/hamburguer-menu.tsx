@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
-import { User, LogOut, Settings } from "lucide-react";
+import { User, LogOut, Settings, Search } from "lucide-react";
 
 // ============================================================================
 // Helper Functions
@@ -272,7 +272,24 @@ export default function HamburgerMenu() {
         <NavLogo />
 
         <div className="relative">
-          <HamburgerIcon isOpen={isOpen} onClick={toggleMenu} />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                window.dispatchEvent(
+                  new KeyboardEvent("keydown", {
+                    key: "k",
+                    ctrlKey: true,
+                    bubbles: true,
+                  })
+                );
+              }}
+              className="p-2 text-neutral-800 dark:text-neutral-50"
+              aria-label="Pesquisar"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+            <HamburgerIcon isOpen={isOpen} onClick={toggleMenu} />
+          </div>
 
           {/* Dropdown Menu */}
           <div
