@@ -104,7 +104,7 @@ function getItemRoute(item: SearchResultItem): string {
     case "curso":
       return `/grades-curriculares`;
     case "usuario":
-      return item.slug ? `/perfil/${item.slug}` : `/perfil`;
+      return item.slug ? `/usuarios/${item.slug}` : `/perfil`;
   }
 }
 
