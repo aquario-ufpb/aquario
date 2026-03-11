@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Search**: Sanitize `limit` query parameter as bounded integer to prevent invalid SQL LIMIT values
 - **Search**: Guard against null `entidade.slug` to prevent navigation to `/entidade/null`
 - **Search**: Fix Prettier formatting and ESLint curly-brace violations across search files
+- **Calendário**: Fix exported calendar image for classes spanning multiple time slots — blocks now correctly occupy their full height instead of being clipped to a single row
+- **Calendário**: Fix inconsistent time label font sizes in exported calendar image caused by unreset Canvas font state
 
 ## [1.4.0] - 2026-03-08
 
