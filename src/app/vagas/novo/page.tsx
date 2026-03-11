@@ -9,6 +9,7 @@ import { mapImagePath } from "@/lib/client/api/entidades";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -403,12 +404,13 @@ export default function NovaVagaPage() {
 
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="dataFinalizacao">Encerra em</Label>
-                    <Input
+                    <DatePicker
                       id="dataFinalizacao"
-                      type="date"
                       value={dataFinalizacao}
-                      onChange={e => setDataFinalizacao(e.target.value)}
+                      onChange={setDataFinalizacao}
                       min={new Date().toISOString().slice(0, 10)}
+                      placeholder="Encerra em"
+                      clearable={false}
                     />
                     <p className="text-xs text-muted-foreground">
                       Após esta data a vaga sai do mural.
