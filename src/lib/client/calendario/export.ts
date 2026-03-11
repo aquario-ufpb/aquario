@@ -107,14 +107,11 @@ export function exportCalendarAsImage({
       CALENDAR_TIME_SLOTS.forEach((timeSlot, slotIndex) => {
         const rowY = tableY + headerHeight + slotIndex * rowHeight;
 
-        // Draw row background
-        ctx.fillStyle = cellBgColor;
-        ctx.fillRect(tableX, rowY, tableWidth, rowHeight);
-
         // Draw time slot label
         ctx.fillStyle = headerBgColor;
         ctx.fillRect(tableX, rowY, timeColumnWidth, rowHeight);
         ctx.fillStyle = textColor;
+        ctx.font = "12px system-ui, -apple-system, sans-serif";
         ctx.textAlign = "left";
         ctx.fillText(timeSlot.label, tableX + 10, rowY + 20);
 
@@ -125,6 +122,7 @@ export function exportCalendarAsImage({
           const slotData = dayData?.get(timeSlot.index);
 
           // Skip if this is part of a merged block but not the start
+          // Do NOT draw background here — it would overwrite the merged cell
           if (slotData && slotData.rowSpan > 1 && !slotData.isStartOfMerge) {
             return;
           }
@@ -133,6 +131,10 @@ export function exportCalendarAsImage({
           const rowSpan = slotData?.rowSpan || 1;
           const cellHeight = rowSpan * rowHeight;
           const hasConflict = classes.length > 1;
+
+          // Draw cell background per column (not full row) to avoid overwriting merged cells
+          ctx.fillStyle = cellBgColor;
+          ctx.fillRect(cellX, rowY, dayColumnWidth, rowHeight);
 
           // Draw cell border
           ctx.strokeStyle = hasConflict ? conflictBorderColor : borderColor;
@@ -150,10 +152,8 @@ export function exportCalendarAsImage({
             const blockPadding = 4;
             const blockSpacing = 2;
             const availableHeight = cellHeight - blockPadding * 2;
-            const blockHeight = Math.min(
-              (availableHeight - (classes.length - 1) * blockSpacing) / classes.length,
-              50
-            );
+            const blockHeight =
+              (availableHeight - (classes.length - 1) * blockSpacing) / classes.length;
 
             classes.forEach((classItem, classIndex) => {
               const blockY = rowY + blockPadding + classIndex * (blockHeight + blockSpacing);
