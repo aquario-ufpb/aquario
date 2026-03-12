@@ -8,9 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **UI**: DatePicker component with Calendar popover, pt-BR locale, and date range constraints
 - **Search**: Global search command palette (Ctrl+K) with unified search across pages, guides, entities, jobs, disciplines, courses, and user profiles
 - **Search**: PostgreSQL Full-Text Search with `unaccent` extension for accent-insensitive Brazilian Portuguese search, ranked by relevance with `ts_rank`
 - **Search**: Recent search history stored in localStorage (up to 8 items)
+
+### Changed
+- **UI**: Replace native date inputs with DatePicker across all forms — entities, memberships, vagas, and calendar management (#167)
 
 ### Fixed
 - **Search**: Sanitize `limit` query parameter as bounded integer to prevent invalid SQL LIMIT values

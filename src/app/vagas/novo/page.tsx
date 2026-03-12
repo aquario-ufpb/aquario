@@ -9,6 +9,8 @@ import { mapImagePath } from "@/lib/client/api/entidades";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { todayDateString } from "@/lib/shared/date-utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -201,7 +203,7 @@ export default function NovaVagaPage() {
       setError("Todos os campos obrigatórios devem ser preenchidos.");
       return;
     }
-    const hoje = new Date().toISOString().slice(0, 10);
+    const hoje = todayDateString();
     if (dataFinalizacao < hoje) {
       setError("A data de finalização deve ser futura.");
       return;
@@ -403,12 +405,13 @@ export default function NovaVagaPage() {
 
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="dataFinalizacao">Encerra em</Label>
-                    <Input
+                    <DatePicker
                       id="dataFinalizacao"
-                      type="date"
                       value={dataFinalizacao}
-                      onChange={e => setDataFinalizacao(e.target.value)}
-                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={setDataFinalizacao}
+                      min={todayDateString()}
+                      placeholder="Encerra em"
+                      clearable={false}
                     />
                     <p className="text-xs text-muted-foreground">
                       Após esta data a vaga sai do mural.

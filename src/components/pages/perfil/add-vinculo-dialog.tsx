@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -244,22 +245,22 @@ export function AddVinculoDialog({ open, onOpenChange }: AddVinculoDialogProps) 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="started-at">Data de Início</Label>
-                  <Input
+                  <DatePicker
                     id="started-at"
-                    type="date"
                     value={startedAt}
-                    onChange={e => setStartedAt(e.target.value)}
+                    onChange={setStartedAt}
                     max={endedAt || undefined}
+                    placeholder="Data de início"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="ended-at">Data de Término (opcional)</Label>
-                  <Input
+                  <DatePicker
                     id="ended-at"
-                    type="date"
                     value={endedAt}
-                    onChange={e => setEndedAt(e.target.value)}
+                    onChange={setEndedAt}
                     min={startedAt || undefined}
+                    placeholder="Data de término"
                   />
                 </div>
               </div>

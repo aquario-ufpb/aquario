@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -412,20 +413,22 @@ function CsvImportFlow({
             </div>
             <div className="space-y-2">
               <Label htmlFor="csv-inicio">Início do Período Letivo</Label>
-              <Input
+              <DatePicker
                 id="csv-inicio"
-                type="date"
                 value={dataInicio}
-                onChange={e => setDataInicio(e.target.value)}
+                onChange={setDataInicio}
+                max={dataFim || undefined}
+                placeholder="Início"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="csv-fim">Término do Período Letivo</Label>
-              <Input
+              <DatePicker
                 id="csv-fim"
-                type="date"
                 value={dataFim}
-                onChange={e => setDataFim(e.target.value)}
+                onChange={setDataFim}
+                min={dataInicio || undefined}
+                placeholder="Término"
               />
             </div>
           </div>
@@ -538,21 +541,25 @@ function SemestreForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="dataInicio">Data de Início</Label>
-          <Input
+          <DatePicker
             id="dataInicio"
-            type="date"
             value={dataInicio}
-            onChange={e => setDataInicio(e.target.value)}
+            onChange={setDataInicio}
+            max={dataFim || undefined}
+            placeholder="Data de início"
+            clearable={false}
             required
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="dataFim">Data de Fim</Label>
-          <Input
+          <DatePicker
             id="dataFim"
-            type="date"
             value={dataFim}
-            onChange={e => setDataFim(e.target.value)}
+            onChange={setDataFim}
+            min={dataInicio || undefined}
+            placeholder="Data de fim"
+            clearable={false}
             required
           />
         </div>
@@ -828,21 +835,25 @@ function EventoForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="eventoDataInicio">Data de Início</Label>
-          <Input
+          <DatePicker
             id="eventoDataInicio"
-            type="date"
             value={dataInicio}
-            onChange={e => setDataInicio(e.target.value)}
+            onChange={setDataInicio}
+            max={dataFim || undefined}
+            placeholder="Data de início"
+            clearable={false}
             required
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="eventoDataFim">Data de Fim</Label>
-          <Input
+          <DatePicker
             id="eventoDataFim"
-            type="date"
             value={dataFim}
-            onChange={e => setDataFim(e.target.value)}
+            onChange={setDataFim}
+            min={dataInicio || undefined}
+            placeholder="Data de fim"
+            clearable={false}
             required
           />
         </div>
