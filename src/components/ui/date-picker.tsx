@@ -116,9 +116,14 @@ export function DatePicker({
   }
 
   const handleSelect = (date: Date | undefined) => {
-    if (date) {
-      onChange(formatDateValue(date));
+    if (!date) {
+      if (clearable) {
+        onChange("");
+      }
+      setOpen(false);
+      return;
     }
+    onChange(formatDateValue(date));
     setOpen(false);
   };
 
@@ -193,6 +198,7 @@ export function DatePicker({
         </div>
         <Calendar
           mode="single"
+          required={required || !clearable}
           month={month}
           onMonthChange={setMonthState}
           selected={selectedDate}

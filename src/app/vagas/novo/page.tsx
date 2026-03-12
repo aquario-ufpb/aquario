@@ -10,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { todayDateString } from "@/lib/shared/date-utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -202,7 +203,7 @@ export default function NovaVagaPage() {
       setError("Todos os campos obrigatórios devem ser preenchidos.");
       return;
     }
-    const hoje = new Date().toISOString().slice(0, 10);
+    const hoje = todayDateString();
     if (dataFinalizacao < hoje) {
       setError("A data de finalização deve ser futura.");
       return;
@@ -408,7 +409,7 @@ export default function NovaVagaPage() {
                       id="dataFinalizacao"
                       value={dataFinalizacao}
                       onChange={setDataFinalizacao}
-                      min={new Date().toISOString().slice(0, 10)}
+                      min={todayDateString()}
                       placeholder="Encerra em"
                       clearable={false}
                     />
