@@ -26,7 +26,11 @@ import {
   BookOpen,
   ChevronDown,
   CircleDot,
+  Download,
 } from "lucide-react";
+import { exportGradeAsImage } from "@/lib/client/grades-curriculares/export";
+import { trackEvent } from "@/analytics/posthog-client";
+import { toast } from "sonner";
 
 function computeHighlightChain(
   code: string,
@@ -115,7 +119,11 @@ export function CurriculumGraph({
   // Selection set for bulk mode (keyed on disciplinaId)
   const [selectionSet, setSelectionSet] = useState<Set<string>>(new Set());
 
+  const [isExporting, setIsExporting] = useState(false);
+  const [isBlankExport, setIsBlankExport] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollWrapperRef = useRef<HTMLDivElement>(null);
   const nodeRefsMap = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   // Detect hover-capable devices (desktop) vs touch-only (mobile)
@@ -215,6 +223,52 @@ export function CurriculumGraph({
       nodeRefsMap.current.delete(code);
     }
   }, []);
+
+  const handleExportImage = useCallback(
+    async (blank: boolean) => {
+      if (!containerRef.current || !scrollWrapperRef.current) {
+        toast.error("Erro ao exportar a grade curricular");
+        return;
+      }
+
+      trackEvent("grade_curricular_export_image_click");
+      setIsExporting(true);
+      if (blank) {
+        setIsBlankExport(true);
+      }
+
+      const wrapper = scrollWrapperRef.current;
+      const originalMaxHeight = wrapper.style.maxHeight;
+      const originalOverflow = wrapper.style.overflow;
+
+      try {
+        // Expand the scroll container so the full grade is visible for capture
+        wrapper.style.maxHeight = "none";
+        wrapper.style.overflow = "visible";
+
+        // Double-rAF: first frame applies styles, second guarantees layout reflow
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        measureNodes();
+        // Wait for React to re-render with the updated node measurements
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        await exportGradeAsImage({
+          graphElement: containerRef.current,
+          cursoNome,
+          curriculoCodigo,
+        });
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao exportar a grade curricular");
+      } finally {
+        wrapper.style.maxHeight = originalMaxHeight;
+        wrapper.style.overflow = originalOverflow;
+        setIsBlankExport(false);
+        measureNodes();
+        setIsExporting(false);
+      }
+    },
+    [cursoNome, curriculoCodigo, measureNodes]
+  );
 
   const handleNodeClick = useCallback(
     (disc: GradeDisciplinaNode, e: React.MouseEvent) => {
@@ -434,6 +488,38 @@ export function CurriculumGraph({
           <p className="text-sm text-muted-foreground">Currículo: {curriculoCodigo}</p>
         </div>
         <div className="flex items-center gap-6 flex-wrap">
+          {isLoggedIn && (completedDisciplinaIds?.size || cursandoDisciplinaIds?.size) ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" disabled={isExporting} className="gap-2">
+                  <Download className="w-4 h-4" />
+                  {isExporting ? "Exportando..." : "Exportar Imagem"}
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => void handleExportImage(false)}>
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-green-600" />
+                  Com meu progresso
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void handleExportImage(true)}>
+                  <BookOpen className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+                  Grade limpa
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void handleExportImage(false)}
+              disabled={isExporting}
+              className="gap-2"
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? "Exportando..." : "Exportar Imagem"}
+            </Button>
+          )}
           {isLoggedIn && onSelectionModeChange && (
             <Button
               variant={selectionMode ? "default" : "outline"}
@@ -535,22 +621,66 @@ export function CurriculumGraph({
 
       {/* Graph container — fixed height, scrollable both axes */}
       <div
-        className="overflow-auto rounded-lg border border-slate-200 dark:border-white/10"
+        ref={scrollWrapperRef}
+        className="relative overflow-auto rounded-lg border border-slate-200 dark:border-white/10"
         style={{ maxHeight: "70vh" }}
         onScroll={measureNodes}
       >
+        {isExporting && <div className="absolute inset-0 z-50 cursor-wait" />}
         <div
           ref={containerRef}
-          className="relative flex gap-8 min-w-max p-3"
+          className={`relative flex gap-8 min-w-max p-3 ${isExporting ? "pt-12" : ""}`}
           onClick={handleContainerClick}
         >
+          {/* Export-only header: course name + legend (visible only during capture) */}
+          {isExporting && (
+            <div className="absolute top-0 left-0 right-0 z-[2] flex items-center justify-between gap-4 px-3 pt-2 pb-3 min-w-max">
+              <div>
+                <h2 className="text-sm font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">
+                  {cursoNome}
+                </h2>
+                <p className="text-[10px] text-muted-foreground">Currículo: {curriculoCodigo}</p>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] flex-wrap">
+                <span className="flex items-center gap-1">
+                  <span className="w-0.5 h-2.5 rounded-full bg-blue-400 dark:bg-blue-500" />
+                  Obrigatória
+                </span>
+                {showOptativas && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <span className="w-0.5 h-2.5 rounded-full bg-amber-400 dark:bg-amber-500" />
+                      Optativa
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-0.5 h-2.5 rounded-full bg-teal-400 dark:bg-teal-500" />
+                      Complementar
+                    </span>
+                  </>
+                )}
+                {isLoggedIn && !isBlankExport && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <span className="w-0.5 h-2.5 rounded-full bg-green-500 dark:bg-green-400" />
+                      Concluída
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-0.5 h-2.5 rounded-full bg-purple-500 dark:bg-purple-400" />
+                      Cursando
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* SVG edge overlay */}
           <GraphEdges
             disciplines={visibleDisciplinas}
             nodeRefs={nodeRects}
             containerRect={containerRect}
-            highlightedCodes={activeHighlightedCodes}
-            hoveredCode={hoveredCode}
+            highlightedCodes={isExporting ? null : activeHighlightedCodes}
+            hoveredCode={isExporting ? null : hoveredCode}
           />
 
           {/* Period columns */}
@@ -565,18 +695,22 @@ export function CurriculumGraph({
                   ref={el => setNodeRef(disc.codigo, el)}
                   discipline={disc}
                   isHighlighted={
-                    activeHighlightedCodes !== null && activeHighlightedCodes.has(disc.codigo)
+                    !isExporting &&
+                    activeHighlightedCodes !== null &&
+                    activeHighlightedCodes.has(disc.codigo)
                   }
                   isFaded={
-                    activeHighlightedCodes !== null && !activeHighlightedCodes.has(disc.codigo)
+                    !isExporting &&
+                    activeHighlightedCodes !== null &&
+                    !activeHighlightedCodes.has(disc.codigo)
                   }
-                  isClicked={clickedCode === disc.codigo}
-                  isHovered={canHover && hoveredCode === disc.codigo}
-                  isCompleted={!!completedDisciplinaIds?.has(disc.disciplinaId)}
-                  isCursando={!!cursandoDisciplinaIds?.has(disc.disciplinaId)}
-                  isLocked={lockedCodes.has(disc.codigo)}
-                  selectionMode={selectionMode}
-                  isSelected={selectionSet.has(disc.disciplinaId)}
+                  isClicked={!isExporting && clickedCode === disc.codigo}
+                  isHovered={!isExporting && canHover && hoveredCode === disc.codigo}
+                  isCompleted={!isBlankExport && !!completedDisciplinaIds?.has(disc.disciplinaId)}
+                  isCursando={!isBlankExport && !!cursandoDisciplinaIds?.has(disc.disciplinaId)}
+                  isLocked={!isBlankExport && lockedCodes.has(disc.codigo)}
+                  selectionMode={!isExporting && selectionMode}
+                  isSelected={!isExporting && selectionSet.has(disc.disciplinaId)}
                   onClick={e => handleNodeClick(disc, e)}
                   onMouseEnter={() => {
                     if (canHover) {
