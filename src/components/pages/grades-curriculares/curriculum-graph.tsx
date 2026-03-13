@@ -650,6 +650,8 @@ export function CurriculumGraph({
                     <span className="w-0.5 h-2.5 rounded-full bg-blue-400 dark:bg-blue-500" />
                     Obrigatória
                   </span>
+                  {/* Uses showOptativas (not hasOptativas) because the exported image
+                      only contains optativas when the toggle is active */}
                   {showOptativas && (
                     <>
                       <span className="flex items-center gap-1">
