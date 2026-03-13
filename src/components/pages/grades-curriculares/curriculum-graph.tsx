@@ -558,7 +558,7 @@ export function CurriculumGraph({
               <span className="w-0.5 h-3 rounded-full bg-blue-400 dark:bg-blue-500" />
               Obrigatória
             </span>
-            {hasOptativas && (
+            {showOptativas && (
               <>
                 <span className="flex items-center gap-1.5">
                   <span className="w-0.5 h-3 rounded-full bg-amber-400 dark:bg-amber-500" />
