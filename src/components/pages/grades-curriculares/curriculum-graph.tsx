@@ -27,10 +27,14 @@ import {
   ChevronDown,
   CircleDot,
   Download,
+  Sparkles,
 } from "lucide-react";
 import { exportGradeAsImage } from "@/lib/client/grades-curriculares/export";
 import { trackEvent } from "@/analytics/posthog-client";
 import { toast } from "sonner";
+
+/** Export modes — union type prevents invalid state combinations */
+type ExportMode = "progress" | "blank" | "available" | null;
 
 function computeHighlightChain(
   code: string,
@@ -119,8 +123,8 @@ export function CurriculumGraph({
   // Selection set for bulk mode (keyed on disciplinaId)
   const [selectionSet, setSelectionSet] = useState<Set<string>>(new Set());
 
-  const [isExporting, setIsExporting] = useState(false);
-  const [isBlankExport, setIsBlankExport] = useState(false);
+  const [exportMode, setExportMode] = useState<ExportMode>(null);
+  const isExporting = exportMode !== null;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
@@ -225,17 +229,14 @@ export function CurriculumGraph({
   }, []);
 
   const handleExportImage = useCallback(
-    async (blank: boolean) => {
+    async (mode: NonNullable<ExportMode>) => {
       if (!containerRef.current || !scrollWrapperRef.current) {
         toast.error("Erro ao exportar a grade curricular");
         return;
       }
 
       trackEvent("grade_curricular_export_image_click");
-      setIsExporting(true);
-      if (blank) {
-        setIsBlankExport(true);
-      }
+      setExportMode(mode);
 
       const wrapper = scrollWrapperRef.current;
       const originalMaxHeight = wrapper.style.maxHeight;
@@ -262,9 +263,8 @@ export function CurriculumGraph({
       } finally {
         wrapper.style.maxHeight = originalMaxHeight;
         wrapper.style.overflow = originalOverflow;
-        setIsBlankExport(false);
+        setExportMode(null);
         measureNodes();
-        setIsExporting(false);
       }
     },
     [cursoNome, curriculoCodigo, measureNodes]
@@ -375,6 +375,23 @@ export function CurriculumGraph({
     return locked;
   }, [disciplinas, completedDisciplinaIds, selectionSet]);
 
+  // Available disciplines: not locked, not completed, not cursando
+  const availableCodes = useMemo(() => {
+    if (!completedDisciplinaIds) {
+      return new Set<string>();
+    }
+    const available = new Set<string>();
+    for (const d of visibleDisciplinas) {
+      const isCompleted = completedDisciplinaIds.has(d.disciplinaId);
+      const isCursando = cursandoDisciplinaIds?.has(d.disciplinaId);
+      const isLocked = lockedCodes.has(d.codigo);
+      if (!isCompleted && !isCursando && !isLocked) {
+        available.add(d.codigo);
+      }
+    }
+    return available;
+  }, [visibleDisciplinas, completedDisciplinaIds, cursandoDisciplinaIds, lockedCodes]);
+
   // Progress stats
   const progressStats = useMemo(() => {
     if (!completedDisciplinaIds) {
@@ -404,6 +421,9 @@ export function CurriculumGraph({
       totalHoras,
     };
   }, [visibleDisciplinas, completedDisciplinaIds]);
+
+  // Status colors visible in normal view + progress export mode
+  const showStatus = exportMode === null || exportMode === "progress";
 
   const hasOptativas = disciplinas.some(d => d.natureza !== "OBRIGATORIA");
 
@@ -494,15 +514,22 @@ export function CurriculumGraph({
                 <Button variant="outline" size="sm" disabled={isExporting} className="gap-2">
                   <Download className="w-4 h-4" />
                   {isExporting ? "Exportando..." : "Exportar Imagem"}
+                  {!showOptativas && !isExporting && (
+                    <span className="text-[10px] text-muted-foreground">(sem optativas)</span>
+                  )}
                   <ChevronDown className="w-3 h-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => void handleExportImage(false)}>
+                <DropdownMenuItem onClick={() => void handleExportImage("progress")}>
                   <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-green-600" />
                   Com meu progresso
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => void handleExportImage(true)}>
+                <DropdownMenuItem onClick={() => void handleExportImage("available")}>
+                  <Sparkles className="w-3.5 h-3.5 mr-2 text-blue-500" />
+                  Próximas disponíveis
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void handleExportImage("blank")}>
                   <BookOpen className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
                   Grade limpa
                 </DropdownMenuItem>
@@ -512,12 +539,15 @@ export function CurriculumGraph({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => void handleExportImage(false)}
+              onClick={() => void handleExportImage("blank")}
               disabled={isExporting}
               className="gap-2"
             >
               <Download className="w-4 h-4" />
               {isExporting ? "Exportando..." : "Exportar Imagem"}
+              {!showOptativas && !isExporting && (
+                <span className="text-[10px] text-muted-foreground">(sem optativas)</span>
+              )}
             </Button>
           )}
           {isLoggedIn && onSelectionModeChange && (
@@ -629,48 +659,93 @@ export function CurriculumGraph({
         {isExporting && <div className="absolute inset-0 z-50 cursor-wait" />}
         <div
           ref={containerRef}
-          className={`relative flex gap-8 min-w-max p-3 ${isExporting ? "pt-12" : ""}`}
+          className={`relative flex gap-8 min-w-max p-3 ${exportMode === "progress" && progressStats ? "pt-16" : isExporting ? "pt-12" : ""}`}
           onClick={handleContainerClick}
         >
-          {/* Export-only header: course name + legend (visible only during capture) */}
+          {/* Export-only header: course name + stats + legend (visible only during capture) */}
           {isExporting && (
-            <div className="absolute top-0 left-0 right-0 z-[2] flex items-center justify-between gap-4 px-3 pt-2 pb-3 min-w-max">
-              <div>
-                <h2 className="text-sm font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">
-                  {cursoNome}
-                </h2>
-                <p className="text-[10px] text-muted-foreground">Currículo: {curriculoCodigo}</p>
+            <div className="absolute top-0 left-0 right-0 z-[2] px-3 pt-2 pb-3 min-w-max">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-sm font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">
+                    {cursoNome}
+                  </h2>
+                  <p className="text-[10px] text-muted-foreground">Currículo: {curriculoCodigo}</p>
+                </div>
+                <div className="flex items-center gap-3 text-[10px] flex-wrap">
+                  {/* Natureza legend — always shown */}
+                  <span className="flex items-center gap-1">
+                    <span className="w-0.5 h-2.5 rounded-full bg-blue-400 dark:bg-blue-500" />
+                    Obrigatória
+                  </span>
+                  {showOptativas && (
+                    <>
+                      <span className="flex items-center gap-1">
+                        <span className="w-0.5 h-2.5 rounded-full bg-amber-400 dark:bg-amber-500" />
+                        Optativa
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-0.5 h-2.5 rounded-full bg-teal-400 dark:bg-teal-500" />
+                        Complementar
+                      </span>
+                    </>
+                  )}
+                  {/* Status legend — progress mode */}
+                  {exportMode === "progress" && (
+                    <>
+                      <span className="flex items-center gap-1">
+                        <span className="w-0.5 h-2.5 rounded-full bg-green-500 dark:bg-green-400" />
+                        Concluída
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-0.5 h-2.5 rounded-full bg-purple-500 dark:bg-purple-400" />
+                        Cursando
+                      </span>
+                    </>
+                  )}
+                  {/* Available legend — available mode */}
+                  {exportMode === "available" && (
+                    <>
+                      <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
+                        ● Disponível
+                      </span>
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        ○ Indisponível
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-[10px] flex-wrap">
-                <span className="flex items-center gap-1">
-                  <span className="w-0.5 h-2.5 rounded-full bg-blue-400 dark:bg-blue-500" />
-                  Obrigatória
-                </span>
-                {showOptativas && (
-                  <>
-                    <span className="flex items-center gap-1">
-                      <span className="w-0.5 h-2.5 rounded-full bg-amber-400 dark:bg-amber-500" />
-                      Optativa
+              {/* Progress stats bar — only in progress mode */}
+              {exportMode === "progress" && progressStats && (
+                <div className="mt-1.5 flex items-center gap-3 text-[10px]">
+                  <span className="font-medium text-[#0e3a6c] dark:text-[#C8E6FA]">
+                    {progressStats.completedObrigatorias}/{progressStats.obrigatorias} obrigatórias
+                    ({progressStats.percentObrigatorias}%)
+                  </span>
+                  <span className="text-muted-foreground">
+                    {progressStats.totalHorasCompleted}h / {progressStats.totalHoras}h
+                  </span>
+                  {progressStats.totalCompleted > progressStats.completedObrigatorias && (
+                    <span className="text-muted-foreground">
+                      +{progressStats.totalCompleted - progressStats.completedObrigatorias}{" "}
+                      optativa(s)
                     </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-0.5 h-2.5 rounded-full bg-teal-400 dark:bg-teal-500" />
-                      Complementar
-                    </span>
-                  </>
-                )}
-                {isLoggedIn && !isBlankExport && (
-                  <>
-                    <span className="flex items-center gap-1">
-                      <span className="w-0.5 h-2.5 rounded-full bg-green-500 dark:bg-green-400" />
-                      Concluída
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-0.5 h-2.5 rounded-full bg-purple-500 dark:bg-purple-400" />
-                      Cursando
-                    </span>
-                  </>
-                )}
-              </div>
+                  )}
+                  <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 max-w-[200px]">
+                    <div
+                      className="h-full rounded-full bg-green-500 dark:bg-green-400"
+                      style={{ width: `${progressStats.percentObrigatorias}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {/* Available count — only in available mode */}
+              {exportMode === "available" && (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {availableCodes.size} disciplina(s) disponível(is) para matrícula
+                </p>
+              )}
             </div>
           )}
 
@@ -695,20 +770,24 @@ export function CurriculumGraph({
                   ref={el => setNodeRef(disc.codigo, el)}
                   discipline={disc}
                   isHighlighted={
-                    !isExporting &&
-                    activeHighlightedCodes !== null &&
-                    activeHighlightedCodes.has(disc.codigo)
+                    exportMode === "available"
+                      ? availableCodes.has(disc.codigo)
+                      : !isExporting &&
+                        activeHighlightedCodes !== null &&
+                        activeHighlightedCodes.has(disc.codigo)
                   }
                   isFaded={
-                    !isExporting &&
-                    activeHighlightedCodes !== null &&
-                    !activeHighlightedCodes.has(disc.codigo)
+                    exportMode === "available"
+                      ? !availableCodes.has(disc.codigo)
+                      : !isExporting &&
+                        activeHighlightedCodes !== null &&
+                        !activeHighlightedCodes.has(disc.codigo)
                   }
                   isClicked={!isExporting && clickedCode === disc.codigo}
                   isHovered={!isExporting && canHover && hoveredCode === disc.codigo}
-                  isCompleted={!isBlankExport && !!completedDisciplinaIds?.has(disc.disciplinaId)}
-                  isCursando={!isBlankExport && !!cursandoDisciplinaIds?.has(disc.disciplinaId)}
-                  isLocked={!isBlankExport && lockedCodes.has(disc.codigo)}
+                  isCompleted={showStatus && !!completedDisciplinaIds?.has(disc.disciplinaId)}
+                  isCursando={showStatus && !!cursandoDisciplinaIds?.has(disc.disciplinaId)}
+                  isLocked={showStatus && lockedCodes.has(disc.codigo)}
                   selectionMode={!isExporting && selectionMode}
                   isSelected={!isExporting && selectionSet.has(disc.disciplinaId)}
                   onClick={e => handleNodeClick(disc, e)}
