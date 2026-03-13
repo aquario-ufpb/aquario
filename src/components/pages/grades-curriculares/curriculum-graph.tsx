@@ -27,14 +27,13 @@ import {
   ChevronDown,
   CircleDot,
   Download,
-  Sparkles,
 } from "lucide-react";
 import { exportGradeAsImage } from "@/lib/client/grades-curriculares/export";
 import { trackEvent } from "@/analytics/posthog-client";
 import { toast } from "sonner";
 
 /** Export modes — union type prevents invalid state combinations */
-type ExportMode = "progress" | "blank" | "available" | null;
+type ExportMode = "progress" | "blank" | null;
 
 function computeHighlightChain(
   code: string,
@@ -375,23 +374,6 @@ export function CurriculumGraph({
     return locked;
   }, [disciplinas, completedDisciplinaIds, selectionSet]);
 
-  // Available disciplines: not locked, not completed, not cursando
-  const availableCodes = useMemo(() => {
-    if (!completedDisciplinaIds) {
-      return new Set<string>();
-    }
-    const available = new Set<string>();
-    for (const d of visibleDisciplinas) {
-      const isCompleted = completedDisciplinaIds.has(d.disciplinaId);
-      const isCursando = cursandoDisciplinaIds?.has(d.disciplinaId);
-      const isLocked = lockedCodes.has(d.codigo);
-      if (!isCompleted && !isCursando && !isLocked) {
-        available.add(d.codigo);
-      }
-    }
-    return available;
-  }, [visibleDisciplinas, completedDisciplinaIds, cursandoDisciplinaIds, lockedCodes]);
-
   // Progress stats
   const progressStats = useMemo(() => {
     if (!completedDisciplinaIds) {
@@ -514,9 +496,6 @@ export function CurriculumGraph({
                 <Button variant="outline" size="sm" disabled={isExporting} className="gap-2">
                   <Download className="w-4 h-4" />
                   {isExporting ? "Exportando..." : "Exportar Imagem"}
-                  {!showOptativas && !isExporting && (
-                    <span className="text-[10px] text-muted-foreground">(sem optativas)</span>
-                  )}
                   <ChevronDown className="w-3 h-3" />
                 </Button>
               </DropdownMenuTrigger>
@@ -524,10 +503,6 @@ export function CurriculumGraph({
                 <DropdownMenuItem onClick={() => void handleExportImage("progress")}>
                   <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-green-600" />
                   Com meu progresso
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => void handleExportImage("available")}>
-                  <Sparkles className="w-3.5 h-3.5 mr-2 text-blue-500" />
-                  Próximas disponíveis
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => void handleExportImage("blank")}>
                   <BookOpen className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
@@ -545,9 +520,6 @@ export function CurriculumGraph({
             >
               <Download className="w-4 h-4" />
               {isExporting ? "Exportando..." : "Exportar Imagem"}
-              {!showOptativas && !isExporting && (
-                <span className="text-[10px] text-muted-foreground">(sem optativas)</span>
-              )}
             </Button>
           )}
           {isLoggedIn && onSelectionModeChange && (
@@ -586,7 +558,7 @@ export function CurriculumGraph({
               <span className="w-0.5 h-3 rounded-full bg-blue-400 dark:bg-blue-500" />
               Obrigatória
             </span>
-            {showOptativas && (
+            {hasOptativas && (
               <>
                 <span className="flex items-center gap-1.5">
                   <span className="w-0.5 h-3 rounded-full bg-amber-400 dark:bg-amber-500" />
@@ -703,17 +675,6 @@ export function CurriculumGraph({
                       </span>
                     </>
                   )}
-                  {/* Available legend — available mode */}
-                  {exportMode === "available" && (
-                    <>
-                      <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
-                        ● Disponível
-                      </span>
-                      <span className="flex items-center gap-1 text-muted-foreground">
-                        ○ Indisponível
-                      </span>
-                    </>
-                  )}
                 </div>
               </div>
               {/* Progress stats bar — only in progress mode */}
@@ -740,12 +701,6 @@ export function CurriculumGraph({
                   </div>
                 </div>
               )}
-              {/* Available count — only in available mode */}
-              {exportMode === "available" && (
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  {availableCodes.size} disciplina(s) disponível(is) para matrícula
-                </p>
-              )}
             </div>
           )}
 
@@ -770,18 +725,14 @@ export function CurriculumGraph({
                   ref={el => setNodeRef(disc.codigo, el)}
                   discipline={disc}
                   isHighlighted={
-                    exportMode === "available"
-                      ? availableCodes.has(disc.codigo)
-                      : !isExporting &&
-                        activeHighlightedCodes !== null &&
-                        activeHighlightedCodes.has(disc.codigo)
+                    !isExporting &&
+                    activeHighlightedCodes !== null &&
+                    activeHighlightedCodes.has(disc.codigo)
                   }
                   isFaded={
-                    exportMode === "available"
-                      ? !availableCodes.has(disc.codigo)
-                      : !isExporting &&
-                        activeHighlightedCodes !== null &&
-                        !activeHighlightedCodes.has(disc.codigo)
+                    !isExporting &&
+                    activeHighlightedCodes !== null &&
+                    !activeHighlightedCodes.has(disc.codigo)
                   }
                   isClicked={!isExporting && clickedCode === disc.codigo}
                   isHovered={!isExporting && canHover && hoveredCode === disc.codigo}
