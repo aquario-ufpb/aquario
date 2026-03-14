@@ -66,10 +66,9 @@ export type CalendarioAcademicoEvent =
   | { name: "calendario_academico_view_changed"; view: "lista" | "calendario" }
   | { name: "calendario_academico_semestre_changed"; semestre_nome: string };
 
-export type GradesCurricularesEvent = {
-  name: "grade_curricular_curso_selected";
-  curso_nome: string;
-};
+export type GradesCurricularesEvent =
+  | { name: "grade_curricular_curso_selected"; curso_nome: string }
+  | { name: "grade_curricular_export_image_click" };
 
 export type MapasEvent = {
   name: "mapa_room_clicked";
