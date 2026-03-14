@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Search**: PostgreSQL Full-Text Search with `unaccent` extension for accent-insensitive Brazilian Portuguese search, ranked by relevance with `ts_rank`
 - **Search**: Recent search history stored in localStorage (up to 8 items)
 
+### Removed
+- **Submodule**: Remove `aquario-vagas` git submodule and all references (repo was deleted). Vagas now fully served via backend API
+
 ### Changed
 - **UI**: Replace native date inputs with DatePicker across all forms — entities, memberships, vagas, and calendar management (#167)
 

@@ -76,7 +76,6 @@ graph TD
 | [aquario-guias](https://github.com/aquario-ufpb/aquario-guias) | Guias academicos em Markdown |
 | [aquario-entidades](https://github.com/aquario-ufpb/aquario-entidades) | Laboratorios, grupos e entidades (JSON) |
 | [aquario-mapas](https://github.com/aquario-ufpb/aquario-mapas) | Mapas do campus |
-| [aquario-vagas](https://github.com/aquario-ufpb/aquario-vagas) | Vagas e oportunidades |
 
 **Diretorios de conteudo** — vivem dentro de `content/`, nao sao submodules:
 
@@ -105,9 +104,6 @@ Edite o arquivo `.gitmodules` na raiz do projeto, trocando `aquario-ufpb` pela s
 [submodule "content/aquario-mapas"]
 	path = content/aquario-mapas
 	url = https://github.com/<sua-org>/aquario-mapas.git
-[submodule "content/aquario-vagas"]
-	path = content/aquario-vagas
-	url = https://github.com/<sua-org>/aquario-vagas
 ```
 
 Depois, execute:

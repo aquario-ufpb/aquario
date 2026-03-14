@@ -8,7 +8,6 @@ import type { Vaga } from "@/lib/shared/types";
 import { SearchBar1 } from "@/components/ui/searchbar1";
 import { Button } from "@/components/ui/button";
 import { Plus, List, LayoutGrid } from "lucide-react";
-import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { useVagas } from "@/lib/client/hooks";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { usePrefetchVaga } from "@/lib/client/hooks/use-prefetch";
@@ -96,12 +95,6 @@ export default function VagasPage() {
           <h1 className="text-4xl md:text-5xl font-display font-bold max-w-3xl">
             Explore vagas de emprego, estágio e projetos no CI e fora dele
           </h1>
-          <div className="hidden md:flex flex-shrink-0">
-            <ContributeOnGitHub
-              url="https://github.com/aquario-ufpb/aquario-vagas"
-              className="rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
-            />
-          </div>
         </div>
 
         {/* Main Layout */}
