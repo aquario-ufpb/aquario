@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -320,11 +321,11 @@ export function EditarEntidadeDialog({
 
           <div className="space-y-2">
             <Label htmlFor="founding_date">Data de Fundação</Label>
-            <Input
+            <DatePicker
               id="founding_date"
-              type="date"
               value={formData.founding_date || ""}
-              onChange={e => setFormData({ ...formData, founding_date: e.target.value || null })}
+              onChange={val => setFormData({ ...formData, founding_date: val || null })}
+              placeholder="Data de fundação"
             />
           </div>
 

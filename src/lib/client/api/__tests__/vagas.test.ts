@@ -92,25 +92,19 @@ describe("vagasService", () => {
         json: async () => mockApiVaga,
       } as Response);
 
-      await vagasService.create(
-        {
-          titulo: "Nova vaga",
-          descricao: "Desc",
-          tipoVaga: "ESTAGIO",
-          entidadeId: "ent-1",
-          linkInscricao: "https://apply.com",
-          dataFinalizacao: new Date("2025-12-31").toISOString(),
-        },
-        "token-123"
-      );
+      await vagasService.create({
+        titulo: "Nova vaga",
+        descricao: "Desc",
+        tipoVaga: "ESTAGIO",
+        entidadeId: "ent-1",
+        linkInscricao: "https://apply.com",
+        dataFinalizacao: new Date("2025-12-31").toISOString(),
+      });
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/api/vagas"),
         expect.objectContaining({
           method: "POST",
-          headers: expect.objectContaining({
-            Authorization: "Bearer token-123",
-          }),
           body: expect.stringContaining("Nova vaga"),
         })
       );

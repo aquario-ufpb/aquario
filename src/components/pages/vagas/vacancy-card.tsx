@@ -5,30 +5,12 @@ import { Monitor, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Vaga } from "@/lib/shared/types";
+import { getEntidadeDisplayName, getTipoVagaLabel } from "@/lib/shared/types/vaga.types";
 
 type VacancyCardProps = {
   vaga: Vaga;
   variant?: "list" | "grid";
 };
-
-function getEntidadeLabel(entidade: Vaga["entidade"]): string {
-  if (typeof entidade === "object") {
-    return entidade.nome;
-  }
-  const labels: Record<string, string> = {
-    laboratorios: "Laboratório",
-    grupos: "Grupo",
-    ufpb: "UFPB",
-    pessoa: "Pessoa",
-    externo: "Externo",
-    ligas: "Liga",
-  };
-  return labels[entidade] ?? entidade;
-}
-
-function getTipoVagaLabel(tipo: string): string {
-  return tipo.replace(/_/g, " ");
-}
 
 function formatDataFim(iso?: string): string {
   if (!iso) {
@@ -44,7 +26,7 @@ function formatDataFim(iso?: string): string {
 
 export default function VacancyCard({ vaga, variant = "list" }: VacancyCardProps) {
   const { titulo, tipoVaga, entidade, dataFinalizacao } = vaga;
-  const entidadeLabel = getEntidadeLabel(entidade);
+  const entidadeLabel = getEntidadeDisplayName(entidade);
   const entidadeNome = typeof entidade === "object" ? entidade.nome : entidadeLabel;
   const entidadeAvatarSrc =
     typeof entidade === "object"

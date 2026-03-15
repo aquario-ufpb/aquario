@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/client/api/auth";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { PasswordInput } from "@/components/auth/password-input";
+import { trackEvent } from "@/analytics/posthog-client";
 
 function ResetarSenhaForm() {
   const router = useRouter();
@@ -53,9 +54,11 @@ function ResetarSenhaForm() {
     }
 
     setIsLoading(true);
+    trackEvent("reset_password_submitted");
 
     try {
       await authService.resetPassword(token, novaSenha);
+      trackEvent("reset_password_succeeded");
       setSuccess(true);
       setTimeout(() => {
         router.push("/login?reset=true");

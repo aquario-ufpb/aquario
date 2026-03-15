@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, use } from "react";
+import { useState, useMemo, use, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEntidadeBySlug, useEntidades } from "@/lib/client/hooks";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ import { EntidadeDescriptionSection } from "@/components/pages/entidades/entidad
 import { EntidadeOtherEntitiesSection } from "@/components/pages/entidades/entidade-other-entities-section";
 import { EntidadeMapSection } from "@/components/pages/entidades/entidade-map-section";
 import { isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
+import { trackEvent } from "@/analytics/posthog-client";
 
 export default function EntidadeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -40,6 +41,15 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
   const canEdit =
     user &&
     (user.papelPlataforma === "MASTER_ADMIN" || isUserAdminOfEntidade(user.id, entidade?.membros));
+
+  useEffect(() => {
+    if (entidade) {
+      trackEvent("entidade_detail_viewed", {
+        entidade_name: entidade.name,
+        entidade_type: entidade.tipo,
+      });
+    }
+  }, [entidade?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) {
     return <Skeleton className="h-screen w-full" />;

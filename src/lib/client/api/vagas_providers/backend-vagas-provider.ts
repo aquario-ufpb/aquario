@@ -1,6 +1,7 @@
 import type { Vaga, TipoVaga, EntidadeVaga } from "@/lib/shared/types";
 import { VagasDataProvider } from "./vagas-provider.interface";
 import { ENDPOINTS } from "@/lib/shared/config/constants";
+import { ENTIDADE_TIPO_MAP } from "@/lib/shared/types/vaga.types";
 import { apiClient } from "../api-client";
 import { throwApiError } from "@/lib/client/errors";
 
@@ -33,7 +34,6 @@ function mapApiVagaToVaga(api: ApiVagaResponse): Vaga {
     criadoEm: api.criadoEm,
     dataFinalizacao: api.dataFinalizacao,
     linkInscricao: api.linkInscricao,
-    linkVaga: api.linkInscricao,
     salario: api.salario,
     sobreEmpresa: api.sobreEmpresa,
     responsabilidades: api.responsabilidades ?? [],
@@ -68,28 +68,26 @@ export class BackendVagasProvider implements VagasDataProvider {
   }
 
   async getByTipo(tipo: TipoVaga): Promise<Vaga[]> {
-    const all = await this.getAll();
-    return all.filter(v => v.tipoVaga === tipo);
+    const url = `${ENDPOINTS.VAGAS}?tipoVaga=${encodeURIComponent(tipo)}`;
+    const response = await apiClient(url, { method: "GET" });
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+    const data: ApiVagaResponse[] = await response.json();
+    return data.map(mapApiVagaToVaga);
   }
 
   async getByEntidade(entidade: EntidadeVaga): Promise<Vaga[]> {
-    const all = await this.getAll();
-    const tipoMap: Record<string, string[]> = {
-      laboratorios: ["LABORATORIO"],
-      grupos: ["GRUPO"],
-      ligas: ["LIGA_ACADEMICA"],
-      ufpb: ["CENTRO_ACADEMICO", "ATLETICA", "OUTRO"],
-      externo: ["EMPRESA"],
-    };
-    const tipos = tipoMap[entidade];
-    return all.filter(v => {
-      if (typeof v.entidade === "string") {
-        return v.entidade === entidade;
-      }
-      if (!tipos || !v.entidade.tipo) {
-        return false;
-      }
-      return tipos.includes(v.entidade.tipo.toUpperCase());
-    });
+    const tipos = ENTIDADE_TIPO_MAP[entidade];
+    if (!tipos) {
+      return [];
+    }
+    const url = `${ENDPOINTS.VAGAS}?entidadeTipos=${encodeURIComponent(tipos.join(","))}`;
+    const response = await apiClient(url, { method: "GET" });
+    if (!response.ok) {
+      await throwApiError(response);
+    }
+    const data: ApiVagaResponse[] = await response.json();
+    return data.map(mapApiVagaToVaga);
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -232,12 +232,12 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
                       </td>
                       <td className="p-3">
                         {isEditing ? (
-                          <Input
-                            type="date"
+                          <DatePicker
                             value={editingMemberStartedAt}
-                            onChange={e => setEditingMemberStartedAt(e.target.value)}
+                            onChange={setEditingMemberStartedAt}
                             className="w-36 h-8"
                             max={editingMemberEndedAt || undefined}
+                            placeholder="Início"
                           />
                         ) : (
                           <span className="text-sm">
@@ -249,13 +249,12 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
                       </td>
                       <td className="p-3">
                         {isEditing ? (
-                          <Input
-                            type="date"
+                          <DatePicker
                             value={editingMemberEndedAt}
-                            onChange={e => setEditingMemberEndedAt(e.target.value)}
+                            onChange={setEditingMemberEndedAt}
                             className="w-36 h-8"
-                            placeholder="Ativo"
                             min={editingMemberStartedAt || undefined}
+                            placeholder="Ativo"
                           />
                         ) : (
                           <span className="text-sm">

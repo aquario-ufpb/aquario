@@ -1,45 +1,158 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { useEntidades } from "@/lib/client/hooks/use-entidades";
 import { vagasService } from "@/lib/client/api/vagas";
 import { mapImagePath } from "@/lib/client/api/entidades";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { todayDateString } from "@/lib/shared/date-utils";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
-import { VagaStepper, VagaProgress } from "@/components/pages/vagas/nova-vaga/vaga-stepper";
-import { StepInformacoes } from "@/components/pages/vagas/nova-vaga/step-informacoes";
-import { StepDescricao } from "@/components/pages/vagas/nova-vaga/step-descricao";
-import { StepProcesso } from "@/components/pages/vagas/nova-vaga/step-processo";
-import { StepRevisao } from "@/components/pages/vagas/nova-vaga/step-revisao";
-import type { VagaFormData, VagaFormUpdater } from "@/components/pages/vagas/nova-vaga/types";
+import { ArrowLeft, ChevronDown, Check, X, Plus } from "lucide-react";
+import { TipoVaga } from "@/lib/shared/types";
+import { cn } from "@/lib/client/utils";
+
+type EntidadeOption = { id: string; nome: string; imagePath: string };
+
+const AREA_OPTIONS = [
+  "FrontEnd",
+  "BackEnd",
+  "Dados",
+  "Infraestrutura",
+  "Design",
+  "Pesquisa",
+  "Robótica",
+  "Otimização e Algoritmos",
+];
+
+type DynamicListProps = {
+  items: string[];
+  inputValue: string;
+  onInputChange: (v: string) => void;
+  onAdd: () => void;
+  onRemove: (index: number) => void;
+  placeholder?: string;
+  maxItems?: number;
+  maxItemLength?: number;
+};
+
+function DynamicList({
+  items,
+  inputValue,
+  onInputChange,
+  onAdd,
+  onRemove,
+  placeholder,
+  maxItems,
+  maxItemLength,
+}: DynamicListProps) {
+  const atLimit = maxItems !== undefined && items.length >= maxItems;
+  return (
+    <div className="flex flex-col gap-2 max-w-2xl">
+      <div className="flex gap-2">
+        <Input
+          value={inputValue}
+          onChange={e => onInputChange(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (inputValue.trim() && !atLimit) {
+                onAdd();
+              }
+            }
+          }}
+          placeholder={atLimit ? "Limite atingido" : placeholder}
+          disabled={atLimit}
+          maxLength={maxItemLength}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onAdd}
+          disabled={!inputValue.trim() || atLimit}
+          className="flex-shrink-0 gap-1.5"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Adicionar
+        </Button>
+      </div>
+      {maxItems !== undefined && (
+        <p className="text-xs text-muted-foreground text-right">
+          {items.length}/{maxItems}
+        </p>
+      )}
+      {items.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-1">
+          {items.map((item, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm border border-input bg-muted/40 text-foreground"
+            >
+              {item}
+              <button
+                type="button"
+                onClick={() => onRemove(i)}
+                className="text-muted-foreground/60 hover:text-destructive transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function NovaVagaPage() {
-  const { token, isLoading: isAuthLoading } = useAuth();
   const { data: user, isLoading: isUserLoading } = useCurrentUser();
   const { data: memberships = [], isLoading: isMembershipsLoading } = useMyMemberships();
   const { data: allEntidades = [], isLoading: isEntidadesLoading } = useEntidades();
   const router = useRouter();
 
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<VagaFormData>({
-    titulo: "",
-    descricao: "",
-    tipoVaga: "",
-    entidadeId: "",
-    areas: [],
-    linkInscricao: "",
-    dataFinalizacao: "",
-    salario: "",
-    sobreEmpresa: "",
-    responsabilidades: [],
-    requisitos: [],
-    etapasProcesso: [],
-    informacoesAdicionais: "",
-  });
+  // Required fields
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [tipoVaga, setTipoVaga] = useState<TipoVaga | "">("");
+  const [entidadeId, setEntidadeId] = useState("");
+  const [entidadeOpen, setEntidadeOpen] = useState(false);
+  const [areas, setAreas] = useState<string[]>([]);
+  const [linkInscricao, setLinkInscricao] = useState("");
+  const [dataFinalizacao, setDataFinalizacao] = useState("");
+
+  // Optional fields
+  const [salario, setSalario] = useState("");
+  const [sobreEmpresa, setSobreEmpresa] = useState("");
+  const [responsabilidades, setResponsabilidades] = useState<string[]>([]);
+  const [responsabilidadeInput, setResponsabilidadeInput] = useState("");
+  const [requisitos, setRequisitos] = useState<string[]>([]);
+  const [requisitoInput, setRequisitoInput] = useState("");
+  const [etapasProcesso, setEtapasProcesso] = useState<string[]>([]);
+  const [etapaInput, setEtapaInput] = useState("");
+  const [informacoesAdicionais, setInformacoesAdicionais] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,13 +168,15 @@ export default function NovaVagaPage() {
       }));
   }, [memberships]);
 
-  const entidadeOptions = isMasterAdmin
+  const entidadeOptions: EntidadeOption[] = isMasterAdmin
     ? allEntidades.map(e => ({ id: e.id, nome: e.name, imagePath: e.imagePath }))
     : adminEntidades;
 
+  const selectedEntidade = entidadeOptions.find(e => e.id === entidadeId);
+
   const canPostJob = isMasterAdmin || adminEntidades.length > 0;
   const isDataLoading =
-    isAuthLoading || isUserLoading || isMembershipsLoading || (isMasterAdmin && isEntidadesLoading);
+    isUserLoading || isMembershipsLoading || (isMasterAdmin && isEntidadesLoading);
 
   useEffect(() => {
     if (!isDataLoading && !canPostJob) {
@@ -70,96 +185,51 @@ export default function NovaVagaPage() {
   }, [isDataLoading, canPostJob, router]);
 
   useEffect(() => {
-    if (entidadeOptions.length === 1 && !formData.entidadeId) {
-      setFormData(prev => ({ ...prev, entidadeId: entidadeOptions[0].id }));
+    if (entidadeOptions.length === 1 && !entidadeId) {
+      setEntidadeId(entidadeOptions[0].id);
     }
-  }, [entidadeOptions, formData.entidadeId]);
+  }, [entidadeOptions, entidadeId]);
 
-  const handleChange: VagaFormUpdater = useCallback((key, value) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
-    setError(null);
-  }, []);
-
-  const validateStep = (step: number): string | null => {
-    switch (step) {
-      case 0: {
-        if (!formData.titulo.trim()) {
-          return "Título é obrigatório.";
-        }
-        if (!formData.tipoVaga) {
-          return "Selecione o tipo de vaga.";
-        }
-        if (!formData.entidadeId) {
-          return "Selecione a entidade.";
-        }
-        if (!formData.linkInscricao.trim()) {
-          return "Link para inscrição é obrigatório.";
-        }
-        if (!formData.dataFinalizacao) {
-          return "Data de encerramento é obrigatória.";
-        }
-        const hoje = new Date().toISOString().slice(0, 10);
-        if (formData.dataFinalizacao < hoje) {
-          return "A data de finalização deve ser futura.";
-        }
-        return null;
-      }
-      case 1: {
-        if (!formData.descricao.trim()) {
-          return "Descrição é obrigatória.";
-        }
-        return null;
-      }
-      default:
-        return null;
-    }
-  };
-
-  const handleNext = () => {
-    const validationError = validateStep(currentStep);
-    if (validationError) {
-      setError(validationError);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      !titulo.trim() ||
+      !descricao.trim() ||
+      !tipoVaga ||
+      !entidadeId ||
+      !linkInscricao.trim() ||
+      !dataFinalizacao
+    ) {
+      setError("Todos os campos obrigatórios devem ser preenchidos.");
       return;
     }
-    setError(null);
-    setCurrentStep(prev => prev + 1);
-  };
-
-  const handleBack = () => {
-    setError(null);
-    setCurrentStep(prev => prev - 1);
-  };
-
-  const handleSubmit = async () => {
-    if (!token) {
-      setError("Sessão expirada. Faça login novamente.");
+    const hoje = todayDateString();
+    if (dataFinalizacao < hoje) {
+      setError("A data de finalização deve ser futura.");
       return;
     }
 
-    const dataFim = new Date(formData.dataFinalizacao);
+    const dataFim = new Date(dataFinalizacao);
 
     setIsSubmitting(true);
     setError(null);
 
     try {
-      await vagasService.create(
-        {
-          titulo: formData.titulo.trim(),
-          descricao: formData.descricao.trim(),
-          tipoVaga: formData.tipoVaga as Exclude<typeof formData.tipoVaga, "">,
-          entidadeId: formData.entidadeId,
-          areas: formData.areas,
-          linkInscricao: formData.linkInscricao.trim(),
-          dataFinalizacao: dataFim.toISOString(),
-          salario: formData.salario.trim() || null,
-          sobreEmpresa: formData.sobreEmpresa.trim() || null,
-          responsabilidades: formData.responsabilidades,
-          requisitos: formData.requisitos,
-          etapasProcesso: formData.etapasProcesso,
-          informacoesAdicionais: formData.informacoesAdicionais.trim() || null,
-        },
-        token
-      );
+      await vagasService.create({
+        titulo: titulo.trim(),
+        descricao: descricao.trim(),
+        tipoVaga,
+        entidadeId,
+        areas,
+        linkInscricao: linkInscricao.trim(),
+        dataFinalizacao: dataFim.toISOString(),
+        salario: salario.trim() || null,
+        sobreEmpresa: sobreEmpresa.trim() || null,
+        responsabilidades,
+        requisitos,
+        etapasProcesso,
+        informacoesAdicionais: informacoesAdicionais.trim() || null,
+      });
       router.push("/vagas");
       router.refresh();
     } catch (err: unknown) {
@@ -177,66 +247,413 @@ export default function NovaVagaPage() {
     return <Skeleton className="h-screen w-full" />;
   }
 
-  const renderStep = () => {
-    switch (currentStep) {
-      case 0:
-        return (
-          <StepInformacoes
-            data={formData}
-            onChange={handleChange}
-            entidadeOptions={entidadeOptions}
-          />
-        );
-      case 1:
-        return <StepDescricao data={formData} onChange={handleChange} />;
-      case 2:
-        return <StepProcesso data={formData} onChange={handleChange} />;
-      case 3:
-        return (
-          <StepRevisao data={formData} onChange={handleChange} entidadeOptions={entidadeOptions} />
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="mt-24">
-      <div className="container mx-auto max-w-4xl px-6">
+      <div className="container mx-auto max-w-7xl">
         {/* Back button */}
-        <div className="pt-8 pb-4">
+        <div className="px-6 md:px-8 lg:px-16 pt-8 pb-4">
           <Button variant="ghost" onClick={() => router.back()} className="flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
             Voltar
           </Button>
         </div>
 
-        {/* Progress bar */}
-        <div className="pb-6">
-          <VagaProgress currentStep={currentStep} />
-        </div>
-
         {/* Title */}
-        <div className="pb-8">
+        <div className="px-6 md:px-8 lg:px-16 pt-4 pb-8">
           <h1 className="text-3xl md:text-4xl font-bold">Divulgar Nova Vaga</h1>
           <p className="text-muted-foreground mt-2">
             Preencha as informações abaixo para publicar uma oportunidade no mural.
           </p>
         </div>
 
-        {/* Stepper */}
-        <div className="pb-16">
-          <VagaStepper
-            currentStep={currentStep}
-            onNext={handleNext}
-            onBack={handleBack}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-            error={error}
-          >
-            {renderStep()}
-          </VagaStepper>
-        </div>
+        <form onSubmit={handleSubmit}>
+          {/* Section: Entidade */}
+          <div className="px-6 md:px-8 lg:px-16 pb-10">
+            <div className="border-t border-border/30 pt-8">
+              <h2 className="text-lg font-semibold mb-1">Entidade</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Selecione a entidade em nome da qual a vaga será publicada.
+              </p>
+              <div className="max-w-md">
+                <Popover open={entidadeOpen} onOpenChange={setEntidadeOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm",
+                        "focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0",
+                        !selectedEntidade && "text-muted-foreground"
+                      )}
+                    >
+                      <span className="truncate flex items-center gap-2">
+                        {selectedEntidade ? (
+                          <>
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage
+                                src={selectedEntidade.imagePath}
+                                alt={selectedEntidade.nome}
+                              />
+                              <AvatarFallback className="text-[10px]">
+                                {selectedEntidade.nome.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            {selectedEntidade.nome}
+                          </>
+                        ) : (
+                          "Selecione a entidade"
+                        )}
+                      </span>
+                      <ChevronDown className="h-4 w-4 opacity-50 ml-2 flex-shrink-0" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="p-0"
+                    style={{ width: "var(--radix-popover-trigger-width)" }}
+                    align="start"
+                  >
+                    <Command>
+                      <CommandInput placeholder="Buscar entidade..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhuma entidade encontrada.</CommandEmpty>
+                        <CommandGroup>
+                          {selectedEntidade && (
+                            <CommandItem
+                              value="__clear__"
+                              onSelect={() => {
+                                setEntidadeId("");
+                                setEntidadeOpen(false);
+                              }}
+                              className="text-muted-foreground"
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Limpar seleção
+                            </CommandItem>
+                          )}
+                          {entidadeOptions.map(ent => (
+                            <CommandItem
+                              key={ent.id}
+                              value={ent.nome}
+                              onSelect={() => {
+                                setEntidadeId(ent.id);
+                                setEntidadeOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "h-4 w-4 mr-2 flex-shrink-0",
+                                  entidadeId === ent.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <Avatar className="h-5 w-5 mr-2 flex-shrink-0">
+                                <AvatarImage src={ent.imagePath} alt={ent.nome} />
+                                <AvatarFallback className="text-[10px]">
+                                  {ent.nome.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              {ent.nome}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Informações da vaga */}
+          <div className="px-6 md:px-8 lg:px-16 pb-10">
+            <div className="border-t border-border/30 pt-8">
+              <h2 className="text-lg font-semibold mb-1">Informações da vaga</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Dados principais que aparecerão no mural e na página da vaga.
+              </p>
+
+              <div className="flex flex-col gap-5 max-w-2xl">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="titulo">Título da vaga</Label>
+                  <Input
+                    id="titulo"
+                    value={titulo}
+                    onChange={e => setTitulo(e.target.value)}
+                    placeholder="Ex: Desenvolvedor Frontend Jr."
+                    maxLength={200}
+                  />
+                  <p className="text-xs text-muted-foreground text-right">{titulo.length}/200</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="tipoVaga">Tipo de vaga</Label>
+                    <Select
+                      onValueChange={(value: TipoVaga) => setTipoVaga(value)}
+                      value={tipoVaga}
+                    >
+                      <SelectTrigger id="tipoVaga">
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.values(TipoVaga).map(tipo => (
+                          <SelectItem key={tipo} value={tipo}>
+                            {tipo.replaceAll("_", " ")}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="dataFinalizacao">Encerra em</Label>
+                    <DatePicker
+                      id="dataFinalizacao"
+                      value={dataFinalizacao}
+                      onChange={setDataFinalizacao}
+                      min={todayDateString()}
+                      placeholder="Encerra em"
+                      clearable={false}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Após esta data a vaga sai do mural.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="linkInscricao">Link para inscrição</Label>
+                    <Input
+                      id="linkInscricao"
+                      type="url"
+                      value={linkInscricao}
+                      onChange={e => setLinkInscricao(e.target.value)}
+                      placeholder="https://..."
+                      maxLength={2048}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="salario">
+                      Remuneração{" "}
+                      <span className="text-muted-foreground font-normal">(opcional)</span>
+                    </Label>
+                    <Input
+                      id="salario"
+                      value={salario}
+                      onChange={e => setSalario(e.target.value)}
+                      placeholder="Ex: R$ 1.500 / Bolsa"
+                      maxLength={100}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label>
+                    Áreas <span className="text-muted-foreground font-normal">(opcional)</span>
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Selecione as áreas relacionadas à vaga para que ela apareça nos filtros.
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {AREA_OPTIONS.map(area => {
+                      const selected = areas.includes(area);
+                      return (
+                        <button
+                          key={area}
+                          type="button"
+                          onClick={() =>
+                            setAreas(prev =>
+                              selected ? prev.filter(a => a !== area) : [...prev, area]
+                            )
+                          }
+                          className={cn(
+                            "px-3 py-1 rounded-full text-sm border transition-colors",
+                            selected
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-muted-foreground border-input hover:border-foreground/40 hover:text-foreground"
+                          )}
+                        >
+                          {area}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Descrição */}
+          <div className="px-6 md:px-8 lg:px-16 pb-10">
+            <div className="border-t border-border/30 pt-8">
+              <h2 className="text-lg font-semibold mb-1">Descrição</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                O que a pessoa vai fazer, o que precisa saber e por que essa vaga vale a pena.
+              </p>
+              <Textarea
+                id="descricao"
+                value={descricao}
+                onChange={e => setDescricao(e.target.value)}
+                placeholder="Escreva aqui! Seja direto, mas não chato. Boas vagas têm boas descrições."
+                rows={8}
+                className="max-w-2xl"
+                maxLength={10000}
+              />
+              <p className="text-xs text-muted-foreground text-right max-w-2xl">
+                {descricao.length}/10000
+              </p>
+            </div>
+          </div>
+
+          {/* Section: Sobre a empresa */}
+          <div className="px-6 md:px-8 lg:px-16 pb-10">
+            <div className="border-t border-border/30 pt-8">
+              <h2 className="text-lg font-semibold mb-1">
+                Sobre a empresa{" "}
+                <span className="text-muted-foreground text-base font-normal">(opcional)</span>
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Contexto sobre a organização que está abrindo a vaga.
+              </p>
+              <Textarea
+                value={sobreEmpresa}
+                onChange={e => setSobreEmpresa(e.target.value)}
+                placeholder="Quem somos, o que fazemos, qual o nosso propósito..."
+                rows={4}
+                className="max-w-2xl"
+                maxLength={5000}
+              />
+              <p className="text-xs text-muted-foreground text-right max-w-2xl">
+                {sobreEmpresa.length}/5000
+              </p>
+            </div>
+          </div>
+
+          {/* Section: Processo seletivo */}
+          <div className="px-6 md:px-8 lg:px-16 pb-10">
+            <div className="border-t border-border/30 pt-8">
+              <h2 className="text-lg font-semibold mb-1">
+                Processo seletivo{" "}
+                <span className="text-muted-foreground text-base font-normal">(opcional)</span>
+              </h2>
+              <p className="text-sm text-muted-foreground mb-8">
+                Detalhe o que se espera do candidato e como será o processo.
+              </p>
+
+              <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-2">
+                  <Label>Responsabilidades</Label>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    O que a pessoa vai fazer no dia a dia.
+                  </p>
+                  <DynamicList
+                    items={responsabilidades}
+                    inputValue={responsabilidadeInput}
+                    onInputChange={setResponsabilidadeInput}
+                    onAdd={() => {
+                      if (responsabilidadeInput.trim()) {
+                        setResponsabilidades(prev => [...prev, responsabilidadeInput.trim()]);
+                        setResponsabilidadeInput("");
+                      }
+                    }}
+                    onRemove={i => setResponsabilidades(prev => prev.filter((_, idx) => idx !== i))}
+                    placeholder="Ex: Desenvolver e manter features do produto"
+                    maxItems={30}
+                    maxItemLength={500}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>Requisitos</Label>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    O que o candidato precisa saber ou ter para se inscrever.
+                  </p>
+                  <DynamicList
+                    items={requisitos}
+                    inputValue={requisitoInput}
+                    onInputChange={setRequisitoInput}
+                    onAdd={() => {
+                      if (requisitoInput.trim()) {
+                        setRequisitos(prev => [...prev, requisitoInput.trim()]);
+                        setRequisitoInput("");
+                      }
+                    }}
+                    onRemove={i => setRequisitos(prev => prev.filter((_, idx) => idx !== i))}
+                    placeholder="Ex: Conhecimento em React"
+                    maxItems={30}
+                    maxItemLength={500}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>Etapas do processo</Label>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Como funciona a seleção, do início ao fim.
+                  </p>
+                  <DynamicList
+                    items={etapasProcesso}
+                    inputValue={etapaInput}
+                    onInputChange={setEtapaInput}
+                    onAdd={() => {
+                      if (etapaInput.trim()) {
+                        setEtapasProcesso(prev => [...prev, etapaInput.trim()]);
+                        setEtapaInput("");
+                      }
+                    }}
+                    onRemove={i => setEtapasProcesso(prev => prev.filter((_, idx) => idx !== i))}
+                    placeholder="Ex: Triagem de currículos"
+                    maxItems={20}
+                    maxItemLength={500}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Informações adicionais */}
+          <div className="px-6 md:px-8 lg:px-16 pb-10">
+            <div className="border-t border-border/30 pt-8">
+              <h2 className="text-lg font-semibold mb-1">
+                Informações adicionais{" "}
+                <span className="text-muted-foreground text-base font-normal">(opcional)</span>
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Benefícios, diferenciais, observações ou qualquer outro detalhe relevante.
+              </p>
+              <Textarea
+                value={informacoesAdicionais}
+                onChange={e => setInformacoesAdicionais(e.target.value)}
+                placeholder="Vale transporte, horário flexível, trabalho remoto..."
+                rows={4}
+                className="max-w-2xl"
+                maxLength={5000}
+              />
+              <p className="text-xs text-muted-foreground text-right max-w-2xl">
+                {informacoesAdicionais.length}/5000
+              </p>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <div className="px-6 md:px-8 lg:px-16 pb-16">
+            <div className="border-t border-border/30 pt-8 flex flex-col gap-4">
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <div className="flex items-center gap-3">
+                <Button type="submit" className="rounded-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Publicando..." : "Publicar vaga"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => router.back()}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   );

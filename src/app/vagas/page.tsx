@@ -8,21 +8,13 @@ import type { Vaga } from "@/lib/shared/types";
 import { SearchBar1 } from "@/components/ui/searchbar1";
 import { Button } from "@/components/ui/button";
 import { Plus, List, LayoutGrid } from "lucide-react";
-import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { useVagas } from "@/lib/client/hooks";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { usePrefetchVaga } from "@/lib/client/hooks/use-prefetch";
 import { cn } from "@/lib/client/utils";
+import { ENTIDADE_TIPO_MAP } from "@/lib/shared/types/vaga.types";
 
 type ViewMode = "list" | "grid";
-
-const ENTIDADE_FILTER_MAP: Record<string, string[]> = {
-  laboratorios: ["LABORATORIO"],
-  grupos: ["GRUPO"],
-  ligas: ["LIGA_ACADEMICA"],
-  ufpb: ["CENTRO_ACADEMICO", "ATLETICA", "OUTRO"],
-  externo: ["EMPRESA"],
-};
 
 function VagasCard({
   vaga,
@@ -81,7 +73,7 @@ export default function VagasPage() {
         typeof vaga.entidade === "string" ? undefined : vaga.entidade.tipo?.toUpperCase();
 
       const matchesCheckbox = selectedCheckboxes.some(selected => {
-        const entidadeTypes = ENTIDADE_FILTER_MAP[selected];
+        const entidadeTypes = ENTIDADE_TIPO_MAP[selected];
         if (entidadeTypes) {
           return entidadeTipo !== undefined && entidadeTypes.includes(entidadeTipo);
         }
@@ -103,12 +95,6 @@ export default function VagasPage() {
           <h1 className="text-4xl md:text-5xl font-display font-bold max-w-3xl">
             Explore vagas de emprego, estágio e projetos no CI e fora dele
           </h1>
-          <div className="hidden md:flex flex-shrink-0">
-            <ContributeOnGitHub
-              url="https://github.com/aquario-ufpb/aquario-vagas"
-              className="rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
-            />
-          </div>
         </div>
 
         {/* Main Layout */}

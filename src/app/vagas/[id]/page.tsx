@@ -17,23 +17,19 @@ import {
 } from "lucide-react";
 import { useVagaById, useVagas } from "@/lib/client/hooks";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
-import { useAuth } from "@/contexts/auth-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { vagasService } from "@/lib/client/api/vagas";
 import Link from "next/link";
 import { toast } from "sonner";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { mapImagePath } from "@/lib/client/api/entidades";
-import { ENTIDADE_VAGA_LABELS } from "@/lib/shared/types/vaga.types";
+import {
+  getEntidadeDisplayName,
+  getTipoVagaLabel,
+  sanitizeExternalUrl,
+} from "@/lib/shared/types/vaga.types";
 import type { Vaga } from "@/lib/shared/types";
 import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
-
-function getEntidadeNome(entidade: Vaga["entidade"]): string {
-  if (typeof entidade === "object") {
-    return entidade.nome;
-  }
-  return ENTIDADE_VAGA_LABELS[entidade] ?? entidade;
-}
 
 function getEntidadeSlug(entidade: Vaga["entidade"]): string | null {
   if (typeof entidade === "object" && entidade.slug) {
@@ -42,14 +38,9 @@ function getEntidadeSlug(entidade: Vaga["entidade"]): string | null {
   return null;
 }
 
-function getTipoVagaLabel(tipo: string): string {
-  return tipo.replace(/_/g, " ");
-}
-
 export default function VagaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { token } = useAuth();
   const { data: user } = useCurrentUser();
   const { data: memberships = [] } = useMyMemberships();
   const queryClient = useQueryClient();
@@ -75,13 +66,10 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
   const canDelete = !!(user && (isMasterAdmin || isAdminOfEntidade));
 
   const handleDelete = async () => {
-    if (!token) {
-      return;
-    }
     setIsDeleting(true);
     try {
-      await vagasService.delete(id, token);
-      queryClient.invalidateQueries({ queryKey: ["vagas"] });
+      await vagasService.delete(id);
+      await queryClient.invalidateQueries({ queryKey: ["vagas"] });
       router.push("/vagas");
     } catch (error) {
       console.error("vagas.delete failed", error);
@@ -102,14 +90,14 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
     );
   }
 
-  const entidadeNome = getEntidadeNome(vaga.entidade);
+  const entidadeNome = getEntidadeDisplayName(vaga.entidade);
   const entidadeSlug = getEntidadeSlug(vaga.entidade);
   const entidadeAvatarSrc =
     typeof vaga.entidade === "object"
       ? mapImagePath("urlFoto" in vaga.entidade ? vaga.entidade.urlFoto : undefined)
       : getDefaultAvatarUrl(entidadeNome, entidadeNome);
   const tipoVagaLabel = getTipoVagaLabel(vaga.tipoVaga);
-  const applyLink = vaga.linkInscricao ?? vaga.linkVaga;
+  const applyLink = sanitizeExternalUrl(vaga.linkInscricao ?? vaga.linkVaga);
 
   return (
     <div className="mt-24">
@@ -254,7 +242,15 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
 
               {/* Apply button + publicador */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                {applyLink && (
+                {vaga.expirada && (
+                  <Badge
+                    variant="outline"
+                    className="text-xs px-2 py-0.5 text-destructive border-destructive/30 font-normal w-fit"
+                  >
+                    Vaga encerrada
+                  </Badge>
+                )}
+                {applyLink && !vaga.expirada && (
                   <Button asChild className="w-fit rounded-full">
                     <a href={applyLink} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="w-4 h-4 mr-2" />
@@ -357,7 +353,7 @@ export default function VagaPage({ params }: { params: Promise<{ id: string }> }
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {otherVagas.map(v => {
-                  const nome = getEntidadeNome(v.entidade);
+                  const nome = getEntidadeDisplayName(v.entidade);
                   const otherAvatarSrc =
                     typeof v.entidade === "object"
                       ? mapImagePath("urlFoto" in v.entidade ? v.entidade.urlFoto : undefined)

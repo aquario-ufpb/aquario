@@ -136,10 +136,6 @@ export async function GET(_request: unknown, { params }: { params: Promise<{ pat
     } else if (slugPath[0] === "mapas") {
       contentDir = join(process.cwd(), "content", "aquario-mapas");
       searchPath = slugPath.slice(1);
-    } else if (slugPath[0] === "aquario-vagas") {
-      // Support for the aquario-vagas repository
-      contentDir = join(process.cwd(), "content", "aquario-vagas");
-      searchPath = slugPath.slice(1);
     } else {
       // Default to guias - now under centro-de-informatica folder
       contentDir = join(process.cwd(), "content", "aquario-guias", "centro-de-informatica");

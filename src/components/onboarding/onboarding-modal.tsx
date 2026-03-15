@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/client/utils";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { useMyMemberships } from "@/lib/client/hooks";
 import type { OnboardingStepId, OnboardingStep } from "@/lib/shared/types";
 import type { SemestreLetivo } from "@/lib/shared/types/calendario.types";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { trackEvent } from "@/analytics/posthog-client";
 
 type OnboardingModalProps = {
   currentStep: OnboardingStep;
@@ -52,12 +53,18 @@ export function OnboardingModal({
   const isRevisiting = viewingPastStep !== null;
   const activeStepDef = stepDefsRef.current.get(activeStepId) ?? currentStep;
 
+  // Track whenever the visible step changes
+  useEffect(() => {
+    trackEvent("onboarding_step_viewed", { step_id: activeStepId });
+  }, [activeStepId]);
+
   const handleComplete = useCallback(
     async (stepId: OnboardingStepId) => {
       if (isRevisiting) {
         setViewingPastStep(null);
         return;
       }
+      trackEvent("onboarding_step_completed", { step_id: stepId });
       setHistory(prev => [...prev, stepId]);
       await onComplete(stepId);
     },
@@ -70,6 +77,7 @@ export function OnboardingModal({
         setViewingPastStep(null);
         return;
       }
+      trackEvent("onboarding_step_skipped", { step_id: stepId });
       setHistory(prev => [...prev, stepId]);
       await onSkip(stepId);
     },

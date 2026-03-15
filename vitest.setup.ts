@@ -99,11 +99,20 @@ vi.mock("@/lib/client/api/paas_providers/local-file-paas-provider", () => {
   };
 });
 
-// Mock the LocalFileVagasProvider to avoid require.context issues
-vi.mock("@/lib/client/api/vagas_providers/local-file-vagas-provider", () => {
+// Mock BackendVagasProvider so tests using vagasService don't hit the API
+vi.mock("@/lib/client/api/vagas_providers/backend-vagas-provider", () => {
   return {
-    LocalFileVagasProvider: class MockLocalFileVagasProvider {
+    BackendVagasProvider: class MockBackendVagasProvider {
       getAll() {
+        return Promise.resolve([]);
+      }
+      getById() {
+        return Promise.resolve(null);
+      }
+      getByTipo() {
+        return Promise.resolve([]);
+      }
+      getByEntidade() {
         return Promise.resolve([]);
       }
     },

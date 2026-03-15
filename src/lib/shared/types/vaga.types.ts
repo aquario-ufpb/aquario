@@ -58,6 +58,25 @@ export const ENTIDADE_VAGA_SHORT_LABELS: Record<EntidadeVagaType, string> = {
 };
 
 /**
+ * Maps entidade vaga categories to their corresponding entidade tipo values.
+ * Used for filtering vagas by entity category.
+ */
+export const ENTIDADE_TIPO_MAP: Record<string, string[]> = {
+  laboratorios: ["LABORATORIO"],
+  grupos: ["GRUPO"],
+  ligas: ["LIGA_ACADEMICA"],
+  ufpb: ["CENTRO_ACADEMICO", "ATLETICA", "OUTRO"],
+  externo: ["EMPRESA"],
+};
+
+/**
+ * Display labels for tipo de vaga
+ */
+export function getTipoVagaLabel(tipo: string): string {
+  return tipo.replace(/_/g, " ");
+}
+
+/**
  * Helper to check if a string is a valid EntidadeVagaType
  */
 export function isValidEntidadeVagaType(value: string): value is EntidadeVagaType {
@@ -82,6 +101,35 @@ export type VagaEntidadeInfo = {
   tipo?: string;
   urlFoto?: string;
 };
+
+/**
+ * Sanitizes a URL to only allow http/https schemes.
+ * Returns undefined for unsafe URIs (e.g. javascript:).
+ */
+export function sanitizeExternalUrl(url: string | undefined | null): string | undefined {
+  if (!url) {
+    return undefined;
+  }
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return url;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Gets the display name for an entidade on a vaga
+ */
+export function getEntidadeDisplayName(entidade: EntidadeVaga | VagaEntidadeInfo): string {
+  if (typeof entidade === "object") {
+    return entidade.nome;
+  }
+  return ENTIDADE_VAGA_LABELS[entidade] ?? entidade;
+}
 
 /**
  * Job/Opportunity posting
@@ -110,4 +158,6 @@ export type Vaga = {
   linkVaga?: string;
   /** Data de finalização (ISO string); após esta data a vaga não aparece no mural */
   dataFinalizacao?: string;
+  /** Whether the vaga has passed its deadline (returned by detail endpoint) */
+  expirada?: boolean;
 };

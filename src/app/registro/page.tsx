@@ -10,6 +10,8 @@ import { authService } from "@/lib/client/api/auth";
 import { useAllCursos } from "@/lib/client/hooks";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { PasswordInput } from "@/components/auth/password-input";
+import { trackEvent } from "@/analytics/posthog-client";
+import { isApiErrorInstance } from "@/lib/client/errors";
 import {
   cursoIllustrations,
   cursoShortLabels,
@@ -39,6 +41,7 @@ export default function Registro() {
     setError(null);
     setSuccess(null);
     setIsLoading(true);
+    trackEvent("register_attempted");
 
     const selectedCurso = cursos.find(c => c.id === cursoId);
     if (!selectedCurso) {
@@ -56,6 +59,7 @@ export default function Registro() {
         cursoId,
       });
 
+      trackEvent("register_succeeded");
       if (result.verificado) {
         setSuccess(result.message);
         setTimeout(() => {
@@ -69,8 +73,11 @@ export default function Registro() {
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
+        const errorType = isApiErrorInstance(err) ? err.code : "unknown";
+        trackEvent("register_failed", { error_type: errorType });
         setError(err.message);
       } else {
+        trackEvent("register_failed", { error_type: "unknown" });
         setError("Ocorreu um erro desconhecido");
       }
     } finally {

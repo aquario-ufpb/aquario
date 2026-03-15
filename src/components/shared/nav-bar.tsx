@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 
 import LinkHover from "@/components/shared/link-hover";
+import { SearchTrigger } from "@/components/shared/search/search-trigger";
 import { ModeToggle } from "@/components/shared/mode-toggle";
 import Link from "next/link";
 import {
@@ -254,12 +255,7 @@ function AuthSection() {
     return <UserDropdownMenu user={user} isDark={isDark} />;
   }
 
-  return (
-    <>
-      <LinkHover href="/login">ENTRAR</LinkHover>
-      <ModeToggle />
-    </>
-  );
+  return <LinkHover href="/login">ENTRAR</LinkHover>;
 }
 
 // Main NavBar Component
@@ -274,6 +270,18 @@ export default function NavBar() {
         <div className="flex items-center justify-end gap-4">
           <NavLinks isDark={isDark} />
           <AuthSection />
+          <SearchTrigger
+            onClick={() => {
+              window.dispatchEvent(
+                new KeyboardEvent("keydown", {
+                  key: "k",
+                  ctrlKey: true,
+                  bubbles: true,
+                })
+              );
+            }}
+          />
+          <ModeToggle />
         </div>
       </div>
     </nav>

@@ -17,6 +17,7 @@ import { CurriculumGraph } from "@/components/pages/grades-curriculares/curricul
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { trackEvent } from "@/analytics/posthog-client";
 
 export default function GradesCurricularesPage() {
   const [selectedCursoId, setSelectedCursoId] = useState<string | null>(null);
@@ -107,7 +108,13 @@ export default function GradesCurricularesPage() {
       <CursoSelector
         cursos={cursos}
         selectedCursoId={selectedCursoId}
-        onSelect={setSelectedCursoId}
+        onSelect={id => {
+          setSelectedCursoId(id);
+          const nome = cursos.find(c => c.id === id)?.nome;
+          if (nome) {
+            trackEvent("grade_curricular_curso_selected", { curso_nome: nome });
+          }
+        }}
         isLoading={cursosLoading}
       />
 
