@@ -1,18 +1,15 @@
 "use client";
 import { trackEvent } from "@/analytics/posthog-client";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { useEntidades } from "@/lib/client/hooks";
 import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import { GitBranch, Github, Map } from "lucide-react";
 import { useTheme } from "next-themes";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { FeatureSection } from "../../components/ui/feature-section";
 
 export default function Home() {
   const { theme, resolvedTheme } = useTheme();
@@ -212,403 +209,161 @@ export default function Home() {
               {/* Tools Section - Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Mapas Section */}
-                <Link href="/mapas" className="block">
-                  <Card
-                    className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                      isDark
-                        ? "bg-white/10 border-white/20 hover:bg-white/15"
-                        : "bg-white/60 border-blue-200 hover:bg-white/80"
-                    }`}
-                  >
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="flex-1">
-                        <h3
-                          className={`font-display text-xl font-bold mb-3 ${
-                            isDark ? "text-white" : "text-aquario-primary"
-                          }`}
-                        >
-                          {PAGE_HEADER_TEXT.mapas.title}
-                        </h3>
-                        <p
-                          className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
-                        >
-                          Explore os mapas interativos do CI e encontre salas e laboratórios.
-                        </p>
-                        <Button
-                          variant="outline"
-                          className={
-                            isDark
-                              ? "border-white text-white hover:bg-white/20"
-                              : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                          }
-                        >
-                          Ver Mapas
-                        </Button>
-                      </div>
-                      <div className="flex-shrink-0 hidden sm:block">
-                        <Image
-                          src={isDark ? "/mapas/dark.png" : "/mapas/light.png"}
-                          alt="Mapas"
-                          width={220}
-                          height={120}
-                          className="object-contain rounded-lg shadow-md"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <FeatureSection
+                  title={PAGE_HEADER_TEXT.mapas.title}
+                  subtitle={PAGE_HEADER_TEXT.mapas.extendedSubtitle}
+                  buttonText="Ver Mapas"
+                  buttonUrl="/mapas"
+                  imageSrc={isDark ? "/mapas/dark.png" : "/mapas/light.png"}
+                  imageAlt="Mapas"
+                  isDark={isDark}
+                />
 
                 {/* Calendario Section */}
-                <Link href="/calendario" className="block">
-                  <Card
-                    className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                      isDark
-                        ? "bg-white/10 border-white/20 hover:bg-white/15"
-                        : "bg-white/60 border-blue-200 hover:bg-white/80"
-                    }`}
-                  >
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="flex-1">
-                        <h3
-                          className={`font-display text-xl font-bold mb-3 ${
-                            isDark ? "text-white" : "text-aquario-primary"
-                          }`}
-                        >
-                          {PAGE_HEADER_TEXT.minhasDisciplinas.title}
-                        </h3>
-                        <p
-                          className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
-                        >
-                          Gerencie suas disciplinas cursando e visualize seu calendário
-                          personalizado.
-                        </p>
-                        <Button
-                          variant="outline"
-                          className={
-                            isDark
-                              ? "border-white text-white hover:bg-white/20"
-                              : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                          }
-                        >
-                          Minhas Disciplinas
-                        </Button>
-                      </div>
-                      <div className="flex-shrink-0 hidden sm:block">
-                        <Image
-                          src={isDark ? "/calendario/dark.png" : "/calendario/light.png"}
-                          alt="Calendário"
-                          width={220}
-                          height={120}
-                          className="object-contain rounded-lg shadow-md"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <FeatureSection
+                  title={PAGE_HEADER_TEXT.minhasDisciplinas.title}
+                  subtitle={PAGE_HEADER_TEXT.minhasDisciplinas.extendedSubtitle}
+                  buttonText="Minhas Disciplinas"
+                  buttonUrl="/calendario"
+                  imageSrc={isDark ? "/calendario/dark.png" : "/calendario/light.png"}
+                  imageAlt="Calendário"
+                  isDark={isDark}
+                />
               </div>
 
               {/* Calendario Academico Section */}
-              <Link href="/calendario-academico" className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
-                >
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h3
-                          className={`font-display text-xl font-bold ${
-                            isDark ? "text-white" : "text-aquario-primary"
-                          }`}
-                        >
-                          {PAGE_HEADER_TEXT.calendarioAcademico.title}
-                        </h3>
-                        <Badge
-                          className={
-                            isDark
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : "bg-green-500/10 text-green-600 border-green-500/30"
-                          }
-                        >
-                          Novo
-                        </Badge>
-                      </div>
-                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                        Consulte as datas importantes do semestre letivo da UFPB.
-                      </p>
-                      <Button
-                        variant="outline"
-                        className={
-                          isDark
-                            ? "border-white text-white hover:bg-white/20"
-                            : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                        }
-                      >
-                        Ver Calendário
-                      </Button>
-                    </div>
-                    <div className="flex-shrink-0 hidden sm:block">
-                      <Image
-                        src={
-                          isDark
-                            ? "/calendario-academico/dark.png"
-                            : "/calendario-academico/light.png"
-                        }
-                        alt="Calendário Acadêmico"
-                        width={220}
-                        height={120}
-                        className="object-contain rounded-lg shadow-md"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <FeatureSection
+                title={PAGE_HEADER_TEXT.calendarioAcademico.title}
+                subtitle={PAGE_HEADER_TEXT.calendarioAcademico.extendedSubtitle}
+                buttonText="Ver Calendário"
+                buttonUrl="/calendario-academico"
+                imageSrc={
+                  isDark ? "/calendario-academico/dark.png" : "/calendario-academico/light.png"
+                }
+                imageAlt="Calendário Acadêmico"
+                isDark={isDark}
+                badgeText="Novo"
+                badgeClassName={
+                  isDark
+                    ? "bg-green-500/20 text-green-400 border-green-500/30"
+                    : "bg-green-500/10 text-green-600 border-green-500/30"
+                }
+              />
 
               {/* Grades Curriculares Section */}
-              <Link href="/grades-curriculares" className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
-                >
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h3
-                          className={`font-display text-xl font-bold ${
-                            isDark ? "text-white" : "text-aquario-primary"
-                          }`}
-                        >
-                          {PAGE_HEADER_TEXT.gradesCurriculares.title}
-                        </h3>
-                        <Badge
-                          className={
-                            isDark
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : "bg-green-500/10 text-green-600 border-green-500/30"
-                          }
-                        >
-                          Novo
-                        </Badge>
-                      </div>
-                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                        Visualize a grade curricular do seu curso de forma interativa com
-                        pré-requisitos e equivalências.
-                      </p>
-                      <Button
-                        variant="outline"
-                        className={
-                          isDark
-                            ? "border-white text-white hover:bg-white/20"
-                            : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                        }
-                      >
-                        Ver Grade
-                      </Button>
-                    </div>
-                    <div className="flex-shrink-0 hidden sm:block">
-                      <Image
-                        src={isDark ? "/grade/dark.png" : "/grade/light.png"}
-                        alt="Grades Curriculares"
-                        width={220}
-                        height={120}
-                        className="object-contain rounded-lg shadow-md"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <FeatureSection
+                title={PAGE_HEADER_TEXT.gradesCurriculares.title}
+                subtitle={PAGE_HEADER_TEXT.gradesCurriculares.extendedSubtitle}
+                buttonText="Ver Grade"
+                buttonUrl="/grades-curriculares"
+                imageSrc={isDark ? "/grade/dark.png" : "/grade/light.png"}
+                imageAlt="Grades Curriculares"
+                isDark={isDark}
+                badgeText="Novo"
+                badgeClassName={
+                  isDark
+                    ? "bg-green-500/20 text-green-400 border-green-500/30"
+                    : "bg-green-500/10 text-green-600 border-green-500/30"
+                }
+              />
 
               {/* Guias Section */}
-              <Link href="/guias" className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
-                >
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="flex-1">
-                      <h3
-                        className={`font-display text-xl font-bold mb-3 ${
-                          isDark ? "text-white" : "text-aquario-primary"
-                        }`}
-                      >
-                        {PAGE_HEADER_TEXT.guias.title}
-                      </h3>
-                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                        Encontre orientações, dicas e recursos que vão te ajudar em sua jornada
-                        acadêmica no Centro de Informática.
-                      </p>
-                      <Button
-                        variant="outline"
-                        className={
-                          isDark
-                            ? "border-white text-white hover:bg-white/20"
-                            : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                        }
-                      >
-                        Explorar Guias
-                      </Button>
-                    </div>
-                    <div className="flex-shrink-0 hidden sm:block">
-                      <Image
-                        src={isDark ? "/guias/dark.png" : "/guias/light.png"}
-                        alt="Guias"
-                        width={220}
-                        height={120}
-                        className="object-contain rounded-lg shadow-md"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <FeatureSection
+                title={PAGE_HEADER_TEXT.guias.title}
+                subtitle={PAGE_HEADER_TEXT.guias.extendedSubtitle}
+                buttonText="Explorar Guias"
+                buttonUrl="/guias"
+                imageSrc={isDark ? "/guias/dark.png" : "/guias/light.png"}
+                imageAlt="Guias"
+                isDark={isDark}
+              />
 
               {/* Sobre Section */}
-              <Link href="/sobre" className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
-                >
-                  <CardContent className="p-6">
-                    <h3
-                      className={`font-display text-xl font-bold mb-3 ${
-                        isDark ? "text-white" : "text-aquario-primary"
-                      }`}
-                    >
-                      {PAGE_HEADER_TEXT.sobre.title}
-                    </h3>
-                    <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                      Conheça mais sobre o Aquário, nossa missão, visão e como contribuir para este
-                      projeto em constante evolução.
-                    </p>
-                    <Button
-                      variant="outline"
-                      className={
-                        isDark
-                          ? "border-white text-white hover:bg-white/20"
-                          : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                      }
-                    >
-                      Saiba Mais
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Link>
+              <FeatureSection
+                title={PAGE_HEADER_TEXT.sobre.title}
+                subtitle={PAGE_HEADER_TEXT.sobre.extendedSubtitle}
+                buttonText="Saiba Mais"
+                buttonUrl="/sobre"
+                isDark={isDark}
+              />
 
               {/* Entidades Section */}
-              <div className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
-                >
-                  <CardContent className="p-6">
-                    <Link href="/entidades" className="block">
-                      <h3
-                        className={`font-display text-xl font-bold mb-3 ${
-                          isDark ? "text-white" : "text-aquario-primary"
-                        }`}
-                      >
-                        {PAGE_HEADER_TEXT.entidades.title}
-                      </h3>
-                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                        Entidades Acadêmicas
-                      </p>
-                      <Button
-                        variant="outline"
-                        className={
-                          isDark
-                            ? "border-white text-white hover:bg-white/20 mb-4"
-                            : "border-blue-900 text-blue-900 hover:bg-blue-50 mb-4"
-                        }
-                      >
-                        Ver Todas
-                      </Button>
-                    </Link>
-
-                    {/* Entidades Infinite Scroll Preview */}
-                    {entidades.length > 0 && (
-                      <div
-                        ref={scrollContainerRef}
-                        className="mt-4 relative overflow-x-auto overflow-y-hidden scrollbar-hide"
-                        onWheel={() => {
-                          setIsScrolling(true);
-                          setTimeout(() => setIsScrolling(false), 2000);
-                        }}
-                        onMouseDown={() => setIsScrolling(true)}
-                        onMouseUp={() => setTimeout(() => setIsScrolling(false), 1000)}
-                        onTouchStart={() => setIsScrolling(true)}
-                        onTouchEnd={() => setTimeout(() => setIsScrolling(false), 1000)}
-                      >
-                        <style>
-                          {`
-                            .scrollbar-hide::-webkit-scrollbar {
-                              display: none;
-                            }
-                            .scrollbar-hide {
-                              -ms-overflow-style: none;
-                              scrollbar-width: none;
-                            }
-                          `}
-                        </style>
-                        <div className="flex gap-4" style={{ width: "fit-content" }}>
-                          {/* Duplicate entidades for seamless loop */}
-                          {[...entidades, ...entidades].map((entidade, index) => (
-                            <Link
-                              key={`${entidade.id}-${index}`}
-                              href={`/entidade/${entidade.slug}`}
-                              className={`flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0 pointer-events-auto border min-w-[200px] max-w-[250px] ${
-                                isDark ? "border-white/10" : "border-black/10"
+              <FeatureSection
+                title={PAGE_HEADER_TEXT.entidades.title}
+                subtitle={PAGE_HEADER_TEXT.entidades.extendedSubtitle}
+                buttonText="Ver Todas"
+                buttonUrl="/entidades"
+                isDark={isDark}
+              >
+                {/* Entidades Infinite Scroll Preview */}
+                {entidades.length > 0 && (
+                  <div
+                    ref={scrollContainerRef}
+                    className="mt-4 relative overflow-x-auto overflow-y-hidden scrollbar-hide"
+                    onWheel={() => {
+                      setIsScrolling(true);
+                      setTimeout(() => setIsScrolling(false), 2000);
+                    }}
+                    onMouseDown={() => setIsScrolling(true)}
+                    onMouseUp={() => setTimeout(() => setIsScrolling(false), 1000)}
+                    onTouchStart={() => setIsScrolling(true)}
+                    onTouchEnd={() => setTimeout(() => setIsScrolling(false), 1000)}
+                  >
+                    <style>
+                      {`
+                          .scrollbar-hide::-webkit-scrollbar {
+                            display: none;
+                          }
+                          .scrollbar-hide {
+                            -ms-overflow-style: none;
+                            scrollbar-width: none;
+                          }
+                        `}
+                    </style>
+                    <div className="flex gap-4" style={{ width: "fit-content" }}>
+                      {/* Duplicate entidades for seamless loop */}
+                      {[...entidades, ...entidades].map((entidade, index) => (
+                        <Link
+                          key={`${entidade.id}-${index}`}
+                          href={`/entidade/${entidade.slug}`}
+                          className={`flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0 pointer-events-auto border min-w-[200px] max-w-[250px] ${
+                            isDark ? "border-white/10" : "border-black/10"
+                          }`}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={entidade.imagePath || ""}
+                            alt={entidade.name}
+                            className="w-12 h-12 object-contain rounded flex-shrink-0"
+                            onError={e => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`text-sm font-medium truncate ${
+                                isDark ? "text-white" : "text-slate-900"
                               }`}
                             >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={entidade.imagePath || ""}
-                                alt={entidade.name}
-                                className="w-12 h-12 object-contain rounded flex-shrink-0"
-                                onError={e => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = "none";
-                                }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p
-                                  className={`text-sm font-medium truncate ${
-                                    isDark ? "text-white" : "text-slate-900"
-                                  }`}
-                                >
-                                  {entidade.name}
-                                </p>
-                                {entidade.subtitle && (
-                                  <p
-                                    className={`text-xs truncate ${
-                                      isDark ? "text-white/60" : "text-slate-600"
-                                    }`}
-                                  >
-                                    {entidade.subtitle}
-                                  </p>
-                                )}
-                              </div>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+                              {entidade.name}
+                            </p>
+                            {entidade.subtitle && (
+                              <p
+                                className={`text-xs truncate ${
+                                  isDark ? "text-white/60" : "text-slate-600"
+                                }`}
+                              >
+                                {entidade.subtitle}
+                              </p>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </FeatureSection>
             </div>
           </div>
         </section>
