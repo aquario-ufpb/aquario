@@ -6,7 +6,6 @@ import Link from "next/link";
 import { ReactNode } from "react";
 
 export type FeatureSectionProps = {
-  size?: "full" | "half";
   title: string;
   subtitle: string;
   buttonText: string;
@@ -23,7 +22,6 @@ export type FeatureSectionProps = {
 };
 
 export function FeatureSection({
-  size = "half",
   title,
   subtitle,
   buttonText,

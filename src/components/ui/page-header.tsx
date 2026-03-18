@@ -1,8 +1,8 @@
-interface PageHeaderProps {
+type PageHeaderProps = {
   title: string;
   subtitle: string;
   className?: string;
-}
+};
 
 export function PageHeader({ title, subtitle, className }: PageHeaderProps) {
   return (
