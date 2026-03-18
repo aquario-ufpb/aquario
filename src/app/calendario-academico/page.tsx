@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, useCallback, forwardRef } from "react";
+import { trackEvent } from "@/analytics/posthog-client";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   Select,
   SelectContent,
@@ -12,20 +14,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { List, CalendarDays, ChevronLeft, ChevronRight, Circle } from "lucide-react";
 import {
-  useSemestres,
   useSemestre,
   useSemestreAtivo,
+  useSemestres,
 } from "@/lib/client/hooks/use-calendario-academico";
 import {
-  CATEGORIA_LABELS,
-  CATEGORIA_COLORS,
   ALL_CATEGORIAS,
+  CATEGORIA_COLORS,
+  CATEGORIA_LABELS,
 } from "@/lib/shared/config/calendario-academico";
 import type { CategoriaEvento, EventoCalendario } from "@/lib/shared/types/calendario.types";
-import { trackEvent } from "@/analytics/posthog-client";
+import { CalendarDays, ChevronLeft, ChevronRight, Circle, List } from "lucide-react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // =============================================================================
 // Helpers
@@ -155,14 +156,10 @@ export default function CalendarioAcademicoPage() {
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-4xl md:text-5xl font-display font-bold mb-4 text-[#0e3a6c] dark:text-[#C8E6FA]">
-          Calendário Acadêmico
-        </h1>
-        <p className="text-lg text-[#0e3a6c] dark:text-[#E5F6FF]">
-          Visualize os eventos e datas importantes do calendário acadêmico da UFPB
-        </p>
-      </div>
+      <PageHeader
+        title="Calendário Acadêmico"
+        subtitle="Visualize os eventos e datas importantes do calendário acadêmico da UFPB"
+      />
 
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-4 mb-6">

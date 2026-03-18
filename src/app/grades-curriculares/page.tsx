@@ -1,23 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import Link from "next/link";
+import { trackEvent } from "@/analytics/posthog-client";
+import { CurriculumGraph } from "@/components/pages/grades-curriculares/curriculum-graph";
+import { CursoSelector } from "@/components/pages/grades-curriculares/curso-selector";
+import { PageHeader } from "@/components/ui/page-header";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAllCursos } from "@/lib/client/hooks/use-admin-cursos";
-import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
-import { useGradeCurricular } from "@/lib/client/hooks/use-grade-curricular";
+import { useSemestreAtivo } from "@/lib/client/hooks/use-calendario-academico";
 import { useDisciplinasConcluidas } from "@/lib/client/hooks/use-disciplinas-concluidas";
 import {
   useDisciplinasSemestreAtivo,
   useMarcarDisciplinas,
 } from "@/lib/client/hooks/use-disciplinas-semestre";
-import { useSemestreAtivo } from "@/lib/client/hooks/use-calendario-academico";
-import { GradeCurricularHeader } from "@/components/pages/grades-curriculares/grade-curricular-header";
-import { CursoSelector } from "@/components/pages/grades-curriculares/curso-selector";
-import { CurriculumGraph } from "@/components/pages/grades-curriculares/curriculum-graph";
-import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, ArrowRight } from "lucide-react";
+import { useGradeCurricular } from "@/lib/client/hooks/use-grade-curricular";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
+import { ArrowRight, BookOpen } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { trackEvent } from "@/analytics/posthog-client";
 
 export default function GradesCurricularesPage() {
   const [selectedCursoId, setSelectedCursoId] = useState<string | null>(null);
@@ -103,7 +103,10 @@ export default function GradesCurricularesPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
-      <GradeCurricularHeader />
+      <PageHeader
+        title="Grades Curriculares"
+        subtitle="Visualize a grade curricular do seu curso com todas as disciplinas, requisitos e equivalências"
+      />
 
       <CursoSelector
         cursos={cursos}

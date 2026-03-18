@@ -57,6 +57,8 @@ const config = {
         "light-text": "hsl(240 5.9% 10%)",
         "dark-text": "hsl(0 0% 98%)",
         "aquario-primary": "hsl(var(--aquario-primary))",
+        "aquario-header": "#0e3a6c",
+        "aquario-header-dark": "#C8E6FA",
       },
       borderRadius: {
         lg: "var(--radius)",
