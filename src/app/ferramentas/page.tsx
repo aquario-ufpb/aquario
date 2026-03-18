@@ -57,7 +57,10 @@ export default function FerramentasPage() {
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
       {/* Header */}
-      <PageHeader title={PAGE_HEADER_TEXT.guias.title} subtitle={PAGE_HEADER_TEXT.guias.subtitle} />
+      <PageHeader
+        title={PAGE_HEADER_TEXT.ferramentas.title}
+        subtitle={PAGE_HEADER_TEXT.ferramentas.subtitle}
+      />
 
       {/* Ferramentas Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

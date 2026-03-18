@@ -59,11 +59,9 @@ export function FeatureSection({
           <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
             {subtitle}
           </p>
-          <Link href={buttonUrl} className="block">
-            <Button variant="outline" {...buttonProps}>
-              {buttonText}
-            </Button>
-          </Link>
+          <Button asChild variant="outline" {...buttonProps}>
+            <Link href={buttonUrl}>{buttonText}</Link>
+          </Button>
           {children}
           {carousel && <div className="w-full min-w-0 max-w-full overflow-hidden">{carousel}</div>}
         </div>

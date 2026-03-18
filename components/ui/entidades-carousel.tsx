@@ -6,8 +6,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 export function EntidadesCarousel({ isDark }: { isDark: boolean }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const resumeScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: allEntidades = [] } = useEntidades();
   const [isScrolling, setIsScrolling] = useState(false);
+
+  const scheduleResumeAutoScroll = (delay: number) => {
+    if (resumeScrollTimeoutRef.current) {
+      clearTimeout(resumeScrollTimeoutRef.current);
+    }
+
+    resumeScrollTimeoutRef.current = setTimeout(() => {
+      setIsScrolling(false);
+      resumeScrollTimeoutRef.current = null;
+    }, delay);
+  };
 
   // Filter and shuffle entidades for preview (excluding EMPRESA)
   const entidades = useMemo(() => {
@@ -55,18 +67,26 @@ export function EntidadesCarousel({ isDark }: { isDark: boolean }) {
     };
   }, [entidades.length, isScrolling]);
 
+  useEffect(() => {
+    return () => {
+      if (resumeScrollTimeoutRef.current) {
+        clearTimeout(resumeScrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div
       ref={scrollContainerRef}
       className="relative mt-4 w-full max-w-full overflow-x-auto overflow-y-hidden scrollbar-hide"
       onWheel={() => {
         setIsScrolling(true);
-        setTimeout(() => setIsScrolling(false), 2000);
+        scheduleResumeAutoScroll(2000);
       }}
       onMouseDown={() => setIsScrolling(true)}
-      onMouseUp={() => setTimeout(() => setIsScrolling(false), 1000)}
+      onMouseUp={() => scheduleResumeAutoScroll(1000)}
       onTouchStart={() => setIsScrolling(true)}
-      onTouchEnd={() => setTimeout(() => setIsScrolling(false), 1000)}
+      onTouchEnd={() => scheduleResumeAutoScroll(1000)}
     >
       <style>
         {`
