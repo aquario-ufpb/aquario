@@ -7,6 +7,7 @@ import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { PageHeader } from "@/components/ui/page-header";
 import { useMapas } from "@/lib/client/hooks/use-mapas";
 import type { Room } from "@/lib/client/mapas/types";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import { Building2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSearchParams } from "next/navigation";
@@ -129,8 +130,8 @@ function MapsPageInner() {
       <div className="mb-12">
         <div className="flex items-start justify-between gap-4 mb-8">
           <PageHeader
-            title="Mapas dos Prédios"
-            subtitle="Mapas interativos dos prédios do Centro de Informática"
+            title={PAGE_HEADER_TEXT.mapas.title}
+            subtitle={PAGE_HEADER_TEXT.mapas.subtitle}
           />
           <div className="hidden md:flex flex-shrink-0">
             <ContributeOnGitHub

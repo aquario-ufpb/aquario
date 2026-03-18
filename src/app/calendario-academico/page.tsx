@@ -24,6 +24,7 @@ import {
   CATEGORIA_COLORS,
   CATEGORIA_LABELS,
 } from "@/lib/shared/config/calendario-academico";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import type { CategoriaEvento, EventoCalendario } from "@/lib/shared/types/calendario.types";
 import { CalendarDays, ChevronLeft, ChevronRight, Circle, List } from "lucide-react";
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -157,8 +158,8 @@ export default function CalendarioAcademicoPage() {
     <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
       {/* Header */}
       <PageHeader
-        title="Calendário Acadêmico"
-        subtitle="Visualize os eventos e datas importantes do calendário acadêmico da UFPB"
+        title={PAGE_HEADER_TEXT.calendarioAcademico.title}
+        subtitle={PAGE_HEADER_TEXT.calendarioAcademico.subtitle}
       />
 
       {/* Controls */}

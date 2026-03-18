@@ -1,17 +1,18 @@
 "use client";
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
-import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
-import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
-import { useTheme } from "next-themes";
-import { useEffect, useState, useRef, useMemo } from "react";
-import { Github, Map, GitBranch } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useEntidades } from "@/lib/client/hooks";
 import { trackEvent } from "@/analytics/posthog-client";
+import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
+import { useEntidades } from "@/lib/client/hooks";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
+import { GitBranch, Github, Map } from "lucide-react";
+import { useTheme } from "next-themes";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function Home() {
   const { theme, resolvedTheme } = useTheme();
@@ -226,7 +227,7 @@ export default function Home() {
                             isDark ? "text-white" : "text-aquario-primary"
                           }`}
                         >
-                          Mapas
+                          {PAGE_HEADER_TEXT.mapas.title}
                         </h3>
                         <p
                           className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
@@ -273,7 +274,7 @@ export default function Home() {
                             isDark ? "text-white" : "text-aquario-primary"
                           }`}
                         >
-                          Minhas Disciplinas
+                          {PAGE_HEADER_TEXT.minhasDisciplinas.title}
                         </h3>
                         <p
                           className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
@@ -323,7 +324,7 @@ export default function Home() {
                             isDark ? "text-white" : "text-aquario-primary"
                           }`}
                         >
-                          Calendário Acadêmico
+                          {PAGE_HEADER_TEXT.calendarioAcademico.title}
                         </h3>
                         <Badge
                           className={
@@ -383,7 +384,7 @@ export default function Home() {
                             isDark ? "text-white" : "text-aquario-primary"
                           }`}
                         >
-                          Grades Curriculares
+                          {PAGE_HEADER_TEXT.gradesCurriculares.title}
                         </h3>
                         <Badge
                           className={
@@ -439,7 +440,7 @@ export default function Home() {
                           isDark ? "text-white" : "text-aquario-primary"
                         }`}
                       >
-                        Guias e Recursos
+                        {PAGE_HEADER_TEXT.guias.title}
                       </h3>
                       <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
                         Encontre orientações, dicas e recursos que vão te ajudar em sua jornada
@@ -484,7 +485,7 @@ export default function Home() {
                         isDark ? "text-white" : "text-aquario-primary"
                       }`}
                     >
-                      Sobre o Projeto
+                      {PAGE_HEADER_TEXT.sobre.title}
                     </h3>
                     <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
                       Conheça mais sobre o Aquário, nossa missão, visão e como contribuir para este
@@ -520,11 +521,10 @@ export default function Home() {
                           isDark ? "text-white" : "text-aquario-primary"
                         }`}
                       >
-                        Entidades
+                        {PAGE_HEADER_TEXT.entidades.title}
                       </h3>
                       <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                        Procure laboratórios, ligas acadêmicas, grupos de pesquisa e outros do
-                        Centro de Informática.
+                        Entidades Acadêmicas
                       </p>
                       <Button
                         variant="outline"

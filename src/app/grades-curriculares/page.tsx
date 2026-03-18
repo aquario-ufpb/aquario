@@ -14,6 +14,7 @@ import {
 } from "@/lib/client/hooks/use-disciplinas-semestre";
 import { useGradeCurricular } from "@/lib/client/hooks/use-grade-curricular";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import { ArrowRight, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -104,8 +105,8 @@ export default function GradesCurricularesPage() {
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
       <PageHeader
-        title="Grades Curriculares"
-        subtitle="Visualize a grade curricular do seu curso com todas as disciplinas, requisitos e equivalências"
+        title={PAGE_HEADER_TEXT.gradesCurriculares.title}
+        subtitle={PAGE_HEADER_TEXT.gradesCurriculares.subtitle}
       />
 
       <CursoSelector

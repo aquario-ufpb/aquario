@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import { BookOpen, Calendar, CalendarDays, GitBranch, Map } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -56,10 +57,7 @@ export default function FerramentasPage() {
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
       {/* Header */}
-      <PageHeader
-        title="Ferramentas"
-        subtitle="Ferramentas úteis para estudantes do Centro de Informática"
-      />
+      <PageHeader title={PAGE_HEADER_TEXT.guias.title} subtitle={PAGE_HEADER_TEXT.guias.subtitle} />
 
       {/* Ferramentas Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

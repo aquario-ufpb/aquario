@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEntidades } from "@/lib/client/hooks";
 import { usePrefetchEntidade } from "@/lib/client/hooks/use-prefetch";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import type { Entidade } from "@/lib/shared/types";
 import type { TipoEntidade } from "@/lib/shared/types/entidade.types";
 import Link from "next/link";
@@ -182,8 +183,8 @@ export default function EntidadesPage() {
       <div className="mb-12">
         <div className="flex items-start justify-between gap-4 mb-8">
           <PageHeader
-            title="Procure Laboratórios, ligas acadêmicas, grupos de pesquisa e outros"
-            subtitle="Encontre entidades acadêmicas, grupos, ligas e empresas parceiras do Centro de Informática"
+            title={PAGE_HEADER_TEXT.entidades.title}
+            subtitle={PAGE_HEADER_TEXT.entidades.subtitle}
           />
           <div className="hidden md:flex flex-shrink-0">
             <ContributeOnGitHub
