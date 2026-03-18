@@ -19,6 +19,7 @@ export type FeatureSectionProps = {
   children?: ReactNode;
   buttonProps?: React.ComponentProps<typeof Button>;
   containerClassName?: string;
+  carousel?: ReactNode;
 };
 
 export function FeatureSection({
@@ -35,6 +36,7 @@ export function FeatureSection({
   children,
   buttonProps,
   containerClassName,
+  carousel,
 }: FeatureSectionProps) {
   return (
     <Card
@@ -44,8 +46,8 @@ export function FeatureSection({
           : "bg-white/60 border-blue-200 hover:bg-white/80"
       } ${containerClassName || ""}`}
     >
-      <CardContent className="p-6 flex items-center gap-4">
-        <div className="flex-1">
+      <CardContent className="flex items-center gap-4 overflow-hidden p-6">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-3">
             <h3
               className={`font-display text-xl font-bold ${
@@ -65,6 +67,7 @@ export function FeatureSection({
             </Button>
           </Link>
           {children}
+          {carousel && <div className="w-full min-w-0 max-w-full overflow-hidden">{carousel}</div>}
         </div>
         {imageSrc && (
           <div className="flex-shrink-0 hidden sm:block">

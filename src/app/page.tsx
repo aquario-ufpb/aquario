@@ -3,22 +3,17 @@ import { trackEvent } from "@/analytics/posthog-client";
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
-import { useEntidades } from "@/lib/client/hooks";
 import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import { GitBranch, Github, Map } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { EntidadesCarousel } from "../../components/ui/entidades-carousel";
 import { FeatureSection } from "../../components/ui/feature-section";
 
 export default function Home() {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Use React Query hook
-  const { data: allEntidades = [] } = useEntidades();
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -43,52 +38,6 @@ export default function Home() {
       );
     }
   }, []);
-
-  // Filter and shuffle entidades for preview (excluding EMPRESA)
-  const entidades = useMemo(() => {
-    if (!mounted || allEntidades.length === 0) {
-      return [];
-    }
-    // Filter out EMPRESA type entidades
-    const filteredData = allEntidades.filter(entidade => entidade.tipo !== "EMPRESA");
-    // Randomize the order using Fisher-Yates shuffle
-    const shuffled = [...filteredData];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }, [mounted, allEntidades]);
-
-  // Auto-scroll functionality
-  useEffect(() => {
-    if (!scrollContainerRef.current || entidades.length === 0 || isScrolling) {
-      return;
-    }
-
-    const container = scrollContainerRef.current;
-    const scrollSpeed = 1.5; // pixels per frame - faster scrolling
-    let animationFrameId: number;
-
-    const autoScroll = () => {
-      if (!isScrolling) {
-        container.scrollLeft += scrollSpeed;
-        // Reset scroll position when we reach halfway (for infinite effect)
-        if (container.scrollLeft >= container.scrollWidth / 2) {
-          container.scrollLeft = 0;
-        }
-      }
-      animationFrameId = requestAnimationFrame(autoScroll);
-    };
-
-    animationFrameId = requestAnimationFrame(autoScroll);
-
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-  }, [entidades.length, isScrolling]);
 
   const isDark = (resolvedTheme || theme) === "dark";
 
@@ -294,76 +243,8 @@ export default function Home() {
                 buttonText="Ver Todas"
                 buttonUrl="/entidades"
                 isDark={isDark}
-              >
-                {/* Entidades Infinite Scroll Preview */}
-                {entidades.length > 0 && (
-                  <div
-                    ref={scrollContainerRef}
-                    className="mt-4 relative overflow-x-auto overflow-y-hidden scrollbar-hide"
-                    onWheel={() => {
-                      setIsScrolling(true);
-                      setTimeout(() => setIsScrolling(false), 2000);
-                    }}
-                    onMouseDown={() => setIsScrolling(true)}
-                    onMouseUp={() => setTimeout(() => setIsScrolling(false), 1000)}
-                    onTouchStart={() => setIsScrolling(true)}
-                    onTouchEnd={() => setTimeout(() => setIsScrolling(false), 1000)}
-                  >
-                    <style>
-                      {`
-                          .scrollbar-hide::-webkit-scrollbar {
-                            display: none;
-                          }
-                          .scrollbar-hide {
-                            -ms-overflow-style: none;
-                            scrollbar-width: none;
-                          }
-                        `}
-                    </style>
-                    <div className="flex gap-4" style={{ width: "fit-content" }}>
-                      {/* Duplicate entidades for seamless loop */}
-                      {[...entidades, ...entidades].map((entidade, index) => (
-                        <Link
-                          key={`${entidade.id}-${index}`}
-                          href={`/entidade/${entidade.slug}`}
-                          className={`flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0 pointer-events-auto border min-w-[200px] max-w-[250px] ${
-                            isDark ? "border-white/10" : "border-black/10"
-                          }`}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={entidade.imagePath || ""}
-                            alt={entidade.name}
-                            className="w-12 h-12 object-contain rounded flex-shrink-0"
-                            onError={e => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = "none";
-                            }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p
-                              className={`text-sm font-medium truncate ${
-                                isDark ? "text-white" : "text-slate-900"
-                              }`}
-                            >
-                              {entidade.name}
-                            </p>
-                            {entidade.subtitle && (
-                              <p
-                                className={`text-xs truncate ${
-                                  isDark ? "text-white/60" : "text-slate-600"
-                                }`}
-                              >
-                                {entidade.subtitle}
-                              </p>
-                            )}
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </FeatureSection>
+                carousel={<EntidadesCarousel isDark={isDark} />}
+              />
             </div>
           </div>
         </section>

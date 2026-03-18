@@ -39,7 +39,8 @@ export const PAGE_HEADER_TEXT = {
   entidades: {
     title: "Entidades Acadêmicas",
     subtitle: "Grupos, ligas e empresas parceiras",
-    extendedSubtitle: "Entidades Acadêmicas",
+    extendedSubtitle:
+      "Procure laboratórios, ligas acadêmicas, grupos de pesquisa e outros do Centro de Informática.",
   },
   vagas: {
     title: "Vagas",
