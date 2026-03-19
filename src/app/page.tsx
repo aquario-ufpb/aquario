@@ -8,8 +8,8 @@ import { GitBranch, Github, Map } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { EntidadesCarousel } from "../../components/ui/entidades-carousel";
-import { FeatureSection } from "../../components/ui/feature-section";
+import { EntidadesCarousel } from "@/components/ui/entidades-carousel";
+import { FeatureSection } from "@/components/ui/feature-section";
 
 export default function Home() {
   const { theme, resolvedTheme } = useTheme();
