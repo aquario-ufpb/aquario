@@ -108,16 +108,18 @@ export function EntidadesCarousel({ isDark }: { isDark: boolean }) {
               isDark ? "border-white/10 hover:bg-white/10" : "border-black/10 hover:bg-black/5"
             }`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={entidade.imagePath || ""}
-              alt={entidade.name}
-              className="h-12 w-12 flex-shrink-0 rounded object-contain"
-              onError={e => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = "none";
-              }}
-            />
+            {entidade.imagePath ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={entidade.imagePath}
+                alt={entidade.name}
+                className="h-12 w-12 flex-shrink-0 rounded object-contain"
+                onError={e => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                }}
+              />
+            ) : null}
             <div className="min-w-0 flex-1">
               <p
                 className={`truncate text-sm font-medium ${isDark ? "text-white" : "text-slate-900"}`}
