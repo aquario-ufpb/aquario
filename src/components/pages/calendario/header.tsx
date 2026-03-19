@@ -1,5 +1,6 @@
-import { Calendar } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 import type { PaasCenterResponse } from "@/lib/shared/types";
+import { Calendar } from "lucide-react";
 
 type CalendarioHeaderProps = {
   data: PaasCenterResponse;
@@ -9,16 +10,8 @@ type CalendarioHeaderProps = {
 export default function CalendarioHeader({ data, isDark }: CalendarioHeaderProps) {
   return (
     <div className="mb-8">
-      <h1
-        className="text-4xl md:text-5xl font-display font-bold mb-4"
-        style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-      >
-        Calendário de Alocação
-      </h1>
+      <PageHeader title="Calendário de Alocação" subtitle={data.centro} />
       <div className="space-y-2">
-        <p className="text-xl font-semibold" style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
-          {data.centro}
-        </p>
         <div
           className="flex flex-wrap gap-4 text-sm"
           style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}
