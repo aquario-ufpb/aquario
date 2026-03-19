@@ -1,7 +1,9 @@
-import Link from "next/link";
-import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, CalendarDays, Map, BookOpen, GitBranch } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
+import { BookOpen, Calendar, CalendarDays, GitBranch, Map } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 const ferramentas = [
   {
@@ -55,14 +57,10 @@ export default function FerramentasPage() {
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl md:text-5xl font-display font-bold mb-4 text-[#0e3a6c] dark:text-[#C8E6FA]">
-          Ferramentas
-        </h1>
-        <p className="text-lg md:text-xl text-[#0e3a6c] dark:text-[#E5F6FF]">
-          Ferramentas úteis para estudantes do Centro de Informática
-        </p>
-      </div>
+      <PageHeader
+        title={PAGE_HEADER_TEXT.ferramentas.title}
+        subtitle={PAGE_HEADER_TEXT.ferramentas.subtitle}
+      />
 
       {/* Ferramentas Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

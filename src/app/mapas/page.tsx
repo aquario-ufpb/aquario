@@ -1,15 +1,17 @@
 "use client";
 
-import React, { Suspense, useEffect, useState, useRef } from "react";
-import { useTheme } from "next-themes";
-import { useSearchParams } from "next/navigation";
-import { Building2 } from "lucide-react";
+import { trackEvent } from "@/analytics/posthog-client";
 import { InteractiveMap } from "@/components/pages/mapas/interactive-map";
 import RoomDetailsDialog from "@/components/pages/mapas/room-details-dialog";
+import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
+import { PageHeader } from "@/components/ui/page-header";
 import { useMapas } from "@/lib/client/hooks/use-mapas";
 import type { Room } from "@/lib/client/mapas/types";
-import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
-import { trackEvent } from "@/analytics/posthog-client";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
+import { Building2 } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 function MapsPageInner() {
   const { theme, resolvedTheme } = useTheme();
@@ -123,13 +125,14 @@ function MapsPageInner() {
   }
 
   return (
-    <div className="w-full px-4 md:px-8 lg:px-12 mt-24 pb-20">
+    <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-24 pb-20">
       {/* Header */}
       <div className="mb-12">
         <div className="flex items-start justify-between gap-4 mb-8">
-          <h1 className="text-4xl md:text-5xl font-display font-bold max-w-3xl">
-            Mapas dos Prédios
-          </h1>
+          <PageHeader
+            title={PAGE_HEADER_TEXT.mapas.title}
+            subtitle={PAGE_HEADER_TEXT.mapas.subtitle}
+          />
           <div className="hidden md:flex flex-shrink-0">
             <ContributeOnGitHub
               url="https://github.com/aquario-ufpb/aquario-mapas"

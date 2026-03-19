@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { trackEvent } from "@/analytics/posthog-client";
+import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
+import { FilterBar } from "@/components/shared/filter-bar";
+import { SearchBar } from "@/components/shared/search-bar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEntidades } from "@/lib/client/hooks";
 import { usePrefetchEntidade } from "@/lib/client/hooks/use-prefetch";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import type { Entidade } from "@/lib/shared/types";
-import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
-import { trackEvent } from "@/analytics/posthog-client";
 import type { TipoEntidade } from "@/lib/shared/types/entidade.types";
-import { FilterBar } from "@/components/shared/filter-bar";
-import { SearchBar } from "@/components/shared/search-bar";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
 function EntidadeCard({
   entidade,
@@ -180,9 +182,10 @@ export default function EntidadesPage() {
     <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl">
       <div className="mb-12">
         <div className="flex items-start justify-between gap-4 mb-8">
-          <h1 className="text-4xl md:text-5xl font-display font-bold max-w-3xl">
-            Procure Laboratórios, ligas acadêmicas, grupos de pesquisa e outros
-          </h1>
+          <PageHeader
+            title={PAGE_HEADER_TEXT.entidades.title}
+            subtitle={PAGE_HEADER_TEXT.entidades.subtitle}
+          />
           <div className="hidden md:flex flex-shrink-0">
             <ContributeOnGitHub
               url="https://github.com/aquario-ufpb/aquario-entidades"
