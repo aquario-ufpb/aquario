@@ -1,3 +1,5 @@
+import { cn } from "@/lib/client/utils";
+
 type PageHeaderProps = {
   title: string;
   subtitle: string;
@@ -6,7 +8,7 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, subtitle, className }: PageHeaderProps) {
   return (
-    <div className={className ? `${className} mb-8` : "mb-8"}>
+    <div className={cn("mb-8", className)}>
       <h1 className="text-4xl md:text-5xl font-display font-bold mb-4 text-aquario-header dark:text-aquario-header-dark">
         {title}
       </h1>

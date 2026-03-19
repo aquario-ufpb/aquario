@@ -9,6 +9,7 @@ import { useVagas } from "@/lib/client/hooks";
 import { usePrefetchVaga } from "@/lib/client/hooks/use-prefetch";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { cn } from "@/lib/client/utils";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import type { Vaga } from "@/lib/shared/types";
 import { ENTIDADE_TIPO_MAP } from "@/lib/shared/types/vaga.types";
 import { LayoutGrid, List, Plus } from "lucide-react";
@@ -93,8 +94,8 @@ export default function VagasPage() {
     <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl">
       <div className="mb-12">
         <PageHeader
-          title="Vagas"
-          subtitle="Encontre oportunidades de emprego, estágio e projetos no CI e fora dele. Filtre por área, tipo e entidade para achar a vaga ideal para você."
+          title={PAGE_HEADER_TEXT.vagas.title}
+          subtitle={PAGE_HEADER_TEXT.vagas.subtitle}
         />
 
         {/* Main Layout */}
