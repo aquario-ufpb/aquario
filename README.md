@@ -37,7 +37,7 @@ Job listings, internships, research positions, and volunteer opportunities.
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 15 
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Database**: PostgreSQL + Prisma
