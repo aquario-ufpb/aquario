@@ -23,7 +23,7 @@ jobs:
   deploy-preview:
     name: Deploy Preview
     runs-on: ubuntu-latest
-    if: github.event.action != 'closed'
+    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Checkout code
@@ -235,7 +235,7 @@ jobs:
   cleanup:
     name: Cleanup Preview
     runs-on: ubuntu-latest
-    if: github.event.action == 'closed'
+    if: github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Generate branch name

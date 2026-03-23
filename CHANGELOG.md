@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI**: Replace native date inputs with DatePicker across all forms — entities, memberships, vagas, and calendar management (#167)
 
 ### Fixed
+- **CI**: Skip preview deployment for fork PRs to avoid failures from missing secrets
 - **Search**: Sanitize `limit` query parameter as bounded integer to prevent invalid SQL LIMIT values
 - **Search**: Guard against null `entidade.slug` to prevent navigation to `/entidade/null`
 - **Search**: Fix Prettier formatting and ESLint curly-brace violations across search files
