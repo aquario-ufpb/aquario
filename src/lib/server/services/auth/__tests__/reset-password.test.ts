@@ -28,7 +28,7 @@ function makeUsuario(): UsuarioWithRelations {
     email: "test@academico.ufpb.br",
     centro: { id: "c1", nome: "CI", sigla: "CI", descricao: null, campusId: "campus-1" },
     curso: { id: "k1", nome: "CC", centroId: "c1", criadoEm: new Date(), atualizadoEm: new Date() },
-  } as UsuarioWithRelations;
+  } as unknown as UsuarioWithRelations;
 }
 
 function makeDeps(
