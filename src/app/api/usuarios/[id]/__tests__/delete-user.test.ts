@@ -59,8 +59,12 @@ describe("DELETE /api/usuarios/[id]", () => {
     const target = makeUsuario({ id: "target-user" });
 
     mockFindById.mockImplementation((id: string) => {
-      if (id === "admin-1") return Promise.resolve(admin);
-      if (id === "target-user") return Promise.resolve(target);
+      if (id === "admin-1") {
+        return Promise.resolve(admin);
+      }
+      if (id === "target-user") {
+        return Promise.resolve(target);
+      }
       return Promise.resolve(null);
     });
 
@@ -85,7 +89,9 @@ describe("DELETE /api/usuarios/[id]", () => {
   it("returns 404 when target user does not exist", async () => {
     const admin = makeUsuario({ id: "admin-1", papelPlataforma: "MASTER_ADMIN" });
     mockFindById.mockImplementation((id: string) => {
-      if (id === "admin-1") return Promise.resolve(admin);
+      if (id === "admin-1") {
+        return Promise.resolve(admin);
+      }
       return Promise.resolve(null);
     });
 

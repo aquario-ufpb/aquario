@@ -1,8 +1,10 @@
 import { mergeFacadeUser } from "../merge-facade-user";
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
-import type { IMembrosRepository } from "@/lib/server/db/interfaces/membros-repository.interface";
+import type {
+  IMembrosRepository,
+  MembroRaw,
+} from "@/lib/server/db/interfaces/membros-repository.interface";
 import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
-import type { MembroRaw } from "@/lib/server/db/interfaces/membros-repository.interface";
 
 function makeUsuario(overrides: Partial<UsuarioWithRelations> = {}): UsuarioWithRelations {
   return {
@@ -37,8 +39,12 @@ function makeDeps(
   realMemberships: MembroRaw[] = []
 ) {
   const findById = jest.fn().mockImplementation((id: string) => {
-    if (id === "facade-1") return Promise.resolve(facadeUser);
-    if (id === "real-1") return Promise.resolve(realUser);
+    if (id === "facade-1") {
+      return Promise.resolve(facadeUser);
+    }
+    if (id === "real-1") {
+      return Promise.resolve(realUser);
+    }
     return Promise.resolve(null);
   });
 
@@ -49,8 +55,12 @@ function makeDeps(
     } as unknown as IUsuariosRepository,
     membrosRepository: {
       findRawByUsuarioId: jest.fn().mockImplementation((userId: string) => {
-        if (userId === "facade-1") return Promise.resolve(facadeMemberships);
-        if (userId === "real-1") return Promise.resolve(realMemberships);
+        if (userId === "facade-1") {
+          return Promise.resolve(facadeMemberships);
+        }
+        if (userId === "real-1") {
+          return Promise.resolve(realMemberships);
+        }
         return Promise.resolve([]);
       }),
       create: jest.fn().mockResolvedValue({ id: "new-membro" }),
