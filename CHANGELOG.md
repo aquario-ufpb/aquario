@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Tests**: Server-side auth service tests — authenticate, register, verify-email, reset-password, forgot-password, resend-verification, and middleware (66 new tests)
+- **Tests**: Admin mutation tests — merge-facade-user service (12 tests), user deletion route, role update route, entity member add/update/delete routes (33 tests)
 - **Grades Curriculares**: Botão para exportar grade curricular como imagem PNG — "Com meu progresso" (barra de progresso e stats) e "Grade limpa" (#169)
 - **UI**: DatePicker component with Calendar popover, pt-BR locale, and date range constraints
 - **Search**: Global search command palette (Ctrl+K) with unified search across pages, guides, entities, jobs, disciplines, courses, and user profiles
