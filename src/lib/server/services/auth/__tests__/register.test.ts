@@ -1,5 +1,4 @@
-import { register } from "../register";
-import type { RegisterDependencies } from "../register";
+import { register, type RegisterDependencies } from "../register";
 import type { UsuarioWithRelations, Centro, Curso } from "@/lib/server/db/interfaces/types";
 
 // Mock bcryptjs
