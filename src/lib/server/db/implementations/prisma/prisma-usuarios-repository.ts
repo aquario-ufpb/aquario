@@ -56,6 +56,7 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
           slug,
           ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
         },
+        select: { id: true }, // Only select id for existence check
       });
 
       if (!existing) {
