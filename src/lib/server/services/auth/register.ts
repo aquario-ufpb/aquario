@@ -44,7 +44,9 @@ function isAllowedEmailDomain(email: string): boolean {
   const atIndex = normalized.lastIndexOf("@");
 
   // Makes sure the '@' exists and is not the first or last character
-  if (atIndex <= 0 || atIndex === normalized.length - 1) return false;
+  if (atIndex <= 0 || atIndex === normalized.length - 1) {
+    return false;
+  }
 
   const domainPart = normalized.slice(atIndex + 1);
 
