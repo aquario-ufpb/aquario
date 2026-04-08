@@ -51,38 +51,53 @@ describe("authService", () => {
       cursoId: "curso-1",
     };
 
-    it("should allow registration with @dcx.ufpb.br", async () => {
+    const mockSuccessResponse = () =>
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ message: "Usuário registrado com sucesso." }),
       } as Response);
 
-      const email = "user@dcx.ufpb.br";
-      await authService.register({ ...userDataBase, email });
+    it("should allow registration with @academico.ufpb.br (backward compatibility)", async () => {
+      mockSuccessResponse();
+      const userData = { ...userDataBase, email: "aluno@academico.ufpb.br" };
+
+      await authService.register(userData);
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("/register"),
         expect.objectContaining({
-          body: expect.stringContaining(email),
+          method: "POST",
+          headers: expect.objectContaining({ "Content-Type": "application/json" }),
+          body: JSON.stringify(userData), // Asserção forte do payload completo
         })
       );
     });
 
-    it("should allow registration with @ct.ufpb.br", async () => {
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ message: "Usuário registrado com sucesso." }),
-      } as Response);
+    it("should allow registration with subdomains like @dcx.ufpb.br", async () => {
+      mockSuccessResponse();
+      const userData = { ...userDataBase, email: "user@dcx.ufpb.br" };
 
-      const email = "professor@ct.ufpb.br";
-      await authService.register({ ...userDataBase, email });
+      await authService.register(userData);
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("/register"),
         expect.objectContaining({
-          body: expect.stringContaining(email),
+          method: "POST",
+          body: JSON.stringify(userData),
         })
       );
+    });
+
+    it("should throw error for non-UFPB domains (negative case)", async () => {
+      const invalidData = { ...userDataBase, email: "user@gmail.com" };
+
+      // Como o service deve validar ou a API retornar erro, simulamos a falha na API
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ message: "Apenas e-mails institucionais são permitidos." }),
+      } as Response);
+
+      await expect(authService.register(invalidData)).rejects.toThrow();
     });
 
     it("should throw error on failed registration (ex: email in use)", async () => {
