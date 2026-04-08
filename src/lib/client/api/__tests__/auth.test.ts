@@ -43,6 +43,56 @@ describe("authService", () => {
     });
   });
 
+  describe("login", () => {
+    it("should return token on successful login with @academico.ufpb.br", async () => {
+      const mockToken = "test-token-123";
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ token: mockToken }),
+      } as Response);
+
+      const result = await authService.login("test@academico.ufpb.br", "password123");
+
+      expect(result.token).toBe(mockToken);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/login"),
+        expect.objectContaining({
+          body: JSON.stringify({ email: "test@academico.ufpb.br", senha: "password123" }),
+        })
+      );
+    });
+
+    // simulating other .ufpb.br domain (e.g., @dcx.ufpb.br)
+    it("should return token on successful login with @dcx.ufpb.br", async () => {
+      const mockToken = "dcx-token-456";
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ token: mockToken }),
+      } as Response);
+
+      const result = await authService.login("professor@dcx.ufpb.br", "password123");
+
+      expect(result.token).toBe(mockToken);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/login"),
+        expect.objectContaining({
+          body: JSON.stringify({ email: "professor@dcx.ufpb.br", senha: "password123" }),
+        })
+      );
+    });
+
+    it("should throw error on failed login", async () => {
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ message: "E-mail ou senha inválidos." }),
+      } as Response);
+
+      await expect(authService.login("test@academico.ufpb.br", "wrongpassword")).rejects.toThrow(
+        "E-mail ou senha inválidos."
+      );
+    });
+  });
+
   describe("register", () => {
     it("should return registration response on success", async () => {
       const mockResponse = {
