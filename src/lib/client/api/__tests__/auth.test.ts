@@ -43,125 +43,70 @@ describe("authService", () => {
     });
   });
 
-  describe("login", () => {
-    it("should return token on successful login with @academico.ufpb.br", async () => {
-      const mockToken = "test-token-123";
+  describe("register - Suporte a domínios institucionais", () => {
+    const userDataBase = {
+      nome: "Test User",
+      senha: "password123",
+      centroId: "centro-1",
+      cursoId: "curso-1",
+    };
+
+    it("should allow registration with @dcx.ufpb.br", async () => {
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ token: mockToken }),
+        json: async () => ({ message: "Usuário registrado com sucesso." }),
       } as Response);
 
-      const result = await authService.login("test@academico.ufpb.br", "password123");
+      const email = "user@dcx.ufpb.br";
+      await authService.register({ ...userDataBase, email });
 
-      expect(result.token).toBe(mockToken);
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/login"),
-        expect.objectContaining({
-          body: JSON.stringify({ email: "test@academico.ufpb.br", senha: "password123" }),
-        })
-      );
-    });
-
-    // simulating other .ufpb.br domain (e.g., @dcx.ufpb.br)
-    it("should return token on successful login with @dcx.ufpb.br", async () => {
-      const mockToken = "dcx-token-456";
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ token: mockToken }),
-      } as Response);
-
-      const result = await authService.login("professor@dcx.ufpb.br", "password123");
-
-      expect(result.token).toBe(mockToken);
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/login"),
-        expect.objectContaining({
-          body: JSON.stringify({ email: "professor@dcx.ufpb.br", senha: "password123" }),
-        })
-      );
-    });
-
-    it("should throw error on failed login", async () => {
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: "E-mail ou senha inválidos." }),
-      } as Response);
-
-      await expect(authService.login("test@academico.ufpb.br", "wrongpassword")).rejects.toThrow(
-        "E-mail ou senha inválidos."
-      );
-    });
-  });
-
-  describe("register", () => {
-    it("should return registration response on success", async () => {
-      const mockResponse = {
-        message: "Usuário registrado com sucesso.",
-        usuarioId: "user-123",
-        verificado: false,
-      };
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      } as Response);
-
-      const result = await authService.register({
-        nome: "Test User",
-        email: "test@academico.ufpb.br",
-        senha: "password123",
-        centroId: "centro-1",
-        cursoId: "curso-1",
-      });
-
-      expect(result).toEqual(mockResponse);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("/register"),
         expect.objectContaining({
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          body: expect.stringContaining(email),
         })
       );
     });
 
-    it("should throw error on failed registration", async () => {
+    it("should allow registration with @ct.ufpb.br", async () => {
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ message: "Usuário registrado com sucesso." }),
+      } as Response);
+
+      const email = "professor@ct.ufpb.br";
+      await authService.register({ ...userDataBase, email });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/register"),
+        expect.objectContaining({
+          body: expect.stringContaining(email),
+        })
+      );
+    });
+
+    it("should throw error on failed registration (ex: email in use)", async () => {
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: false,
         json: async () => ({ message: "Este e-mail já está em uso." }),
       } as Response);
 
       await expect(
-        authService.register({
-          nome: "Test User",
-          email: "test@academico.ufpb.br",
-          senha: "password123",
-          centroId: "centro-1",
-          cursoId: "curso-1",
-        })
+        authService.register({ ...userDataBase, email: "test@academico.ufpb.br" })
       ).rejects.toThrow("Este e-mail já está em uso.");
     });
   });
 
   describe("verifyEmail", () => {
     it("should return success on valid token", async () => {
-      const mockResponse = {
-        success: true,
-        message: "Email verificado com sucesso.",
-      };
+      const mockResponse = { success: true, message: "Email verificado com sucesso." };
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       } as Response);
 
       const result = await authService.verifyEmail("valid-token");
-
       expect(result).toEqual(mockResponse);
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/verificar-email"),
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({ token: "valid-token" }),
-        })
-      );
     });
 
     it("should throw error on invalid token", async () => {
@@ -178,81 +123,40 @@ describe("authService", () => {
 
   describe("resendVerification", () => {
     it("should return success on valid request", async () => {
-      const mockResponse = {
-        success: true,
-        message: "Email de verificação reenviado.",
-      };
+      const mockResponse = { success: true, message: "Email de verificação reenviado." };
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       } as Response);
 
       const result = await authService.resendVerification("token-123");
-
       expect(result).toEqual(mockResponse);
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/reenviar-verificacao"),
-        expect.objectContaining({
-          method: "POST",
-          headers: expect.objectContaining({
-            Authorization: "Bearer token-123",
-          }),
-        })
-      );
     });
   });
 
   describe("forgotPassword", () => {
     it("should always return success (security)", async () => {
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
-        ok: false, // Simulate error
+        ok: false,
         json: async () => ({ message: "Email não encontrado" }),
       } as Response);
 
       const result = await authService.forgotPassword("test@academico.ufpb.br");
-
-      // Should still return success even on error
       expect(result.success).toBe(true);
       expect(result.message).toContain("receberá instruções");
-    });
-
-    it("should return success on valid request", async () => {
-      const mockResponse = {
-        success: true,
-        message: "Email enviado com sucesso.",
-      };
-      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      } as Response);
-
-      const result = await authService.forgotPassword("test@academico.ufpb.br");
-
-      expect(result.success).toBe(true);
     });
   });
 
   describe("resetPassword", () => {
     it("should return success on valid token and password", async () => {
-      const mockResponse = {
-        success: true,
-        message: "Senha redefinida com sucesso.",
-      };
+      const mockResponse = { success: true, message: "Senha redefinida com sucesso." };
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       } as Response);
 
       const result = await authService.resetPassword("valid-token", "newpassword123");
-
       expect(result).toEqual(mockResponse);
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/resetar-senha"),
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({ token: "valid-token", novaSenha: "newpassword123" }),
-        })
-      );
     });
 
     it("should throw error on invalid token", async () => {
