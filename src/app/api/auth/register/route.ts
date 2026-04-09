@@ -5,7 +5,7 @@ import { getContainer } from "@/lib/server/container";
 import { register } from "@/lib/server/services/auth/register";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 
-const registerSchema = z.object({
+export const registerSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   email: z.string().email("Email inválido"),
   senha: z

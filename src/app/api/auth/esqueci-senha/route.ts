@@ -5,7 +5,7 @@ import { getContainer } from "@/lib/server/container";
 import { forgotPassword } from "@/lib/server/services/auth/forgot-password";
 import { fromZodError } from "@/lib/server/errors";
 
-const forgotPasswordSchema = z.object({
+export const forgotPasswordSchema = z.object({
   email: z.string().email("Email inválido"),
 });
 

@@ -12,7 +12,7 @@ const LOGIN_RATE_LIMIT = {
   windowMs: 60 * 1000, // 1 minute
 };
 
-const loginSchema = z.object({
+export const loginSchema = z.object({
   email: z.string().email("Email inválido"),
   senha: z.string().min(1, "Senha é obrigatória"),
 });

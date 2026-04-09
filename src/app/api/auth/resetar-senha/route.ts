@@ -5,7 +5,7 @@ import { getContainer } from "@/lib/server/container";
 import { resetPassword } from "@/lib/server/services/auth/reset-password";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 
-const resetPasswordSchema = z.object({
+export const resetPasswordSchema = z.object({
   token: z.string().min(1, "Token é obrigatório"),
   novaSenha: z.string().min(8, "Senha deve ter pelo menos 8 caracteres"),
 });

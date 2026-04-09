@@ -5,7 +5,7 @@ import { getContainer } from "@/lib/server/container";
 import { verifyEmail } from "@/lib/server/services/auth/verify-email";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 
-const verifySchema = z.object({
+export const verifySchema = z.object({
   token: z.string().min(1, "Token é obrigatório"),
 });
 
