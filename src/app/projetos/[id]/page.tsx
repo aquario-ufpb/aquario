@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -8,103 +8,20 @@ import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Projeto, formatProjetoTipo } from "@/components/shared/project-card";
+import { formatProjetoTipo } from "@/components/shared/project-card";
+import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
+import { useProjetoBySlug } from "@/lib/client/hooks/use-projetos";
 import { ArrowLeft, Github, ExternalLink } from "lucide-react";
-import { apiClient } from "@/lib/client/api/api-client";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import DOMPurify from "dompurify";
 import Link from "next/link";
 
-type AutorRaw = {
-  autorPrincipal: boolean;
-  usuario: { id: string; nome: string; slug?: string; urlFotoPerfil?: string | null };
-};
-
 export default function ProjetoPage() {
   const { id } = useParams<{ id: string }>();
-  const [projeto, setProjeto] = useState<Projeto | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { data: raw, isLoading, error } = useProjetoBySlug(id);
 
-  useEffect(() => {
-    const fetchProjeto = async () => {
-      try {
-        setIsLoading(true);
-
-        const response = await apiClient(`/projetos/${id}`);
-
-        if (!response.ok) {
-          throw new Error("Projeto não encontrado");
-        }
-
-        const data = await response.json();
-
-        let publicador: Projeto["publicador"];
-
-        if (data.entidade) {
-          publicador = {
-            id: data.entidade.id,
-            nome: data.entidade.nome,
-            slug: data.entidade.slug,
-            urlFotoPerfil: data.entidade.urlFoto ?? null,
-            tipo: "ENTIDADE" as const,
-            entidadeTipo: data.entidade.tipo,
-          };
-        } else {
-          const autorPrincipalObj = data.autores.find((a: AutorRaw) => a.autorPrincipal);
-
-          const autorPrincipal = autorPrincipalObj?.usuario;
-
-          publicador = {
-            id: autorPrincipal?.id ?? "0",
-            nome: autorPrincipal?.nome ?? "Usuário",
-            slug: autorPrincipal?.slug,
-            urlFotoPerfil: autorPrincipal?.urlFotoPerfil ?? null,
-            tipo: "USUARIO" as const,
-          };
-        }
-
-        const colaboradores = data.autores.map((a: AutorRaw) => ({
-          id: a.usuario.id,
-          nome: a.usuario.nome,
-          slug: a.usuario.slug,
-          urlFotoPerfil: a.usuario.urlFotoPerfil,
-          autorPrincipal: a.autorPrincipal,
-        }));
-
-        const projetoMapeado: Projeto = {
-          id: data.slug,
-          nome: data.titulo,
-          descricao: data.descricao ?? "",
-          imagem: data.urlImagem ?? null,
-          tipo: data.entidade?.tipo ?? "PESSOAL",
-          tags: data.tags ?? [],
-          criadoEm: data.criadoEm,
-
-          publicador,
-
-          colaboradores,
-          linkRepositorio: data.urlRepositorio ?? undefined,
-          linkPrototipo: data.urlDemo ?? undefined,
-        };
-
-        setProjeto(projetoMapeado);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Erro ao carregar projeto");
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchProjeto();
-    }
-  }, [id]);
+  const projeto = useMemo(() => (raw ? mapProjetoToCard(raw) : null), [raw]);
 
   if (isLoading) {
     return <Skeleton className="h-screen w-full" />;
@@ -113,7 +30,7 @@ export default function ProjetoPage() {
   if (error || !projeto) {
     return (
       <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl text-center text-red-500">
-        {error || "Projeto não encontrado."}
+        {error instanceof Error ? error.message : "Projeto não encontrado."}
       </div>
     );
   }

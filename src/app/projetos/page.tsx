@@ -2,98 +2,26 @@
 
 import { SearchBar } from "@/components/shared/search-bar";
 import { FilterBar } from "@/components/shared/filter-bar";
-import ProjectCard, { Projeto, Publicador, TipoProjeto } from "@/components/shared/project-card";
-import type { ProjetoWithRelations, ProjetosListResponse } from "@/lib/shared/types/projeto";
-import { useState, useEffect, useMemo } from "react";
+import ProjectCard from "@/components/shared/project-card";
+import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
+import { useProjetos } from "@/lib/client/hooks/use-projetos";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/lib/client/hooks";
-import { apiClient } from "@/lib/client/api/api-client";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
 export default function Projetos() {
-  const [projetos, setProjetos] = useState<Projeto[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { data: user } = useCurrentUser();
+  const { data: projetosResponse, isLoading, error } = useProjetos();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProjetos = async () => {
-      try {
-        setIsLoading(true);
-
-        const response = await apiClient("/projetos");
-        if (!response.ok) {
-          throw new Error("Erro ao buscar projetos");
-        }
-
-        const data: ProjetosListResponse = await response.json();
-
-        const projetosMapeados: Projeto[] = data.projetos.map((p: ProjetoWithRelations) => {
-          let publicador;
-
-          if (p.entidade) {
-            publicador = {
-              id: p.entidade.id,
-              nome: p.entidade.nome,
-              slug: p.entidade.slug ?? "",
-              urlFotoPerfil: p.entidade.urlFoto ?? null,
-              tipo: "ENTIDADE" as const,
-              entidadeTipo: p.entidade.tipo as Publicador["entidadeTipo"],
-            };
-          } else {
-            const autorPrincipalObj = p.autores.find(a => a.autorPrincipal);
-
-            const autorPrincipal = autorPrincipalObj?.usuario;
-
-            publicador = {
-              id: autorPrincipal?.id ?? "0",
-              nome: autorPrincipal?.nome ?? "Usuário",
-              slug: autorPrincipal?.slug ?? "",
-              urlFotoPerfil: autorPrincipal?.urlFotoPerfil ?? null,
-              tipo: "USUARIO" as const,
-            };
-          }
-
-          const colaboradores = p.autores.map(a => ({
-            id: a.usuario.id,
-            nome: a.usuario.nome,
-            slug: a.usuario.slug ?? a.usuario.id,
-            urlFotoPerfil: a.usuario.urlFotoPerfil,
-            autorPrincipal: a.autorPrincipal,
-          }));
-
-          return {
-            id: p.slug,
-            nome: p.titulo,
-            descricao: p.descricao ?? "",
-            imagem: p.urlImagem ?? null,
-            tipo: (p.entidade?.tipo ?? "PESSOAL") as TipoProjeto,
-            tags: p.tags ?? [],
-            criadoEm: new Date(p.criadoEm).toISOString(),
-
-            publicador,
-
-            colaboradores,
-            linkRepositorio: p.urlRepositorio ?? undefined,
-            linkPrototipo: p.urlDemo ?? undefined,
-          };
-        });
-
-        setProjetos(projetosMapeados);
-      } catch (err) {
-        console.error(err);
-        setError(err instanceof Error ? err.message : "Erro ao carregar projetos.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProjetos();
-  }, []);
+  const projetos = useMemo(
+    () => (projetosResponse?.projetos ?? []).map(mapProjetoToCard),
+    [projetosResponse]
+  );
 
   const filteredProjetos = useMemo(() => {
     let filtered = projetos;
@@ -185,7 +113,7 @@ export default function Projetos() {
           ))}
         </div>
       ) : error ? (
-        <div className="text-center text-destructive py-12">{error}</div>
+        <div className="text-center text-destructive py-12">Erro ao carregar projetos.</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
           {filteredProjetos.length > 0 ? (

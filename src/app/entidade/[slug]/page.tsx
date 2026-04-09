@@ -17,7 +17,8 @@ import { EntidadeDescriptionSection } from "@/components/pages/entidades/entidad
 import { EntidadeOtherEntitiesSection } from "@/components/pages/entidades/entidade-other-entities-section";
 import { EntidadeMapSection } from "@/components/pages/entidades/entidade-map-section";
 import { isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
-import ProjectCard, { type Projeto as ProjetoCard } from "@/components/shared/project-card";
+import ProjectCard from "@/components/shared/project-card";
+import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { Layers } from "lucide-react";
 import Link from "next/link";
 import { trackEvent } from "@/analytics/posthog-client";
@@ -97,12 +98,7 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
           </TabsList>
 
           <TabsContent value="projetos" className="mt-6">
-            <ProjetosTab
-              entidadeId={entidade.id}
-              entidadeNome={entidade.name}
-              entidadeImagem={entidade.imagePath}
-              entidadeSlug={entidade.slug}
-            />
+            <ProjetosTab entidadeId={entidade.id} />
           </TabsContent>
 
           <TabsContent value="pessoas" className="mt-0">
@@ -142,12 +138,9 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
 
 type ProjetosTabProps = {
   entidadeId: string;
-  entidadeNome: string;
-  entidadeImagem: string;
-  entidadeSlug: string;
 };
 
-function ProjetosTab({ entidadeId, entidadeNome, entidadeImagem, entidadeSlug }: ProjetosTabProps) {
+function ProjetosTab({ entidadeId }: ProjetosTabProps) {
   const { data: projetos, isLoading, error } = useProjetosByEntidade(entidadeId);
 
   if (isLoading) {
@@ -177,39 +170,13 @@ function ProjetosTab({ entidadeId, entidadeNome, entidadeImagem, entidadeSlug }:
     );
   }
 
-  // Map Prisma Projeto to ProjectCard Projeto shape
-  const cards: ProjetoCard[] = projetos.map(p => ({
-    id: p.id,
-    nome: p.titulo,
-    descricao: p.descricao ?? "",
-    imagem: p.urlImagem ?? null,
-    tipo: (p.entidade?.tipo ?? "LABORATORIO") as ProjetoCard["tipo"],
-    tags: p.tags ?? [],
-    publicador: {
-      id: entidadeId,
-      nome: entidadeNome,
-      slug: entidadeSlug,
-      urlFotoPerfil: entidadeImagem,
-      tipo: "ENTIDADE" as const,
-    },
-    colaboradores: (p.autores ?? []).map(a => ({
-      id: a.usuario.id,
-      nome: a.usuario.nome,
-      slug: a.usuario.slug ?? a.usuario.id,
-      urlFotoPerfil: a.usuario.urlFotoPerfil ?? null,
-    })),
-    linkRepositorio: p.urlRepositorio ?? undefined,
-    criadoEm: p.criadoEm.toString(),
-  }));
+  const cards = projetos.map(mapProjetoToCard);
 
   return (
     <div className="max-w-6xl">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pb-12">
         {cards.map(card => (
-          <Link
-            key={card.id}
-            href={`/projetos/${projetos.find(p => p.id === card.id)?.slug ?? card.id}`}
-          >
+          <Link key={card.id} href={`/projetos/${card.id}`}>
             <ProjectCard projeto={card} />
           </Link>
         ))}

@@ -21,7 +21,8 @@ import { Camera, Trash2 } from "lucide-react";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
 import { ProgressoCursoCard } from "@/components/pages/perfil/progresso-curso-card";
 import { useProjetosByUsuario } from "@/lib/client/hooks/use-projetos";
-import ProjectCard, { type Projeto as ProjetoCard } from "@/components/shared/project-card";
+import ProjectCard from "@/components/shared/project-card";
+import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { trackEvent } from "@/analytics/posthog-client";
 
 export default function UserProfilePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -357,43 +358,9 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
             {!projetosLoading && projetos && projetos.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {projetos.map(p => {
-                  const card: ProjetoCard = {
-                    id: p.id,
-                    nome: p.titulo,
-                    descricao: p.descricao ?? "",
-                    imagem: p.urlImagem ?? null,
-                    tipo: (p.entidade?.tipo ?? "PESSOAL") as ProjetoCard["tipo"],
-                    tags: p.tags ?? [],
-
-                    publicador: p.entidade
-                      ? {
-                          id: p.entidade.id,
-                          nome: p.entidade.nome,
-                          slug: p.entidade.slug ?? "",
-                          urlFotoPerfil: p.entidade.urlFoto ?? null,
-                          tipo: "ENTIDADE",
-                        }
-                      : {
-                          id: user.id,
-                          nome: user.nome,
-                          slug: user.slug ?? "",
-                          urlFotoPerfil: user.urlFotoPerfil ?? null,
-                          tipo: "USUARIO",
-                        },
-
-                    colaboradores: (p.autores ?? []).map(a => ({
-                      id: a.usuario.id,
-                      nome: a.usuario.nome,
-                      slug: a.usuario.slug ?? a.usuario.id,
-                      urlFotoPerfil: a.usuario.urlFotoPerfil ?? null,
-                    })),
-
-                    linkRepositorio: p.urlRepositorio ?? undefined,
-                    criadoEm: p.criadoEm.toString(),
-                  };
-
+                  const card = mapProjetoToCard(p);
                   return (
-                    <Link key={p.id} href={`/projetos/${p.slug}`}>
+                    <Link key={card.id} href={`/projetos/${card.id}`}>
                       <ProjectCard projeto={card} />
                     </Link>
                   );
