@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { errorResponses } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Shared minimal shape for search result items. Each result category has
@@ -61,7 +61,8 @@ const searchResponseSchema = z
   })
   .openapi("SearchResponse");
 
-export function registerSearchPaths(registry: OpenAPIRegistry): void {
+export function registerSearchPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses } = schemas;
   registry.registerPath({
     method: "get",
     path: "/search",

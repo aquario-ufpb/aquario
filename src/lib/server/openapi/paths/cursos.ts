@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { errorResponses } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Curso (course/major) response shape. The handlers do not use Zod schemas
@@ -23,7 +23,8 @@ const createOrUpdateCursoSchema = z
   })
   .openapi("CreateOrUpdateCursoRequest");
 
-export function registerCursosPaths(registry: OpenAPIRegistry): void {
+export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses } = schemas;
   registry.registerPath({
     method: "get",
     path: "/cursos",

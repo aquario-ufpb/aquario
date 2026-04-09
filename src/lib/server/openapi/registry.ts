@@ -2,38 +2,54 @@ import { OpenAPIRegistry, extendZodWithOpenApi } from "@asteasolutions/zod-to-op
 import { z } from "zod";
 
 /**
- * Extend Zod with .openapi() method.
- *
- * IMPORTANT: This must be called exactly once, before any schema uses .openapi().
- * Since this file is the entry point for the OpenAPI infrastructure and is imported
- * by every module that touches the registry, calling it here guarantees the extension
- * is applied before any consumer runs.
+ * Extend Zod with the `.openapi()` method. This is a global, idempotent
+ * operation: calling it multiple times has no effect, so keeping it at module
+ * top level is safe. Every consumer that defines Zod schemas with `.openapi()`
+ * metadata must ensure this file has been imported at least once before the
+ * schemas are evaluated — importing `createRegistry` or any path module
+ * transitively triggers it.
  */
 extendZodWithOpenApi(z);
 
 /**
- * Global OpenAPI registry. All component schemas and paths are registered here.
- * Consumed by generator.ts to produce the final OpenAPI document.
+ * Create a fresh OpenAPI registry, pre-configured with the shared security
+ * schemes used across the API.
+ *
+ * **The registry is intentionally NOT a module-level singleton.** An earlier
+ * version of this file exported a global registry, which caused `registerPath`
+ * calls to accumulate across multiple `getOpenApiDocument()` invocations when
+ * the document cache was invalidated (e.g., in Jest `beforeEach` or Next.js
+ * dev-mode hot reload). The result was a monotonically growing `definitions`
+ * array and linear slowdown between calls.
+ *
+ * Making the registry ephemeral guarantees that `getOpenApiDocument()` is a
+ * pure function of the code deployed, with no hidden cross-call state.
  */
-export const registry = new OpenAPIRegistry();
+export function createRegistry(): OpenAPIRegistry {
+  const registry = new OpenAPIRegistry();
 
-/**
- * Bearer JWT security scheme used by all authenticated endpoints.
- * Matches the Authorization: Bearer <token> format enforced by withAuth/withAdmin
- * middlewares in src/lib/server/services/auth/middleware.ts.
- */
-registry.registerComponent("securitySchemes", "bearerAuth", {
-  type: "http",
-  scheme: "bearer",
-  bearerFormat: "JWT",
-  description: "JWT token obtained via POST /auth/login. Send as 'Authorization: Bearer <token>'.",
-});
+  // Bearer JWT security scheme used by every authenticated endpoint.
+  // Matches the Authorization: Bearer <token> format enforced by
+  // withAuth/withAdmin middlewares in src/lib/server/services/auth/middleware.ts.
+  registry.registerComponent("securitySchemes", "bearerAuth", {
+    type: "http",
+    scheme: "bearer",
+    bearerFormat: "JWT",
+    description:
+      "JWT token obtained via POST /auth/login. Send as 'Authorization: Bearer <token>'.",
+  });
+
+  return registry;
+}
 
 /**
  * OpenAPI tags used to group operations in the documentation UI.
- * One tag per resource group under src/app/api/, in the order they should appear.
- * Dev endpoints (src/app/api/dev/) are intentionally NOT listed — they only run
- * in development (IS_DEV guard) and are excluded from the public documentation.
+ * One tag per resource group under src/app/api/, in the order they should
+ * appear. Dev endpoints (src/app/api/dev/) are intentionally NOT listed —
+ * they only run in development (IS_DEV guard) and are excluded from the
+ * public documentation.
+ *
+ * Kept as a module-level constant because it is pure data with no lifecycle.
  */
 export const OPENAPI_TAGS = [
   {

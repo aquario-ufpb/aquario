@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { errorResponses } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Discipline inside a curriculum grid — summary fields only.
@@ -45,7 +45,8 @@ const curriculoGradeResponseSchema = z
   })
   .openapi("CurriculoGradeResponse");
 
-export function registerCurriculosPaths(registry: OpenAPIRegistry): void {
+export function registerCurriculosPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses } = schemas;
   registry.registerPath({
     method: "get",
     path: "/curriculos/grade",

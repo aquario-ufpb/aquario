@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { errorResponses } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Discipline (course subject) summary returned by the disciplines search endpoint.
@@ -23,7 +23,8 @@ const disciplinaSearchItemSchema = z
   })
   .openapi("DisciplinaSearchItem");
 
-export function registerDisciplinasPaths(registry: OpenAPIRegistry): void {
+export function registerDisciplinasPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses } = schemas;
   registry.registerPath({
     method: "get",
     path: "/disciplinas/search",

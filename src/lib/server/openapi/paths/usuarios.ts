@@ -16,7 +16,7 @@ import { updatePhotoSchema } from "@/app/api/usuarios/me/photo/route";
 import { saveSchema as saveSemestreDisciplinasSchema } from "@/app/api/usuarios/me/semestres/[semestreId]/disciplinas/route";
 import { patchSchema as updateDisciplinaSemestreSchema } from "@/app/api/usuarios/me/semestres/[semestreId]/disciplinas/[disciplinaSemestreId]/route";
 
-import { errorResponses, PaginationMetaSchema } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * User profile shape returned by the `formatUserResponse` mapper. Mirrors the
@@ -73,16 +73,6 @@ const adminUserResponseSchema = userProfileSchema
     }),
   })
   .openapi("AdminUserResponse");
-
-/**
- * Paginated user list envelope for GET /usuarios (with ?page and ?limit).
- */
-const paginatedUsersResponseSchema = z
-  .object({
-    users: z.array(adminUserResponseSchema),
-    pagination: PaginationMetaSchema,
-  })
-  .openapi("PaginatedUsersResponse");
 
 /**
  * Simplified entity summary embedded in membership responses.
@@ -168,7 +158,21 @@ const messageResponseSchema = z
   .object({ message: z.string() })
   .openapi({ description: "Simple status message response." });
 
-export function registerUsuariosPaths(registry: OpenAPIRegistry): void {
+export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses, PaginationMetaSchema } = schemas;
+
+  /**
+   * Paginated user list envelope for GET /usuarios (with ?page and ?limit).
+   * Defined inside the register function so it can reference the shared
+   * PaginationMetaSchema from the current registry — building it at module
+   * level would capture a stale reference across multiple document generations.
+   */
+  const paginatedUsersResponseSchema = z
+    .object({
+      users: z.array(adminUserResponseSchema),
+      pagination: PaginationMetaSchema,
+    })
+    .openapi("PaginatedUsersResponse");
   // ============================================================================
   // GET /usuarios — three-mode listing (see edge case documentation)
   // ============================================================================

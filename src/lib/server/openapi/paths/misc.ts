@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { errorResponses } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Miscellaneous endpoints that don't fit into any specific resource group:
@@ -58,7 +58,8 @@ const uploadPhotoResponseSchema = z
   })
   .openapi("UploadPhotoResponse");
 
-export function registerMiscPaths(registry: OpenAPIRegistry): void {
+export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses } = schemas;
   registry.registerPath({
     method: "get",
     path: "/health",

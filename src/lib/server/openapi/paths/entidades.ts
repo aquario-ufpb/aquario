@@ -6,7 +6,7 @@ import { addMemberSchema } from "@/app/api/entidades/[id]/membros/route";
 import { updateMemberSchema } from "@/app/api/entidades/[id]/membros/[membroId]/route";
 import { createCargoSchema, updateCargoSchema } from "@/app/api/entidades/[id]/cargos/route";
 
-import { errorResponses } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Enum of entity types (LABORATORIO, GRUPO, etc). Mirrors the values accepted
@@ -139,7 +139,8 @@ const updateCargoRequestSchema = updateCargoSchema
   })
   .openapi("UpdateCargoRequest");
 
-export function registerEntidadesPaths(registry: OpenAPIRegistry): void {
+export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses } = schemas;
   registry.registerPath({
     method: "get",
     path: "/entidades",

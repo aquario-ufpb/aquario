@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { errorResponses } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Campus response shape. Handlers validate request bodies inline (no Zod),
@@ -20,7 +20,8 @@ const createOrUpdateCampusSchema = z
   })
   .openapi("CreateOrUpdateCampusRequest");
 
-export function registerCampusPaths(registry: OpenAPIRegistry): void {
+export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses } = schemas;
   registry.registerPath({
     method: "get",
     path: "/campus",

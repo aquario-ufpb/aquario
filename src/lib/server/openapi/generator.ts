@@ -3,12 +3,8 @@ import type { OpenAPIObject } from "openapi3-ts/oas31";
 
 import packageJson from "../../../../package.json";
 
-// Importing these modules has the side effect of registering their schemas
-// and (eventually) paths on the shared registry. The order matters: the
-// registry must exist first, then the shared component schemas, then the
-// per-resource paths are registered on demand via registerAllPaths().
-import { registry, OPENAPI_TAGS } from "./registry";
-import "./common-schemas";
+import { registerCommonSchemas } from "./common-schemas";
+import { createRegistry, OPENAPI_TAGS } from "./registry";
 import { registerAllPaths } from "./paths";
 
 /**
@@ -19,6 +15,11 @@ import { registerAllPaths } from "./paths";
  * naturally invalidates this cache so contributors see fresh docs without
  * any extra plumbing. In production the cache persists for the lifetime of
  * the serverless function instance.
+ *
+ * Note that ONLY the generated document is cached — the registry used to
+ * build it is ephemeral, created fresh inside `getOpenApiDocument` on each
+ * cache miss. That ensures every invocation is a pure function of the code:
+ * calling the generator multiple times never leaks state between calls.
  */
 let cachedDocument: OpenAPIObject | null = null;
 
@@ -52,13 +53,20 @@ error messages returned by the API are in Portuguese (as served to end users).
  * Lazily build and cache the OpenAPI document. Subsequent calls return the
  * exact same object reference so the underlying JSON serialization can be
  * cached by Next.js and downstream consumers.
+ *
+ * On a cache miss, a fresh registry is created, the common component schemas
+ * are registered on it, and every path group is registered in turn. The
+ * resulting document is frozen in the module-level cache and returned on all
+ * subsequent calls until the cache is cleared (in tests or on hot reload).
  */
 export function getOpenApiDocument(): OpenAPIObject {
   if (cachedDocument) {
     return cachedDocument;
   }
 
-  registerAllPaths(registry);
+  const registry = createRegistry();
+  const schemas = registerCommonSchemas(registry);
+  registerAllPaths(registry, schemas);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
 
@@ -90,8 +98,9 @@ export function getOpenApiDocument(): OpenAPIObject {
 
 /**
  * Test-only helper: reset the cached document so tests can re-run document
- * generation in isolation. Not exported from any public module outside of
- * __tests__ consumers.
+ * generation in isolation. Safe to call repeatedly — since each call to
+ * `getOpenApiDocument()` now builds its own registry, there is no cross-call
+ * state to leak.
  */
 export function __resetOpenApiCacheForTests(): void {
   cachedDocument = null;

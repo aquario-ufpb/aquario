@@ -8,7 +8,7 @@ import { updateEventoSchema } from "@/app/api/calendario-academico/[id]/eventos/
 import { batchCreateSchema } from "@/app/api/calendario-academico/[id]/eventos/batch/route";
 import { ALL_CATEGORIAS } from "@/lib/shared/config/calendario-academico";
 
-import { errorResponses } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Enum of event categories. Mirrors ALL_CATEGORIAS in
@@ -56,7 +56,8 @@ const eventoResponseSchema = z
 
 const messageResponseSchema = z.object({ message: z.string() });
 
-export function registerCalendarioPaths(registry: OpenAPIRegistry): void {
+export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses } = schemas;
   registry.registerPath({
     method: "get",
     path: "/calendario-academico",

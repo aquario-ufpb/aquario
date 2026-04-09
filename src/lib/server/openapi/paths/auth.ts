@@ -8,7 +8,7 @@ import { forgotPasswordSchema } from "@/app/api/auth/esqueci-senha/route";
 import { resetPasswordSchema } from "@/app/api/auth/resetar-senha/route";
 import { resendVerificationRequestSchema } from "@/app/api/auth/solicitar-reenvio-verificacao/route";
 
-import { errorResponses, ApiErrorBodySchema } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Shared JWT example used across token responses. Truncated to keep the
@@ -106,8 +106,14 @@ const currentUserResponseSchema = z
 /**
  * Register all authentication-related paths on the OpenAPI registry.
  * Called from registerAllPaths() in paths/index.ts during document generation.
+ *
+ * The `schemas` argument holds the shared component schemas and helpers
+ * registered by `registerCommonSchemas` on the same registry — we destructure
+ * it here so the rest of the file can use `errorResponses` and
+ * `ApiErrorBodySchema` with the familiar names.
  */
-export function registerAuthPaths(registry: OpenAPIRegistry): void {
+export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses, ApiErrorBodySchema } = schemas;
   registry.registerPath({
     method: "post",
     path: "/auth/login",

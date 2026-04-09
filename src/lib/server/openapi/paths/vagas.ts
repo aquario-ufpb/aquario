@@ -3,7 +3,7 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
 import { createVagaSchema } from "@/app/api/vagas/route";
 
-import { errorResponses } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Enum of supported job/opportunity types. Mirrors TIPO_VAGA_VALUES in
@@ -75,7 +75,8 @@ const vagaDetailResponseSchema = vagaResponseSchema
   })
   .openapi("VagaDetailResponse");
 
-export function registerVagasPaths(registry: OpenAPIRegistry): void {
+export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses } = schemas;
   registry.registerPath({
     method: "get",
     path: "/vagas",

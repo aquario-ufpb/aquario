@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { errorResponses } from "../common-schemas";
+import type { CommonSchemas } from "../common-schemas";
 
 /**
  * Guia (academic guide) shape. Guides organize tutorial content for students
@@ -47,7 +47,8 @@ const subSecaoGuiaResponseSchema = z
   })
   .openapi("SubSecaoGuiaResponse");
 
-export function registerGuiasPaths(registry: OpenAPIRegistry): void {
+export function registerGuiasPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  const { errorResponses } = schemas;
   registry.registerPath({
     method: "get",
     path: "/guias",

@@ -1,5 +1,6 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
+import type { CommonSchemas } from "../common-schemas";
 import { registerAuthPaths } from "./auth";
 import { registerCalendarioPaths } from "./calendario";
 import { registerCampusPaths } from "./campus";
@@ -19,21 +20,24 @@ import { registerVagasPaths } from "./vagas";
  * during lazy document creation. Keep the calls ordered by resource group
  * so the resulting paths object matches the tag order in registry.ts.
  *
- * As each resource group is documented, its `register*Paths` function will
- * be added here (see src/lib/server/openapi/paths/auth.ts, usuarios.ts, etc).
+ * The `schemas` argument is the set of shared component schemas (ErrorCode,
+ * ApiErrorBody, PaginationMeta, the `errorResponses` helper) created by
+ * `registerCommonSchemas` on the same registry. Path modules receive it as
+ * a second argument so they can reference the shared error envelope without
+ * importing module-level singletons.
  */
-export function registerAllPaths(registry: OpenAPIRegistry): void {
-  registerAuthPaths(registry);
-  registerUsuariosPaths(registry);
-  registerEntidadesPaths(registry);
-  registerVagasPaths(registry);
-  registerGuiasPaths(registry);
-  registerCursosPaths(registry);
-  registerCentrosPaths(registry);
-  registerCampusPaths(registry);
-  registerDisciplinasPaths(registry);
-  registerCurriculosPaths(registry);
-  registerCalendarioPaths(registry);
-  registerSearchPaths(registry);
-  registerMiscPaths(registry);
+export function registerAllPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
+  registerAuthPaths(registry, schemas);
+  registerUsuariosPaths(registry, schemas);
+  registerEntidadesPaths(registry, schemas);
+  registerVagasPaths(registry, schemas);
+  registerGuiasPaths(registry, schemas);
+  registerCursosPaths(registry, schemas);
+  registerCentrosPaths(registry, schemas);
+  registerCampusPaths(registry, schemas);
+  registerDisciplinasPaths(registry, schemas);
+  registerCurriculosPaths(registry, schemas);
+  registerCalendarioPaths(registry, schemas);
+  registerSearchPaths(registry, schemas);
+  registerMiscPaths(registry, schemas);
 }
