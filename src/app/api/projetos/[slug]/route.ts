@@ -3,13 +3,17 @@ import { getContainer } from "@/lib/server/container";
 import { updateProjetoSchema } from "@/lib/shared/validations/projeto";
 import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
 
+type RouteContext = {
+  params: Promise<{ slug: string }>;
+};
+
 /**
  * GET /api/projetos/[slug]
  * Obtém detalhes de um projeto específico pelo slug
  */
-export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function GET(_request: NextRequest, context: RouteContext) {
   try {
-    const { slug } = params;
+    const { slug } = await context.params;
     const { projetosRepository } = getContainer();
 
     const projeto = await projetosRepository.findBySlug(slug);
@@ -29,9 +33,9 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
  * PATCH /api/projetos/[slug]
  * Atualiza um projeto (não atualiza autores)
  */
-export async function PATCH(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
-    const { slug } = params;
+    const { slug } = await context.params;
     const body = await request.json();
 
     const validation = updateProjetoSchema.safeParse(body);
@@ -70,9 +74,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { slug: 
  * DELETE /api/projetos/[slug]
  * Remove um projeto
  */
-export async function DELETE(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
-    const { slug } = params;
+    const { slug } = await context.params;
     const { projetosRepository } = getContainer();
 
     // Check if projeto exists

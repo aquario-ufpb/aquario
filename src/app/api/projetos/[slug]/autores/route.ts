@@ -3,13 +3,17 @@ import { getContainer } from "@/lib/server/container";
 import { updateProjetoAutoresSchema } from "@/lib/shared/validations/projeto";
 import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
 
+type RouteContext = {
+  params: Promise<{ slug: string }>;
+};
+
 /**
  * PUT /api/projetos/[slug]/autores
  * Atualiza os autores de um projeto (substitui todos)
  */
-export async function PUT(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    const { slug } = params;
+    const { slug } = await context.params;
     const body = await request.json();
 
     const validation = updateProjetoAutoresSchema.safeParse(body);
