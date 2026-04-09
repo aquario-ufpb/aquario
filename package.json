@@ -69,6 +69,8 @@
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-query-devtools": "^5.90.2",
     "@tiptap/extension-blockquote": "^2.10.0",
+    "@tiptap/extension-image": "^2.27.2",
+    "@tiptap/extension-link": "^2.9.1",
     "@tiptap/extension-placeholder": "^2.9.1",
     "@tiptap/extension-text-style": "^2.9.1",
     "@tiptap/extension-underline": "^2.9.1",

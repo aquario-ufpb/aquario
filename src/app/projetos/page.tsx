@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/lib/client/hooks";
+import { apiClient } from "@/lib/client/api/api-client";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -24,7 +25,7 @@ export default function Projetos() {
       try {
         setIsLoading(true);
 
-        const response = await fetch("/api/projetos");
+        const response = await apiClient("/projetos");
         if (!response.ok) {
           throw new Error("Erro ao buscar projetos");
         }
@@ -198,6 +199,21 @@ export default function Projetos() {
               Nenhum projeto encontrado com os filtros selecionados.
             </div>
           )}
+        </div>
+      )}
+
+      {/* Floating Action Button */}
+      {user && (
+        <div className="fixed bottom-8 left-8 z-50">
+          <Link href="/projetos/novo">
+            <Button
+              size="icon"
+              className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all"
+            >
+              <Plus className="h-6 w-6" />
+              <span className="sr-only">Divulgar um projeto</span>
+            </Button>
+          </Link>
         </div>
       )}
     </div>
