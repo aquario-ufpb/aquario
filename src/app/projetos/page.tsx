@@ -44,14 +44,11 @@ export default function Projetos() {
         case "laboratorios":
           filtered = filtered.filter(p => p.tipo === "LABORATORIO");
           break;
-        case "entidades":
+        case "grupos":
           filtered = filtered.filter(p => p.tipo === "GRUPO");
           break;
         case "ligas":
           filtered = filtered.filter(p => p.tipo === "LIGA");
-          break;
-        case "grupos":
-          filtered = filtered.filter(p => p.tipo === "GRUPO");
           break;
       }
     }
@@ -97,7 +94,7 @@ export default function Projetos() {
               { id: null, label: "Todos" },
               { id: "pessoais", label: "Pessoais" },
               { id: "laboratorios", label: "Laboratórios" },
-              { id: "entidades", label: "Grupos" },
+              { id: "grupos", label: "Grupos" },
               { id: "ligas", label: "Ligas" },
             ]}
             active={activeFilter}

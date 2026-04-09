@@ -165,7 +165,13 @@ export default function ProjetoPage() {
                   >
                     <div className="flex items-center gap-3 hover:bg-muted/50 p-2 rounded-lg transition-colors cursor-pointer">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={colaborador.urlFotoPerfil || ""} alt={colaborador.nome} />
+                        <AvatarImage
+                          src={
+                            colaborador.urlFotoPerfil ||
+                            getDefaultAvatarUrl(colaborador.id, colaborador.nome)
+                          }
+                          alt={colaborador.nome}
+                        />
                         <AvatarFallback>{colaborador.nome?.[0] ?? "U"}</AvatarFallback>
                       </Avatar>
 

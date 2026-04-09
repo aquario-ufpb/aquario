@@ -22,7 +22,7 @@ const createProjetoBaseSchema = z.object({
   subtitulo: z.string().max(500).optional().nullable(),
   descricao: z.string().max(1000).optional().nullable(),
   textContent: z.string().optional().nullable(),
-  tipoConteudo: z.enum(["MARKDOWN", "HTML"]).default("MARKDOWN"),
+  tipoConteudo: z.enum(["MARKDOWN", "HTML", "TEXTO_SIMPLES"]).default("MARKDOWN"),
   urlImagem: z.string().url().optional().nullable(),
   status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).default("RASCUNHO"),
   tags: z.array(z.string().max(50)).default([]),

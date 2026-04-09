@@ -36,7 +36,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
   const [showAllEntities, setShowAllEntities] = useState(false);
-  const { data: projetos, isLoading: projetosLoading } = useProjetosByUsuario(user?.id);
+  const {
+    data: projetos,
+    isLoading: projetosLoading,
+    error: projetosError,
+  } = useProjetosByUsuario(user?.id);
 
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser?.id === user?.id;
@@ -347,7 +351,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
               </div>
             )}
 
-            {!projetosLoading && (!projetos || projetos.length === 0) && (
+            {!projetosLoading && projetosError && (
+              <p className="text-destructive text-sm">Erro ao carregar projetos.</p>
+            )}
+
+            {!projetosLoading && !projetosError && (!projetos || projetos.length === 0) && (
               <p className="text-muted-foreground text-sm">
                 {isOwnProfile
                   ? "Você ainda não publicou nenhum projeto."
@@ -355,7 +363,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
               </p>
             )}
 
-            {!projetosLoading && projetos && projetos.length > 0 && (
+            {!projetosLoading && !projetosError && projetos && projetos.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {projetos.map(p => {
                   const card = mapProjetoToCard(p);

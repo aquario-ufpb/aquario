@@ -127,8 +127,8 @@ export function CriarProjetoForm() {
       setDescricao("");
       setImageUrl(null);
       setImageName("");
-    } catch (error) {
-      console.error("Erro:", error);
+    } catch (_error) {
+      // Error toast is handled by useCreateProjeto's onError
     }
   };
 
