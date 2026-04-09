@@ -4,40 +4,41 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Miscellaneous endpoints that don't fit into any specific resource group:
- * health check, file upload, and static content image serving.
+ * Endpoints diversos que não se encaixam em nenhum grupo de recurso específico:
+ * health check, upload de arquivos e serviço de imagens estáticas dos
+ * submódulos de conteúdo.
  *
- * These are registered together to avoid creating three separate files for
- * one endpoint each.
+ * Registrados juntos para evitar criar três arquivos separados de 1 endpoint cada.
  */
 
 const healthResponseSchema = z
   .object({
     status: z.literal("ok").openapi({
-      description: "Service health indicator. Always 'ok' when the service is reachable.",
+      description: "Indicador de saúde do serviço. Sempre 'ok' quando o serviço está acessível.",
       example: "ok",
     }),
   })
   .openapi("HealthResponse");
 
 /**
- * Multipart form body schema for POST /upload/photo. The file must be sent
- * as a multipart/form-data field named `file`. Zod doesn't have a native
- * binary primitive, so we use `z.unknown()` with an explicit openapi override.
+ * Schema do corpo multipart para POST /upload/photo. O arquivo deve ser enviado
+ * como campo `file` em multipart/form-data. Zod não tem primitivo binário
+ * nativo, então usamos `z.unknown()` com override explícito do openapi.
  */
 const uploadPhotoBodySchema = z
   .object({
     file: z.unknown().openapi({
       type: "string",
       format: "binary",
-      description: "Image file to upload. Max 5MB. Allowed MIME types: JPEG, PNG, WebP, GIF.",
+      description:
+        "Arquivo de imagem para upload. Máximo 5MB. MIME types aceitos: JPEG, PNG, WebP, GIF.",
     }),
   })
   .openapi("UploadPhotoBody");
 
 /**
- * Reuses the same user profile shape returned by /auth/me and /usuarios/slug/{slug}.
- * Kept minimal here since the full profile schema lives in paths/usuarios.ts.
+ * Reusa o mesmo shape de perfil retornado por /auth/me e /usuarios/slug/{slug}.
+ * Mantido mínimo aqui — o schema completo de perfil vive em paths/usuarios.ts.
  */
 const uploadPhotoResponseSchema = z
   .object({
@@ -48,7 +49,7 @@ const uploadPhotoResponseSchema = z
     papelPlataforma: z.enum(["USER", "MASTER_ADMIN"]),
     eVerificado: z.boolean(),
     urlFotoPerfil: z.string().nullable().openapi({
-      description: "URL of the newly uploaded photo in blob storage.",
+      description: "URL da foto recém-enviada no blob storage.",
       example: "https://blob.vercel-storage.com/photos/550e8400-1712668800.webp",
     }),
     periodoAtual: z.string().nullable().optional(),
@@ -64,12 +65,12 @@ export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSche
     method: "get",
     path: "/health",
     tags: ["Health"],
-    summary: "Service health check",
+    summary: "Health check do serviço",
     description:
-      "Simple liveness probe for the API service. Returns HTTP 200 with `{ status: 'ok' }` when the service is reachable. Use this for uptime monitoring and load balancer health checks.",
+      "Liveness probe simples da API. Retorna HTTP 200 com `{ status: 'ok' }` quando o serviço está acessível. Útil para monitoramento de uptime e health checks de load balancer.",
     responses: {
       200: {
-        description: "Service is healthy.",
+        description: "Serviço saudável.",
         content: {
           "application/json": {
             schema: healthResponseSchema,
@@ -84,9 +85,9 @@ export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSche
     method: "post",
     path: "/upload/photo",
     tags: ["Upload"],
-    summary: "Upload a profile photo for the current user",
+    summary: "Enviar foto de perfil do usuário atual",
     description:
-      "Upload a photo (max 5 MB, JPEG/PNG/WebP/GIF) and atomically update the user's profile. Returns the updated user.",
+      "Faz upload de uma foto (máximo 5MB, JPEG/PNG/WebP/GIF) e atualiza o perfil do usuário atomicamente. Retorna o usuário atualizado.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -100,7 +101,7 @@ export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSche
     },
     responses: {
       200: {
-        description: "Photo uploaded and user profile updated.",
+        description: "Foto enviada e perfil atualizado.",
         content: { "application/json": { schema: uploadPhotoResponseSchema } },
       },
       ...errorResponses([400]),
@@ -110,21 +111,21 @@ export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSche
   registry.registerPath({
     method: "get",
     path: "/content-images/{path}",
-    tags: ["Content Images"],
-    summary: "Serve a static image from the content submodules",
+    tags: ["Imagens de Conteúdo"],
+    summary: "Servir imagem estática dos submódulos de conteúdo",
     description:
-      "Serve a static image from `content/` git submodules. Path uses slug matching (accent-stripped, priority prefixes ignored). Supported roots: `entidades/*`, `assets/entidades/*`, `mapas/*`, or default (guias). **Errors return plain text**, not JSON — compatible with `<img>` tags.",
+      "Serve uma imagem estática dos submódulos git em `content/`. O path usa slug matching (sem acentos, prefixos de prioridade ignorados). Roots suportados: `entidades/*`, `assets/entidades/*`, `mapas/*`, ou padrão (guias). **Erros retornam texto plano**, não JSON — compatível com tags `<img>`.",
     request: {
       params: z.object({
         path: z.string().openapi({
-          description: "Slash-joined path segments (catch-all).",
+          description: "Segmentos de path concatenados por barra (catch-all).",
           example: "entidades/pet-computacao.png",
         }),
       }),
     },
     responses: {
       200: {
-        description: "Image binary. Cached for 1 year (`Cache-Control: immutable`).",
+        description: "Imagem binária. Cacheada por 1 ano (`Cache-Control: immutable`).",
         content: {
           "image/png": { schema: { type: "string", format: "binary" } },
           "image/jpeg": { schema: { type: "string", format: "binary" } },
@@ -135,7 +136,7 @@ export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSche
         },
       },
       404: {
-        description: "Image not found (plain text body).",
+        description: "Imagem não encontrada (corpo em texto plano).",
         content: {
           "text/plain": {
             schema: { type: "string", example: "Image not found" },

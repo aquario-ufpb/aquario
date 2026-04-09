@@ -4,10 +4,10 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Guia (academic guide) shape. Guides organize tutorial content for students
- * — typically course-specific (e.g., "Guia do Calouro de Ciência da Computação").
- * Handlers return Prisma-shaped objects without an explicit mapper, so this
- * schema mirrors the shape returned from the repository.
+ * Shape de Guia. Guias organizam conteúdo tutorial para estudantes —
+ * tipicamente associados a um curso (ex: "Guia do Calouro de Ciência da
+ * Computação"). Os handlers retornam objetos no formato do Prisma sem mapper
+ * explícito, então o schema espelha o shape vindo do repositório.
  */
 const guiaResponseSchema = z
   .object({
@@ -39,7 +39,7 @@ const subSecaoGuiaResponseSchema = z
     id: z.string().uuid(),
     titulo: z.string().openapi({ example: "Onde fica o Centro de Informática" }),
     conteudo: z.string().openapi({
-      description: "Markdown content of the subsection.",
+      description: "Conteúdo da subseção em Markdown.",
       example: "O CI fica localizado no Campus I, próximo ao bloco de engenharias...",
     }),
     ordem: z.number().int().openapi({ example: 1 }),
@@ -52,21 +52,21 @@ export function registerGuiasPaths(registry: OpenAPIRegistry, schemas: CommonSch
   registry.registerPath({
     method: "get",
     path: "/guias",
-    tags: ["Guides"],
-    summary: "List all guides (optionally filtered by course)",
+    tags: ["Guias"],
+    summary: "Listar guias (opcionalmente filtrados por curso)",
     description:
-      "Public endpoint returning all academic guides. Optionally filter by `cursoId` to get only guides associated with a specific course.",
+      "Retorna todos os guias acadêmicos. Use `cursoId` para filtrar apenas os guias associados a um curso específico.",
     request: {
       query: z.object({
         cursoId: z.string().uuid().optional().openapi({
-          description: "Filter guides by course id.",
+          description: "Filtra guias pelo ID do curso.",
           example: "550e8400-e29b-41d4-a716-446655440000",
         }),
       }),
     },
     responses: {
       200: {
-        description: "List of guides.",
+        description: "Lista de guias.",
         content: { "application/json": { schema: z.array(guiaResponseSchema) } },
       },
     },
@@ -75,16 +75,16 @@ export function registerGuiasPaths(registry: OpenAPIRegistry, schemas: CommonSch
   registry.registerPath({
     method: "get",
     path: "/guias/{id}/secoes",
-    tags: ["Guides"],
-    summary: "List sections for a guide",
+    tags: ["Guias"],
+    summary: "Listar seções de um guia",
     description:
-      "Public endpoint returning all top-level sections of a guide, ordered by the `ordem` field. Sections group related subsections within a guide.",
+      "Retorna todas as seções de nível superior de um guia, ordenadas pelo campo `ordem`. Seções agrupam subseções relacionadas dentro de um guia.",
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "List of sections ordered by the 'ordem' field.",
+        description: "Lista de seções ordenadas pelo campo `ordem`.",
         content: { "application/json": { schema: z.array(secaoGuiaResponseSchema) } },
       },
     },
@@ -93,16 +93,16 @@ export function registerGuiasPaths(registry: OpenAPIRegistry, schemas: CommonSch
   registry.registerPath({
     method: "get",
     path: "/guias/secoes/{id}/subsecoes",
-    tags: ["Guides"],
-    summary: "List subsections for a section",
+    tags: ["Guias"],
+    summary: "Listar subseções de uma seção",
     description:
-      "Public endpoint returning all subsections within a section, ordered by `ordem`. Subsection content is Markdown.",
+      "Retorna todas as subseções de uma seção, ordenadas pelo campo `ordem`. O conteúdo das subseções é Markdown.",
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "List of subsections ordered by the 'ordem' field.",
+        description: "Lista de subseções ordenadas pelo campo `ordem`.",
         content: { "application/json": { schema: z.array(subSecaoGuiaResponseSchema) } },
       },
     },

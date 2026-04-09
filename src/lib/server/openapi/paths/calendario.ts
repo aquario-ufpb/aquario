@@ -13,37 +13,37 @@ import { ALL_CATEGORIAS } from "@/lib/shared/config/calendario-academico";
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Enum of event categories. Mirrors ALL_CATEGORIAS in
- * src/lib/shared/config/calendario-academico.ts — kept in sync via the import.
+ * Enum das categorias de evento. Espelha ALL_CATEGORIAS em
+ * src/lib/shared/config/calendario-academico.ts — mantido em sincronia via import.
  */
 const categoriaEventoSchema = z.enum(ALL_CATEGORIAS).openapi({
   description:
-    "Category of the event. Used for display grouping and color coding in the calendar UI. 'OUTRA' is a catch-all for uncategorized events.",
+    "Categoria do evento. Usada para agrupamento e cores no calendário. 'OUTRA' é o catch-all para eventos sem categoria definida.",
   example: "INICIO_PERIODO_LETIVO",
 });
 
 /**
- * SemestreLetivo (academic semester) response shape.
+ * Shape de resposta de SemestreLetivo (semestre acadêmico).
  */
 const semestreResponseSchema = z
   .object({
     id: z.string().uuid(),
     nome: z.string().openapi({
-      description: "Semester name, typically in the 'YYYY.N' format.",
+      description: "Nome do semestre, tipicamente no formato 'YYYY.N'.",
       example: "2026.1",
     }),
     dataInicio: z.string().datetime().openapi({ example: "2026-03-10T00:00:00.000Z" }),
     dataFim: z.string().datetime().openapi({ example: "2026-07-15T00:00:00.000Z" }),
     ativo: z.boolean().optional().openapi({
       description:
-        "Whether this is the currently active semester. Exactly one semester should be active at a time.",
+        "Indica se este é o semestre ativo no momento. Exatamente um semestre deve estar ativo por vez.",
       example: true,
     }),
   })
   .openapi("SemestreResponse");
 
 /**
- * Evento (calendar event) response shape.
+ * Shape de resposta de Evento do calendário.
  */
 const eventoResponseSchema = z
   .object({
@@ -63,21 +63,21 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "get",
     path: "/calendario-academico",
-    tags: ["Academic Calendar"],
-    summary: "List semesters (or get the active one)",
+    tags: ["Calendário Acadêmico"],
+    summary: "Listar semestres (ou obter o ativo)",
     description:
-      "List semesters. Pass `?ativo=true` to get only the currently active semester (as a single object or `null`).",
+      "Lista todos os semestres. Use `?ativo=true` para obter apenas o semestre ativo (como objeto único ou `null`).",
     request: {
       query: z.object({
         ativo: z.enum(["true", "false"]).optional().openapi({
-          description: "If `true`, return only the active semester.",
+          description: "Se `true`, retorna apenas o semestre ativo.",
           example: "true",
         }),
       }),
     },
     responses: {
       200: {
-        description: "Array of semesters, or a single semester when `?ativo=true`.",
+        description: "Array de semestres, ou um único semestre quando `?ativo=true`.",
         content: {
           "application/json": {
             schema: z.union([z.array(semestreResponseSchema), semestreResponseSchema.nullable()]),
@@ -90,10 +90,10 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "post",
     path: "/calendario-academico",
-    tags: ["Academic Calendar"],
-    summary: "Create a new semester (admin only)",
+    tags: ["Calendário Acadêmico"],
+    summary: "Criar um novo semestre (admin)",
     description:
-      "Create a new semester. Returns 409 with `SEMESTRE_NOME_EXISTS` if the name already exists.",
+      "Cria um novo semestre. Retorna 409 com `SEMESTRE_NOME_EXISTS` se já existir um semestre com esse nome.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -112,7 +112,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
     },
     responses: {
       201: {
-        description: "Semester created.",
+        description: "Semestre criado.",
         content: { "application/json": { schema: semestreResponseSchema } },
       },
       ...errorResponses([400, 409]),
@@ -122,16 +122,16 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "get",
     path: "/calendario-academico/{id}",
-    tags: ["Academic Calendar"],
-    summary: "Get a semester by id",
+    tags: ["Calendário Acadêmico"],
+    summary: "Buscar um semestre pelo ID",
     description:
-      "Public endpoint returning the details of a specific semester. Returns 404 with `SEMESTRE_NOT_FOUND` if the id does not match any semester.",
+      "Retorna os detalhes de um semestre específico. Retorna 404 com `SEMESTRE_NOT_FOUND` se o ID não corresponder a nenhum semestre.",
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "Semester details.",
+        description: "Detalhes do semestre.",
         content: { "application/json": { schema: semestreResponseSchema } },
       },
       ...errorResponses([404]),
@@ -141,10 +141,10 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "put",
     path: "/calendario-academico/{id}",
-    tags: ["Academic Calendar"],
-    summary: "Update a semester (admin only)",
+    tags: ["Calendário Acadêmico"],
+    summary: "Atualizar um semestre (admin)",
     description:
-      "Admin-only endpoint to update a semester's name or dates. All fields are optional — only provided fields are updated.",
+      "Endpoint exclusivo para administradores. Atualiza nome ou datas de um semestre. Todos os campos são opcionais — apenas os enviados são atualizados.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -160,7 +160,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
     },
     responses: {
       200: {
-        description: "Semester updated.",
+        description: "Semestre atualizado.",
         content: { "application/json": { schema: semestreResponseSchema } },
       },
       ...errorResponses([400, 404, 409]),
@@ -170,17 +170,17 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "delete",
     path: "/calendario-academico/{id}",
-    tags: ["Academic Calendar"],
-    summary: "Delete a semester (admin only)",
+    tags: ["Calendário Acadêmico"],
+    summary: "Excluir um semestre (admin)",
     description:
-      "Admin-only endpoint to delete a semester. Related events are also removed as part of the deletion.",
+      "Endpoint exclusivo para administradores. Os eventos vinculados também são removidos como parte da exclusão.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "Semester deleted.",
+        description: "Semestre excluído.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -195,16 +195,16 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "get",
     path: "/calendario-academico/{id}/eventos",
-    tags: ["Academic Calendar"],
-    summary: "List events for a semester",
+    tags: ["Calendário Acadêmico"],
+    summary: "Listar eventos de um semestre",
     description:
-      "Public endpoint returning all events (holidays, registration deadlines, exam periods, etc) scheduled for the specified semester.",
+      "Retorna todos os eventos (feriados, prazos de matrícula, períodos de prova, etc) agendados para o semestre especificado.",
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "List of events for the semester.",
+        description: "Lista de eventos do semestre.",
         content: { "application/json": { schema: z.array(eventoResponseSchema) } },
       },
       ...errorResponses([404]),
@@ -214,10 +214,10 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "post",
     path: "/calendario-academico/{id}/eventos",
-    tags: ["Academic Calendar"],
-    summary: "Create a new event in a semester (admin only)",
+    tags: ["Calendário Acadêmico"],
+    summary: "Criar um novo evento em um semestre (admin)",
     description:
-      "Admin-only endpoint to add a new event to the specified semester. Events are categorized via the `categoria` field (holidays, exam periods, etc) for UI display grouping.",
+      "Endpoint exclusivo para administradores. Adiciona um novo evento ao semestre especificado. Eventos são categorizados pelo campo `categoria` (feriados, períodos de prova, etc) para agrupamento na UI.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -238,7 +238,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
     },
     responses: {
       201: {
-        description: "Event created.",
+        description: "Evento criado.",
         content: { "application/json": { schema: eventoResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -248,10 +248,10 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "put",
     path: "/calendario-academico/{id}/eventos/{eventoId}",
-    tags: ["Academic Calendar"],
-    summary: "Update an event (admin only)",
+    tags: ["Calendário Acadêmico"],
+    summary: "Atualizar um evento (admin)",
     description:
-      "Admin-only endpoint to update an event's description, dates, or category. All fields are optional. Returns 404 with `EVENTO_NOT_FOUND` if the event does not exist.",
+      "Endpoint exclusivo para administradores. Atualiza a descrição, datas ou categoria de um evento. Todos os campos são opcionais. Retorna 404 com `EVENTO_NOT_FOUND` se o evento não existir.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({
@@ -273,7 +273,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
     },
     responses: {
       200: {
-        description: "Event updated.",
+        description: "Evento atualizado.",
         content: { "application/json": { schema: eventoResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -283,9 +283,9 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "delete",
     path: "/calendario-academico/{id}/eventos/{eventoId}",
-    tags: ["Academic Calendar"],
-    summary: "Delete an event (admin only)",
-    description: "Admin-only endpoint to delete an event from the semester.",
+    tags: ["Calendário Acadêmico"],
+    summary: "Excluir um evento (admin)",
+    description: "Endpoint exclusivo para administradores. Exclui um evento do semestre.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({
@@ -295,7 +295,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
     },
     responses: {
       200: {
-        description: "Event deleted.",
+        description: "Evento excluído.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -310,10 +310,10 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "post",
     path: "/calendario-academico/{id}/eventos/batch",
-    tags: ["Academic Calendar"],
-    summary: "Batch create (or replace) events in a semester (admin only)",
+    tags: ["Calendário Acadêmico"],
+    summary: "Criar (ou substituir) eventos em lote em um semestre (admin)",
     description:
-      "Admin-only endpoint to create multiple events in a single request — used by the CSV import flow. When `replace: true`, ALL existing events for the semester are deleted before inserting the new batch (use with caution). When `replace: false` (default), new events are appended.",
+      "Endpoint exclusivo para administradores. Cria múltiplos eventos em uma única requisição — usado pelo fluxo de import via CSV. Quando `replace: true`, TODOS os eventos existentes do semestre são excluídos antes de inserir o novo lote (use com cuidado). Com `replace: false` (padrão), novos eventos são apenas adicionados.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -345,7 +345,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
     },
     responses: {
       201: {
-        description: "Events created. Response includes the total number of events inserted.",
+        description: "Eventos criados. A resposta inclui o total de eventos inseridos.",
         content: {
           "application/json": {
             schema: z.object({ count: z.number().int().openapi({ example: 2 }) }),

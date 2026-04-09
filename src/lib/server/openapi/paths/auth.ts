@@ -13,40 +13,42 @@ import {
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Shared JWT example used across token responses. Truncated to keep the
- * rendered examples readable — the real token is a long opaque string.
+ * Exemplo de JWT compartilhado entre as respostas de token. Truncado para
+ * manter os exemplos renderizados legíveis — o token real é uma string opaca
+ * bem mais longa.
  */
 const EXAMPLE_JWT =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAifQ.signature";
 
 /**
- * Schema for the `{ token }` response returned by login and refresh endpoints.
+ * Schema da resposta `{ token }` retornada pelos endpoints de login e refresh.
  */
 const tokenResponseSchema = z
   .object({
     token: z.string().openapi({
-      description: "JWT bearer token. Use it in the Authorization header as 'Bearer <token>'.",
+      description: "Token JWT. Enviar no header `Authorization: Bearer <token>`.",
       example: EXAMPLE_JWT,
     }),
   })
   .openapi("TokenResponse");
 
 /**
- * Generic `{ message }` response used by several auth flows that do not
- * return structured data (verification, password reset, etc).
+ * Resposta genérica `{ message }` usada por vários fluxos de autenticação que
+ * não retornam dados estruturados (verificação, reset de senha, etc).
  */
 const messageResponseSchema = z
   .object({
     message: z.string().openapi({
-      description: "Human-readable status message, localized in Portuguese.",
+      description: "Mensagem de status legível, em português.",
       example: "Operação realizada com sucesso.",
     }),
   })
   .openapi("MessageResponse");
 
 /**
- * Response shape for POST /auth/register — includes the new user id and whether
- * email verification was skipped (happens automatically in dev/test environments).
+ * Shape da resposta de POST /auth/register — inclui o ID do novo usuário e se
+ * a verificação de email foi pulada (acontece automaticamente em
+ * desenvolvimento/teste).
  */
 const registerResponseSchema = z
   .object({
@@ -54,20 +56,21 @@ const registerResponseSchema = z
       example: "Cadastro realizado! Verifique seu email para ativar sua conta.",
     }),
     usuarioId: z.string().uuid().openapi({
-      description: "UUID of the newly created user.",
+      description: "UUID do usuário recém-criado.",
       example: "550e8400-e29b-41d4-a716-446655440000",
     }),
     verificado: z.boolean().openapi({
-      description: "Whether the user was auto-verified (true) or needs email verification (false).",
+      description:
+        "Indica se o usuário foi auto-verificado (true) ou se precisa verificar o email (false).",
       example: false,
     }),
   })
   .openapi("RegisterResponse");
 
 /**
- * Response shape for GET /auth/me — the authenticated user's profile with
- * sensitive fields (password hash, etc) stripped out. Matches the object
- * returned by src/app/api/auth/me/route.ts.
+ * Shape da resposta de GET /auth/me — o perfil do usuário autenticado, com os
+ * campos sensíveis (hash de senha, etc) removidos. Espelha o objeto retornado
+ * por src/app/api/auth/me/route.ts.
  */
 const currentUserResponseSchema = z
   .object({
@@ -76,7 +79,7 @@ const currentUserResponseSchema = z
     email: z.string().email().openapi({ example: "joao.silva@academico.ufpb.br" }),
     slug: z.string().openapi({ example: "joao-silva" }),
     papelPlataforma: z.enum(["USER", "MASTER_ADMIN"]).openapi({
-      description: "Platform-wide role: regular user or master admin.",
+      description: "Papel global na plataforma: usuário comum ou administrador master.",
       example: "USER",
     }),
     eVerificado: z.boolean().openapi({ example: true }),
@@ -91,38 +94,39 @@ const currentUserResponseSchema = z
         nome: z.string().openapi({ example: "Centro de Informática" }),
         sigla: z.string().openapi({ example: "CI" }),
       })
-      .openapi({ description: "User's academic center." }),
+      .openapi({ description: "Centro acadêmico do usuário." }),
     curso: z
       .object({
         id: z.string().uuid(),
         nome: z.string().openapi({ example: "Ciência da Computação" }),
       })
-      .openapi({ description: "User's course/major." }),
+      .openapi({ description: "Curso do usuário." }),
     permissoes: z.array(z.string()).openapi({
-      description: "List of permission strings derived from the user's roles and memberships.",
+      description: "Lista de strings de permissão derivadas dos papéis e vínculos do usuário.",
       example: ["entidade:admin:a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
     }),
   })
   .openapi("CurrentUserResponse");
 
 /**
- * Register all authentication-related paths on the OpenAPI registry.
- * Called from registerAllPaths() in paths/index.ts during document generation.
+ * Registra todos os paths de autenticação no registry OpenAPI.
+ * Chamado por registerAllPaths() em paths/index.ts durante a geração do
+ * documento.
  *
- * The `schemas` argument holds the shared component schemas and helpers
- * registered by `registerCommonSchemas` on the same registry — we destructure
- * it here so the rest of the file can use `errorResponses` and
- * `ApiErrorBodySchema` with the familiar names.
+ * O argumento `schemas` carrega os schemas de componentes compartilhados e os
+ * helpers registrados por `registerCommonSchemas` no mesmo registry — fazemos
+ * destructuring para que o resto do arquivo possa usar `errorResponses` e
+ * `ApiErrorBodySchema` com os nomes familiares.
  */
 export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses, ApiErrorBodySchema } = schemas;
   registry.registerPath({
     method: "post",
     path: "/auth/login",
-    tags: ["Auth"],
-    summary: "Log in with email and password",
+    tags: ["Autenticação"],
+    summary: "Login com email e senha",
     description:
-      "Authenticate with email and password. Returns a JWT bearer token valid for 7 days. Rate limited to 5 attempts/min per IP. Invalid credentials always return a generic 401 to prevent user enumeration.",
+      "Autentica com email e senha. Retorna um token JWT válido por 7 dias. Limitado a 5 tentativas/min por IP. Credenciais inválidas sempre retornam um 401 genérico para evitar enumeração de usuários.",
     request: {
       body: {
         required: true,
@@ -139,7 +143,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     },
     responses: {
       200: {
-        description: "Login successful.",
+        description: "Login realizado com sucesso.",
         content: {
           "application/json": {
             schema: tokenResponseSchema,
@@ -148,10 +152,11 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
         },
       },
       429: {
-        description: "Rate limited — wait `Retry-After` seconds before retrying.",
+        description:
+          "Limite de requisições excedido — aguarde os segundos indicados em `Retry-After` antes de tentar novamente.",
         headers: {
           "Retry-After": {
-            description: "Seconds until the rate limit window resets.",
+            description: "Segundos até a janela de rate limit reabrir.",
             schema: { type: "integer", example: 42 },
           },
         },
@@ -168,10 +173,10 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
   registry.registerPath({
     method: "post",
     path: "/auth/register",
-    tags: ["Auth"],
-    summary: "Register a new user account",
+    tags: ["Autenticação"],
+    summary: "Cadastrar uma nova conta",
     description:
-      "Create a new user account. Only UFPB email domains (`*.ufpb.br`) are accepted. In prod a verification email is sent; in dev (no email provider) users are auto-verified.",
+      "Cria uma nova conta de usuário. Apenas domínios de email da UFPB (`*.ufpb.br`) são aceitos. Em produção, um email de verificação é enviado; em desenvolvimento (sem provider de email), usuários são auto-verificados.",
     request: {
       body: {
         required: true,
@@ -191,7 +196,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     },
     responses: {
       200: {
-        description: "User created successfully.",
+        description: "Usuário criado com sucesso.",
         content: {
           "application/json": {
             schema: registerResponseSchema,
@@ -210,13 +215,13 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
   registry.registerPath({
     method: "get",
     path: "/auth/me",
-    tags: ["Auth"],
-    summary: "Get the currently authenticated user",
-    description: "Return the authenticated user's profile. Sensitive fields are never included.",
+    tags: ["Autenticação"],
+    summary: "Obter o usuário autenticado",
+    description: "Retorna o perfil do usuário autenticado. Campos sensíveis nunca são incluídos.",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
-        description: "The authenticated user's profile.",
+        description: "Perfil do usuário autenticado.",
         content: {
           "application/json": {
             schema: currentUserResponseSchema,
@@ -248,13 +253,13 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
   registry.registerPath({
     method: "post",
     path: "/auth/refresh",
-    tags: ["Auth"],
-    summary: "Refresh the current JWT token",
-    description: "Issue a fresh JWT for the authenticated user.",
+    tags: ["Autenticação"],
+    summary: "Renovar o token JWT atual",
+    description: "Emite um novo token JWT para o usuário autenticado.",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
-        description: "A new valid JWT token.",
+        description: "Novo token JWT válido.",
         content: {
           "application/json": {
             schema: tokenResponseSchema,
@@ -268,9 +273,10 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
   registry.registerPath({
     method: "post",
     path: "/auth/verificar-email",
-    tags: ["Auth"],
-    summary: "Verify an email address using a token",
-    description: "Consume a verification token sent by email and mark the user as verified.",
+    tags: ["Autenticação"],
+    summary: "Verificar email usando token",
+    description:
+      "Consome um token de verificação enviado por email e marca o usuário como verificado.",
     request: {
       body: {
         required: true,
@@ -284,7 +290,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     },
     responses: {
       200: {
-        description: "Email verified successfully.",
+        description: "Email verificado com sucesso.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -299,10 +305,10 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
   registry.registerPath({
     method: "post",
     path: "/auth/esqueci-senha",
-    tags: ["Auth"],
-    summary: "Request a password reset email",
+    tags: ["Autenticação"],
+    summary: "Solicitar email de redefinição de senha",
     description:
-      "Always returns 200, whether the email is registered or not, to prevent user enumeration.",
+      "Sempre retorna 200, independentemente do email estar cadastrado ou não, para evitar enumeração de usuários.",
     request: {
       body: {
         required: true,
@@ -316,7 +322,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     },
     responses: {
       200: {
-        description: "Request accepted.",
+        description: "Solicitação aceita.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -333,9 +339,9 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
   registry.registerPath({
     method: "post",
     path: "/auth/resetar-senha",
-    tags: ["Auth"],
-    summary: "Reset password using a reset token",
-    description: "Consume a reset token (sent via email) and set a new password.",
+    tags: ["Autenticação"],
+    summary: "Redefinir senha usando token",
+    description: "Consome um token de reset (enviado por email) e define uma nova senha.",
     request: {
       body: {
         required: true,
@@ -352,7 +358,8 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     },
     responses: {
       200: {
-        description: "Password reset successfully. The user can now log in with the new password.",
+        description:
+          "Senha redefinida com sucesso. O usuário já pode fazer login com a nova senha.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -367,14 +374,14 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
   registry.registerPath({
     method: "post",
     path: "/auth/reenviar-verificacao",
-    tags: ["Auth"],
-    summary: "Resend verification email (authenticated)",
+    tags: ["Autenticação"],
+    summary: "Reenviar email de verificação (autenticado)",
     description:
-      "Resend the verification email for the authenticated user. For the unauthenticated flow, see `/auth/solicitar-reenvio-verificacao`.",
+      "Reenvia o email de verificação para o usuário autenticado. Para o fluxo sem autenticação, veja `/auth/solicitar-reenvio-verificacao`.",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
-        description: "Verification email resent.",
+        description: "Email de verificação reenviado.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -389,10 +396,10 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
   registry.registerPath({
     method: "post",
     path: "/auth/solicitar-reenvio-verificacao",
-    tags: ["Auth"],
-    summary: "Request verification email resend by email address",
+    tags: ["Autenticação"],
+    summary: "Solicitar reenvio de verificação pelo email",
     description:
-      "Unauthenticated resend flow. Always returns 200 regardless of whether the email exists (prevents user enumeration).",
+      "Fluxo de reenvio sem autenticação. Sempre retorna 200, independentemente do email existir (previne enumeração de usuários).",
     request: {
       body: {
         required: true,
@@ -407,7 +414,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     responses: {
       200: {
         description:
-          "Request accepted. A verification email is sent only if the address is registered and unverified.",
+          "Solicitação aceita. Um email de verificação só é enviado se o endereço estiver cadastrado e ainda não verificado.",
         content: {
           "application/json": {
             schema: messageResponseSchema,

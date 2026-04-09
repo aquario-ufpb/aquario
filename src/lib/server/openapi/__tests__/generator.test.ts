@@ -59,21 +59,21 @@ describe("getOpenApiDocument", () => {
     const tagNames = (doc.tags ?? []).map(t => t.name);
 
     const expectedTags = [
-      "Auth",
-      "Users",
-      "Entities",
+      "Autenticação",
+      "Usuários",
+      "Entidades",
       "Vagas",
-      "Guides",
-      "Courses",
-      "Academic Centers",
+      "Guias",
+      "Cursos",
+      "Centros Acadêmicos",
       "Campus",
-      "Disciplines",
-      "Curricula",
-      "Academic Calendar",
-      "Search",
+      "Disciplinas",
+      "Currículos",
+      "Calendário Acadêmico",
+      "Busca",
       "Health",
       "Upload",
-      "Content Images",
+      "Imagens de Conteúdo",
     ];
 
     for (const expected of expectedTags) {

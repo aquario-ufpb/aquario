@@ -4,7 +4,7 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Discipline inside a curriculum grid — summary fields only.
+ * Disciplina dentro da grade curricular (campos de resumo).
  */
 const gradeDisciplinaSchema = z
   .object({
@@ -14,15 +14,14 @@ const gradeDisciplinaSchema = z
     cargaHoraria: z.number().int().optional(),
     creditos: z.number().int().optional(),
     natureza: z.enum(["OBRIGATORIA", "OPTATIVA", "ELETIVA", "COMPLEMENTAR"]).optional().openapi({
-      description: "Discipline nature inside this curriculum (required, optional, etc).",
+      description: "Natureza da disciplina no currículo (obrigatória, optativa, etc).",
       example: "OBRIGATORIA",
     }),
   })
   .openapi("GradeDisciplina");
 
 /**
- * A single period/semester in a curriculum grid, containing the disciplines
- * that should be taken during that period.
+ * Um período/semestre da grade, contendo as disciplinas que devem ser cursadas.
  */
 const gradePeriodoSchema = z
   .object({
@@ -32,8 +31,7 @@ const gradePeriodoSchema = z
   .openapi("GradePeriodo");
 
 /**
- * Full curriculum grid response. The shape is the one returned by
- * curriculosRepository.findActiveGradeByCursoId — an active grade per course.
+ * Resposta completa da grade curricular ativa de um curso.
  */
 const curriculoGradeResponseSchema = z
   .object({
@@ -50,21 +48,21 @@ export function registerCurriculosPaths(registry: OpenAPIRegistry, schemas: Comm
   registry.registerPath({
     method: "get",
     path: "/curriculos/grade",
-    tags: ["Curricula"],
-    summary: "Get the active curriculum grid for a course",
+    tags: ["Currículos"],
+    summary: "Obter a grade curricular ativa de um curso",
     description:
-      "Public endpoint returning the currently active curriculum grid for a specific course, organized by semester. Used by the curriculum browser page to display the discipline tree. Requires the `cursoId` query parameter — returns 400 if missing and 404 if no active grid exists for that course.",
+      "Retorna a grade curricular ativa de um curso, organizada por período. Retorna 400 se `cursoId` não for informado e 404 se o curso não tiver grade ativa.",
     request: {
       query: z.object({
         cursoId: z.string().uuid().openapi({
-          description: "Course id to fetch the active curriculum grid for.",
+          description: "ID do curso.",
           example: "550e8400-e29b-41d4-a716-446655440000",
         }),
       }),
     },
     responses: {
       200: {
-        description: "Active curriculum grid organized by period.",
+        description: "Grade curricular ativa organizada por período.",
         content: { "application/json": { schema: curriculoGradeResponseSchema } },
       },
       ...errorResponses([400, 404]),

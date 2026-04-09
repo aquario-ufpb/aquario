@@ -39,13 +39,13 @@ export type CommonSchemas = {
  * Pure data, kept module-level since it has no lifecycle.
  */
 const STATUS_DESCRIPTIONS: Record<number, string> = {
-  400: "Validation error",
-  401: "Unauthorized",
-  403: "Forbidden",
-  404: "Not found",
-  409: "Conflict",
-  429: "Rate limited",
-  500: "Internal server error",
+  400: "Erro de validação",
+  401: "Não autorizado",
+  403: "Sem permissão",
+  404: "Não encontrado",
+  409: "Conflito",
+  429: "Limite de requisições excedido",
+  500: "Erro interno do servidor",
 };
 
 /**
@@ -61,7 +61,7 @@ export function registerCommonSchemas(registry: OpenAPIRegistry): CommonSchemas 
   const ErrorCodeSchema = registry.register(
     "ErrorCode",
     z.enum(Object.values(ErrorCode) as [string, ...string[]]).openapi({
-      description: "Machine-readable error code returned in every error response.",
+      description: "Código de erro legível por máquina, retornado em toda resposta de erro.",
       example: ErrorCode.VALIDATION_ERROR,
     })
   );
@@ -71,16 +71,16 @@ export function registerCommonSchemas(registry: OpenAPIRegistry): CommonSchemas 
     z
       .object({
         field: z.string().openapi({
-          description: "Dot-notation path to the field that failed validation.",
+          description: "Caminho (dot-notation) do campo que falhou na validação.",
           example: "email",
         }),
         message: z.string().openapi({
-          description: "Human-readable message describing the validation failure.",
+          description: "Mensagem legível descrevendo a falha de validação.",
           example: "Email inválido",
         }),
       })
       .openapi({
-        description: "Details about a single field-level validation failure.",
+        description: "Detalhes de uma falha de validação em um campo específico.",
       })
   );
 
@@ -89,18 +89,18 @@ export function registerCommonSchemas(registry: OpenAPIRegistry): CommonSchemas 
     z
       .object({
         message: z.string().openapi({
-          description: "Human-readable error message, localized in Portuguese.",
+          description: "Mensagem de erro legível, em português.",
           example: "Email inválido",
         }),
         code: ErrorCodeSchema.openapi({
-          description: "Machine-readable error code. See the ErrorCode enum.",
+          description: "Código de erro legível por máquina. Ver o enum ErrorCode.",
         }),
         errors: z.array(FieldErrorSchema).optional().openapi({
-          description: "Field-level validation errors (present only for VALIDATION_ERROR).",
+          description: "Erros de validação por campo (presente apenas em VALIDATION_ERROR).",
         }),
       })
       .openapi({
-        description: "Standard error response returned for every 4xx and 5xx status code.",
+        description: "Formato padrão de resposta de erro retornado em todo 4xx e 5xx.",
       })
   );
 
@@ -114,7 +114,7 @@ export function registerCommonSchemas(registry: OpenAPIRegistry): CommonSchemas 
         totalPages: z.number().int().nonnegative().openapi({ example: 14 }),
       })
       .openapi({
-        description: "Pagination metadata returned alongside paginated result lists.",
+        description: "Metadados de paginação retornados junto com listas paginadas.",
       })
   );
 

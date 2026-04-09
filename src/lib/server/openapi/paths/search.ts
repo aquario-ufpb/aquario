@@ -4,44 +4,44 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Shared minimal shape for search result items. Each result category has
- * slightly different fields (entities have sigla, disciplines have codigo, etc),
- * but all include at least `id`, `title` and `url` for the Scalar UI to render
- * meaningful examples.
+ * Shape mínimo compartilhado pelos itens de resultado da busca. Cada categoria
+ * tem campos ligeiramente diferentes (entidades têm sigla, disciplinas têm
+ * código, etc), mas todos incluem pelo menos `id`, `title` e `url`.
  */
 const searchResultItemSchema = z
   .object({
     id: z.string().openapi({
-      description: "Entity identifier (UUID for DB-backed items, slug for static pages).",
+      description: "Identificador do item (UUID para itens do banco, slug para páginas estáticas).",
       example: "550e8400-e29b-41d4-a716-446655440000",
     }),
     title: z.string().openapi({
-      description: "Primary display text for the result item.",
+      description: "Texto principal exibido para o item.",
       example: "Centro de Informática",
     }),
     subtitle: z.string().nullable().optional().openapi({
-      description: "Secondary display text (sigla, category, etc).",
+      description: "Texto secundário (sigla, categoria, etc).",
       example: "CI",
     }),
     url: z.string().openapi({
-      description: "In-app URL to navigate to the full item.",
+      description: "URL interna para navegar até o item completo.",
       example: "/entidade/centro-de-informatica",
     }),
     rank: z.number().optional().openapi({
-      description: "PostgreSQL full-text search rank score (higher is more relevant).",
+      description:
+        "Score de relevância do full-text search do PostgreSQL (quanto maior, mais relevante).",
       example: 0.87,
     }),
   })
   .openapi("SearchResultItem");
 
 /**
- * Unified search response. Results are grouped by entity category so the
- * command palette UI can render them in separate sections.
+ * Resposta unificada da busca. Resultados são agrupados por categoria para que
+ * a UI do command palette possa renderizá-los em seções separadas.
  */
 const searchResponseSchema = z
   .object({
     query: z.string().openapi({
-      description: "The normalized search query that was executed.",
+      description: "Query de busca normalizada que foi executada.",
       example: "computação",
     }),
     results: z
@@ -56,7 +56,7 @@ const searchResponseSchema = z
       })
       .openapi({
         description:
-          "Results grouped by category. Empty arrays are returned for categories with no matches.",
+          "Resultados agrupados por categoria. Categorias sem resultados retornam array vazio.",
       }),
   })
   .openapi("SearchResponse");
@@ -66,18 +66,19 @@ export function registerSearchPaths(registry: OpenAPIRegistry, schemas: CommonSc
   registry.registerPath({
     method: "get",
     path: "/search",
-    tags: ["Search"],
-    summary: "Unified full-text search across all entity categories",
+    tags: ["Busca"],
+    summary: "Busca unificada em todas as categorias",
     description:
-      "Full-text search across pages, guides, entities, vagas, disciplines, courses and users. Accent-insensitive (Brazilian Portuguese). Queries shorter than 3 characters return empty results.",
+      "Full-text search em páginas, guias, entidades, vagas, disciplinas, cursos e usuários. Acento-insensível (português). Queries com menos de 3 caracteres retornam resultados vazios.",
     request: {
       query: z.object({
         q: z.string().min(3).openapi({
-          description: "Search query. Minimum 3 characters; shorter queries return empty results.",
+          description:
+            "Termo de busca. Mínimo de 3 caracteres; queries menores retornam resultados vazios.",
           example: "computação",
         }),
         limit: z.coerce.number().int().min(1).max(20).default(5).openapi({
-          description: "Maximum results per category (1-20, default 5).",
+          description: "Número máximo de resultados por categoria (1-20, padrão 5).",
           example: 5,
         }),
       }),
@@ -85,7 +86,7 @@ export function registerSearchPaths(registry: OpenAPIRegistry, schemas: CommonSc
     responses: {
       200: {
         description:
-          "Search results grouped by category (empty arrays where there are no matches).",
+          "Resultados da busca agrupados por categoria (arrays vazios onde não há matches).",
         content: {
           "application/json": {
             schema: searchResponseSchema,

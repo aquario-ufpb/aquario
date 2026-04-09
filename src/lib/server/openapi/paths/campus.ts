@@ -4,8 +4,8 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Campus response shape. Handlers validate request bodies inline (no Zod),
- * so request/response shapes are defined here.
+ * Shape de resposta de Campus. Os handlers validam o corpo das requisições
+ * inline (sem Zod), então definimos os schemas de request/response aqui.
  */
 const campusResponseSchema = z
   .object({
@@ -26,12 +26,12 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
     method: "get",
     path: "/campus",
     tags: ["Campus"],
-    summary: "List all campi",
+    summary: "Listar todos os campi",
     description:
-      "Public endpoint returning all UFPB campi. UFPB has multiple campi across the state of Paraíba.",
+      "Retorna todos os campi da UFPB. A UFPB tem múltiplos campi espalhados pelo estado da Paraíba.",
     responses: {
       200: {
-        description: "List of all campi.",
+        description: "Lista de todos os campi.",
         content: { "application/json": { schema: z.array(campusResponseSchema) } },
       },
     },
@@ -41,9 +41,9 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
     method: "post",
     path: "/campus",
     tags: ["Campus"],
-    summary: "Create a new campus (admin only)",
+    summary: "Criar um novo campus (admin)",
     description:
-      "Admin-only endpoint to create a new campus. Returns 409 if a campus with the same name already exists.",
+      "Endpoint exclusivo para administradores. Retorna 409 se já existir um campus com o mesmo nome.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -58,7 +58,7 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
     },
     responses: {
       201: {
-        description: "Campus created.",
+        description: "Campus criado.",
         content: { "application/json": { schema: campusResponseSchema } },
       },
       ...errorResponses([400, 409]),
@@ -69,8 +69,8 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
     method: "put",
     path: "/campus/{id}",
     tags: ["Campus"],
-    summary: "Update a campus (admin only)",
-    description: "Admin-only endpoint to rename a campus.",
+    summary: "Atualizar um campus (admin)",
+    description: "Endpoint exclusivo para administradores. Renomeia um campus.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -86,7 +86,7 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
     },
     responses: {
       200: {
-        description: "Campus updated.",
+        description: "Campus atualizado.",
         content: { "application/json": { schema: campusResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -97,16 +97,16 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
     method: "delete",
     path: "/campus/{id}",
     tags: ["Campus"],
-    summary: "Delete a campus (admin only)",
+    summary: "Excluir um campus (admin)",
     description:
-      "Admin-only endpoint to delete a campus. **Returns 409 with `HAS_DEPENDENCIES` if there are academic centers linked to this campus** — you must delete/reassign linked centers first.",
+      "Endpoint exclusivo para administradores. **Retorna 409 com `HAS_DEPENDENCIES` se houver centros acadêmicos vinculados a este campus** — você precisa excluir/reatribuir os centros vinculados antes.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "Campus deleted.",
+        description: "Campus excluído.",
         content: {
           "application/json": {
             schema: z.object({ success: z.literal(true) }),

@@ -4,18 +4,18 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Discipline (course subject) summary returned by the disciplines search endpoint.
+ * Resumo de disciplina retornado pelo endpoint de busca.
  */
 const disciplinaSearchItemSchema = z
   .object({
     id: z.string().uuid(),
     codigo: z.string().openapi({
-      description: "Official discipline code (SIGGA/PAAS format).",
+      description: "Código oficial da disciplina (formato SIGGA/PAAS).",
       example: "DCE1001",
     }),
     nome: z.string().openapi({ example: "Introdução à Computação" }),
     cargaHoraria: z.number().int().optional().openapi({
-      description: "Workload in hours.",
+      description: "Carga horária em horas.",
       example: 60,
     }),
     creditos: z.number().int().optional().openapi({ example: 4 }),
@@ -28,22 +28,21 @@ export function registerDisciplinasPaths(registry: OpenAPIRegistry, schemas: Com
   registry.registerPath({
     method: "get",
     path: "/disciplinas/search",
-    tags: ["Disciplines"],
-    summary: "Search disciplines by code or name",
+    tags: ["Disciplinas"],
+    summary: "Buscar disciplinas por código ou nome",
     description:
-      "Public endpoint to search for disciplines by their official code (e.g., `DCE1001`) or by name substring. Queries shorter than 2 characters return an empty result set without hitting the database. Used by the curriculum picker during onboarding and semester discipline management.",
+      "Busca disciplinas pelo código oficial (ex: `DCE1001`) ou por parte do nome. Buscas com menos de 2 caracteres retornam array vazio sem consultar o banco.",
     request: {
       query: z.object({
         q: z.string().min(2).openapi({
-          description:
-            "Search query — discipline code or name. Minimum 2 characters; shorter queries return an empty array without hitting the database.",
+          description: "Termo de busca — código ou nome da disciplina. Mínimo de 2 caracteres.",
           example: "DCE1001",
         }),
       }),
     },
     responses: {
       200: {
-        description: "Disciplines matching the query. Empty array if none match.",
+        description: "Disciplinas correspondentes à busca.",
         content: {
           "application/json": {
             schema: z.object({

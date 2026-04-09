@@ -36,7 +36,7 @@ export function createRegistry(): OpenAPIRegistry {
     scheme: "bearer",
     bearerFormat: "JWT",
     description:
-      "JWT token obtained via POST /auth/login. Send as 'Authorization: Bearer <token>'.",
+      "Token JWT obtido via POST /auth/login. Enviar no header `Authorization: Bearer <token>`.",
   });
 
   return registry;
@@ -53,23 +53,26 @@ export function createRegistry(): OpenAPIRegistry {
  */
 export const OPENAPI_TAGS = [
   {
-    name: "Auth",
-    description: "Authentication, registration, password recovery and email verification",
+    name: "Autenticação",
+    description: "Login, cadastro, recuperação de senha e verificação de email",
   },
-  { name: "Users", description: "User profiles, memberships, photos, onboarding and curriculum" },
-  { name: "Entities", description: "Student organizations, labs, and other UFPB entities" },
-  { name: "Vagas", description: "Job and internship listings" },
-  { name: "Guides", description: "Academic guides with sections and subsections" },
-  { name: "Courses", description: "UFPB courses (majors)" },
-  { name: "Academic Centers", description: "UFPB academic centers" },
-  { name: "Campus", description: "UFPB campi" },
-  { name: "Disciplines", description: "Course disciplines and search" },
-  { name: "Curricula", description: "Curriculum grids and discipline trees" },
-  { name: "Academic Calendar", description: "Semesters and academic events" },
-  { name: "Search", description: "Unified full-text search across all entities" },
-  { name: "Health", description: "Service health check" },
-  { name: "Upload", description: "File upload endpoints" },
-  { name: "Content Images", description: "Static image serving from content submodules" },
+  { name: "Usuários", description: "Perfis, membresias, fotos, onboarding e currículo" },
+  { name: "Entidades", description: "Organizações estudantis, laboratórios e demais entidades" },
+  { name: "Vagas", description: "Estágios, empregos e oportunidades publicadas pelas entidades" },
+  { name: "Guias", description: "Guias acadêmicos com seções e subseções" },
+  { name: "Cursos", description: "Cursos (graduações) da UFPB" },
+  { name: "Centros Acadêmicos", description: "Centros acadêmicos da UFPB" },
+  { name: "Campus", description: "Campi da UFPB" },
+  { name: "Disciplinas", description: "Busca de disciplinas dos cursos" },
+  { name: "Currículos", description: "Grades curriculares e árvores de disciplinas" },
+  { name: "Calendário Acadêmico", description: "Semestres letivos e eventos do calendário" },
+  { name: "Busca", description: "Busca unificada em todas as categorias" },
+  { name: "Health", description: "Health check do serviço" },
+  { name: "Upload", description: "Endpoints de upload de arquivos" },
+  {
+    name: "Imagens de Conteúdo",
+    description: "Imagens estáticas servidas dos submódulos de conteúdo",
+  },
 ] as const;
 
 export type OpenApiTagName = (typeof OPENAPI_TAGS)[number]["name"];

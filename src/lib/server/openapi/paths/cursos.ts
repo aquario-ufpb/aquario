@@ -4,9 +4,9 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Curso (course/major) response shape. The handlers do not use Zod schemas
- * for request validation (they check fields inline), so we define request
- * and response schemas here directly.
+ * Shape de resposta de Curso. Os handlers não usam Zod para validar requests
+ * (validam os campos inline), então definimos os schemas de request e response
+ * diretamente aqui.
  */
 const cursoResponseSchema = z
   .object({
@@ -28,13 +28,13 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
   registry.registerPath({
     method: "get",
     path: "/cursos",
-    tags: ["Courses"],
-    summary: "List all courses",
+    tags: ["Cursos"],
+    summary: "Listar todos os cursos",
     description:
-      "Public endpoint returning all courses (majors) across all centros. Used by the registration form, curriculum browser and search.",
+      "Retorna todos os cursos de todos os centros. Usado pelo formulário de cadastro, pelo navegador de currículo e pela busca.",
     responses: {
       200: {
-        description: "List of all courses.",
+        description: "Lista de todos os cursos.",
         content: { "application/json": { schema: z.array(cursoResponseSchema) } },
       },
     },
@@ -43,10 +43,10 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
   registry.registerPath({
     method: "post",
     path: "/cursos",
-    tags: ["Courses"],
-    summary: "Create a new course (admin only)",
+    tags: ["Cursos"],
+    summary: "Criar um novo curso (admin)",
     description:
-      "Admin-only endpoint to create a new course. Both `nome` and `centroId` are required.",
+      "Endpoint exclusivo para administradores. Tanto `nome` quanto `centroId` são obrigatórios.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -64,7 +64,7 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
     },
     responses: {
       201: {
-        description: "Course created.",
+        description: "Curso criado.",
         content: { "application/json": { schema: cursoResponseSchema } },
       },
       ...errorResponses([400]),
@@ -74,9 +74,10 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
   registry.registerPath({
     method: "put",
     path: "/cursos/{id}",
-    tags: ["Courses"],
-    summary: "Update a course (admin only)",
-    description: "Admin-only endpoint to update a course's name and/or centro.",
+    tags: ["Cursos"],
+    summary: "Atualizar um curso (admin)",
+    description:
+      "Endpoint exclusivo para administradores. Atualiza o nome e/ou o centro de um curso.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -95,7 +96,7 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
     },
     responses: {
       200: {
-        description: "Course updated.",
+        description: "Curso atualizado.",
         content: { "application/json": { schema: cursoResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -105,17 +106,17 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
   registry.registerPath({
     method: "delete",
     path: "/cursos/{id}",
-    tags: ["Courses"],
-    summary: "Delete a course (admin only)",
+    tags: ["Cursos"],
+    summary: "Excluir um curso (admin)",
     description:
-      "Admin-only endpoint to delete a course. **Returns 409 with `HAS_DEPENDENCIES` if there are curriculos, guias, or usuarios linked to this course** — you must remove/reassign dependencies before deleting. The error message lists the counts.",
+      "Endpoint exclusivo para administradores. **Retorna 409 com `HAS_DEPENDENCIES` se houver currículos, guias ou usuários vinculados a este curso** — é necessário remover/reatribuir as dependências antes de excluir. A mensagem de erro lista as contagens.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "Course deleted.",
+        description: "Curso excluído.",
         content: {
           "application/json": {
             schema: z.object({ success: z.literal(true) }),

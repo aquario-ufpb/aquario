@@ -21,19 +21,19 @@ import {
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * User profile shape returned by the `formatUserResponse` mapper. Mirrors the
- * output of src/lib/server/utils/format-user-response.ts — do NOT substitute
- * with the raw Prisma `Usuario` type (it includes sensitive fields).
+ * Shape de perfil de usuário retornado pelo mapper `formatUserResponse`.
+ * Espelha a saída de src/lib/server/utils/format-user-response.ts — NÃO usar
+ * o tipo Prisma `Usuario` direto (ele inclui campos sensíveis).
  *
- * Also used by other endpoints that return a user (PATCH /photo, PATCH /slug,
- * PATCH /info, POST /facade, etc).
+ * Também usado por outros endpoints que retornam um usuário (PATCH /photo,
+ * PATCH /slug, PATCH /info, POST /facade, etc).
  */
 const userProfileSchema = z
   .object({
     id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
     nome: z.string().openapi({ example: "João Silva" }),
     email: z.string().nullable().openapi({
-      description: "Email address. Null for facade users (placeholders created by admins).",
+      description: "Email do usuário. Null para usuários facade (placeholders criados por admins).",
       example: "joao.silva@academico.ufpb.br",
     }),
     slug: z.string().nullable().openapi({ example: "joao-silva" }),
@@ -44,7 +44,7 @@ const userProfileSchema = z
       .nullable()
       .openapi({ example: "https://blob.vercel-storage.com/photos/550e8400-1712668800.webp" }),
     periodoAtual: z.string().nullable().optional().openapi({
-      description: "Current semester (1–12, '12+', or 'graduado'). Null until set by the user.",
+      description: "Período atual (1–12, '12+' ou 'graduado'). Null até o usuário definir.",
       example: "5",
     }),
     centro: z.object({
@@ -63,21 +63,21 @@ const userProfileSchema = z
   .openapi("UserProfile");
 
 /**
- * Extended user shape that includes the `eFacade` flag. Returned by admin-only
- * endpoints (GET /usuarios, POST /facade) so admins can distinguish real users
- * from facade placeholders.
+ * Shape estendido de usuário que inclui o flag `eFacade`. Retornado pelos
+ * endpoints exclusivos de admin (GET /usuarios, POST /facade) para que admins
+ * possam distinguir usuários reais de placeholders facade.
  */
 const adminUserResponseSchema = userProfileSchema
   .extend({
     eFacade: z.boolean().openapi({
-      description: "Whether this is a facade user (placeholder created by an admin, no login).",
+      description: "Indica se este é um usuário facade (placeholder criado por admin, sem login).",
       example: false,
     }),
   })
   .openapi("AdminUserResponse");
 
 /**
- * Simplified entity summary embedded in membership responses.
+ * Resumo simplificado de entidade embutido nas respostas de membresia.
  */
 const membershipEntidadeSchema = z
   .object({
@@ -97,7 +97,7 @@ const membershipEntidadeSchema = z
   .openapi("MembershipEntidade");
 
 /**
- * Cargo (role title) inside an entity membership.
+ * Cargo dentro de uma membresia de entidade.
  */
 const cargoSchema = z
   .object({
@@ -108,8 +108,8 @@ const cargoSchema = z
   .openapi("Cargo");
 
 /**
- * Membership response shape returned by endpoints that list or return
- * memberships (/usuarios/{id}/membros, /usuarios/me/membros, etc).
+ * Shape de resposta de Membresia retornado pelos endpoints que listam ou
+ * retornam membresias (/usuarios/{id}/membros, /usuarios/me/membros, etc).
  */
 const membershipResponseSchema = z
   .object({
@@ -123,7 +123,8 @@ const membershipResponseSchema = z
   .openapi("MembershipResponse");
 
 /**
- * DisciplinaSemestre response shape returned by semester discipline endpoints.
+ * Shape de resposta de DisciplinaSemestre retornado pelos endpoints de
+ * disciplinas por semestre.
  */
 const disciplinaSemestreResponseSchema = z
   .object({
@@ -140,7 +141,7 @@ const disciplinaSemestreResponseSchema = z
   .openapi("DisciplinaSemestreResponse");
 
 /**
- * Envelope for GET/PUT /usuarios/me/semestres/{semestreId}/disciplinas.
+ * Envelope de GET/PUT /usuarios/me/semestres/{semestreId}/disciplinas.
  */
 const semestreDisciplinasResponseSchema = z
   .object({
@@ -148,26 +149,28 @@ const semestreDisciplinasResponseSchema = z
     disciplinas: z.array(disciplinaSemestreResponseSchema),
     skippedCodigos: z.array(z.string()).optional().openapi({
       description:
-        "Discipline codes that could not be resolved to a valid record and were skipped (only present on PUT responses when applicable).",
+        "Códigos de disciplina que não puderam ser resolvidos para um registro válido e foram pulados (presente apenas em respostas de PUT quando aplicável).",
     }),
   })
   .openapi("SemestreDisciplinasResponse");
 
 /**
- * Simple message response used by DELETE endpoints and other success confirmations.
+ * Resposta simples com mensagem usada por endpoints DELETE e outras
+ * confirmações de sucesso.
  */
 const messageResponseSchema = z
   .object({ message: z.string() })
-  .openapi({ description: "Simple status message response." });
+  .openapi({ description: "Resposta simples com mensagem de status." });
 
 export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses, PaginationMetaSchema } = schemas;
 
   /**
-   * Paginated user list envelope for GET /usuarios (with ?page and ?limit).
-   * Defined inside the register function so it can reference the shared
-   * PaginationMetaSchema from the current registry — building it at module
-   * level would capture a stale reference across multiple document generations.
+   * Envelope de listagem paginada de usuários para GET /usuarios (com `?page`
+   * e `?limit`). Definido dentro da função de registro para que possa
+   * referenciar o `PaginationMetaSchema` compartilhado do registry atual —
+   * construir no nível do módulo capturaria uma referência stale entre
+   * múltiplas gerações de documento.
    */
   const paginatedUsersResponseSchema = z
     .object({
@@ -176,34 +179,35 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     })
     .openapi("PaginatedUsersResponse");
   // ============================================================================
-  // GET /usuarios — three-mode listing (see edge case documentation)
+  // GET /usuarios — listagem em três modos (ver documentação de edge cases)
   // ============================================================================
   registry.registerPath({
     method: "get",
     path: "/usuarios",
-    tags: ["Users"],
-    summary: "List users (search, paginated, or all)",
+    tags: ["Usuários"],
+    summary: "Listar usuários (busca, paginado ou todos)",
     description:
-      "Three modes:\n- `?search=X`: envelope of matching users (any authenticated user)\n- `?page=N`: paginated envelope (admin only)\n- no params: raw array of all users (admin only)\n\nCheck for `pagination` key to distinguish envelope from array.",
+      "Três modos:\n- `?search=X`: envelope com usuários que combinam (qualquer usuário autenticado)\n- `?page=N`: envelope paginado (apenas admin)\n- sem parâmetros: array bruto com todos os usuários (apenas admin)\n\nVerifique a presença da chave `pagination` para distinguir envelope de array.",
     security: [{ bearerAuth: [] }],
     request: {
       query: z.object({
         search: z.string().optional().openapi({
-          description: "Search term (used in search and paginated modes).",
+          description: "Termo de busca (usado nos modos search e paginado).",
           example: "joão",
         }),
         page: z.coerce.number().int().positive().optional().openapi({ example: 1 }),
         limit: z.coerce.number().int().positive().max(100).optional().openapi({ example: 25 }),
         filter: z.enum(["all", "facade", "real"]).optional().openapi({
           description:
-            "Filter by user type: 'all' (default), 'facade' (placeholder users), or 'real' (normal users with email).",
+            "Filtra por tipo de usuário: 'all' (padrão), 'facade' (usuários placeholder) ou 'real' (usuários normais com email).",
           example: "all",
         }),
       }),
     },
     responses: {
       200: {
-        description: "Users (envelope in search/paginated modes, array in full-dump mode).",
+        description:
+          "Usuários (envelope nos modos search/paginado, array no modo de listagem completa).",
         content: {
           "application/json": {
             schema: z.union([paginatedUsersResponseSchema, z.array(adminUserResponseSchema)]),
@@ -215,14 +219,14 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // DELETE /usuarios/{id} — admin-only, prevents self-delete
+  // DELETE /usuarios/{id} — apenas admin, impede auto-exclusão
   // ============================================================================
   registry.registerPath({
     method: "delete",
     path: "/usuarios/{id}",
-    tags: ["Users"],
-    summary: "Delete a user (admin only)",
-    description: "Delete a user account. Admins cannot delete themselves (returns 400).",
+    tags: ["Usuários"],
+    summary: "Excluir um usuário (admin)",
+    description: "Exclui uma conta de usuário. Admins não podem se auto-excluir (retorna 400).",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({
@@ -231,7 +235,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "User deleted successfully.",
+        description: "Usuário excluído com sucesso.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -244,15 +248,15 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // PATCH /usuarios/{id}/info — admin-only (update centro/curso)
+  // PATCH /usuarios/{id}/info — apenas admin (atualiza centro/curso)
   // ============================================================================
   registry.registerPath({
     method: "patch",
     path: "/usuarios/{id}/info",
-    tags: ["Users"],
-    summary: "Update a user's academic center and/or course (admin only)",
+    tags: ["Usuários"],
+    summary: "Atualizar centro e/ou curso de um usuário (admin)",
     description:
-      "Admin-only endpoint to correct a user's centro and/or curso. Both fields are optional — omit a field to leave it unchanged. Used when users are incorrectly assigned during registration.",
+      "Endpoint exclusivo para administradores. Corrige o centro e/ou curso de um usuário. Ambos os campos são opcionais — omita um campo para mantê-lo inalterado. Útil para corrigir cadastros feitos com dados errados.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -271,7 +275,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "User info updated.",
+        description: "Dados do usuário atualizados.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -279,21 +283,21 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // GET /usuarios/{id}/membros — list memberships for a user (public)
+  // GET /usuarios/{id}/membros — lista membresias de um usuário (público)
   // ============================================================================
   registry.registerPath({
     method: "get",
     path: "/usuarios/{id}/membros",
-    tags: ["Users"],
-    summary: "List memberships for a specific user",
+    tags: ["Usuários"],
+    summary: "Listar membresias de um usuário",
     description:
-      "Return all entity memberships (active and historical) for the specified user. Public endpoint — useful for displaying a user's affiliations on their profile page.",
+      "Retorna todas as membresias (ativas e históricas) do usuário especificado. Útil para exibir os vínculos de um usuário na página de perfil.",
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "List of memberships for the user.",
+        description: "Lista de membresias do usuário.",
         content: {
           "application/json": {
             schema: z.array(membershipResponseSchema),
@@ -325,15 +329,15 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // PATCH /usuarios/{id}/role — admin-only, prevents self-demotion
+  // PATCH /usuarios/{id}/role — apenas admin, impede auto-rebaixamento
   // ============================================================================
   registry.registerPath({
     method: "patch",
     path: "/usuarios/{id}/role",
-    tags: ["Users"],
-    summary: "Update a user's platform role (admin only)",
+    tags: ["Usuários"],
+    summary: "Atualizar o papel de um usuário na plataforma (admin)",
     description:
-      "Admin-only endpoint to promote or demote users between USER and MASTER_ADMIN. Admins cannot change their own role through this endpoint to prevent accidental lockout.",
+      "Endpoint exclusivo para administradores. Promove ou rebaixa usuários entre USER e MASTER_ADMIN. Admins não podem alterar o próprio papel por este endpoint, para evitar lockout acidental.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -349,7 +353,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Role updated successfully.",
+        description: "Papel atualizado com sucesso.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -357,15 +361,15 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // PATCH /usuarios/{id}/slug — admin-only
+  // PATCH /usuarios/{id}/slug — apenas admin
   // ============================================================================
   registry.registerPath({
     method: "patch",
     path: "/usuarios/{id}/slug",
-    tags: ["Users"],
-    summary: "Update a user's slug (admin only)",
+    tags: ["Usuários"],
+    summary: "Atualizar o slug de um usuário (admin)",
     description:
-      "Admin-only endpoint to change a user's URL slug. The slug is normalized (trimmed, lowercased) server-side. Pass null to remove the slug. Slugs must be unique across all users — 409 is returned on collision.",
+      "Endpoint exclusivo para administradores. Altera o slug de URL do usuário. O slug é normalizado (trim e lowercase) no servidor. Envie null para remover o slug. Slugs precisam ser únicos — retorna 409 em caso de colisão.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -381,7 +385,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Slug updated.",
+        description: "Slug atualizado.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
       ...errorResponses([400, 409]),
@@ -389,15 +393,15 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // GET /usuarios/slug/{slug} — public lookup by slug
+  // GET /usuarios/slug/{slug} — busca pública pelo slug
   // ============================================================================
   registry.registerPath({
     method: "get",
     path: "/usuarios/slug/{slug}",
-    tags: ["Users"],
-    summary: "Look up a user by URL slug",
+    tags: ["Usuários"],
+    summary: "Buscar um usuário pelo slug",
     description:
-      "Public endpoint to fetch a user's profile by their slug. Returns the sanitized user profile (no sensitive fields). Used by `/usuarios/[slug]` pages.",
+      "Retorna o perfil de um usuário pelo slug. Devolve o perfil sanitizado (sem campos sensíveis). Usado pelas páginas `/usuarios/[slug]`.",
     request: {
       params: z.object({
         slug: z.string().openapi({ example: "joao-silva" }),
@@ -405,7 +409,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "User profile.",
+        description: "Perfil do usuário.",
         content: { "application/json": { schema: userProfileSchema } },
       },
       ...errorResponses([404]),
@@ -413,15 +417,15 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // POST /usuarios/facade — admin-only, create placeholder user
+  // POST /usuarios/facade — apenas admin, cria usuário placeholder
   // ============================================================================
   registry.registerPath({
     method: "post",
     path: "/usuarios/facade",
-    tags: ["Users"],
-    summary: "Create a facade user (admin only)",
+    tags: ["Usuários"],
+    summary: "Criar um usuário facade (admin)",
     description:
-      "Admin-only endpoint to create a placeholder ('facade') user — a user record without email or password, used to represent non-registered people (historical members, guest speakers, etc) in entity memberships. Facade users can later be merged into real users via POST /usuarios/merge-facade.",
+      "Endpoint exclusivo para administradores. Cria um usuário placeholder ('facade') — um registro sem email nem senha, usado para representar pessoas não cadastradas (membros antigos, palestrantes convidados, etc) em membresias de entidades. Usuários facade podem ser posteriormente mesclados em usuários reais via POST /usuarios/merge-facade.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -440,7 +444,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Facade user created.",
+        description: "Usuário facade criado.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -448,15 +452,15 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // POST /usuarios/merge-facade — admin-only
+  // POST /usuarios/merge-facade — apenas admin
   // ============================================================================
   registry.registerPath({
     method: "post",
     path: "/usuarios/merge-facade",
-    tags: ["Users"],
-    summary: "Merge a facade user into a real user (admin only)",
+    tags: ["Usuários"],
+    summary: "Mesclar usuário facade em usuário real (admin)",
     description:
-      "Admin-only endpoint to merge a facade user's memberships into a real user account. Membership conflicts (same user already in the same entity) are returned in the response. By default the facade user is deleted after merging — pass `deleteFacade: false` to retain the facade record.",
+      "Endpoint exclusivo para administradores. Mescla as membresias de um usuário facade em uma conta de usuário real. Conflitos de membresia (mesmo usuário já em mesma entidade) são retornados na resposta. Por padrão, o usuário facade é excluído após a mesclagem — envie `deleteFacade: false` para manter o registro facade.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -475,7 +479,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Merge completed successfully.",
+        description: "Mesclagem realizada com sucesso.",
         content: {
           "application/json": {
             schema: z.object({
@@ -498,19 +502,19 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // GET/PUT /usuarios/me/disciplinas — completed disciplines
+  // GET/PUT /usuarios/me/disciplinas — disciplinas concluídas
   // ============================================================================
   registry.registerPath({
     method: "get",
     path: "/usuarios/me/disciplinas",
-    tags: ["Users"],
-    summary: "List completed disciplines for the current user",
+    tags: ["Usuários"],
+    summary: "Listar disciplinas concluídas do usuário atual",
     description:
-      "Return the list of discipline IDs the authenticated user has marked as completed.",
+      "Retorna a lista de IDs das disciplinas que o usuário autenticado marcou como concluídas.",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
-        description: "List of completed discipline IDs.",
+        description: "Lista de IDs de disciplinas concluídas.",
         content: {
           "application/json": {
             schema: z.object({ disciplinaIds: z.array(z.string().uuid()) }),
@@ -529,10 +533,10 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "put",
     path: "/usuarios/me/disciplinas",
-    tags: ["Users"],
-    summary: "Replace the set of completed disciplines for the current user",
+    tags: ["Usuários"],
+    summary: "Substituir o conjunto de disciplinas concluídas do usuário atual",
     description:
-      "Replace the authenticated user's full set of completed disciplines in one request. Any disciplines not in the provided list will be removed from the completed set.",
+      "Substitui o conjunto completo de disciplinas concluídas do usuário autenticado em uma única requisição. Disciplinas não incluídas na lista enviada serão removidas do conjunto.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -552,7 +556,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Completed disciplines updated.",
+        description: "Disciplinas concluídas atualizadas.",
         content: {
           "application/json": {
             schema: z.object({ disciplinaIds: z.array(z.string().uuid()) }),
@@ -564,15 +568,15 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // POST /usuarios/me/disciplinas/marcar — mark with status
+  // POST /usuarios/me/disciplinas/marcar — marca com status
   // ============================================================================
   registry.registerPath({
     method: "post",
     path: "/usuarios/me/disciplinas/marcar",
-    tags: ["Users"],
-    summary: "Mark disciplines with a status (concluida, cursando, or none)",
+    tags: ["Usuários"],
+    summary: "Marcar disciplinas com um status (concluida, cursando ou none)",
     description:
-      "Atomically mark a set of disciplines with a specific status. Uses the currently active semester as the context for the 'cursando' (in progress) status. Marking as 'cursando' removes a previous 'concluida' status on the same disciplines and vice versa. Status 'none' clears any existing marking.",
+      "Marca atomicamente um conjunto de disciplinas com um status específico. Usa o semestre ativo como contexto para o status 'cursando'. Marcar como 'cursando' remove um status 'concluida' anterior nas mesmas disciplinas e vice-versa. O status 'none' limpa qualquer marcação existente.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -590,7 +594,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Disciplines marked successfully.",
+        description: "Disciplinas marcadas com sucesso.",
         content: {
           "application/json": {
             schema: z.object({ ok: z.literal(true) }),
@@ -603,19 +607,18 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   });
 
   // ============================================================================
-  // GET/POST /usuarios/me/membros — current user's memberships
+  // GET/POST /usuarios/me/membros — membresias do usuário atual
   // ============================================================================
   registry.registerPath({
     method: "get",
     path: "/usuarios/me/membros",
-    tags: ["Users"],
-    summary: "List the current user's memberships",
-    description:
-      "Return all entity memberships (active and historical) for the authenticated user.",
+    tags: ["Usuários"],
+    summary: "Listar as membresias do usuário atual",
+    description: "Retorna todas as membresias (ativas e históricas) do usuário autenticado.",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
-        description: "List of memberships for the authenticated user.",
+        description: "Lista de membresias do usuário autenticado.",
         content: { "application/json": { schema: z.array(membershipResponseSchema) } },
       },
     },
@@ -624,10 +627,10 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "post",
     path: "/usuarios/me/membros",
-    tags: ["Users"],
-    summary: "Join an entity as a member",
+    tags: ["Usuários"],
+    summary: "Entrar em uma entidade como membro",
     description:
-      "Create a new membership linking the authenticated user to an entity. Regular users can only join as `MEMBRO` — attempting to set `papel: 'ADMIN'` silently downgrades to `MEMBRO` unless the caller is a MASTER_ADMIN. Returns 409 if the user is already an active member of the target entity.",
+      "Cria uma nova membresia vinculando o usuário autenticado a uma entidade. Usuários comuns só podem entrar como `MEMBRO` — tentar definir `papel: 'ADMIN'` é silenciosamente rebaixado para `MEMBRO`, exceto se quem chama for MASTER_ADMIN. Retorna 409 se o usuário já é membro ativo da entidade alvo.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -647,7 +650,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Membership created.",
+        description: "Membresia criada.",
         content: { "application/json": { schema: membershipResponseSchema } },
       },
       ...errorResponses([400, 404, 409]),
@@ -660,10 +663,10 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "put",
     path: "/usuarios/me/membros/{membroId}",
-    tags: ["Users"],
-    summary: "Update one of the current user's memberships",
+    tags: ["Usuários"],
+    summary: "Atualizar uma membresia do usuário atual",
     description:
-      "Update dates, cargo or papel on a membership. The membership must belong to the authenticated user — returns 403 otherwise. Non-admins cannot set `papel: 'ADMIN'` (silently ignored).",
+      "Atualiza datas, cargo ou papel de uma membresia. A membresia deve pertencer ao usuário autenticado — retorna 403 caso contrário. Não-admins não podem definir `papel: 'ADMIN'` (silenciosamente ignorado).",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ membroId: z.string().uuid() }),
@@ -679,7 +682,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Membership updated.",
+        description: "Membresia atualizada.",
         content: { "application/json": { schema: membershipResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -689,17 +692,17 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "delete",
     path: "/usuarios/me/membros/{membroId}",
-    tags: ["Users"],
-    summary: "Delete one of the current user's memberships",
+    tags: ["Usuários"],
+    summary: "Excluir uma membresia do usuário atual",
     description:
-      "Permanently delete a membership. The membership must belong to the authenticated user — returns 403 otherwise.",
+      "Exclui uma membresia permanentemente. A membresia deve pertencer ao usuário autenticado — retorna 403 caso contrário.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ membroId: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "Membership deleted.",
+        description: "Membresia excluída.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -717,14 +720,14 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "get",
     path: "/usuarios/me/onboarding",
-    tags: ["Users"],
-    summary: "Get the current user's onboarding progress",
+    tags: ["Usuários"],
+    summary: "Obter o progresso de onboarding do usuário atual",
     description:
-      "Return the onboarding metadata object tracking which onboarding steps the user has completed or skipped. Returns an empty object if no onboarding has been started.",
+      "Retorna o objeto de metadata do onboarding, rastreando quais etapas o usuário já completou ou pulou. Retorna objeto vazio se nenhum onboarding foi iniciado.",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
-        description: "Onboarding metadata (may be empty).",
+        description: "Metadata do onboarding (pode estar vazio).",
         content: {
           "application/json": {
             schema: onboardingPatchSchema,
@@ -742,10 +745,10 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "patch",
     path: "/usuarios/me/onboarding",
-    tags: ["Users"],
-    summary: "Update the current user's onboarding progress",
+    tags: ["Usuários"],
+    summary: "Atualizar o progresso de onboarding do usuário atual",
     description:
-      "Partial update of onboarding metadata. The request body is deep-merged with the existing metadata — only provided keys are updated. The `semesters` field is a map keyed by semester id, allowing per-semester tracking of 'cursando' and 'turmas' steps.",
+      "Atualização parcial dos metadados de onboarding. O corpo da requisição é mesclado em profundidade (deep merge) com o existente — apenas as chaves enviadas são atualizadas. O campo `semesters` é um mapa indexado por ID de semestre, permitindo rastrear as etapas de 'cursando' e 'turmas' por semestre.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -762,7 +765,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Onboarding metadata updated.",
+        description: "Metadata do onboarding atualizado.",
         content: { "application/json": { schema: onboardingPatchSchema } },
       },
       ...errorResponses([400]),
@@ -775,10 +778,10 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "patch",
     path: "/usuarios/me/periodo",
-    tags: ["Users"],
-    summary: "Update the current user's academic period",
+    tags: ["Usuários"],
+    summary: "Atualizar o período acadêmico do usuário atual",
     description:
-      "Update the user's current semester (e.g., '5' for 5th semester, '12+' for 12+ semesters, 'graduado' for graduated). Pass null to clear the field.",
+      "Atualiza o período atual do usuário (ex: '5' para o 5º período, '12+' para 12 ou mais, 'graduado' para já formado). Envie null para limpar o campo.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -793,7 +796,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Period updated.",
+        description: "Período atualizado.",
         content: {
           "application/json": {
             schema: z.object({ periodoAtual: z.string().nullable() }),
@@ -811,10 +814,10 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "patch",
     path: "/usuarios/me/photo",
-    tags: ["Users"],
-    summary: "Update the current user's profile photo URL",
+    tags: ["Usuários"],
+    summary: "Atualizar a URL da foto de perfil do usuário atual",
     description:
-      "Update the profile photo URL for the authenticated user. The URL must point to an already-uploaded image — to upload a new image file, use POST /upload/photo instead (which handles upload + DB update atomically). The old photo is deleted from blob storage if it was hosted there.",
+      "Atualiza a URL da foto de perfil do usuário autenticado. A URL deve apontar para uma imagem já enviada — para fazer upload de um novo arquivo, use POST /upload/photo (que cuida do upload + atualização do banco atomicamente). A foto antiga é excluída do blob storage se estivesse hospedada lá.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -831,7 +834,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Photo updated.",
+        description: "Foto atualizada.",
         content: { "application/json": { schema: userProfileSchema } },
       },
       ...errorResponses([400]),
@@ -841,26 +844,26 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "delete",
     path: "/usuarios/me/photo",
-    tags: ["Users"],
-    summary: "Delete the current user's profile photo",
+    tags: ["Usuários"],
+    summary: "Excluir a foto de perfil do usuário atual",
     description:
-      "Remove the authenticated user's profile photo and delete the file from blob storage if it was hosted there.",
+      "Remove a foto de perfil do usuário autenticado e exclui o arquivo do blob storage se estivesse hospedada lá.",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
-        description: "Photo deleted.",
+        description: "Foto excluída.",
         content: { "application/json": { schema: userProfileSchema } },
       },
     },
   });
 
   // ============================================================================
-  // GET/PUT /usuarios/me/semestres/{semestreId}/disciplinas — semestreId can be UUID or "ativo"
+  // GET/PUT /usuarios/me/semestres/{semestreId}/disciplinas — semestreId pode ser UUID ou "ativo"
   // ============================================================================
   const semestreIdParam = z.object({
     semestreId: z.union([z.string().uuid(), z.literal("ativo")]).openapi({
       description:
-        "Either a specific semester UUID, or the literal string 'ativo' to target the currently active semester.",
+        "Um UUID de semestre específico ou a string literal 'ativo' para mirar o semestre atualmente ativo.",
       example: "ativo",
     }),
   });
@@ -868,16 +871,16 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "get",
     path: "/usuarios/me/semestres/{semestreId}/disciplinas",
-    tags: ["Users"],
-    summary: "List the current user's enrolled disciplines for a semester",
+    tags: ["Usuários"],
+    summary: "Listar disciplinas matriculadas no semestre (usuário atual)",
     description:
-      "Return the disciplines the authenticated user is currently enrolled in for the specified semester. The `semestreId` path parameter accepts either a UUID (for a specific semester) or the literal string `'ativo'`, which auto-resolves to the currently active semester.",
+      "Retorna as disciplinas em que o usuário autenticado está matriculado no semestre especificado. O parâmetro `semestreId` aceita um UUID (para um semestre específico) ou a string literal `'ativo'`, que resolve automaticamente para o semestre ativo.",
     security: [{ bearerAuth: [] }],
     request: { params: semestreIdParam },
     responses: {
       200: {
         description:
-          "Enrolled disciplines for the semester. Returns `{ semestreLetivoId: null, disciplinas: [] }` when `semestreId='ativo'` but no semester is currently active.",
+          "Disciplinas matriculadas no semestre. Retorna `{ semestreLetivoId: null, disciplinas: [] }` quando `semestreId='ativo'` mas nenhum semestre está ativo.",
         content: { "application/json": { schema: semestreDisciplinasResponseSchema } },
       },
     },
@@ -886,10 +889,10 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "put",
     path: "/usuarios/me/semestres/{semestreId}/disciplinas",
-    tags: ["Users"],
-    summary: "Replace enrolled disciplines for a semester",
+    tags: ["Usuários"],
+    summary: "Substituir disciplinas matriculadas em um semestre",
     description:
-      "Replace the authenticated user's full set of enrolled disciplines for the specified semester. Disciplines are referenced by their PAAS `codigoDisciplina` and resolved to internal IDs server-side. Any codes that cannot be resolved are listed in `skippedCodigos` in the response. `semestreId` accepts a UUID or the literal 'ativo'.",
+      "Substitui o conjunto completo de disciplinas matriculadas do usuário autenticado para o semestre especificado. As disciplinas são referenciadas pelo `codigoDisciplina` do PAAS e resolvidas para IDs internos no servidor. Códigos que não puderem ser resolvidos aparecem em `skippedCodigos` na resposta. `semestreId` aceita um UUID ou a string 'ativo'.",
     security: [{ bearerAuth: [] }],
     request: {
       params: semestreIdParam,
@@ -915,7 +918,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Enrolled disciplines replaced.",
+        description: "Disciplinas matriculadas substituídas.",
         content: { "application/json": { schema: semestreDisciplinasResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -928,10 +931,10 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   registry.registerPath({
     method: "patch",
     path: "/usuarios/me/semestres/{semestreId}/disciplinas/{disciplinaSemestreId}",
-    tags: ["Users"],
-    summary: "Update one of the user's enrolled disciplines for a semester",
+    tags: ["Usuários"],
+    summary: "Atualizar uma disciplina matriculada do usuário no semestre",
     description:
-      "Update the turma, docente, horario or codigoPaas fields on a specific enrolled discipline. The discipline must belong to the authenticated user and the specified semester. `semestreId` accepts a UUID or 'ativo'.",
+      "Atualiza os campos turma, docente, horario ou codigoPaas de uma disciplina matriculada específica. A disciplina deve pertencer ao usuário autenticado e ao semestre informado. `semestreId` aceita um UUID ou 'ativo'.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({
@@ -950,7 +953,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description: "Discipline updated.",
+        description: "Disciplina atualizada.",
         content: { "application/json": { schema: disciplinaSemestreResponseSchema } },
       },
       ...errorResponses([400, 404]),

@@ -12,8 +12,8 @@ import {
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Enum of entity types (LABORATORIO, GRUPO, etc). Mirrors the values accepted
- * by updateEntidadeSchema's `tipo` field.
+ * Enum dos tipos de entidade (LABORATORIO, GRUPO, etc). Espelha os valores
+ * aceitos pelo campo `tipo` em updateEntidadeSchema.
  */
 const tipoEntidadeSchema = z
   .enum([
@@ -27,13 +27,14 @@ const tipoEntidadeSchema = z
   ])
   .openapi({
     description:
-      "Entity category. PET groups are modeled under 'GRUPO'. Student unions (DCEs, centros acadêmicos) use 'CENTRO_ACADEMICO'.",
+      "Categoria da entidade. Grupos PET são modelados como 'GRUPO'. DCEs e centros acadêmicos usam 'CENTRO_ACADEMICO'.",
     example: "GRUPO",
   });
 
 /**
- * Public entidade shape returned by GET /entidades, GET /entidades/slug/{slug}, etc.
- * Includes the embedded centro and — when loaded — the list of active memberships.
+ * Shape público de Entidade, retornado por GET /entidades, GET
+ * /entidades/slug/{slug}, etc. Inclui o centro embutido e — quando carregada —
+ * a lista de membros ativos.
  */
 const entidadeResponseSchema = z
   .object({
@@ -84,9 +85,9 @@ const entidadeResponseSchema = z
   .openapi("EntidadeResponse");
 
 /**
- * Response shape for entity-scoped membership endpoints (POST/PUT under
- * /entidades/{id}/membros). Differs from the user-scoped membership shape
- * in `paths/usuarios.ts` because it nests the user instead of the entity.
+ * Shape de resposta dos endpoints de membresia no escopo da entidade (POST/PUT
+ * em /entidades/{id}/membros). Difere do shape no escopo do usuário em
+ * `paths/usuarios.ts` porque aninha o usuário em vez da entidade.
  */
 const entidadeMembershipResponseSchema = z
   .object({
@@ -116,7 +117,7 @@ const entidadeMembershipResponseSchema = z
   .openapi("EntidadeMembershipResponse");
 
 /**
- * Cargo (role title) shape returned by cargos endpoints.
+ * Shape de Cargo retornado pelos endpoints de cargos.
  */
 const cargoResponseSchema = z
   .object({
@@ -131,13 +132,13 @@ const cargoResponseSchema = z
 const messageResponseSchema = z.object({ message: z.string() });
 
 /**
- * PUT cargo request body schema. Unlike POST which uses `createCargoSchema`,
- * the PUT handler expects `cargoId` in the body alongside the update fields.
+ * Schema do corpo de PUT cargo. Diferente do POST (que usa `createCargoSchema`),
+ * o handler de PUT espera `cargoId` no corpo junto com os campos de atualização.
  */
 const updateCargoRequestSchema = updateCargoSchema
   .extend({
     cargoId: z.string().uuid().openapi({
-      description: "ID of the cargo to update. Sent in the body (not the URL) on PUT requests.",
+      description: "ID do cargo a atualizar. Enviado no corpo (não na URL) em requisições PUT.",
     }),
   })
   .openapi("UpdateCargoRequest");
@@ -147,13 +148,13 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
   registry.registerPath({
     method: "get",
     path: "/entidades",
-    tags: ["Entities"],
-    summary: "List all entities",
+    tags: ["Entidades"],
+    summary: "Listar todas as entidades",
     description:
-      "Public endpoint returning all entities (labs, PET groups, student unions, companies, athletics associations) registered in the system. Results include the embedded centro but not the full member list — fetch that via GET /entidades/slug/{slug} or /entidades/{id}/membros.",
+      "Retorna todas as entidades cadastradas (laboratórios, PETs, centros acadêmicos, empresas júnior, atléticas). Os resultados incluem o centro embutido, mas não a lista completa de membros — para isso use GET /entidades/slug/{slug} ou /entidades/{id}/membros.",
     responses: {
       200: {
-        description: "List of all entities.",
+        description: "Lista de todas as entidades.",
         content: { "application/json": { schema: z.array(entidadeResponseSchema) } },
       },
     },
@@ -162,10 +163,10 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
   registry.registerPath({
     method: "get",
     path: "/entidades/slug/{slug}",
-    tags: ["Entities"],
-    summary: "Look up an entity by slug",
+    tags: ["Entidades"],
+    summary: "Buscar uma entidade pelo slug",
     description:
-      "Public endpoint to fetch an entity's full profile (with members and cargos) by its URL slug. Used by the `/entidade/[slug]` pages.",
+      "Retorna o perfil completo de uma entidade (com membros e cargos) pelo slug da URL. Usado pelas páginas `/entidade/[slug]`.",
     request: {
       params: z.object({
         slug: z.string().openapi({ example: "pet-computacao" }),
@@ -173,7 +174,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     },
     responses: {
       200: {
-        description: "Entity profile with embedded members and cargos.",
+        description: "Perfil da entidade com membros e cargos embutidos.",
         content: { "application/json": { schema: entidadeResponseSchema } },
       },
       ...errorResponses([404]),
@@ -183,10 +184,10 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
   registry.registerPath({
     method: "put",
     path: "/entidades/{id}",
-    tags: ["Entities"],
-    summary: "Update an entity",
+    tags: ["Entidades"],
+    summary: "Atualizar uma entidade",
     description:
-      "Update entity fields. Requires MASTER_ADMIN or an active ADMIN membership in the entity.",
+      "Atualiza campos da entidade. Requer MASTER_ADMIN ou uma membresia ADMIN ativa na entidade.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -206,7 +207,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     },
     responses: {
       200: {
-        description: "Entity updated.",
+        description: "Entidade atualizada.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -221,10 +222,10 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
   registry.registerPath({
     method: "post",
     path: "/entidades/{id}/membros",
-    tags: ["Entities"],
-    summary: "Add a member to an entity",
+    tags: ["Entidades"],
+    summary: "Adicionar um membro à entidade",
     description:
-      "Add a user as a member. Requires MASTER_ADMIN or entity ADMIN. For self-joining, use `POST /usuarios/me/membros`.",
+      "Adiciona um usuário como membro. Requer MASTER_ADMIN ou ADMIN da entidade. Para o usuário entrar sozinho, use `POST /usuarios/me/membros`.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -245,7 +246,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     },
     responses: {
       200: {
-        description: "Member added.",
+        description: "Membro adicionado.",
         content: { "application/json": { schema: entidadeMembershipResponseSchema } },
       },
       ...errorResponses([400, 404, 409]),
@@ -255,10 +256,10 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
   registry.registerPath({
     method: "put",
     path: "/entidades/{id}/membros/{membroId}",
-    tags: ["Entities"],
-    summary: "Update a member of an entity",
+    tags: ["Entidades"],
+    summary: "Atualizar um membro da entidade",
     description:
-      "Update a member. Requires MASTER_ADMIN or entity ADMIN. For self-management, use `PUT /usuarios/me/membros/{membroId}`.",
+      "Atualiza um membro. Requer MASTER_ADMIN ou ADMIN da entidade. Para o próprio usuário se gerenciar, use `PUT /usuarios/me/membros/{membroId}`.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({
@@ -277,7 +278,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     },
     responses: {
       200: {
-        description: "Member updated.",
+        description: "Membro atualizado.",
         content: { "application/json": { schema: entidadeMembershipResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -287,9 +288,9 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
   registry.registerPath({
     method: "delete",
     path: "/entidades/{id}/membros/{membroId}",
-    tags: ["Entities"],
-    summary: "Remove a member from an entity",
-    description: "Delete a membership. Requires MASTER_ADMIN or entity ADMIN.",
+    tags: ["Entidades"],
+    summary: "Remover um membro da entidade",
+    description: "Exclui uma membresia. Requer MASTER_ADMIN ou ADMIN da entidade.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({
@@ -299,7 +300,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     },
     responses: {
       200: {
-        description: "Member removed.",
+        description: "Membro removido.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -314,16 +315,16 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
   registry.registerPath({
     method: "get",
     path: "/entidades/{id}/cargos",
-    tags: ["Entities"],
-    summary: "List all cargos for an entity",
+    tags: ["Entidades"],
+    summary: "Listar cargos de uma entidade",
     description:
-      "List cargos (role titles) defined for this entity. Used as `cargoId` when creating memberships.",
+      "Lista os cargos definidos para esta entidade. Usados como `cargoId` ao criar membresias.",
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "List of cargos.",
+        description: "Lista de cargos.",
         content: { "application/json": { schema: z.array(cargoResponseSchema) } },
       },
     },
@@ -332,9 +333,9 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
   registry.registerPath({
     method: "post",
     path: "/entidades/{id}/cargos",
-    tags: ["Entities"],
-    summary: "Create a new cargo for an entity",
-    description: "Create a new cargo. Requires MASTER_ADMIN or entity ADMIN.",
+    tags: ["Entidades"],
+    summary: "Criar um novo cargo para uma entidade",
+    description: "Cria um novo cargo. Requer MASTER_ADMIN ou ADMIN da entidade.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -354,7 +355,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     },
     responses: {
       200: {
-        description: "Cargo created.",
+        description: "Cargo criado.",
         content: { "application/json": { schema: cargoResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -364,10 +365,10 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
   registry.registerPath({
     method: "put",
     path: "/entidades/{id}/cargos",
-    tags: ["Entities"],
-    summary: "Update a cargo for an entity",
+    tags: ["Entidades"],
+    summary: "Atualizar um cargo de uma entidade",
     description:
-      "Update a cargo. **Unusual:** `cargoId` is in the body, not the URL. Requires MASTER_ADMIN or entity ADMIN.",
+      "Atualiza um cargo. **Atenção:** `cargoId` vai no corpo, não na URL. Requer MASTER_ADMIN ou ADMIN da entidade.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -383,7 +384,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     },
     responses: {
       200: {
-        description: "Cargo updated.",
+        description: "Cargo atualizado.",
         content: { "application/json": { schema: cargoResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -393,23 +394,23 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
   registry.registerPath({
     method: "delete",
     path: "/entidades/{id}/cargos",
-    tags: ["Entities"],
-    summary: "Delete a cargo from an entity",
+    tags: ["Entidades"],
+    summary: "Excluir um cargo de uma entidade",
     description:
-      "Delete a cargo. **Unusual:** cargo id is a `?cargoId=` query param, not in the URL. Requires MASTER_ADMIN or entity ADMIN.",
+      "Exclui um cargo. **Atenção:** o ID do cargo é passado como query param `?cargoId=`, não na URL. Requer MASTER_ADMIN ou ADMIN da entidade.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
       query: z.object({
         cargoId: z.string().uuid().openapi({
-          description: "ID of the cargo to delete.",
+          description: "ID do cargo a excluir.",
           example: "550e8400-e29b-41d4-a716-446655440000",
         }),
       }),
     },
     responses: {
       200: {
-        description: "Cargo deleted.",
+        description: "Cargo excluído.",
         content: {
           "application/json": {
             schema: messageResponseSchema,

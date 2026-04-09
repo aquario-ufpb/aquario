@@ -6,18 +6,18 @@ import { createVagaSchema } from "@/lib/server/api-schemas/vagas";
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Enum of supported job/opportunity types. Mirrors TIPO_VAGA_VALUES in
- * src/app/api/vagas/route.ts — keep in sync.
+ * Enum dos tipos de vaga suportados. Espelha TIPO_VAGA_VALUES em
+ * src/app/api/vagas/route.ts — manter em sincronia.
  */
 const tipoVagaSchema = z
   .enum(["ESTAGIO", "TRAINEE", "VOLUNTARIO", "PESQUISA", "CLT", "PJ", "OUTRO"])
   .openapi({
-    description: "Type of job opportunity.",
+    description: "Tipo da oportunidade de vaga.",
     example: "ESTAGIO",
   });
 
 /**
- * Publisher summary embedded in vaga responses — the user who created the vaga.
+ * Resumo do publicador embutido nas respostas de vaga — o usuário que criou a vaga.
  */
 const vagaPublicadorSchema = z.object({
   nome: z.string().openapi({ example: "João Silva" }),
@@ -25,7 +25,7 @@ const vagaPublicadorSchema = z.object({
 });
 
 /**
- * Entity summary embedded in vaga responses.
+ * Resumo da entidade embutido nas respostas de vaga.
  */
 const vagaEntidadeSchema = z.object({
   id: z.string().uuid(),
@@ -36,8 +36,8 @@ const vagaEntidadeSchema = z.object({
 });
 
 /**
- * Vaga response shape as returned by mapVagaToJson — the canonical JSON
- * representation used by both list and detail endpoints.
+ * Shape da resposta de Vaga conforme retornado por mapVagaToJson — representação
+ * JSON canônica usada tanto pelo endpoint de listagem quanto pelo de detalhe.
  */
 const vagaResponseSchema = z
   .object({
@@ -63,13 +63,13 @@ const vagaResponseSchema = z
   .openapi("VagaResponse");
 
 /**
- * Extended response shape for GET /vagas/{id} which adds an `expirada` flag
- * computed from `dataFinalizacao` vs current time.
+ * Shape estendido da resposta para GET /vagas/{id} — adiciona o flag `expirada`
+ * calculado a partir de `dataFinalizacao` vs hora atual.
  */
 const vagaDetailResponseSchema = vagaResponseSchema
   .extend({
     expirada: z.boolean().openapi({
-      description: "Whether the vaga has passed its dataFinalizacao.",
+      description: "Indica se a vaga já passou da `dataFinalizacao`.",
       example: false,
     }),
   })
@@ -81,23 +81,24 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
     method: "get",
     path: "/vagas",
     tags: ["Vagas"],
-    summary: "List active job opportunities",
-    description: "List non-expired vagas. Filter by job type and/or publishing entity category.",
+    summary: "Listar vagas ativas",
+    description:
+      "Lista as vagas não expiradas. Permite filtrar por tipo de vaga e/ou categoria da entidade publicadora.",
     request: {
       query: z.object({
         tipoVaga: tipoVagaSchema.optional().openapi({
-          description: "Filter by job type.",
+          description: "Filtra pelo tipo de vaga.",
         }),
         entidadeTipos: z.string().optional().openapi({
           description:
-            "Comma-separated list of entity types to filter by (e.g., 'LABORATORIO,GRUPO'). Unknown types are ignored.",
+            "Lista separada por vírgulas dos tipos de entidade para filtrar (ex: 'LABORATORIO,GRUPO'). Tipos desconhecidos são ignorados.",
           example: "LABORATORIO,GRUPO",
         }),
       }),
     },
     responses: {
       200: {
-        description: "List of active vagas.",
+        description: "Lista de vagas ativas.",
         content: { "application/json": { schema: z.array(vagaResponseSchema) } },
       },
     },
@@ -107,9 +108,9 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
     method: "post",
     path: "/vagas",
     tags: ["Vagas"],
-    summary: "Create a new vaga",
+    summary: "Criar uma nova vaga",
     description:
-      "Publish a new vaga. Caller must be MASTER_ADMIN or an active ADMIN of the target entity. `dataFinalizacao` must be in the future.",
+      "Publica uma nova vaga. O usuário deve ser MASTER_ADMIN ou ADMIN ativo da entidade. `dataFinalizacao` deve estar no futuro.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -135,7 +136,7 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
     },
     responses: {
       201: {
-        description: "Vaga created successfully.",
+        description: "Vaga criada com sucesso.",
         content: { "application/json": { schema: vagaResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -146,14 +147,14 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
     method: "get",
     path: "/vagas/{id}",
     tags: ["Vagas"],
-    summary: "Get a vaga by id",
-    description: "Fetch a single vaga with an `expirada` flag indicating if its deadline passed.",
+    summary: "Buscar uma vaga pelo ID",
+    description: "Retorna uma vaga única com o flag `expirada` indicando se o prazo já passou.",
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "Vaga details.",
+        description: "Detalhes da vaga.",
         content: { "application/json": { schema: vagaDetailResponseSchema } },
       },
       ...errorResponses([404]),
@@ -164,16 +165,16 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
     method: "delete",
     path: "/vagas/{id}",
     tags: ["Vagas"],
-    summary: "Soft-delete a vaga",
+    summary: "Excluir uma vaga (soft delete)",
     description:
-      "Soft-delete a vaga. Caller must be MASTER_ADMIN or an active ADMIN of the vaga's entity.",
+      "Marca uma vaga como excluída (soft delete). O usuário deve ser MASTER_ADMIN ou ADMIN ativo da entidade dona da vaga.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       204: {
-        description: "Vaga deleted successfully. No response body.",
+        description: "Vaga excluída com sucesso. Sem corpo de resposta.",
       },
       ...errorResponses([404]),
     },

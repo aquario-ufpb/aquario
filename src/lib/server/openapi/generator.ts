@@ -29,24 +29,22 @@ let cachedDocument: OpenAPIObject | null = null;
  * can immediately test protected endpoints using a real login flow.
  */
 const API_DESCRIPTION = `
-Interactive documentation for the Aquário UFPB API.
+Documentação interativa da API do Aquário UFPB.
 
-**Authentication:** most endpoints require a JWT bearer token. To test authenticated
-endpoints in this UI:
+**Autenticação:** a maior parte dos endpoints exige um token JWT. Para testar
+endpoints autenticados aqui na UI:
 
-1. Call \`POST /auth/login\` with valid credentials to obtain a token.
-2. Copy the \`token\` value from the response.
-3. Click the **Authorize** button at the top right of this page.
-4. Paste the token as a Bearer credential and click **Authorize**.
+1. Chame \`POST /auth/login\` com credenciais válidas para obter um token.
+2. Copie o valor do campo \`token\` da resposta.
+3. Clique no botão **Authorize** no topo da página.
+4. Cole o token como credencial Bearer e clique em **Authorize**.
 
-All subsequent "Try it out" requests will include the token automatically.
+A partir daí, todas as chamadas "Try it out" incluirão o token automaticamente.
 
-**Error responses:** every 4xx and 5xx response follows the shared \`ApiErrorBody\`
-schema with a \`message\` (human-readable) and a \`code\` (machine-readable, see the
-\`ErrorCode\` enum). Use the \`code\` for programmatic handling.
-
-**Languages:** descriptions are written in English for a broader audience, but
-error messages returned by the API are in Portuguese (as served to end users).
+**Respostas de erro:** toda resposta 4xx e 5xx segue o formato \`ApiErrorBody\`,
+com um campo \`message\` (legível por humanos, em português) e um \`code\`
+(legível por máquina — ver o enum \`ErrorCode\`). Use o \`code\` para tratamento
+programático dos erros.
 `.trim();
 
 /**
@@ -87,8 +85,8 @@ export function getOpenApiDocument(): OpenAPIObject {
       },
     },
     servers: [
-      { url: "https://www.aquarioufpb.com", description: "Production" },
-      { url: "http://localhost:3000", description: "Local development" },
+      { url: "https://www.aquarioufpb.com", description: "Produção" },
+      { url: "http://localhost:3000", description: "Desenvolvimento local" },
     ],
     tags: OPENAPI_TAGS.map(tag => ({ ...tag })),
   });

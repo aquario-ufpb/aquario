@@ -4,9 +4,9 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Centro (academic center, e.g., Centro de Informática) response shape.
- * Handlers validate request bodies inline rather than with Zod schemas, so
- * request/response shapes are defined here.
+ * Shape de resposta de Centro Acadêmico (ex: Centro de Informática). Os
+ * handlers validam o corpo das requisições inline, sem schemas Zod, então
+ * os shapes de request/response são definidos aqui.
  */
 const centroResponseSchema = z
   .object({
@@ -32,7 +32,7 @@ const createOrUpdateCentroSchema = z
   .openapi("CreateOrUpdateCentroRequest");
 
 /**
- * Simplified curso shape returned by GET /centros/{id}/cursos.
+ * Shape simplificado de curso retornado por GET /centros/{id}/cursos.
  */
 const centroCursoSchema = z
   .object({
@@ -47,13 +47,13 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
   registry.registerPath({
     method: "get",
     path: "/centros",
-    tags: ["Academic Centers"],
-    summary: "List all academic centers",
+    tags: ["Centros Acadêmicos"],
+    summary: "Listar todos os centros acadêmicos",
     description:
-      "Public endpoint returning all academic centers (e.g., Centro de Informática, Centro de Ciências Exatas) across all campi.",
+      "Retorna todos os centros acadêmicos (ex: Centro de Informática, Centro de Ciências Exatas) de todos os campi.",
     responses: {
       200: {
-        description: "List of all centers.",
+        description: "Lista de todos os centros.",
         content: { "application/json": { schema: z.array(centroResponseSchema) } },
       },
     },
@@ -62,9 +62,9 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
   registry.registerPath({
     method: "post",
     path: "/centros",
-    tags: ["Academic Centers"],
-    summary: "Create a new academic center (admin only)",
-    description: "Admin-only endpoint to create a new academic center.",
+    tags: ["Centros Acadêmicos"],
+    summary: "Criar um novo centro acadêmico (admin)",
+    description: "Endpoint exclusivo para administradores. Cria um novo centro acadêmico.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -85,7 +85,7 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
     },
     responses: {
       201: {
-        description: "Center created.",
+        description: "Centro criado.",
         content: { "application/json": { schema: centroResponseSchema } },
       },
       ...errorResponses([400]),
@@ -95,9 +95,9 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
   registry.registerPath({
     method: "put",
     path: "/centros/{id}",
-    tags: ["Academic Centers"],
-    summary: "Update an academic center (admin only)",
-    description: "Admin-only endpoint to update an academic center.",
+    tags: ["Centros Acadêmicos"],
+    summary: "Atualizar um centro acadêmico (admin)",
+    description: "Endpoint exclusivo para administradores. Atualiza um centro acadêmico.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -118,7 +118,7 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
     },
     responses: {
       200: {
-        description: "Center updated.",
+        description: "Centro atualizado.",
         content: { "application/json": { schema: centroResponseSchema } },
       },
       ...errorResponses([400, 404]),
@@ -128,17 +128,17 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
   registry.registerPath({
     method: "delete",
     path: "/centros/{id}",
-    tags: ["Academic Centers"],
-    summary: "Delete an academic center (admin only)",
+    tags: ["Centros Acadêmicos"],
+    summary: "Excluir um centro acadêmico (admin)",
     description:
-      "Admin-only endpoint to delete an academic center. **Returns 409 with `HAS_DEPENDENCIES` if there are courses linked to this center** — you must delete/reassign linked courses first.",
+      "Endpoint exclusivo para administradores. **Retorna 409 com `HAS_DEPENDENCIES` se houver cursos vinculados a este centro** — é necessário excluir/reatribuir os cursos vinculados antes.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "Center deleted.",
+        description: "Centro excluído.",
         content: {
           "application/json": {
             schema: z.object({ success: z.literal(true) }),
@@ -153,15 +153,15 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
   registry.registerPath({
     method: "get",
     path: "/centros/{id}/cursos",
-    tags: ["Academic Centers"],
-    summary: "List courses for a specific center",
-    description: "Public endpoint returning all courses (majors) offered by the specified center.",
+    tags: ["Centros Acadêmicos"],
+    summary: "Listar cursos de um centro",
+    description: "Retorna todos os cursos oferecidos pelo centro especificado.",
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
     responses: {
       200: {
-        description: "List of courses for this center.",
+        description: "Lista de cursos deste centro.",
         content: { "application/json": { schema: z.array(centroCursoSchema) } },
       },
     },
