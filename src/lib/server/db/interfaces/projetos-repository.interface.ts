@@ -95,7 +95,10 @@ export type IProjetosRepository = {
   usuariosExist(ids: string[]): Promise<boolean>;
 
   /** Cria um projeto com autores */
-  create(data: CreateProjetoInput, autores: CreateProjetoAutorInput[]): Promise<ProjetoWithRelations>;
+  create(
+    data: CreateProjetoInput,
+    autores: CreateProjetoAutorInput[]
+  ): Promise<ProjetoWithRelations>;
 
   /** Atualiza dados de um projeto (sem autores) */
   update(slug: string, data: Partial<CreateProjetoInput>): Promise<ProjetoWithRelations>;
@@ -104,10 +107,18 @@ export type IProjetosRepository = {
   delete(slug: string): Promise<void>;
 
   /** Atualiza o status de publicação */
-  updateStatus(slug: string, status: StatusProjeto, publicadoEm: Date | null): Promise<ProjetoWithRelations>;
+  updateStatus(
+    slug: string,
+    status: StatusProjeto,
+    publicadoEm: Date | null
+  ): Promise<ProjetoWithRelations>;
 
   /** Substitui todos os autores de um projeto */
-  replaceAutores(projetoId: string, slug: string, autores: CreateProjetoAutorInput[]): Promise<ProjetoWithRelations | null>;
+  replaceAutores(
+    projetoId: string,
+    slug: string,
+    autores: CreateProjetoAutorInput[]
+  ): Promise<ProjetoWithRelations | null>;
 
   /** Busca projeto pelo slug sem relações (para verificações rápidas) */
   findBySlugBasic(slug: string): Promise<Projeto | null>;

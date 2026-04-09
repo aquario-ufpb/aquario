@@ -6,7 +6,9 @@ import { useRequireAuth } from "@/lib/client/hooks/use-require-auth";
 export default function AdminProjetosPage() {
   const { isLoading } = useRequireAuth({ requireRole: "MASTER_ADMIN" });
 
-  if (isLoading) return <div>Carregando...</div>;
+  if (isLoading) {
+    return <div>Carregando...</div>;
+  }
 
   return (
     <div className="space-y-6">

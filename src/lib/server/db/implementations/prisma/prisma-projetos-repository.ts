@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/server/db/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, type Projeto, type ProjetoAutor, type StatusProjeto } from "@prisma/client";
 import type {
   IProjetosRepository,
   ProjetoWithRelations,
@@ -8,7 +8,6 @@ import type {
   CreateProjetoInput,
   CreateProjetoAutorInput,
 } from "@/lib/server/db/interfaces/projetos-repository.interface";
-import type { Projeto, ProjetoAutor, StatusProjeto } from "@prisma/client";
 
 /**
  * Select padrão para dados públicos do usuario (sem PII)
@@ -129,7 +128,7 @@ export class PrismaProjetosRepository implements IProjetosRepository {
   }
 
   async findBySlugBasic(slug: string): Promise<Projeto | null> {
-    return prisma.projeto.findUnique({
+    return await prisma.projeto.findUnique({
       where: { slug },
     });
   }
@@ -137,7 +136,7 @@ export class PrismaProjetosRepository implements IProjetosRepository {
   async findBySlugWithAutores(
     slug: string
   ): Promise<(Projeto & { autores: ProjetoAutor[] }) | null> {
-    return prisma.projeto.findUnique({
+    return await prisma.projeto.findUnique({
       where: { slug },
       include: { autores: true },
     });
@@ -182,10 +181,7 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     return projeto as unknown as ProjetoWithRelations;
   }
 
-  async update(
-    slug: string,
-    data: Partial<CreateProjetoInput>
-  ): Promise<ProjetoWithRelations> {
+  async update(slug: string, data: Partial<CreateProjetoInput>): Promise<ProjetoWithRelations> {
     const projeto = await prisma.projeto.update({
       where: { slug },
       data: data as Prisma.ProjetoUpdateInput,
