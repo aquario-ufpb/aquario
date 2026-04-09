@@ -246,7 +246,8 @@ export const useOnboarding = () => {
   );
 
   const isLoading = isAuthLoading || isMetadataLoading;
-  const shouldShow = isAuthenticated && !isLoading && isMetadataFetched && !status.isComplete && isInsideSemester;
+  const shouldShow =
+    isAuthenticated && !isLoading && isMetadataFetched && !status.isComplete && isInsideSemester;
 
   return {
     ...status,
