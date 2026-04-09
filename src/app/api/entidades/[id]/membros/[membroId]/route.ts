@@ -9,7 +9,7 @@ type RouteContext = {
   params: Promise<{ id: string; membroId: string }>;
 };
 
-const updateMemberSchema = z.object({
+export const updateMemberSchema = z.object({
   papel: z.enum(["ADMIN", "MEMBRO"]).optional(),
   cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
   startedAt: z.string().optional(), // ISO date string

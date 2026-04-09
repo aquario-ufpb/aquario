@@ -9,7 +9,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-const addMemberSchema = z.object({
+export const addMemberSchema = z.object({
   usuarioId: z.string().uuid("ID de usuário inválido"),
   papel: z.enum(["ADMIN", "MEMBRO"]),
   cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),

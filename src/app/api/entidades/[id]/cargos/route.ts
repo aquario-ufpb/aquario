@@ -9,13 +9,13 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-const createCargoSchema = z.object({
+export const createCargoSchema = z.object({
   nome: z.string().min(1, "Nome do cargo é obrigatório"),
   descricao: z.string().nullable().optional(),
   ordem: z.number().int().default(0),
 });
 
-const updateCargoSchema = z.object({
+export const updateCargoSchema = z.object({
   nome: z.string().min(1, "Nome do cargo é obrigatório").optional(),
   descricao: z.string().nullable().optional(),
   ordem: z.number().int().optional(),

@@ -9,7 +9,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-const updateEntidadeSchema = z.object({
+export const updateEntidadeSchema = z.object({
   nome: z.string().optional(),
   subtitle: z.string().nullable().optional(),
   descricao: z.string().nullable().optional(),
