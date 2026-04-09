@@ -101,6 +101,12 @@ export const useOnboarding = () => {
     paasSemestreNome === dbSemestreNome
   );
 
+  const isInsideSemester = !!(
+    semestreAtivo &&
+    new Date(semestreAtivo.dataInicio) <= new Date() &&
+    new Date(semestreAtivo.dataFim) >= new Date()
+  );
+
   const status: OnboardingStatus = useMemo(() => {
     if (!metadata || !isMetadataFetched) {
       return {
@@ -113,7 +119,7 @@ export const useOnboarding = () => {
     }
 
     const m = metadata as OnboardingMetadata;
-    const semNome = semestreAtivo?.nome;
+    const semNome = isInsideSemester ? semestreAtivo?.nome : undefined;
     const semesterMeta = semNome ? m.semesters?.[semNome] : undefined;
 
     // Build the full list of relevant steps (both completed and pending)
@@ -185,7 +191,7 @@ export const useOnboarding = () => {
       completedCount,
       totalCount: allSteps.length,
     };
-  }, [metadata, isMetadataFetched, semestreAtivo?.nome, user?.periodoAtual, paasAvailable]);
+  }, [metadata, isMetadataFetched, semestreAtivo, user?.periodoAtual, paasAvailable]);
 
   const completeStep = useCallback(
     async (stepId: OnboardingStepId) => {
@@ -240,7 +246,8 @@ export const useOnboarding = () => {
   );
 
   const isLoading = isAuthLoading || isMetadataLoading;
-  const shouldShow = isAuthenticated && !isLoading && isMetadataFetched && !status.isComplete;
+  const shouldShow =
+    isAuthenticated && !isLoading && isMetadataFetched && !status.isComplete && isInsideSemester;
 
   return {
     ...status,

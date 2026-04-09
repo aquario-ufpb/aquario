@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Submodule**: Remove `aquario-vagas` git submodule and all references (repo was deleted). Vagas now fully served via backend API
 
 ### Changed
+- **Onboarding**: Hide onboarding entirely when between semesters — only show it when today falls within an active semester's date range
 - **UI**: Replace native date inputs with DatePicker across all forms — entities, memberships, vagas, and calendar management (#167)
 - **Users**:  Otimiza verificação de unicidade de slug em `prisma-usuarios-repository.ts`, limitando a consulta de existência a `select: { id: true }` para reduzir payload por iteração.
 
