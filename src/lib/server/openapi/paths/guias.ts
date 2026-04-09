@@ -47,8 +47,7 @@ const subSecaoGuiaResponseSchema = z
   })
   .openapi("SubSecaoGuiaResponse");
 
-export function registerGuiasPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
-  const { errorResponses } = schemas;
+export function registerGuiasPaths(registry: OpenAPIRegistry, _schemas: CommonSchemas): void {
   registry.registerPath({
     method: "get",
     path: "/guias",

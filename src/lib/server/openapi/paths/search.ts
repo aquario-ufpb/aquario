@@ -61,8 +61,7 @@ const searchResponseSchema = z
   })
   .openapi("SearchResponse");
 
-export function registerSearchPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
-  const { errorResponses } = schemas;
+export function registerSearchPaths(registry: OpenAPIRegistry, _schemas: CommonSchemas): void {
   registry.registerPath({
     method: "get",
     path: "/search",
