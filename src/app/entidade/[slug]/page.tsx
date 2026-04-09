@@ -2,7 +2,9 @@
 
 import { useState, useMemo, use, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEntidadeBySlug, useEntidades } from "@/lib/client/hooks";
+import { useProjetosByEntidade } from "@/lib/client/hooks/use-projetos";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/client/query-keys";
 import { useRouter } from "next/navigation";
@@ -15,6 +17,10 @@ import { EntidadeDescriptionSection } from "@/components/pages/entidades/entidad
 import { EntidadeOtherEntitiesSection } from "@/components/pages/entidades/entidade-other-entities-section";
 import { EntidadeMapSection } from "@/components/pages/entidades/entidade-map-section";
 import { isUserAdminOfEntidade } from "@/lib/shared/types/membro.types";
+import ProjectCard from "@/components/shared/project-card";
+import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
+import { Layers } from "lucide-react";
+import Link from "next/link";
 import { trackEvent } from "@/analytics/posthog-client";
 
 export default function EntidadeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -35,7 +41,7 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
     }
     return allEntidades
       .filter(e => e.tipo === entidade.tipo && e.slug !== entidade.slug)
-      .slice(0, 8); // Limit to 8 similar entities
+      .slice(0, 8);
   }, [entidade, allEntidades]);
 
   const canEdit =
@@ -74,12 +80,38 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
           onEditClick={() => setIsEditDialogOpen(true)}
         />
 
-        <EntidadeDescriptionSection entidade={entidade} />
+        {/* Tabs */}
+        <Tabs defaultValue="projetos" className="mt-2">
+          <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0 h-auto gap-0">
+            {(["Projetos", "Pessoas", "Sobre"] as const).map(tab => (
+              <TabsTrigger
+                key={tab}
+                value={tab
+                  .toLowerCase()
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "")}
+                className="rounded-none border-b-2 border-transparent px-6 py-3 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none bg-transparent"
+              >
+                {tab}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <EntidadeMembersSection entidade={entidade} />
+          <TabsContent value="projetos" className="mt-6">
+            <ProjetosTab entidadeId={entidade.id} />
+          </TabsContent>
 
-        <EntidadeMapSection entidade={entidade} />
+          <TabsContent value="pessoas" className="mt-0">
+            <EntidadeMembersSection entidade={entidade} />
+          </TabsContent>
 
+          <TabsContent value="sobre" className="mt-6">
+            <EntidadeDescriptionSection entidade={entidade} />
+            <EntidadeMapSection entidade={entidade} />
+          </TabsContent>
+        </Tabs>
+
+        {/* "Outros..." section always visible below tabs */}
         <EntidadeOtherEntitiesSection currentEntidade={entidade} otherEntidades={otherEntidades} />
       </div>
 
@@ -90,16 +122,65 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           onSuccess={newSlug => {
-            // If slug changed, redirect to new URL
             if (newSlug && newSlug !== slug) {
               router.push(`/entidade/${newSlug}`);
             } else {
-              // Otherwise, invalidate and refetch entidade data
               queryClient.invalidateQueries({ queryKey: queryKeys.entidades.bySlug(slug) });
             }
           }}
         />
       )}
+    </div>
+  );
+}
+
+// Projetos Tab
+
+type ProjetosTabProps = {
+  entidadeId: string;
+};
+
+function ProjetosTab({ entidadeId }: ProjetosTabProps) {
+  const { data: projetos, isLoading, error } = useProjetosByEntidade(entidadeId);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pb-12">
+        {[...Array(3)].map((_, i) => (
+          <Skeleton key={i} className="h-64 rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-20 text-sm text-destructive">
+        Erro ao carregar os projetos desta entidade.
+      </div>
+    );
+  }
+
+  if (!projetos || projetos.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <Layers className="w-10 h-10 mb-3 opacity-40" />
+        <p className="text-sm">Esta entidade ainda não possui projetos.</p>
+      </div>
+    );
+  }
+
+  const cards = projetos.map(mapProjetoToCard);
+
+  return (
+    <div className="max-w-6xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pb-12">
+        {cards.map(card => (
+          <Link key={card.id} href={`/projetos/${card.id}`}>
+            <ProjectCard projeto={card} />
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

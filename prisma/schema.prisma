@@ -73,6 +73,18 @@ enum TipoVaga {
   OUTRO
 }
 
+enum StatusProjeto {
+  RASCUNHO
+  PUBLICADO
+  ARQUIVADO
+}
+
+enum TipoConteudo {
+  MARKDOWN
+  HTML
+  TEXTO_SIMPLES
+}
+
 // ============================================================================
 // CAMPUS & CENTRO & CURSO (Core organizational structure)
 // ============================================================================
@@ -140,6 +152,7 @@ model Usuario {
   disciplinasConcluidas  DisciplinaConcluida[]
   disciplinasSemestre    DisciplinaSemestre[]
   vagasCriadas           Vaga[]
+  projetosAutor          ProjetoAutor[]
 
   @@index([email])
   @@index([matricula])
@@ -187,7 +200,8 @@ model Entidade {
   centro  Centro           @relation(fields: [centroId], references: [id])
   membros MembroEntidade[]
   cargos  Cargo[]
-  vagas   Vaga[]
+  vagas    Vaga[]
+  projetos Projeto[]
 
   @@unique([nome, tipo])
   @@index([slug])
@@ -470,4 +484,54 @@ model DisciplinaSemestre {
   @@unique([usuarioId, semestreLetivoId, disciplinaId])
   @@index([usuarioId])
   @@index([usuarioId, semestreLetivoId])
+}
+
+// ============================================================================
+// PROJETOS E AUTORES
+// ============================================================================
+
+model Projeto {
+  id             String        @id @default(uuid())
+  titulo         String
+  slug           String        @unique
+  subtitulo      String?
+  descricao      String?
+  textContent    String?
+  tipoConteudo   TipoConteudo  @default(MARKDOWN)
+  urlImagem      String?
+  status         StatusProjeto @default(RASCUNHO)
+  tags           String[]      @default([])
+  dataInicio     DateTime?
+  dataFim        DateTime?
+  urlRepositorio String?
+  urlDemo        String?
+  urlPublicacao  String?
+  criadoEm       DateTime      @default(now())
+  atualizadoEm   DateTime      @updatedAt
+  publicadoEm    DateTime?
+
+  autores    ProjetoAutor[]
+  entidadeId String?
+  entidade   Entidade?      @relation(fields: [entidadeId], references: [id])
+
+  @@index([slug])
+  @@index([status])
+  @@index([entidadeId])
+  @@index([criadoEm])
+  @@index([publicadoEm])
+}
+
+model ProjetoAutor {
+  id              String   @id @default(uuid())
+  projetoId       String
+  usuarioId       String
+  autorPrincipal  Boolean  @default(false)
+
+  projeto Projeto  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  usuario Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([projetoId, usuarioId])
+  @@index([projetoId])
+  @@index([usuarioId])
+  @@index([autorPrincipal])
 }

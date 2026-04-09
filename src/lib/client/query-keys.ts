@@ -45,6 +45,19 @@ export const queryKeys = {
     byTipo: (tipo: string) => ["entidades", "tipo", tipo] as const,
     cargos: (entidadeId: string) => ["entidades", entidadeId, "cargos"] as const,
   },
+  projetos: {
+    all: ["projetos"] as const,
+    bySlug: (slug: string) => ["projetos", "slug", slug] as const,
+    byEntidade: (entidadeId: string) => ["projetos", "entidade", entidadeId] as const,
+    byUsuario: (usuarioId: string) => ["projetos", "usuario", usuarioId] as const,
+    byEntidadeUsuario: (entidadeId: string, usuarioId: string) => [
+      "projetos",
+      "entidade",
+      entidadeId,
+      "usuario",
+      usuarioId,
+    ],
+  },
   vagas: {
     all: ["vagas"] as const,
     byId: (id: string) => ["vagas", id] as const,

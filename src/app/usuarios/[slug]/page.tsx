@@ -20,6 +20,9 @@ import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
 import { ProgressoCursoCard } from "@/components/pages/perfil/progresso-curso-card";
+import { useProjetosByUsuario } from "@/lib/client/hooks/use-projetos";
+import ProjectCard from "@/components/shared/project-card";
+import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { trackEvent } from "@/analytics/posthog-client";
 
 export default function UserProfilePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -33,6 +36,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
   const [showAllEntities, setShowAllEntities] = useState(false);
+  const {
+    data: projetos,
+    isLoading: projetosLoading,
+    error: projetosError,
+  } = useProjetosByUsuario(user?.id);
 
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser?.id === user?.id;
@@ -303,14 +311,16 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
         </div>
       )}
 
-      {/* Tabs for Entidades and Timeline */}
+      {/* Tabs for Entidades, Projetos and Timeline */}
       <div className="mt-8">
         <Tabs defaultValue="entidades" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="entidades">Entidades</TabsTrigger>
+            <TabsTrigger value="projetos">Projetos</TabsTrigger>
             <TabsTrigger value="timeline">Linha do Tempo</TabsTrigger>
           </TabsList>
 
+          {/* Entidades */}
           <TabsContent value="entidades" className="mt-6">
             <EntidadesTab
               memberships={memberships}
@@ -327,6 +337,47 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
             />
           </TabsContent>
 
+          {/* Projetos */}
+          <TabsContent value="projetos" className="mt-6">
+            <h2 className="text-xl font-semibold mb-6">
+              {isOwnProfile ? "Meus Projetos" : "Projetos"}
+            </h2>
+
+            {projetosLoading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-64 rounded-xl" />
+                ))}
+              </div>
+            )}
+
+            {!projetosLoading && projetosError && (
+              <p className="text-destructive text-sm">Erro ao carregar projetos.</p>
+            )}
+
+            {!projetosLoading && !projetosError && (!projetos || projetos.length === 0) && (
+              <p className="text-muted-foreground text-sm">
+                {isOwnProfile
+                  ? "Você ainda não publicou nenhum projeto."
+                  : "Este usuário ainda não publicou projetos."}
+              </p>
+            )}
+
+            {!projetosLoading && !projetosError && projetos && projetos.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {projetos.map(p => {
+                  const card = mapProjetoToCard(p);
+                  return (
+                    <Link key={card.id} href={`/projetos/${card.id}`}>
+                      <ProjectCard projeto={card} />
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Timeline */}
           <TabsContent value="timeline" className="mt-6">
             <TimelineTab
               memberships={memberships}

@@ -14,6 +14,7 @@ import type { ICargosRepository } from "@/lib/server/db/interfaces/cargos-reposi
 import type { ICurriculosRepository } from "@/lib/server/db/interfaces/curriculos-repository.interface";
 import type { ICalendarioRepository } from "@/lib/server/db/interfaces/calendario-repository.interface";
 import type { IVagasRepository } from "@/lib/server/db/interfaces/vagas-repository.interface";
+import type { IProjetosRepository } from "@/lib/server/db/interfaces/projetos-repository.interface";
 import type { IDisciplinaSemestreRepository } from "@/lib/server/db/interfaces/disciplina-semestre-repository.interface";
 import type { IDisciplinaRepository } from "@/lib/server/db/interfaces/disciplina-repository.interface";
 import type { IDisciplinaConcluidaRepository } from "@/lib/server/db/interfaces/disciplina-concluida-repository.interface";
@@ -43,6 +44,7 @@ export type Container = {
   curriculosRepository: ICurriculosRepository;
   calendarioRepository: ICalendarioRepository;
   vagasRepository: IVagasRepository;
+  projetosRepository: IProjetosRepository;
   disciplinaSemestreRepository: IDisciplinaSemestreRepository;
   disciplinaRepository: IDisciplinaRepository;
   disciplinaConcluidaRepository: IDisciplinaConcluidaRepository;
