@@ -32,7 +32,12 @@ vi.mock("@/lib/client/hooks/use-usuarios", () => ({
 
 vi.mock("@/lib/client/hooks/use-calendario-academico", () => ({
   useSemestreAtivo: vi.fn(() => ({
-    data: { id: "sem-1", nome: "2025.1" },
+    data: {
+      id: "sem-1",
+      nome: "2025.1",
+      dataInicio: "2025-01-01T00:00:00.000Z",
+      dataFim: "2099-12-31T23:59:59.999Z",
+    },
   })),
 }));
 
@@ -82,7 +87,12 @@ describe("useOnboarding", () => {
     } as ReturnType<typeof useCurrentUser>);
 
     mockUseSemestreAtivo.mockReturnValue({
-      data: { id: "sem-1", nome: "2025.1" },
+      data: {
+        id: "sem-1",
+        nome: "2025.1",
+        dataInicio: "2025-01-01T00:00:00.000Z",
+        dataFim: "2099-12-31T23:59:59.999Z",
+      },
     } as ReturnType<typeof useSemestreAtivo>);
 
     mockUsePaasCalendar.mockReturnValue({
@@ -161,6 +171,28 @@ describe("useOnboarding", () => {
 
       const stepIds = result.current.steps.map(s => s.id);
       expect(stepIds).not.toContain("turmas");
+    });
+
+    it("hides entire onboarding when in gray zone between semesters", async () => {
+      mockUseSemestreAtivo.mockReturnValue({
+        data: {
+          id: "sem-2",
+          nome: "2099.1",
+          dataInicio: "2099-01-01T00:00:00.000Z",
+          dataFim: "2099-06-30T23:59:59.999Z",
+        },
+      } as ReturnType<typeof useSemestreAtivo>);
+
+      const meta = freshMetadata();
+      mockGetMetadata.mockResolvedValue(meta);
+
+      const { result } = renderHookWithProviders(() => useOnboarding());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.shouldShow).toBe(false);
     });
 
     it("hides cursando step when no active semester", async () => {
