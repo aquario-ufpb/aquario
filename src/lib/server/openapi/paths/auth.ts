@@ -122,7 +122,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     tags: ["Auth"],
     summary: "Log in with email and password",
     description:
-      "Authenticate with email and password and receive a JWT bearer token. **Rate limited to 5 attempts per minute per IP address.** On rate limit exceeded, the response includes `X-RateLimit-*` headers and `Retry-After`. For security, this endpoint does not disclose whether the email exists — any invalid email/password combination returns a generic 401 response.",
+      "Authenticate with email and password. Returns a JWT bearer token valid for 7 days. Rate limited to 5 attempts/min per IP. Invalid credentials always return a generic 401 to prevent user enumeration.",
     request: {
       body: {
         required: true,
@@ -139,21 +139,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     },
     responses: {
       200: {
-        description: "Login successful. The returned token is valid for 7 days.",
-        headers: {
-          "X-RateLimit-Limit": {
-            description: "Maximum number of login attempts allowed per minute per IP.",
-            schema: { type: "integer", example: 5 },
-          },
-          "X-RateLimit-Remaining": {
-            description: "Remaining login attempts in the current window.",
-            schema: { type: "integer", example: 4 },
-          },
-          "X-RateLimit-Reset": {
-            description: "Unix timestamp (ms) when the rate limit window resets.",
-            schema: { type: "integer", example: 1712668800000 },
-          },
-        },
+        description: "Login successful.",
         content: {
           "application/json": {
             schema: tokenResponseSchema,
@@ -162,15 +148,12 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
         },
       },
       429: {
-        description: "Too many login attempts. Wait for `Retry-After` seconds before trying again.",
+        description: "Rate limited — wait `Retry-After` seconds before retrying.",
         headers: {
           "Retry-After": {
-            description: "Number of seconds to wait before retrying.",
+            description: "Seconds until the rate limit window resets.",
             schema: { type: "integer", example: 42 },
           },
-          "X-RateLimit-Limit": { schema: { type: "integer", example: 5 } },
-          "X-RateLimit-Remaining": { schema: { type: "integer", example: 0 } },
-          "X-RateLimit-Reset": { schema: { type: "integer", example: 1712668800000 } },
         },
         content: {
           "application/json": {
@@ -178,7 +161,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([400, 401, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -188,7 +171,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     tags: ["Auth"],
     summary: "Register a new user account",
     description:
-      "Create a new user account. In production environments, a verification email is sent and the user must click the link before logging in. In development environments (no email provider configured), the user is auto-verified and can log in immediately. Email addresses must belong to a UFPB domain (any subdomain of `.ufpb.br`).",
+      "Create a new user account. Only UFPB email domains (`*.ufpb.br`) are accepted. In prod a verification email is sent; in dev (no email provider) users are auto-verified.",
     request: {
       body: {
         required: true,
@@ -220,7 +203,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([400, 409, 500]),
+      ...errorResponses([400, 409]),
     },
   });
 
@@ -229,8 +212,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     path: "/auth/me",
     tags: ["Auth"],
     summary: "Get the currently authenticated user",
-    description:
-      "Return the profile of the user whose bearer token is supplied. Sensitive fields (password hash, verification tokens, etc) are never included in the response.",
+    description: "Return the authenticated user's profile. Sensitive fields are never included.",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
@@ -260,7 +242,6 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([401, 500]),
     },
   });
 
@@ -269,8 +250,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     path: "/auth/refresh",
     tags: ["Auth"],
     summary: "Refresh the current JWT token",
-    description:
-      "Issue a fresh JWT for the authenticated user without requiring email/password. Useful for extending sessions before the current token expires.",
+    description: "Issue a fresh JWT for the authenticated user.",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
@@ -282,7 +262,6 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([401, 500]),
     },
   });
 
@@ -291,8 +270,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     path: "/auth/verificar-email",
     tags: ["Auth"],
     summary: "Verify an email address using a token",
-    description:
-      "Consume a verification token sent by email (when registering or requesting a resend). On success, the user is marked as verified and can log in.",
+    description: "Consume a verification token sent by email and mark the user as verified.",
     request: {
       body: {
         required: true,
@@ -314,7 +292,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([400, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -324,7 +302,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     tags: ["Auth"],
     summary: "Request a password reset email",
     description:
-      "Send a password reset email to the provided address if it exists in the system. **Returns 200 regardless of whether the email is registered** to prevent user enumeration attacks. Clients should never rely on the response to determine account existence.",
+      "Always returns 200, whether the email is registered or not, to prevent user enumeration.",
     request: {
       body: {
         required: true,
@@ -338,8 +316,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     },
     responses: {
       200: {
-        description:
-          "Request accepted. A reset email is sent only if the address is registered — clients should not interpret this response as confirmation that the account exists.",
+        description: "Request accepted.",
         content: {
           "application/json": {
             schema: messageResponseSchema,
@@ -358,8 +335,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     path: "/auth/resetar-senha",
     tags: ["Auth"],
     summary: "Reset password using a reset token",
-    description:
-      "Consume a password reset token (sent via email from /auth/esqueci-senha) and set a new password for the associated account.",
+    description: "Consume a reset token (sent via email) and set a new password.",
     request: {
       body: {
         required: true,
@@ -384,7 +360,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([400, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -394,7 +370,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     tags: ["Auth"],
     summary: "Resend verification email (authenticated)",
     description:
-      "Request a new verification email for the currently authenticated user. Use this when the original verification email was lost or expired. The user must be authenticated — for an unauthenticated flow, use POST /auth/solicitar-reenvio-verificacao instead.",
+      "Resend the verification email for the authenticated user. For the unauthenticated flow, see `/auth/solicitar-reenvio-verificacao`.",
     security: [{ bearerAuth: [] }],
     responses: {
       200: {
@@ -406,7 +382,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([400, 401, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -416,7 +392,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
     tags: ["Auth"],
     summary: "Request verification email resend by email address",
     description:
-      "Unauthenticated version of the resend flow: provide an email address and, if it corresponds to a registered but unverified account, a new verification email will be sent. **Returns 200 regardless of whether the email is registered** to prevent user enumeration attacks.",
+      "Unauthenticated resend flow. Always returns 200 regardless of whether the email exists (prevents user enumeration).",
     request: {
       body: {
         required: true,

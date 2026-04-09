@@ -182,9 +182,9 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     method: "get",
     path: "/usuarios",
     tags: ["Users"],
-    summary: "List users (three modes: search, paginated, or all)",
+    summary: "List users (search, paginated, or all)",
     description:
-      "This endpoint has **three distinct modes** depending on the query parameters supplied, each with different authentication requirements:\n\n- **Search mode** (`?search=term` without `?page`): returns an envelope with users matching the query. Requires any authenticated user (`bearerAuth`).\n- **Paginated mode** (`?page=N` and/or `?limit=N`): returns a paginated envelope `{ users, pagination }`. Requires MASTER_ADMIN role.\n- **Full dump mode** (no query params): returns an array of ALL users (legacy backward-compatibility mode). Requires MASTER_ADMIN role.\n\nThe response shape differs across modes — consumers should check for the presence of the `pagination` key to distinguish the envelope form from the raw array form.",
+      "Three modes:\n- `?search=X`: envelope of matching users (any authenticated user)\n- `?page=N`: paginated envelope (admin only)\n- no params: raw array of all users (admin only)\n\nCheck for `pagination` key to distinguish envelope from array.",
     security: [{ bearerAuth: [] }],
     request: {
       query: z.object({
@@ -203,15 +203,14 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     },
     responses: {
       200: {
-        description:
-          "Users matching the query. Response shape depends on the mode: paginated envelope `{ users, pagination }` for search/pagination modes, bare array for full dump mode.",
+        description: "Users (envelope in search/paginated modes, array in full-dump mode).",
         content: {
           "application/json": {
             schema: z.union([paginatedUsersResponseSchema, z.array(adminUserResponseSchema)]),
           },
         },
       },
-      ...errorResponses([401, 403, 500]),
+      ...errorResponses([403]),
     },
   });
 
@@ -223,8 +222,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     path: "/usuarios/{id}",
     tags: ["Users"],
     summary: "Delete a user (admin only)",
-    description:
-      "Permanently delete a user account. Admins cannot delete their own account through this endpoint — a 400 is returned in that case to prevent accidental lockout.",
+    description: "Delete a user account. Admins cannot delete themselves (returns 400).",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({
@@ -241,7 +239,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -276,7 +274,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "User info updated.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -323,7 +321,6 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -355,7 +352,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Role updated successfully.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -387,7 +384,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Slug updated.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 409, 500]),
+      ...errorResponses([400, 409]),
     },
   });
 
@@ -411,7 +408,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "User profile.",
         content: { "application/json": { schema: userProfileSchema } },
       },
-      ...errorResponses([404, 500]),
+      ...errorResponses([404]),
     },
   });
 
@@ -446,7 +443,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Facade user created.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -496,7 +493,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([400, 401, 403, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -526,7 +523,6 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([401, 500]),
     },
   });
 
@@ -563,7 +559,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([400, 401, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -602,7 +598,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([400, 401, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -622,7 +618,6 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "List of memberships for the authenticated user.",
         content: { "application/json": { schema: z.array(membershipResponseSchema) } },
       },
-      ...errorResponses([401, 500]),
     },
   });
 
@@ -655,7 +650,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Membership created.",
         content: { "application/json": { schema: membershipResponseSchema } },
       },
-      ...errorResponses([400, 401, 404, 409, 500]),
+      ...errorResponses([400, 404, 409]),
     },
   });
 
@@ -687,7 +682,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Membership updated.",
         content: { "application/json": { schema: membershipResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -712,7 +707,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([401, 403, 404, 500]),
+      ...errorResponses([404]),
     },
   });
 
@@ -741,7 +736,6 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([401, 500]),
     },
   });
 
@@ -771,7 +765,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Onboarding metadata updated.",
         content: { "application/json": { schema: onboardingPatchSchema } },
       },
-      ...errorResponses([400, 401, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -807,7 +801,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([400, 401, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -840,7 +834,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Photo updated.",
         content: { "application/json": { schema: userProfileSchema } },
       },
-      ...errorResponses([400, 401, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -857,7 +851,6 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Photo deleted.",
         content: { "application/json": { schema: userProfileSchema } },
       },
-      ...errorResponses([401, 500]),
     },
   });
 
@@ -887,7 +880,6 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           "Enrolled disciplines for the semester. Returns `{ semestreLetivoId: null, disciplinas: [] }` when `semestreId='ativo'` but no semester is currently active.",
         content: { "application/json": { schema: semestreDisciplinasResponseSchema } },
       },
-      ...errorResponses([401, 500]),
     },
   });
 
@@ -926,7 +918,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Enrolled disciplines replaced.",
         content: { "application/json": { schema: semestreDisciplinasResponseSchema } },
       },
-      ...errorResponses([400, 401, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -961,7 +953,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Discipline updated.",
         content: { "application/json": { schema: disciplinaSemestreResponseSchema } },
       },
-      ...errorResponses([400, 401, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 }

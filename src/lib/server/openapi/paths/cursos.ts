@@ -37,7 +37,6 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
         description: "List of all courses.",
         content: { "application/json": { schema: z.array(cursoResponseSchema) } },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -68,7 +67,7 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
         description: "Course created.",
         content: { "application/json": { schema: cursoResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -99,7 +98,7 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
         description: "Course updated.",
         content: { "application/json": { schema: cursoResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -124,7 +123,7 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
           },
         },
       },
-      ...errorResponses([401, 403, 404, 409, 500]),
+      ...errorResponses([404, 409]),
     },
   });
 }

@@ -56,7 +56,6 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
         description: "List of all centers.",
         content: { "application/json": { schema: z.array(centroResponseSchema) } },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -89,7 +88,7 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
         description: "Center created.",
         content: { "application/json": { schema: centroResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -122,7 +121,7 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
         description: "Center updated.",
         content: { "application/json": { schema: centroResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -147,7 +146,7 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
           },
         },
       },
-      ...errorResponses([401, 403, 404, 409, 500]),
+      ...errorResponses([404, 409]),
     },
   });
 
@@ -165,7 +164,6 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
         description: "List of courses for this center.",
         content: { "application/json": { schema: z.array(centroCursoSchema) } },
       },
-      ...errorResponses([500]),
     },
   });
 }

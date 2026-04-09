@@ -39,12 +39,12 @@ export type CommonSchemas = {
  * Pure data, kept module-level since it has no lifecycle.
  */
 const STATUS_DESCRIPTIONS: Record<number, string> = {
-  400: "Bad request — invalid input or validation failure",
-  401: "Unauthorized — missing, invalid or expired token",
-  403: "Forbidden — authenticated but lacking permission",
-  404: "Not found — the requested resource does not exist",
-  409: "Conflict — the request conflicts with current state",
-  429: "Too many requests — rate limit exceeded",
+  400: "Validation error",
+  401: "Unauthorized",
+  403: "Forbidden",
+  404: "Not found",
+  409: "Conflict",
+  429: "Rate limited",
   500: "Internal server error",
 };
 

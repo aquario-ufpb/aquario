@@ -67,7 +67,7 @@ export function registerCurriculosPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Active curriculum grid organized by period.",
         content: { "application/json": { schema: curriculoGradeResponseSchema } },
       },
-      ...errorResponses([400, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 }

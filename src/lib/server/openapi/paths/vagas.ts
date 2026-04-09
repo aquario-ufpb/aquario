@@ -82,8 +82,7 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
     path: "/vagas",
     tags: ["Vagas"],
     summary: "List active job opportunities",
-    description:
-      "Public endpoint returning active (non-expired) vagas. Results can be filtered by job type and by publishing entity category (e.g., only vagas from labs or PET groups).",
+    description: "List non-expired vagas. Filter by job type and/or publishing entity category.",
     request: {
       query: z.object({
         tipoVaga: tipoVagaSchema.optional().openapi({
@@ -101,7 +100,6 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
         description: "List of active vagas.",
         content: { "application/json": { schema: z.array(vagaResponseSchema) } },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -111,7 +109,7 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
     tags: ["Vagas"],
     summary: "Create a new vaga",
     description:
-      "Publish a new job opportunity on behalf of an entity. **Custom permission:** the caller must be either a MASTER_ADMIN or an active ADMIN member of the target entity (`canManageVagaForEntidade` check). The `dataFinalizacao` must be in the future.",
+      "Publish a new vaga. Caller must be MASTER_ADMIN or an active ADMIN of the target entity. `dataFinalizacao` must be in the future.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -140,7 +138,7 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
         description: "Vaga created successfully.",
         content: { "application/json": { schema: vagaResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -149,8 +147,7 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
     path: "/vagas/{id}",
     tags: ["Vagas"],
     summary: "Get a vaga by id",
-    description:
-      "Public endpoint to fetch a single vaga with all its details plus an `expirada` flag indicating whether it has passed its deadline.",
+    description: "Fetch a single vaga with an `expirada` flag indicating if its deadline passed.",
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
@@ -159,7 +156,7 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
         description: "Vaga details.",
         content: { "application/json": { schema: vagaDetailResponseSchema } },
       },
-      ...errorResponses([404, 500]),
+      ...errorResponses([404]),
     },
   });
 
@@ -169,7 +166,7 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
     tags: ["Vagas"],
     summary: "Soft-delete a vaga",
     description:
-      "Soft-delete a vaga (marks it as deleted in the database without removing the record). **Custom permission:** the caller must be either a MASTER_ADMIN or an active ADMIN member of the vaga's entity (`canManageVagaForEntidade` check).",
+      "Soft-delete a vaga. Caller must be MASTER_ADMIN or an active ADMIN of the vaga's entity.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -178,7 +175,7 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
       204: {
         description: "Vaga deleted successfully. No response body.",
       },
-      ...errorResponses([401, 403, 404, 500]),
+      ...errorResponses([404]),
     },
   });
 }

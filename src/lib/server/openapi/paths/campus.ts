@@ -34,7 +34,6 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
         description: "List of all campi.",
         content: { "application/json": { schema: z.array(campusResponseSchema) } },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -62,7 +61,7 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
         description: "Campus created.",
         content: { "application/json": { schema: campusResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 409, 500]),
+      ...errorResponses([400, 409]),
     },
   });
 
@@ -90,7 +89,7 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
         description: "Campus updated.",
         content: { "application/json": { schema: campusResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -115,7 +114,7 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
           },
         },
       },
-      ...errorResponses([401, 403, 404, 409, 500]),
+      ...errorResponses([404, 409]),
     },
   });
 }

@@ -77,7 +77,6 @@ export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -87,7 +86,7 @@ export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSche
     tags: ["Upload"],
     summary: "Upload a profile photo for the current user",
     description:
-      "Atomically upload a profile photo and update the user's `urlFotoPerfil` field. The previous photo (if hosted on blob storage) is deleted as part of the operation. On any failure after upload, the newly-uploaded file is cleaned up to keep storage and database in sync.\n\n**File constraints:**\n- Max size: **5 MB**\n- Allowed MIME types: `image/jpeg`, `image/jpg`, `image/png`, `image/webp`, `image/gif`\n- The filename is ignored server-side — a safe extension is derived from the MIME type.\n\nReturns the updated user profile on success.",
+      "Upload a photo (max 5 MB, JPEG/PNG/WebP/GIF) and atomically update the user's profile. Returns the updated user.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -104,7 +103,7 @@ export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSche
         description: "Photo uploaded and user profile updated.",
         content: { "application/json": { schema: uploadPhotoResponseSchema } },
       },
-      ...errorResponses([400, 401, 500]),
+      ...errorResponses([400]),
     },
   });
 
@@ -114,30 +113,18 @@ export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSche
     tags: ["Content Images"],
     summary: "Serve a static image from the content submodules",
     description:
-      "Public endpoint that serves static images (illustrations, entity logos, map assets) from the `content/` git submodules. The path is **resolved using slug matching**, so you can reference folders/files by their lowercased, accent-stripped, hyphen-joined names rather than the actual filesystem paths (which may include priority prefixes like `'1 - Componentes Curriculares'`).\n\n**Supported path roots (the first segment chooses the content submodule):**\n- `entidades/<file>` — serves from `content/aquario-entidades/centro-de-informatica`\n- `assets/entidades/<file>` — serves from `content/aquario-entidades/centro-de-informatica/assets`\n- `mapas/<path>` — serves from `content/aquario-mapas`\n- (anything else) — serves from `content/aquario-guias/centro-de-informatica` (default)\n\n**Unlike every other endpoint in this API, error responses for this endpoint are plain text (`'Image not found'`, `'Forbidden'`, `'Internal Server Error'`) — NOT the standard `ApiErrorBody` JSON shape.** This keeps the endpoint compatible with `<img>` tags and avoids any JSON parsing on the client side.\n\nResponses include `Cache-Control: public, max-age=31536000, immutable` — the browser can cache the image permanently.",
+      "Serve a static image from `content/` git submodules. Path uses slug matching (accent-stripped, priority prefixes ignored). Supported roots: `entidades/*`, `assets/entidades/*`, `mapas/*`, or default (guias). **Errors return plain text**, not JSON — compatible with `<img>` tags.",
     request: {
       params: z.object({
         path: z.string().openapi({
-          description:
-            "Slash-joined path segments. Next.js catch-all route — any number of segments is accepted. Slugs are matched case-insensitively against folder/file names with priority prefixes stripped.",
+          description: "Slash-joined path segments (catch-all).",
           example: "entidades/pet-computacao.png",
         }),
       }),
     },
     responses: {
       200: {
-        description:
-          "Image file served as binary data. The `Content-Type` header reflects the actual file format; `application/octet-stream` is used as a fallback for unknown extensions.",
-        headers: {
-          "Content-Type": {
-            description: "MIME type of the served image, derived from the file extension.",
-            schema: { type: "string", example: "image/png" },
-          },
-          "Cache-Control": {
-            description: "Long-lived immutable cache directive (1 year).",
-            schema: { type: "string", example: "public, max-age=31536000, immutable" },
-          },
-        },
+        description: "Image binary. Cached for 1 year (`Cache-Control: immutable`).",
         content: {
           "image/png": { schema: { type: "string", format: "binary" } },
           "image/jpeg": { schema: { type: "string", format: "binary" } },
@@ -147,30 +134,11 @@ export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSche
           "application/octet-stream": { schema: { type: "string", format: "binary" } },
         },
       },
-      403: {
-        description:
-          "Forbidden — the resolved path is outside the allowed content directory. Body is the plain text string 'Forbidden', NOT the standard JSON error shape.",
-        content: {
-          "text/plain": {
-            schema: { type: "string", example: "Forbidden" },
-          },
-        },
-      },
       404: {
-        description:
-          "Image not found at the resolved path. Body is the plain text string 'Image not found', NOT the standard JSON error shape.",
+        description: "Image not found (plain text body).",
         content: {
           "text/plain": {
             schema: { type: "string", example: "Image not found" },
-          },
-        },
-      },
-      500: {
-        description:
-          "Internal error while reading the image. Body is the plain text string 'Internal Server Error', NOT the standard JSON error shape.",
-        content: {
-          "text/plain": {
-            schema: { type: "string", example: "Internal Server Error" },
           },
         },
       },

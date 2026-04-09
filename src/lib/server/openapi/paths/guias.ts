@@ -69,7 +69,6 @@ export function registerGuiasPaths(registry: OpenAPIRegistry, schemas: CommonSch
         description: "List of guides.",
         content: { "application/json": { schema: z.array(guiaResponseSchema) } },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -88,7 +87,6 @@ export function registerGuiasPaths(registry: OpenAPIRegistry, schemas: CommonSch
         description: "List of sections ordered by the 'ordem' field.",
         content: { "application/json": { schema: z.array(secaoGuiaResponseSchema) } },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -107,7 +105,6 @@ export function registerGuiasPaths(registry: OpenAPIRegistry, schemas: CommonSch
         description: "List of subsections ordered by the 'ordem' field.",
         content: { "application/json": { schema: z.array(subSecaoGuiaResponseSchema) } },
       },
-      ...errorResponses([500]),
     },
   });
 }

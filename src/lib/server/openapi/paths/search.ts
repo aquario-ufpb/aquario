@@ -69,7 +69,7 @@ export function registerSearchPaths(registry: OpenAPIRegistry, schemas: CommonSc
     tags: ["Search"],
     summary: "Unified full-text search across all entity categories",
     description:
-      "Execute a unified full-text search across all major entity categories (static pages, guides, entities, jobs, disciplines, courses, users). Uses PostgreSQL full-text search with the `unaccent` extension, so queries match Brazilian Portuguese accents transparently. Results are ranked by relevance using `ts_rank`. Queries shorter than 3 characters return an empty result set without hitting the database.",
+      "Full-text search across pages, guides, entities, vagas, disciplines, courses and users. Accent-insensitive (Brazilian Portuguese). Queries shorter than 3 characters return empty results.",
     request: {
       query: z.object({
         q: z.string().min(3).openapi({
@@ -85,7 +85,7 @@ export function registerSearchPaths(registry: OpenAPIRegistry, schemas: CommonSc
     responses: {
       200: {
         description:
-          "Search results grouped by category. Categories with no matches return empty arrays instead of being omitted.",
+          "Search results grouped by category (empty arrays where there are no matches).",
         content: {
           "application/json": {
             schema: searchResponseSchema,
@@ -143,7 +143,6 @@ export function registerSearchPaths(registry: OpenAPIRegistry, schemas: CommonSc
           },
         },
       },
-      ...errorResponses([500]),
     },
   });
 }

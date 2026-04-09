@@ -156,7 +156,6 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "List of all entities.",
         content: { "application/json": { schema: z.array(entidadeResponseSchema) } },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -177,7 +176,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "Entity profile with embedded members and cargos.",
         content: { "application/json": { schema: entidadeResponseSchema } },
       },
-      ...errorResponses([404, 500]),
+      ...errorResponses([404]),
     },
   });
 
@@ -187,7 +186,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     tags: ["Entities"],
     summary: "Update an entity",
     description:
-      "Update entity fields (name, description, social links, etc). **Requires either MASTER_ADMIN role or an active ADMIN membership in the target entity.** All fields are optional — only provided fields are updated.",
+      "Update entity fields. Requires MASTER_ADMIN or an active ADMIN membership in the entity.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -215,7 +214,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
           },
         },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -225,7 +224,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     tags: ["Entities"],
     summary: "Add a member to an entity",
     description:
-      "Add a user as a member of the entity. **Requires either MASTER_ADMIN role or an active ADMIN membership in the target entity.** Returns 409 if the user is already an active member. To let users join entities themselves, use POST /usuarios/me/membros instead.",
+      "Add a user as a member. Requires MASTER_ADMIN or entity ADMIN. For self-joining, use `POST /usuarios/me/membros`.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -249,7 +248,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "Member added.",
         content: { "application/json": { schema: entidadeMembershipResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 409, 500]),
+      ...errorResponses([400, 404, 409]),
     },
   });
 
@@ -259,7 +258,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     tags: ["Entities"],
     summary: "Update a member of an entity",
     description:
-      "Update a member's role, cargo, or dates inside the entity. **Requires MASTER_ADMIN or active ADMIN membership in the entity.** To update your own membership (non-admin use case), use PUT /usuarios/me/membros/{membroId} instead.",
+      "Update a member. Requires MASTER_ADMIN or entity ADMIN. For self-management, use `PUT /usuarios/me/membros/{membroId}`.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({
@@ -281,7 +280,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "Member updated.",
         content: { "application/json": { schema: entidadeMembershipResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -290,8 +289,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     path: "/entidades/{id}/membros/{membroId}",
     tags: ["Entities"],
     summary: "Remove a member from an entity",
-    description:
-      "Permanently delete a membership from the entity. **Requires MASTER_ADMIN or active ADMIN membership in the entity.**",
+    description: "Delete a membership. Requires MASTER_ADMIN or entity ADMIN.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({
@@ -309,7 +307,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
           },
         },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -319,7 +317,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     tags: ["Entities"],
     summary: "List all cargos for an entity",
     description:
-      "Public endpoint returning the list of cargos (role titles) defined for this entity. Cargos are used as the `cargoId` field when creating or updating memberships.",
+      "List cargos (role titles) defined for this entity. Used as `cargoId` when creating memberships.",
     request: {
       params: z.object({ id: z.string().uuid() }),
     },
@@ -328,7 +326,6 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "List of cargos.",
         content: { "application/json": { schema: z.array(cargoResponseSchema) } },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -337,8 +334,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     path: "/entidades/{id}/cargos",
     tags: ["Entities"],
     summary: "Create a new cargo for an entity",
-    description:
-      "Define a new cargo (role title) in the entity. **Requires MASTER_ADMIN or active ADMIN membership in the entity.**",
+    description: "Create a new cargo. Requires MASTER_ADMIN or entity ADMIN.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -361,7 +357,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "Cargo created.",
         content: { "application/json": { schema: cargoResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -371,7 +367,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     tags: ["Entities"],
     summary: "Update a cargo for an entity",
     description:
-      "Update an existing cargo. **Unusual pattern:** the cargo id is sent in the **request body** (as `cargoId`), not in the URL. All other update fields are optional. **Requires MASTER_ADMIN or active ADMIN membership in the entity.**",
+      "Update a cargo. **Unusual:** `cargoId` is in the body, not the URL. Requires MASTER_ADMIN or entity ADMIN.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -390,7 +386,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "Cargo updated.",
         content: { "application/json": { schema: cargoResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -400,7 +396,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     tags: ["Entities"],
     summary: "Delete a cargo from an entity",
     description:
-      "Delete a cargo. **Unusual pattern:** the cargo id is sent as a `?cargoId=` query parameter, not in the URL path. **Requires MASTER_ADMIN or active ADMIN membership in the entity.**",
+      "Delete a cargo. **Unusual:** cargo id is a `?cargoId=` query param, not in the URL. Requires MASTER_ADMIN or entity ADMIN.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -421,7 +417,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
           },
         },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 }

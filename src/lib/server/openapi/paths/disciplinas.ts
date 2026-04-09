@@ -64,7 +64,6 @@ export function registerDisciplinasPaths(registry: OpenAPIRegistry, schemas: Com
           },
         },
       },
-      ...errorResponses([500]),
     },
   });
 }

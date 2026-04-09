@@ -66,27 +66,24 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
     tags: ["Academic Calendar"],
     summary: "List semesters (or get the active one)",
     description:
-      "Public endpoint for reading semesters from the academic calendar.\n\n**Response shape depends on the `ativo` query parameter:**\n- Without `?ativo=true`: returns an array of all semesters.\n- With `?ativo=true`: returns the currently active semester as a single object, or `null` if no semester is currently active.\n\nConsumers must inspect the response type and handle both cases.",
+      "List semesters. Pass `?ativo=true` to get only the currently active semester (as a single object or `null`).",
     request: {
       query: z.object({
         ativo: z.enum(["true", "false"]).optional().openapi({
-          description:
-            "Set to 'true' to receive only the active semester as a single object (or null) instead of the full list.",
+          description: "If `true`, return only the active semester.",
           example: "true",
         }),
       }),
     },
     responses: {
       200: {
-        description:
-          "Either an array of semesters (default) or a single semester object/null (when `?ativo=true`).",
+        description: "Array of semesters, or a single semester when `?ativo=true`.",
         content: {
           "application/json": {
             schema: z.union([z.array(semestreResponseSchema), semestreResponseSchema.nullable()]),
           },
         },
       },
-      ...errorResponses([500]),
     },
   });
 
@@ -96,7 +93,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
     tags: ["Academic Calendar"],
     summary: "Create a new semester (admin only)",
     description:
-      "Admin-only endpoint to create a new academic semester. Returns 409 with `SEMESTRE_NOME_EXISTS` if a semester with the same name already exists.",
+      "Create a new semester. Returns 409 with `SEMESTRE_NOME_EXISTS` if the name already exists.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -118,7 +115,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Semester created.",
         content: { "application/json": { schema: semestreResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 409, 500]),
+      ...errorResponses([400, 409]),
     },
   });
 
@@ -137,7 +134,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Semester details.",
         content: { "application/json": { schema: semestreResponseSchema } },
       },
-      ...errorResponses([404, 500]),
+      ...errorResponses([404]),
     },
   });
 
@@ -166,7 +163,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Semester updated.",
         content: { "application/json": { schema: semestreResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 409, 500]),
+      ...errorResponses([400, 404, 409]),
     },
   });
 
@@ -191,7 +188,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
           },
         },
       },
-      ...errorResponses([401, 403, 404, 500]),
+      ...errorResponses([404]),
     },
   });
 
@@ -210,7 +207,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "List of events for the semester.",
         content: { "application/json": { schema: z.array(eventoResponseSchema) } },
       },
-      ...errorResponses([404, 500]),
+      ...errorResponses([404]),
     },
   });
 
@@ -244,7 +241,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Event created.",
         content: { "application/json": { schema: eventoResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -279,7 +276,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Event updated.",
         content: { "application/json": { schema: eventoResponseSchema } },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 
@@ -306,7 +303,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
           },
         },
       },
-      ...errorResponses([401, 403, 404, 500]),
+      ...errorResponses([404]),
     },
   });
 
@@ -355,7 +352,7 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
           },
         },
       },
-      ...errorResponses([400, 401, 403, 404, 500]),
+      ...errorResponses([400, 404]),
     },
   });
 }
