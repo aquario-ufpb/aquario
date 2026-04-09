@@ -105,7 +105,7 @@ describe("register", () => {
     const deps = makeDeps();
 
     await expect(register({ ...validInput, email: "test@gmail.com" }, deps)).rejects.toThrow(
-      "Apenas emails acadêmicos"
+      "Apenas e-mails institucionais"
     );
   });
 
