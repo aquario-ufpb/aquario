@@ -6,7 +6,7 @@ import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
-const patchSchema = z.object({
+export const patchSchema = z.object({
   periodoAtual: z.string().min(1).nullable(),
 });
 

@@ -13,7 +13,7 @@ const stepStateSchema = z
   })
   .strict();
 
-const patchSchema = z
+export const patchSchema = z
   .object({
     welcome: z.object({ completedAt: z.string() }).strict().optional(),
     periodo: stepStateSchema.optional(),

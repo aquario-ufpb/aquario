@@ -9,7 +9,7 @@ import { ApiError, fromZodError } from "@/lib/server/errors";
 
 const log = createLogger("Photo");
 
-const updatePhotoSchema = z.object({
+export const updatePhotoSchema = z.object({
   urlFotoPerfil: z.string().url().nullable().optional(),
 });
 

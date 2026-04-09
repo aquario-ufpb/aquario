@@ -9,7 +9,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-const updateRoleSchema = z.object({
+export const updateRoleSchema = z.object({
   papelPlataforma: z.enum(["USER", "MASTER_ADMIN"]),
 });
 

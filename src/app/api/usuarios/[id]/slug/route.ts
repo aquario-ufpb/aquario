@@ -9,7 +9,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-const updateSlugSchema = z.object({
+export const updateSlugSchema = z.object({
   slug: z.string().nullable(),
 });
 

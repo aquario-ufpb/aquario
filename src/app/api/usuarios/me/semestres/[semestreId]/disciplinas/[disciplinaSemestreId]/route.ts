@@ -10,7 +10,7 @@ type RouteContext = {
   params: Promise<{ semestreId: string; disciplinaSemestreId: string }>;
 };
 
-const patchSchema = z.object({
+export const patchSchema = z.object({
   turma: z.string().nullish(),
   docente: z.string().nullish(),
   horario: z.string().nullish(),

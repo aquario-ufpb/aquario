@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ semestreId: string }> };
 
-const saveSchema = z.object({
+export const saveSchema = z.object({
   disciplinas: z.array(
     z.object({
       codigoDisciplina: z.string().min(1),

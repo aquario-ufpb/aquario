@@ -6,7 +6,7 @@ import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
-const marcarSchema = z.object({
+export const marcarDisciplinasSchema = z.object({
   disciplinaIds: z.array(z.string().uuid()).min(1),
   status: z.enum(["concluida", "cursando", "none"]),
 });
@@ -25,7 +25,7 @@ export function POST(request: Request) {
       } catch {
         return ApiError.badRequest("Corpo da requisição inválido");
       }
-      const parsed = marcarSchema.safeParse(body);
+      const parsed = marcarDisciplinasSchema.safeParse(body);
       if (!parsed.success) {
         return ApiError.badRequest("disciplinaIds deve ser um array de UUIDs e status válido");
       }

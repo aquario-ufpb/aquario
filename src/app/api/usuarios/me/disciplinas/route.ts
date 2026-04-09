@@ -6,7 +6,7 @@ import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
-const updateSchema = z.object({
+export const updateCompletedDisciplinasSchema = z.object({
   disciplinaIds: z.array(z.string().uuid()),
 });
 
@@ -36,7 +36,7 @@ export function PUT(request: Request) {
   return withAuth(request, async (req, usuario) => {
     try {
       const body = await req.json();
-      const parsed = updateSchema.safeParse(body);
+      const parsed = updateCompletedDisciplinasSchema.safeParse(body);
 
       if (!parsed.success) {
         return ApiError.badRequest("disciplinaIds deve ser um array de UUIDs válidos");

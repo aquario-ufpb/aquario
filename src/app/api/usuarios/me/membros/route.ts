@@ -9,7 +9,7 @@ const dateStringSchema = z
   .string()
   .refine(v => !isNaN(Date.parse(v)), { message: "Data inválida" });
 
-const createOwnMembershipSchema = z.object({
+export const createOwnMembershipSchema = z.object({
   entidadeId: z.string().uuid("ID de entidade inválido"),
   papel: z.enum(["ADMIN", "MEMBRO"]).optional().default("MEMBRO"),
   cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),

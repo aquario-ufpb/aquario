@@ -3,6 +3,7 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { registerAuthPaths } from "./auth";
 import { registerMiscPaths } from "./misc";
 import { registerSearchPaths } from "./search";
+import { registerUsuariosPaths } from "./usuarios";
 
 /**
  * Register every path in the OpenAPI registry. Called once by the generator
@@ -14,6 +15,7 @@ import { registerSearchPaths } from "./search";
  */
 export function registerAllPaths(registry: OpenAPIRegistry): void {
   registerAuthPaths(registry);
+  registerUsuariosPaths(registry);
   registerSearchPaths(registry);
   registerMiscPaths(registry);
 }

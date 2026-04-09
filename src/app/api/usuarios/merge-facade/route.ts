@@ -6,7 +6,7 @@ import { mergeFacadeUser } from "@/lib/server/services/admin/merge-facade-user";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 
-const mergeFacadeUserSchema = z.object({
+export const mergeFacadeUserSchema = z.object({
   facadeUserId: z.string().uuid("ID de usuário facade inválido"),
   realUserId: z.string().uuid("ID de usuário real inválido"),
   deleteFacade: z.boolean().default(true),

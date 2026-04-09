@@ -9,7 +9,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-const updateUserInfoSchema = z.object({
+export const updateUserInfoSchema = z.object({
   centroId: z.string().optional(),
   cursoId: z.string().optional(),
 });
