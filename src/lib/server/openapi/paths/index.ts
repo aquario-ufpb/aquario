@@ -1,10 +1,14 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
 import { registerAuthPaths } from "./auth";
+import { registerCalendarioPaths } from "./calendario";
 import { registerCampusPaths } from "./campus";
 import { registerCentrosPaths } from "./centros";
+import { registerCurriculosPaths } from "./curriculos";
 import { registerCursosPaths } from "./cursos";
+import { registerDisciplinasPaths } from "./disciplinas";
 import { registerEntidadesPaths } from "./entidades";
+import { registerGuiasPaths } from "./guias";
 import { registerMiscPaths } from "./misc";
 import { registerSearchPaths } from "./search";
 import { registerUsuariosPaths } from "./usuarios";
@@ -23,9 +27,13 @@ export function registerAllPaths(registry: OpenAPIRegistry): void {
   registerUsuariosPaths(registry);
   registerEntidadesPaths(registry);
   registerVagasPaths(registry);
+  registerGuiasPaths(registry);
   registerCursosPaths(registry);
   registerCentrosPaths(registry);
   registerCampusPaths(registry);
+  registerDisciplinasPaths(registry);
+  registerCurriculosPaths(registry);
+  registerCalendarioPaths(registry);
   registerSearchPaths(registry);
   registerMiscPaths(registry);
 }

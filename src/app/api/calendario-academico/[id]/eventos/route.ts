@@ -29,7 +29,7 @@ const dateString = z
   .min(1, "Data é obrigatória")
   .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
 
-const createEventoSchema = z.object({
+export const createEventoSchema = z.object({
   descricao: z.string().min(1, "Descrição é obrigatória"),
   dataInicio: dateString,
   dataFim: dateString,

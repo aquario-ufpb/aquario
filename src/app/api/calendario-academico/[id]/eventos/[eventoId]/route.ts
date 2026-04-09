@@ -12,7 +12,7 @@ const dateString = z
   .string()
   .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
 
-const updateEventoSchema = z.object({
+export const updateEventoSchema = z.object({
   descricao: z.string().min(1).optional(),
   dataInicio: dateString.optional(),
   dataFim: dateString.optional(),

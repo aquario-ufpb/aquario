@@ -29,7 +29,7 @@ const dateString = z
   .min(1, "Data é obrigatória")
   .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
 
-const createSemestreSchema = z.object({
+export const createSemestreSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
   dataInicio: dateString,
   dataFim: dateString,

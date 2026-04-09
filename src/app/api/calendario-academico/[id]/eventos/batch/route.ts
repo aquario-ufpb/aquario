@@ -12,7 +12,7 @@ const dateString = z
   .min(1, "Data é obrigatória")
   .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
 
-const batchCreateSchema = z.object({
+export const batchCreateSchema = z.object({
   eventos: z.array(
     z.object({
       descricao: z.string().min(1),

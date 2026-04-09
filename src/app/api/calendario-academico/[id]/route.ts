@@ -26,7 +26,7 @@ const dateString = z
   .string()
   .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
 
-const updateSemestreSchema = z.object({
+export const updateSemestreSchema = z.object({
   nome: z.string().min(1).optional(),
   dataInicio: dateString.optional(),
   dataFim: dateString.optional(),
