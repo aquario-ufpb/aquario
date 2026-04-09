@@ -1,24 +1,26 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Image as ImageIcon, Upload } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import { useUploadProjetoImage, useCreateProjeto } from "@/lib/client/hooks/use-criar-projeto";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { toast } from "sonner";
 
 export function CriarProjetoForm() {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [titulo, setTitulo] = useState("");
   const [subtitulo, setSubtitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string>("");
-  
+
   const uploadMutation = useUploadProjetoImage();
   const createMutation = useCreateProjeto();
   const { data: currentUser } = useCurrentUser();
@@ -27,36 +29,40 @@ export function CriarProjetoForm() {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validar tipo de arquivo
+  const processFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       toast.error("Selecione uma imagem válida");
       return;
     }
 
-    // Validar tamanho (máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Imagem muito grande (máximo 5MB)");
       return;
     }
 
+    const toastId = toast.loading("Enviando imagem...");
     try {
-      toast.loading("Enviando imagem...");
       const url = await uploadMutation.mutateAsync(file);
       setImageUrl(url);
       setImageName(file.name);
-      toast.dismiss();
-    } catch (error) {
-      toast.error("Erro ao enviar imagem");
+      toast.success("Imagem enviada!", { id: toastId });
+    } catch (_error) {
+      toast.error("Erro ao enviar imagem", { id: toastId });
     }
   };
 
-  const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     const items = e.clipboardData?.items;
-    if (!items) return;
+    if (!items) {
+      return;
+    }
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -64,10 +70,7 @@ export function CriarProjetoForm() {
         const file = item.getAsFile();
         if (file) {
           e.preventDefault();
-          const event = {
-            target: { files: [file] },
-          } as any;
-          handleFileChange(event);
+          processFile(file);
         }
       }
     }
@@ -91,7 +94,13 @@ export function CriarProjetoForm() {
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9\s-]/g, "")
       .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    if (!slug) {
+      toast.error("Título deve conter letras ou números");
+      return;
+    }
 
     try {
       await createMutation.mutateAsync({
@@ -127,16 +136,15 @@ export function CriarProjetoForm() {
     <div className="max-w-2xl mx-auto space-y-6">
       <Card className="p-6">
         {/* Imagem */}
-        <div 
+        <div
           className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted transition mb-6"
           onClick={handleImageClick}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
+          onDragOver={e => e.preventDefault()}
+          onDrop={e => {
             e.preventDefault();
             const file = e.dataTransfer.files[0];
             if (file?.type.startsWith("image/")) {
-              const event = { target: { files: [file] } } as any;
-              handleFileChange(event);
+              processFile(file);
             }
           }}
           onPaste={handlePaste}
@@ -175,7 +183,7 @@ export function CriarProjetoForm() {
               id="titulo"
               placeholder="Nome do projeto"
               value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
+              onChange={e => setTitulo(e.target.value)}
               className="mt-2"
             />
           </div>
@@ -186,7 +194,7 @@ export function CriarProjetoForm() {
               id="subtitulo"
               placeholder="Descrição breve"
               value={subtitulo}
-              onChange={(e) => setSubtitulo(e.target.value)}
+              onChange={e => setSubtitulo(e.target.value)}
               className="mt-2"
             />
           </div>
@@ -197,18 +205,17 @@ export function CriarProjetoForm() {
               id="descricao"
               placeholder="Descrição detalhada do projeto (markdown)"
               value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
+              onChange={e => setDescricao(e.target.value)}
               className="mt-2 min-h-[200px]"
             />
           </div>
 
           {/* Botões */}
           <div className="flex gap-2 justify-end pt-4">
-            <Button variant="outline">Cancelar</Button>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={!titulo || createMutation.isPending}
-            >
+            <Button variant="outline" onClick={() => router.back()}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSubmit} disabled={!titulo || createMutation.isPending}>
               {createMutation.isPending ? "Salvando..." : "Continuar"}
             </Button>
           </div>

@@ -9,7 +9,7 @@ export const useUploadProjetoImage = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/upload/projeto-image", {
+      const response = await apiClient("/upload/projeto-image", {
         method: "POST",
         body: formData,
       });
@@ -41,7 +41,7 @@ export const useCreateProjeto = () => {
     onSuccess: () => {
       toast.success("Projeto criado com sucesso!");
     },
-    onError: (error) => {
+    onError: error => {
       toast.error("Erro ao criar projeto", {
         description: error.message,
       });

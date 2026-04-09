@@ -23,7 +23,7 @@ export function POST(req: NextRequest) {
 
     const container = getContainer();
     const buffer = Buffer.from(await file.arrayBuffer());
-    
+
     // Upload para blob storage (Vercel Blob ou local)
     const timestamp = Date.now();
     const url = await container.blobStorage.upload(
@@ -46,18 +46,28 @@ export function DELETE(req: NextRequest) {
         return NextResponse.json({ error: "URL não fornecida" }, { status: 400 });
       }
 
-      if (!url.includes(`projetos/${usuario.id}-`)) {
-        return NextResponse.json({ error: "Não autorizado a deletar este arquivo" }, { status: 403 });
+      // Validate URL structure to prevent authorization bypass
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(url);
+      } catch {
+        return NextResponse.json({ error: "URL inválida" }, { status: 400 });
+      }
+
+      const pathSegments = parsedUrl.pathname.split("/");
+      const projetosIndex = pathSegments.findIndex(s => s === "projetos");
+      if (projetosIndex === -1 || !pathSegments[projetosIndex + 1]?.startsWith(`${usuario.id}-`)) {
+        return NextResponse.json(
+          { error: "Não autorizado a deletar este arquivo" },
+          { status: 403 }
+        );
       }
 
       const container = getContainer();
       const deleted = await container.blobStorage.delete(url);
 
-      if (deleted) {
-        return NextResponse.json({ success: true }, { status: 200 });
-      } else {
-        return NextResponse.json({ error: "Arquivo não encontrado ou erro ao deletar" }, { status: 404 });
-      }
+      // Idempotent delete — return success regardless
+      return NextResponse.json({ success: true, deleted }, { status: 200 });
     } catch (error) {
       console.error("Erro ao deletar imagem:", error);
       return NextResponse.json({ error: "Erro interno ao deletar imagem" }, { status: 500 });

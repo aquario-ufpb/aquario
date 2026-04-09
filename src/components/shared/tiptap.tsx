@@ -14,19 +14,18 @@ import {
   Strikethrough,
   Code,
   Link as LinkIcon,
-  Image as ImageIcon,
 } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { tokenManager } from "@/lib/client/api/token-manager";
+import { apiClient } from "@/lib/client/api/api-client";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-interface TiptapProps {
+type TiptapProps = {
   value: string;
   onChange: (value: string) => void;
   onImageUpload?: (url: string) => void;
-}
+};
 
 const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
   const handleImageUpload = useCallback(
@@ -35,7 +34,7 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         toast.error("Por favor, selecione uma imagem.");
         return null;
       }
-      
+
       if (file.size > MAX_FILE_SIZE) {
         toast.error("A imagem selecionada é muito grande (máximo 5MB).");
         return null;
@@ -46,11 +45,8 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/upload/projeto-image", {
+        const response = await apiClient("/upload/projeto-image", {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${tokenManager.getToken()}`
-          },
           body: formData,
         });
 
@@ -67,7 +63,7 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
 
         toast.success("Upload concluído com sucesso!", { id: loadingToastId });
         return url;
-      } catch (error) {
+      } catch (_error) {
         toast.error("Erro ao fazer upload da imagem", { id: loadingToastId });
         return null;
       }
@@ -97,15 +93,19 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         class:
           "prose dark:prose-invert prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none border rounded-b-md p-4 min-h-[300px]",
       },
-      handlePaste: function (view, event, slice) {
+      handlePaste: function (view, event, _slice) {
         const items = Array.from(event.clipboardData?.items || []);
-        const imageItems = items.filter((item) => item.type.startsWith("image"));
-        if (imageItems.length === 0) return false;
+        const imageItems = items.filter(item => item.type.startsWith("image"));
+        if (imageItems.length === 0) {
+          return false;
+        }
 
         const handleImages = async () => {
           for (const item of imageItems) {
             const file = item.getAsFile();
-            if (!file) continue;
+            if (!file) {
+              continue;
+            }
 
             const url = await handleImageUpload(file);
             if (url) {
@@ -119,19 +119,26 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         handleImages();
         return true; // Prevents default behavior
       },
-      handleDrop: function (view, event, slice, moved) {
-        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+      handleDrop: function (view, event, _slice, moved) {
+        if (
+          !moved &&
+          event.dataTransfer &&
+          event.dataTransfer.files &&
+          event.dataTransfer.files[0]
+        ) {
           const files = event.dataTransfer.files;
           const handleImages = async () => {
             const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
+            let offset = 0;
             for (let i = 0; i < files.length; i++) {
               const file = files[i];
               if (file.type.startsWith("image")) {
                 const url = await handleImageUpload(file);
                 if (url && coordinates) {
                   const node = view.state.schema.nodes.image.create({ src: url });
-                  const transaction = view.state.tr.insert(coordinates.pos, node);
+                  const transaction = view.state.tr.insert(coordinates.pos + offset, node);
                   view.dispatch(transaction);
+                  offset += node.nodeSize;
                 }
               }
             }
