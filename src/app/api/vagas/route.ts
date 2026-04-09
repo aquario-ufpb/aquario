@@ -5,37 +5,7 @@ import { getContainer } from "@/lib/server/container";
 import { withAuth, canManageVagaForEntidade } from "@/lib/server/services/auth/middleware";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { mapVagaToJson } from "@/lib/server/utils/vaga-mapper";
-
-const TIPO_VAGA_VALUES = [
-  "ESTAGIO",
-  "TRAINEE",
-  "VOLUNTARIO",
-  "PESQUISA",
-  "CLT",
-  "PJ",
-  "OUTRO",
-] as const;
-
-export const createVagaSchema = z.object({
-  titulo: z.string().min(1, "Título é obrigatório").max(200, "Título muito longo"),
-  descricao: z.string().min(1, "Descrição é obrigatória").max(10000, "Descrição muito longa"),
-  tipoVaga: z.enum(TIPO_VAGA_VALUES),
-  entidadeId: z.string().uuid("ID de entidade inválido"),
-  linkInscricao: z
-    .string()
-    .url("Link para inscrição deve ser uma URL válida")
-    .max(2048, "URL muito longa"),
-  dataFinalizacao: z.string().refine(v => !isNaN(Date.parse(v)), {
-    message: "Data de finalização inválida",
-  }),
-  areas: z.array(z.string().min(1).max(100)).max(20).optional().default([]),
-  salario: z.string().max(100, "Salário muito longo").nullable().optional(),
-  sobreEmpresa: z.string().max(5000, "Texto muito longo").nullable().optional(),
-  responsabilidades: z.array(z.string().min(1).max(500)).max(30).optional().default([]),
-  requisitos: z.array(z.string().min(1).max(500)).max(30).optional().default([]),
-  informacoesAdicionais: z.string().max(5000, "Texto muito longo").nullable().optional(),
-  etapasProcesso: z.array(z.string().min(1).max(500)).max(20).optional().default([]),
-});
+import { createVagaSchema, TIPO_VAGA_VALUES } from "@/lib/server/api-schemas/vagas";
 
 export async function GET(request: Request) {
   try {

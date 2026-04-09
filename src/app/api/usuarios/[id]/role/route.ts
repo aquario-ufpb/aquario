@@ -4,14 +4,11 @@ import { z } from "zod";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
+import { updateRoleSchema } from "@/lib/server/api-schemas/usuarios";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-export const updateRoleSchema = z.object({
-  papelPlataforma: z.enum(["USER", "MASTER_ADMIN"]),
-});
 
 export function PATCH(request: Request, context: RouteContext) {
   return withAdmin(request, async (req, currentUser) => {

@@ -1,11 +1,13 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { createSemestreSchema } from "@/app/api/calendario-academico/route";
-import { updateSemestreSchema } from "@/app/api/calendario-academico/[id]/route";
-import { createEventoSchema } from "@/app/api/calendario-academico/[id]/eventos/route";
-import { updateEventoSchema } from "@/app/api/calendario-academico/[id]/eventos/[eventoId]/route";
-import { batchCreateSchema } from "@/app/api/calendario-academico/[id]/eventos/batch/route";
+import {
+  createSemestreSchema,
+  updateSemestreSchema,
+  createEventoSchema,
+  updateEventoSchema,
+  batchCreateSchema,
+} from "@/lib/server/api-schemas/calendario";
 import { ALL_CATEGORIAS } from "@/lib/shared/config/calendario-academico";
 
 import type { CommonSchemas } from "../common-schemas";

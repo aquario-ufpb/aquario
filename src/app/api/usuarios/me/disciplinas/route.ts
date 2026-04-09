@@ -2,13 +2,9 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import { getContainer } from "@/lib/server/container";
-import { z } from "zod";
+import { updateCompletedDisciplinasSchema } from "@/lib/server/api-schemas/usuarios";
 
 export const dynamic = "force-dynamic";
-
-export const updateCompletedDisciplinasSchema = z.object({
-  disciplinaIds: z.array(z.string().uuid()),
-});
 
 /**
  * GET /api/usuarios/me/disciplinas

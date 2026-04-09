@@ -4,22 +4,11 @@ import { z } from "zod";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
+import { createCargoSchema, updateCargoSchema } from "@/lib/server/api-schemas/entidades";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-export const createCargoSchema = z.object({
-  nome: z.string().min(1, "Nome do cargo é obrigatório"),
-  descricao: z.string().nullable().optional(),
-  ordem: z.number().int().default(0),
-});
-
-export const updateCargoSchema = z.object({
-  nome: z.string().min(1, "Nome do cargo é obrigatório").optional(),
-  descricao: z.string().nullable().optional(),
-  ordem: z.number().int().optional(),
-});
 
 // GET - List all cargos for an entidade
 export async function GET(_request: Request, context: RouteContext) {

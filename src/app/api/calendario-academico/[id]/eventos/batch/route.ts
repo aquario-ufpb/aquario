@@ -3,26 +3,9 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
-import { ALL_CATEGORIAS } from "@/lib/shared/config/calendario-academico";
+import { batchCreateSchema } from "@/lib/server/api-schemas/calendario";
 
 type RouteContext = { params: Promise<{ id: string }> };
-
-const dateString = z
-  .string()
-  .min(1, "Data é obrigatória")
-  .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
-
-export const batchCreateSchema = z.object({
-  eventos: z.array(
-    z.object({
-      descricao: z.string().min(1),
-      dataInicio: dateString,
-      dataFim: dateString,
-      categoria: z.enum(ALL_CATEGORIAS).default("OUTRA"),
-    })
-  ),
-  replace: z.boolean().default(false),
-});
 
 export function POST(request: Request, context: RouteContext) {
   return withAdmin(request, async req => {

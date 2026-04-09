@@ -2,20 +2,13 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import { getContainer } from "@/lib/server/container";
-import { z } from "zod";
+import { updateDisciplinaSemestreSchema } from "@/lib/server/api-schemas/usuarios";
 
 export const dynamic = "force-dynamic";
 
 type RouteContext = {
   params: Promise<{ semestreId: string; disciplinaSemestreId: string }>;
 };
-
-export const patchSchema = z.object({
-  turma: z.string().nullish(),
-  docente: z.string().nullish(),
-  horario: z.string().nullish(),
-  codigoPaas: z.number().int().nullish(),
-});
 
 async function resolveSemestreId(semestreId: string): Promise<string | null> {
   if (semestreId === "ativo") {
@@ -59,7 +52,7 @@ export function PATCH(request: Request, context: RouteContext) {
       } catch {
         return ApiError.badRequest("Corpo da requisição inválido");
       }
-      const parsed = patchSchema.safeParse(body);
+      const parsed = updateDisciplinaSemestreSchema.safeParse(body);
       if (!parsed.success) {
         return ApiError.badRequest("Dados inválidos");
       }

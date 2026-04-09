@@ -4,15 +4,11 @@ import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { z } from "zod";
 import { ApiError, fromZodError } from "@/lib/server/errors";
+import { updateUserInfoSchema } from "@/lib/server/api-schemas/usuarios";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-export const updateUserInfoSchema = z.object({
-  centroId: z.string().optional(),
-  cursoId: z.string().optional(),
-});
 
 export function PATCH(request: Request, context: RouteContext) {
   return withAdmin(request, async req => {

@@ -1,12 +1,14 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { loginSchema } from "@/app/api/auth/login/route";
-import { registerSchema } from "@/app/api/auth/register/route";
-import { verifySchema } from "@/app/api/auth/verificar-email/route";
-import { forgotPasswordSchema } from "@/app/api/auth/esqueci-senha/route";
-import { resetPasswordSchema } from "@/app/api/auth/resetar-senha/route";
-import { resendVerificationRequestSchema } from "@/app/api/auth/solicitar-reenvio-verificacao/route";
+import {
+  loginSchema,
+  registerSchema,
+  verifySchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  resendVerificationRequestSchema,
+} from "@/lib/server/api-schemas/auth";
 
 import type { CommonSchemas } from "../common-schemas";
 

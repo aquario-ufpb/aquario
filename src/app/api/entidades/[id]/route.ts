@@ -4,35 +4,11 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError, fromZodError } from "@/lib/server/errors";
+import { updateEntidadeSchema } from "@/lib/server/api-schemas/entidades";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-export const updateEntidadeSchema = z.object({
-  nome: z.string().optional(),
-  subtitle: z.string().nullable().optional(),
-  descricao: z.string().nullable().optional(),
-  tipo: z
-    .enum([
-      "LABORATORIO",
-      "GRUPO",
-      "LIGA_ACADEMICA",
-      "EMPRESA",
-      "ATLETICA",
-      "CENTRO_ACADEMICO",
-      "OUTRO",
-    ])
-    .optional(),
-  urlFoto: z.string().nullable().optional(),
-  contato: z.string().nullable().optional(),
-  instagram: z.string().nullable().optional(),
-  linkedin: z.string().nullable().optional(),
-  website: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  foundingDate: z.string().nullable().optional(),
-  slug: z.string().optional(),
-});
 
 export function PUT(request: Request, context: RouteContext) {
   return withAuth(request, async (req, usuario) => {

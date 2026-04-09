@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
+import { updateSemestreSchema } from "@/lib/server/api-schemas/calendario";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -21,16 +22,6 @@ export async function GET(_request: Request, context: RouteContext) {
     return ApiError.internal("Erro ao buscar semestre");
   }
 }
-
-const dateString = z
-  .string()
-  .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
-
-export const updateSemestreSchema = z.object({
-  nome: z.string().min(1).optional(),
-  dataInicio: dateString.optional(),
-  dataFim: dateString.optional(),
-});
 
 export function PUT(request: Request, context: RouteContext) {
   return withAdmin(request, async req => {

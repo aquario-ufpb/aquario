@@ -5,12 +5,7 @@ import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { mergeFacadeUser } from "@/lib/server/services/admin/merge-facade-user";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
-
-export const mergeFacadeUserSchema = z.object({
-  facadeUserId: z.string().uuid("ID de usuário facade inválido"),
-  realUserId: z.string().uuid("ID de usuário real inválido"),
-  deleteFacade: z.boolean().default(true),
-});
+import { mergeFacadeUserSchema } from "@/lib/server/api-schemas/usuarios";
 
 export async function POST(request: Request) {
   return await withAdmin(request, async () => {

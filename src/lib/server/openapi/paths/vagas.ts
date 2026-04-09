@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { createVagaSchema } from "@/app/api/vagas/route";
+import { createVagaSchema } from "@/lib/server/api-schemas/vagas";
 
 import type { CommonSchemas } from "../common-schemas";
 

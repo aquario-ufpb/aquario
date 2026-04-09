@@ -4,10 +4,7 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { verifyEmail } from "@/lib/server/services/auth/verify-email";
 import { ApiError, fromZodError } from "@/lib/server/errors";
-
-export const verifySchema = z.object({
-  token: z.string().min(1, "Token é obrigatório"),
-});
+import { verifySchema } from "@/lib/server/api-schemas/auth";
 
 export async function POST(request: Request) {
   try {

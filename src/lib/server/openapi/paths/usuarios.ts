@@ -1,20 +1,22 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { updateUserInfoSchema } from "@/app/api/usuarios/[id]/info/route";
-import { updateRoleSchema } from "@/app/api/usuarios/[id]/role/route";
-import { updateSlugSchema } from "@/app/api/usuarios/[id]/slug/route";
-import { createFacadeUserSchema } from "@/app/api/usuarios/facade/route";
-import { mergeFacadeUserSchema } from "@/app/api/usuarios/merge-facade/route";
-import { updateCompletedDisciplinasSchema } from "@/app/api/usuarios/me/disciplinas/route";
-import { marcarDisciplinasSchema } from "@/app/api/usuarios/me/disciplinas/marcar/route";
-import { createOwnMembershipSchema } from "@/app/api/usuarios/me/membros/route";
-import { updateOwnMembershipSchema } from "@/app/api/usuarios/me/membros/[membroId]/route";
-import { patchSchema as onboardingPatchSchema } from "@/app/api/usuarios/me/onboarding/route";
-import { patchSchema as updatePeriodoSchema } from "@/app/api/usuarios/me/periodo/route";
-import { updatePhotoSchema } from "@/app/api/usuarios/me/photo/route";
-import { saveSchema as saveSemestreDisciplinasSchema } from "@/app/api/usuarios/me/semestres/[semestreId]/disciplinas/route";
-import { patchSchema as updateDisciplinaSemestreSchema } from "@/app/api/usuarios/me/semestres/[semestreId]/disciplinas/[disciplinaSemestreId]/route";
+import {
+  updateUserInfoSchema,
+  updateRoleSchema,
+  updateSlugSchema,
+  createFacadeUserSchema,
+  mergeFacadeUserSchema,
+  updateCompletedDisciplinasSchema,
+  marcarDisciplinasSchema,
+  createOwnMembershipSchema,
+  updateOwnMembershipSchema,
+  onboardingPatchSchema,
+  updatePeriodoSchema,
+  updatePhotoSchema,
+  saveSemestreDisciplinasSchema,
+  updateDisciplinaSemestreSchema,
+} from "@/lib/server/api-schemas/usuarios";
 
 import type { CommonSchemas } from "../common-schemas";
 

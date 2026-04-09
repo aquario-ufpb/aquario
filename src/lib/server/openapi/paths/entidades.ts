@@ -1,10 +1,13 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { updateEntidadeSchema } from "@/app/api/entidades/[id]/route";
-import { addMemberSchema } from "@/app/api/entidades/[id]/membros/route";
-import { updateMemberSchema } from "@/app/api/entidades/[id]/membros/[membroId]/route";
-import { createCargoSchema, updateCargoSchema } from "@/app/api/entidades/[id]/cargos/route";
+import {
+  updateEntidadeSchema,
+  addMemberSchema,
+  updateMemberSchema,
+  createCargoSchema,
+  updateCargoSchema,
+} from "@/lib/server/api-schemas/entidades";
 
 import type { CommonSchemas } from "../common-schemas";
 

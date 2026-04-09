@@ -4,18 +4,11 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError, fromZodError } from "@/lib/server/errors";
+import { addMemberSchema } from "@/lib/server/api-schemas/entidades";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-export const addMemberSchema = z.object({
-  usuarioId: z.string().uuid("ID de usuário inválido"),
-  papel: z.enum(["ADMIN", "MEMBRO"]),
-  cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
-  startedAt: z.string().optional(), // ISO date string
-  endedAt: z.string().nullable().optional(), // ISO date string or null
-});
 
 export async function POST(request: Request, context: RouteContext) {
   return await withAuth(request, async (req, usuario) => {

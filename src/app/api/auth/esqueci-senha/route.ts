@@ -4,10 +4,7 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { forgotPassword } from "@/lib/server/services/auth/forgot-password";
 import { fromZodError } from "@/lib/server/errors";
-
-export const forgotPasswordSchema = z.object({
-  email: z.string().email("Email inválido"),
-});
+import { forgotPasswordSchema } from "@/lib/server/api-schemas/auth";
 
 export async function POST(request: Request) {
   try {

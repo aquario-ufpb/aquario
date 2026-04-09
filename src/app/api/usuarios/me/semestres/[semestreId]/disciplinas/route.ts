@@ -2,24 +2,12 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import { getContainer } from "@/lib/server/container";
-import { z } from "zod";
+import { saveSemestreDisciplinasSchema } from "@/lib/server/api-schemas/usuarios";
 import type { DisciplinaSemestreWithDisciplina } from "@/lib/server/db/interfaces/disciplina-semestre-repository.interface";
 
 export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ semestreId: string }> };
-
-export const saveSchema = z.object({
-  disciplinas: z.array(
-    z.object({
-      codigoDisciplina: z.string().min(1),
-      turma: z.string().nullish(),
-      docente: z.string().nullish(),
-      horario: z.string().nullish(),
-      codigoPaas: z.number().int().nullish(),
-    })
-  ),
-});
 
 async function resolveSemestreId(semestreId: string): Promise<string | null> {
   if (semestreId === "ativo") {
@@ -97,7 +85,7 @@ export function PUT(request: Request, context: RouteContext) {
       } catch {
         return ApiError.badRequest("Corpo da requisição inválido");
       }
-      const parsed = saveSchema.safeParse(body);
+      const parsed = saveSemestreDisciplinasSchema.safeParse(body);
       if (!parsed.success) {
         return ApiError.badRequest("Dados de disciplinas inválidos");
       }
