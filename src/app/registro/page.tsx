@@ -117,7 +117,7 @@ export default function Registro() {
               <Input
                 id="email"
                 type="email"
-                placeholder="seu.email@academico.ufpb.br"
+                placeholder="seu.email@subdominio.ufpb.br"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -125,7 +125,7 @@ export default function Registro() {
                 className="h-12"
               />
               <p className="text-xs text-muted-foreground">
-                Apenas emails @academico.ufpb.br são permitidos
+                Apenas emails institucionais da UFPB são permitidos
               </p>
             </div>
 

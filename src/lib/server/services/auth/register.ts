@@ -11,7 +11,7 @@ import { createLogger } from "@/lib/server/utils/logger";
 const log = createLogger("Auth");
 
 // Allowed email domains for registration
-const ALLOWED_EMAIL_DOMAINS = ["@academico.ufpb.br"];
+const ALLOWED_EMAIL_DOMAINS = [".ufpb.br"];
 
 export type RegisterInput = {
   nome: string;
@@ -40,7 +40,18 @@ function isMasterAdminEmail(email: string): boolean {
 }
 
 function isAllowedEmailDomain(email: string): boolean {
-  return ALLOWED_EMAIL_DOMAINS.some(domain => email.toLowerCase().endsWith(domain));
+  const normalized = email.toLowerCase().trim();
+  const atIndex = normalized.lastIndexOf("@");
+
+  // Makes sure the '@' exists and is not the first or last character
+  if (atIndex <= 0 || atIndex === normalized.length - 1) {
+    return false;
+  }
+
+  const domainPart = normalized.slice(atIndex + 1);
+
+  // Checks if the domain part ends with any of the allowed domains
+  return ALLOWED_EMAIL_DOMAINS.some(suffix => domainPart.endsWith(suffix));
 }
 
 function generateToken(): string {
@@ -66,7 +77,7 @@ export async function register(
 
   // Validate email domain (allow MASTER_ADMIN emails regardless of domain)
   if (!isAllowedEmailDomain(normalizedEmail) && !isMasterAdminEmail(normalizedEmail)) {
-    throw new Error("Apenas emails acadêmicos (@academico.ufpb.br) são permitidos.");
+    throw new Error("Apenas e-mails institucionais da UFPB são permitidos.");
   }
 
   // Check if email is already registered
