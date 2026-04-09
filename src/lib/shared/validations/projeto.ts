@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { StatusProjeto, TipoConteudo } from "@prisma/client";
 
 /**
  * Schema de validação para autor do projeto
@@ -23,9 +22,9 @@ const createProjetoBaseSchema = z.object({
   subtitulo: z.string().max(500).optional().nullable(),
   descricao: z.string().max(1000).optional().nullable(),
   textContent: z.string().optional().nullable(),
-  tipoConteudo: z.nativeEnum(TipoConteudo).default(TipoConteudo.MARKDOWN),
+  tipoConteudo: z.enum(["MARKDOWN", "HTML"]).default("MARKDOWN"),
   urlImagem: z.string().url().optional().nullable(),
-  status: z.nativeEnum(StatusProjeto).default(StatusProjeto.RASCUNHO),
+  status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).default("RASCUNHO"),
   tags: z.array(z.string().max(50)).default([]),
   dataInicio: z.coerce.date().optional().nullable(),
   dataFim: z.coerce.date().optional().nullable(),
@@ -72,11 +71,8 @@ export const updateProjetoAutoresSchema = z
     autores: z.array(projetoAutorSchema).min(1, "Pelo menos um autor é obrigatório"),
   })
   .refine(
-    (data: { autores: Array<{ autorPrincipal: boolean }> }) => {
-      const temAutorPrincipal = data.autores.some(
-        (a: { autorPrincipal: boolean }) => a.autorPrincipal
-      );
-      return temAutorPrincipal;
+    data => {
+      return data.autores.some(a => a.autorPrincipal);
     },
     {
       message: "Pelo menos um autor deve ser marcado como principal",
@@ -99,7 +95,7 @@ export const listProjetosSchema = z.object({
 
   limit: z.coerce.number().min(1).max(100).default(10),
 
-  status: z.nativeEnum(StatusProjeto).optional(),
+  status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).optional(),
 
   entidadeId: z.string().uuid().optional(),
 

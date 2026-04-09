@@ -369,12 +369,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
                       ? {
                           id: p.entidade.id,
                           nome: p.entidade.nome,
+                          slug: p.entidade.slug ?? "",
                           urlFotoPerfil: p.entidade.urlFoto ?? null,
                           tipo: "ENTIDADE",
                         }
                       : {
                           id: user.id,
                           nome: user.nome,
+                          slug: user.slug ?? "",
                           urlFotoPerfil: user.urlFotoPerfil ?? null,
                           tipo: "USUARIO",
                         },
@@ -382,6 +384,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
                     colaboradores: (p.autores ?? []).map(a => ({
                       id: a.usuario.id,
                       nome: a.usuario.nome,
+                      slug: a.usuario.slug ?? a.usuario.id,
                       urlFotoPerfil: a.usuario.urlFotoPerfil ?? null,
                     })),
 

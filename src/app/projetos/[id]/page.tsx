@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Projeto, formatProjetoTipo } from "@/components/shared/project-card";
 import { ArrowLeft, Github, ExternalLink } from "lucide-react";
+import { apiClient } from "@/lib/client/api/api-client";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import DOMPurify from "dompurify";
 import Link from "next/link";
@@ -31,7 +32,7 @@ export default function ProjetoPage() {
       try {
         setIsLoading(true);
 
-        const response = await fetch(`/api/projetos/${id}`);
+        const response = await apiClient(`/projetos/${id}`);
 
         if (!response.ok) {
           throw new Error("Projeto não encontrado");

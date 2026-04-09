@@ -3,7 +3,7 @@
 import { SearchBar } from "@/components/shared/search-bar";
 import { FilterBar } from "@/components/shared/filter-bar";
 import ProjectCard, { Projeto, Publicador, TipoProjeto } from "@/components/shared/project-card";
-import type { ProjetoWithAutores, ProjetosListResponse } from "@/lib/shared/types/projeto";
+import type { ProjetoWithRelations, ProjetosListResponse } from "@/lib/shared/types/projeto";
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,7 +32,7 @@ export default function Projetos() {
 
         const data: ProjetosListResponse = await response.json();
 
-        const projetosMapeados: Projeto[] = data.projetos.map((p: ProjetoWithAutores) => {
+        const projetosMapeados: Projeto[] = data.projetos.map((p: ProjetoWithRelations) => {
           let publicador;
 
           if (p.entidade) {

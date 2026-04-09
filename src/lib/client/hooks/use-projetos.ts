@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/client/api/api-client";
+import { throwApiError } from "@/lib/client/errors";
 import { queryKeys } from "@/lib/client/query-keys";
 import type { ProjetoWithRelations } from "@/lib/shared/types/projeto";
 
-interface FetchProjetosParams {
+type FetchProjetosParams = {
   entidadeId?: string;
   usuarioId?: string;
   limit?: number;
-}
+};
 
-// Função base para buscar projetos
 async function fetchProjetos({
   entidadeId,
   usuarioId,
@@ -26,10 +27,10 @@ async function fetchProjetos({
 
   params.append("limit", limit.toString());
 
-  const res = await fetch(`/api/projetos?${params.toString()}`);
+  const res = await apiClient(`/projetos?${params.toString()}`);
 
   if (!res.ok) {
-    throw new Error("Erro ao buscar projetos");
+    await throwApiError(res);
   }
 
   const data = await res.json();

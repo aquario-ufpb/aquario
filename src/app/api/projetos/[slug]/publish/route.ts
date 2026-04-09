@@ -3,13 +3,17 @@ import { getContainer } from "@/lib/server/container";
 import { StatusProjeto } from "@prisma/client";
 import { ApiError } from "@/lib/server/errors/api-error";
 
+type RouteContext = {
+  params: Promise<{ slug: string }>;
+};
+
 /**
  * POST /api/projetos/[slug]/publish
  * Publica um projeto (muda status de RASCUNHO para PUBLICADO)
  */
-export async function POST(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(_request: NextRequest, context: RouteContext) {
   try {
-    const { slug } = params;
+    const { slug } = await context.params;
     const { projetosRepository } = getContainer();
 
     // Check if projeto exists with autores
@@ -51,9 +55,9 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
  * DELETE /api/projetos/[slug]/publish
  * Despublica um projeto (muda status de PUBLICADO para RASCUNHO)
  */
-export async function DELETE(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
-    const { slug } = params;
+    const { slug } = await context.params;
     const { projetosRepository } = getContainer();
 
     // Check if projeto exists
