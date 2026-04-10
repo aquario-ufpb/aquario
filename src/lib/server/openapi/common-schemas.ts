@@ -3,6 +3,8 @@ import type { OpenAPIRegistry, ResponseConfig } from "@asteasolutions/zod-to-ope
 
 import { ErrorCode } from "@/lib/shared/errors/error-codes";
 
+type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode];
+
 /**
  * Reusable component schemas shared across every path.
  *
@@ -33,7 +35,7 @@ export type CommonSchemas = {
    */
   errorResponses: (
     codes: number[],
-    examples?: Partial<Record<number, { message: string; code: string }>>
+    examples?: Partial<Record<number, { message: string; code: ErrorCodeValue }>>
   ) => Record<string, ResponseConfig>;
 };
 
@@ -128,7 +130,7 @@ export function registerCommonSchemas(registry: OpenAPIRegistry): CommonSchemas 
    */
   function errorResponses(
     codes: number[],
-    examples?: Partial<Record<number, { message: string; code: string }>>
+    examples?: Partial<Record<number, { message: string; code: ErrorCodeValue }>>
   ): Record<string, ResponseConfig> {
     const responses: Record<string, ResponseConfig> = {};
     for (const code of codes) {

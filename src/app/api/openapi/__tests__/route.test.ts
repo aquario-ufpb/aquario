@@ -41,14 +41,11 @@ describe("GET /api/openapi", () => {
     expect(Object.keys(body.paths as Record<string, unknown>).length).toBeGreaterThan(0);
   });
 
-  it("returns the same cached document across multiple requests", async () => {
-    const first = (await GET().json()) as { info: { version: string } };
-    const second = (await GET().json()) as { info: { version: string } };
+  it("returns a deterministic OpenAPI payload across multiple requests", async () => {
+    const first = (await GET().json()) as Record<string, unknown>;
+    const second = (await GET().json()) as Record<string, unknown>;
 
-    // We can't check reference equality across serialized JSON responses, so
-    // we assert that the version field is stable (the underlying cache is
-    // validated separately in generator.test.ts).
-    expect(second.info.version).toBe(first.info.version);
+    expect(second).toEqual(first);
   });
 });
 
