@@ -212,9 +212,7 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([400, 409], {
-        409: { message: "Este email já está cadastrado", code: "EMAIL_ALREADY_EXISTS" },
-      }),
+      ...errorResponses([400]),
     },
   });
 
