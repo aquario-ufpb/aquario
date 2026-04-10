@@ -59,6 +59,7 @@ const uploadPhotoResponseSchema = z
   })
   .openapi("UploadPhotoResponse");
 
+/** Registra os paths diversos (health, upload, imagens de conteúdo) no registry OpenAPI. */
 export function registerMiscPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses } = schemas;
   registry.registerPath({

@@ -47,6 +47,7 @@ const subSecaoGuiaResponseSchema = z
   })
   .openapi("SubSecaoGuiaResponse");
 
+/** Registra os paths de guias no registry OpenAPI. */
 export function registerGuiasPaths(registry: OpenAPIRegistry, _schemas: CommonSchemas): void {
   registry.registerPath({
     method: "get",

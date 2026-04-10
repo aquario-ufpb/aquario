@@ -43,6 +43,7 @@ const curriculoGradeResponseSchema = z
   })
   .openapi("CurriculoGradeResponse");
 
+/** Registra os paths de currículos no registry OpenAPI. */
 export function registerCurriculosPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses } = schemas;
   registry.registerPath({

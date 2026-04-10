@@ -20,6 +20,7 @@ const createOrUpdateCampusSchema = z
   })
   .openapi("CreateOrUpdateCampusRequest");
 
+/** Registra os paths de campus no registry OpenAPI. */
 export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses } = schemas;
   registry.registerPath({

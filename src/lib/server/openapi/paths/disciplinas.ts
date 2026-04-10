@@ -23,6 +23,7 @@ const disciplinaSearchItemSchema = z
   })
   .openapi("DisciplinaSearchItem");
 
+/** Registra os paths de disciplinas no registry OpenAPI. */
 export function registerDisciplinasPaths(registry: OpenAPIRegistry, _schemas: CommonSchemas): void {
   registry.registerPath({
     method: "get",

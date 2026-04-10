@@ -61,6 +61,7 @@ const searchResponseSchema = z
   })
   .openapi("SearchResponse");
 
+/** Registra os paths de busca unificada no registry OpenAPI. */
 export function registerSearchPaths(registry: OpenAPIRegistry, _schemas: CommonSchemas): void {
   registry.registerPath({
     method: "get",

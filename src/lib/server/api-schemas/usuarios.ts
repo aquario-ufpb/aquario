@@ -29,15 +29,18 @@ const stepStateSchema = z
 // Admin endpoints on /api/usuarios/{id}/*
 // ---------------------------------------------------------------------------
 
+/** Schema de validação para atualização de centro/curso do usuário (admin). */
 export const updateUserInfoSchema = z.object({
   centroId: z.string().optional(),
   cursoId: z.string().optional(),
 });
 
+/** Schema de validação para atualização do papel de plataforma do usuário (admin). */
 export const updateRoleSchema = z.object({
   papelPlataforma: z.enum(["USER", "MASTER_ADMIN"]),
 });
 
+/** Schema de validação para atualização do slug do usuário. */
 export const updateSlugSchema = z.object({
   slug: z.string().nullable(),
 });
@@ -46,12 +49,14 @@ export const updateSlugSchema = z.object({
 // Facade user management (admin only)
 // ---------------------------------------------------------------------------
 
+/** Schema de validação para criação de usuário facade (placeholder sem login). */
 export const createFacadeUserSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   centroId: z.string().uuid("Centro inválido"),
   cursoId: z.string().uuid("Curso inválido"),
 });
 
+/** Schema de validação para fusão de usuário facade com usuário real. */
 export const mergeFacadeUserSchema = z.object({
   facadeUserId: z.string().uuid("ID de usuário facade inválido"),
   realUserId: z.string().uuid("ID de usuário real inválido"),

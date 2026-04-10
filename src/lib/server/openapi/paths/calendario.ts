@@ -58,6 +58,7 @@ const eventoResponseSchema = z
 
 const messageResponseSchema = z.object({ message: z.string() });
 
+/** Registra os paths de calendário acadêmico no registry OpenAPI. */
 export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses } = schemas;
   registry.registerPath({

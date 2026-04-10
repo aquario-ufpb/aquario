@@ -42,6 +42,7 @@ const centroCursoSchema = z
   })
   .openapi("CentroCurso");
 
+/** Registra os paths de centros acadêmicos no registry OpenAPI. */
 export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses } = schemas;
   registry.registerPath({

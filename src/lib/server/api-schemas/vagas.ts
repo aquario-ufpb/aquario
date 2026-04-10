@@ -21,6 +21,7 @@ export const TIPO_VAGA_VALUES = [
   "OUTRO",
 ] as const;
 
+/** Schema de validação para criação de vaga. */
 export const createVagaSchema = z.object({
   titulo: z.string().min(1, "Título é obrigatório").max(200, "Título muito longo"),
   descricao: z.string().min(1, "Descrição é obrigatória").max(10000, "Descrição muito longa"),

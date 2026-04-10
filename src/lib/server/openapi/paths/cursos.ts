@@ -23,6 +23,7 @@ const createOrUpdateCursoSchema = z
   })
   .openapi("CreateOrUpdateCursoRequest");
 
+/** Registra os paths de cursos no registry OpenAPI. */
 export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses } = schemas;
   registry.registerPath({

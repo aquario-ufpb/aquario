@@ -31,12 +31,14 @@ const optionalDateString = z
 // Semesters
 // ---------------------------------------------------------------------------
 
+/** Schema de validação para criação de semestre letivo. */
 export const createSemestreSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
   dataInicio: requiredDateString,
   dataFim: requiredDateString,
 });
 
+/** Schema de validação para atualização de semestre letivo. */
 export const updateSemestreSchema = z.object({
   nome: z.string().min(1).optional(),
   dataInicio: optionalDateString.optional(),
@@ -47,6 +49,7 @@ export const updateSemestreSchema = z.object({
 // Events
 // ---------------------------------------------------------------------------
 
+/** Schema de validação para criação de evento do calendário. */
 export const createEventoSchema = z.object({
   descricao: z.string().min(1, "Descrição é obrigatória"),
   dataInicio: requiredDateString,
@@ -54,6 +57,7 @@ export const createEventoSchema = z.object({
   categoria: z.enum(ALL_CATEGORIAS).default("OUTRA"),
 });
 
+/** Schema de validação para atualização de evento do calendário. */
 export const updateEventoSchema = z.object({
   descricao: z.string().min(1).optional(),
   dataInicio: optionalDateString.optional(),
@@ -61,6 +65,7 @@ export const updateEventoSchema = z.object({
   categoria: z.enum(ALL_CATEGORIAS).optional(),
 });
 
+/** Schema de validação para criação em lote de eventos do calendário. */
 export const batchCreateSchema = z.object({
   eventos: z.array(
     z.object({

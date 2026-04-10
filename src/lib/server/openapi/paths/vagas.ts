@@ -73,6 +73,7 @@ const vagaDetailResponseSchema = vagaResponseSchema
   })
   .openapi("VagaDetailResponse");
 
+/** Registra os paths de vagas no registry OpenAPI. */
 export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses } = schemas;
   registry.registerPath({

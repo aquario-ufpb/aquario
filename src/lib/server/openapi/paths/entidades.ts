@@ -143,6 +143,7 @@ const updateCargoRequestSchema = updateCargoSchema
   })
   .openapi("UpdateCargoRequest");
 
+/** Registra os paths de entidades no registry OpenAPI. */
 export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses } = schemas;
   registry.registerPath({

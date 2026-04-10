@@ -13,11 +13,13 @@ import { z } from "zod";
  * import the full route handler tree.
  */
 
+/** Schema de validação para login (email + senha). */
 export const loginSchema = z.object({
   email: z.string().email("Email inválido"),
   senha: z.string().min(1, "Senha é obrigatória"),
 });
 
+/** Schema de validação para cadastro de novo usuário. */
 export const registerSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   email: z.string().email("Email inválido"),
@@ -30,19 +32,23 @@ export const registerSchema = z.object({
   urlFotoPerfil: z.string().url().optional(),
 });
 
+/** Schema de validação para verificação de email via token. */
 export const verifySchema = z.object({
   token: z.string().min(1, "Token é obrigatório"),
 });
 
+/** Schema de validação para solicitação de recuperação de senha. */
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Email inválido"),
 });
 
+/** Schema de validação para redefinição de senha (token + nova senha). */
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, "Token é obrigatório"),
   novaSenha: z.string().min(8, "Senha deve ter pelo menos 8 caracteres"),
 });
 
+/** Schema de validação para reenvio do email de verificação. */
 export const resendVerificationRequestSchema = z.object({
   email: z.string().email("Email inválido"),
 });

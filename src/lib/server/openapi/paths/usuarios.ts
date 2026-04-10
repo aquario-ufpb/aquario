@@ -162,6 +162,7 @@ const messageResponseSchema = z
   .object({ message: z.string() })
   .openapi({ description: "Resposta simples com mensagem de status." });
 
+/** Registra os paths de usuários no registry OpenAPI. */
 export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: CommonSchemas): void {
   const { errorResponses, PaginationMetaSchema } = schemas;
 
