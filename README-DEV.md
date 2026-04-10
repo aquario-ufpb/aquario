@@ -267,6 +267,55 @@ describe("useData", () => {
 
 ---
 
+## API Documentation
+
+Interactive API docs are available at [`/api-docs`](http://localhost:3000/api-docs) (Scalar UI) and the raw OpenAPI 3.1 spec at [`GET /api/openapi`](http://localhost:3000/api/openapi).
+
+### How it works
+
+```text
+Zod schemas (api-schemas/)           →  zod-to-openapi  →  OpenAPI 3.1 JSON  →  Scalar UI
+Route handler error codes (route.ts) →  paths/*.ts       →  (same spec)       →  (same page)
+```
+
+All 56 API endpoints are documented with request/response schemas, examples, and error codes — generated from the same Zod schemas used for runtime validation.
+
+### Adding docs for a new endpoint
+
+1. **Create the path file** in `src/lib/server/openapi/paths/` (or add to an existing one)
+2. **Register it** in `src/lib/server/openapi/paths/index.ts`
+3. **Use `errorResponses()`** with examples matching the actual `ApiError.xxx()` calls in the route handler:
+   ```typescript
+   ...errorResponses([400, 404], {
+     404: { message: "Recurso não encontrado", code: "NOT_FOUND" },
+   })
+   ```
+4. **Run tests**: `npm run test` — the generator test validates spec structure and endpoint count
+
+### File structure
+
+```text
+src/lib/server/
+├── api-schemas/          # Zod schemas (shared between routes and OpenAPI)
+│   ├── auth.ts
+│   ├── usuarios.ts
+│   ├── entidades.ts
+│   ├── vagas.ts
+│   └── calendario.ts
+└── openapi/
+    ├── registry.ts       # Tags and security scheme
+    ├── generator.ts      # Spec generation with lazy cache
+    ├── common-schemas.ts # Shared error/pagination schemas + errorResponses()
+    └── paths/            # One file per resource group
+        ├── index.ts      # Registers all path groups
+        ├── auth.ts
+        ├── usuarios.ts
+        ├── entidades.ts
+        └── ...
+```
+
+---
+
 ## Code Style
 
 ### Tools

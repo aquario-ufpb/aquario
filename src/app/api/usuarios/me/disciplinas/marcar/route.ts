@@ -2,14 +2,9 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import { getContainer } from "@/lib/server/container";
-import { z } from "zod";
+import { marcarDisciplinasSchema } from "@/lib/server/api-schemas/usuarios";
 
 export const dynamic = "force-dynamic";
-
-const marcarSchema = z.object({
-  disciplinaIds: z.array(z.string().uuid()).min(1),
-  status: z.enum(["concluida", "cursando", "none"]),
-});
 
 /**
  * POST /api/usuarios/me/disciplinas/marcar
@@ -25,7 +20,7 @@ export function POST(request: Request) {
       } catch {
         return ApiError.badRequest("Corpo da requisição inválido");
       }
-      const parsed = marcarSchema.safeParse(body);
+      const parsed = marcarDisciplinasSchema.safeParse(body);
       if (!parsed.success) {
         return ApiError.badRequest("disciplinaIds deve ser um array de UUIDs e status válido");
       }

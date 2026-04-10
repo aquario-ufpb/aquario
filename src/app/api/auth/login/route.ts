@@ -5,17 +5,13 @@ import { getContainer } from "@/lib/server/container";
 import { authenticate } from "@/lib/server/services/auth/authenticate";
 import { checkRateLimit, getClientIP } from "@/lib/server/services/rate-limit/rate-limiter";
 import { ApiError, fromZodError, ErrorCode } from "@/lib/server/errors";
+import { loginSchema } from "@/lib/server/api-schemas/auth";
 
 // Rate limit: 5 login attempts per minute per IP
 const LOGIN_RATE_LIMIT = {
   limit: 5,
   windowMs: 60 * 1000, // 1 minute
 };
-
-const loginSchema = z.object({
-  email: z.string().email("Email inválido"),
-  senha: z.string().min(1, "Senha é obrigatória"),
-});
 
 export async function POST(request: Request) {
   // Check rate limit
