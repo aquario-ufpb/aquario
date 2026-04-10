@@ -24,6 +24,7 @@ const guiaResponseSchema = z
   })
   .openapi("GuiaResponse");
 
+/** Shape de resposta de seção de guia. */
 const secaoGuiaResponseSchema = z
   .object({
     id: z.string().uuid(),
@@ -34,6 +35,7 @@ const secaoGuiaResponseSchema = z
   })
   .openapi("SecaoGuiaResponse");
 
+/** Shape de resposta de subseção de guia. */
 const subSecaoGuiaResponseSchema = z
   .object({
     id: z.string().uuid(),

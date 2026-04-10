@@ -16,6 +16,7 @@ const cursoResponseSchema = z
   })
   .openapi("CursoResponse");
 
+/** Schema de request para criar ou atualizar um curso. */
 const createOrUpdateCursoSchema = z
   .object({
     nome: z.string().min(1).openapi({ example: "Ciência da Computação" }),

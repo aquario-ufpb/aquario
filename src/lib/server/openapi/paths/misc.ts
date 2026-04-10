@@ -11,6 +11,7 @@ import type { CommonSchemas } from "../common-schemas";
  * Registrados juntos para evitar criar três arquivos separados de 1 endpoint cada.
  */
 
+/** Shape de resposta do health check. */
 const healthResponseSchema = z
   .object({
     status: z.literal("ok").openapi({

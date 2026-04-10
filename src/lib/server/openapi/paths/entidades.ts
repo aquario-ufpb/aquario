@@ -129,6 +129,7 @@ const cargoResponseSchema = z
   })
   .openapi("CargoResponse");
 
+/** Resposta simples com mensagem de status. */
 const messageResponseSchema = z.object({ message: z.string() });
 
 /**

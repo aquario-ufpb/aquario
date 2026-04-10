@@ -18,6 +18,7 @@ const centroResponseSchema = z
   })
   .openapi("CentroResponse");
 
+/** Schema de request para criar ou atualizar um centro acadêmico. */
 const createOrUpdateCentroSchema = z
   .object({
     nome: z.string().min(1).openapi({ example: "Centro de Informática" }),

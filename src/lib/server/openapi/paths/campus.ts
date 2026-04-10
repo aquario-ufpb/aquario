@@ -14,6 +14,7 @@ const campusResponseSchema = z
   })
   .openapi("CampusResponse");
 
+/** Schema de request para criar ou atualizar um campus. */
 const createOrUpdateCampusSchema = z
   .object({
     nome: z.string().min(1).openapi({ example: "Campus I - João Pessoa" }),

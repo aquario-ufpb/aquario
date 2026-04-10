@@ -883,6 +883,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
   // ============================================================================
   // GET/PUT /usuarios/me/semestres/{semestreId}/disciplinas — semestreId pode ser UUID ou "ativo"
   // ============================================================================
+  /** Parâmetro de path que aceita UUID ou a string literal 'ativo'. */
   const semestreIdParam = z.object({
     semestreId: z.union([z.string().uuid(), z.literal("ativo")]).openapi({
       description:

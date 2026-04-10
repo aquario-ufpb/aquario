@@ -3,6 +3,7 @@ import type { OpenAPIRegistry, ResponseConfig } from "@asteasolutions/zod-to-ope
 
 import { ErrorCode } from "@/lib/shared/errors/error-codes";
 
+/** Tipo utilitário: valores possíveis do enum ErrorCode. */
 type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode];
 
 /**

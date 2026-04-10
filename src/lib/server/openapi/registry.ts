@@ -75,4 +75,5 @@ export const OPENAPI_TAGS = [
   },
 ] as const;
 
+/** Tipo derivado: nomes das tags OpenAPI registradas. */
 export type OpenApiTagName = (typeof OPENAPI_TAGS)[number]["name"];

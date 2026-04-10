@@ -56,6 +56,7 @@ const eventoResponseSchema = z
   })
   .openapi("EventoResponse");
 
+/** Resposta simples com mensagem de status. */
 const messageResponseSchema = z.object({ message: z.string() });
 
 /** Registra os paths de calendário acadêmico no registry OpenAPI. */
