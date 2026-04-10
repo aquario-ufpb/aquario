@@ -273,7 +273,7 @@ Interactive API docs are available at [`/api-docs`](http://localhost:3000/api-do
 
 ### How it works
 
-```
+```text
 Zod schemas (api-schemas/)           →  zod-to-openapi  →  OpenAPI 3.1 JSON  →  Scalar UI
 Route handler error codes (route.ts) →  paths/*.ts       →  (same spec)       →  (same page)
 ```
@@ -294,7 +294,7 @@ All 56 API endpoints are documented with request/response schemas, examples, and
 
 ### File structure
 
-```
+```text
 src/lib/server/
 ├── api-schemas/          # Zod schemas (shared between routes and OpenAPI)
 │   ├── auth.ts
