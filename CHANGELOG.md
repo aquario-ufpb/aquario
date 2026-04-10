@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **API Docs**: Interactive OpenAPI 3.1 documentation rendered with Scalar UI at `/api-docs`, covering all 56 API endpoints with request/response schemas, examples, and error codes (#149)
 - **API Docs**: JSON spec endpoint at `GET /api/openapi` for tooling integration (Postman, Insomnia, SDK generators)
+- **Tests**: Server-side auth service tests — authenticate, register, verify-email, reset-password, forgot-password, resend-verification, and middleware (66 new tests)
+- **Tests**: Admin mutation tests — merge-facade-user service (12 tests), user deletion route, role update route, entity member add/update/delete routes (33 tests)
+- **Tests**: Onboarding state machine integration tests — step ordering, conditional visibility, PAAS availability, semester-based logic, completion/skip mutations (18 tests)
 - **Grades Curriculares**: Botão para exportar grade curricular como imagem PNG — "Com meu progresso" (barra de progresso e stats) e "Grade limpa" (#169)
 - **UI**: DatePicker component with Calendar popover, pt-BR locale, and date range constraints
 - **Search**: Global search command palette (Ctrl+K) with unified search across pages, guides, entities, jobs, disciplines, courses, and user profiles
@@ -21,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **API**: Extract Zod validation schemas from route handlers into `src/lib/server/api-schemas/` for Next.js 15 App Router compatibility
+- **Onboarding**: Hide onboarding entirely when between semesters — only show it when today falls within an active semester's date range
 - **UI**: Replace native date inputs with DatePicker across all forms — entities, memberships, vagas, and calendar management (#167)
 - **Users**:  Otimiza verificação de unicidade de slug em `prisma-usuarios-repository.ts`, limitando a consulta de existência a `select: { id: true }` para reduzir payload por iteração.
 
