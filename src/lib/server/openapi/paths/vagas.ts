@@ -1,20 +1,18 @@
 import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
-import { createVagaSchema } from "@/lib/server/api-schemas/vagas";
+import { createVagaSchema, TIPO_VAGA_VALUES } from "@/lib/server/api-schemas/vagas";
 
 import type { CommonSchemas } from "../common-schemas";
 
 /**
- * Enum dos tipos de vaga suportados. Espelha TIPO_VAGA_VALUES em
- * src/app/api/vagas/route.ts — manter em sincronia.
+ * Enum dos tipos de vaga suportados. Importado de api-schemas/vagas.ts
+ * para evitar duplicação.
  */
-const tipoVagaSchema = z
-  .enum(["ESTAGIO", "TRAINEE", "VOLUNTARIO", "PESQUISA", "CLT", "PJ", "OUTRO"])
-  .openapi({
-    description: "Tipo da oportunidade de vaga.",
-    example: "ESTAGIO",
-  });
+const tipoVagaSchema = z.enum(TIPO_VAGA_VALUES).openapi({
+  description: "Tipo da oportunidade de vaga.",
+  example: "ESTAGIO",
+});
 
 /**
  * Resumo do publicador embutido nas respostas de vaga — o usuário que criou a vaga.

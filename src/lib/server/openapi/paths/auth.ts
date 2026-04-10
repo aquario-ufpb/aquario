@@ -77,7 +77,7 @@ const currentUserResponseSchema = z
     id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
     nome: z.string().openapi({ example: "João Silva" }),
     email: z.string().email().openapi({ example: "joao.silva@academico.ufpb.br" }),
-    slug: z.string().openapi({ example: "joao-silva" }),
+    slug: z.string().nullable().openapi({ example: "joao-silva" }),
     papelPlataforma: z.enum(["USER", "MASTER_ADMIN"]).openapi({
       description: "Papel global na plataforma: usuário comum ou administrador master.",
       example: "USER",
@@ -170,7 +170,9 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([400]),
+      ...errorResponses([400, 401], {
+        401: { message: "Email ou senha incorretos", code: "INVALID_CREDENTIALS" },
+      }),
     },
   });
 

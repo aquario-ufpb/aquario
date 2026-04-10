@@ -33,8 +33,9 @@ export function registerDisciplinasPaths(registry: OpenAPIRegistry, _schemas: Co
       "Busca disciplinas pelo código oficial (ex: `DCE1001`) ou por parte do nome. Buscas com menos de 2 caracteres retornam array vazio sem consultar o banco.",
     request: {
       query: z.object({
-        q: z.string().min(2).openapi({
-          description: "Termo de busca — código ou nome da disciplina. Mínimo de 2 caracteres.",
+        q: z.string().optional().openapi({
+          description:
+            "Termo de busca — código ou nome da disciplina. Se ausente ou com menos de 2 caracteres, retorna lista vazia.",
           example: "DCE1001",
         }),
       }),

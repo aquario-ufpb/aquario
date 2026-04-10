@@ -166,7 +166,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
     tags: ["Entidades"],
     summary: "Buscar uma entidade pelo slug",
     description:
-      "Retorna o perfil completo de uma entidade (com membros e cargos) pelo slug da URL. Usado pelas páginas `/entidade/[slug]`.",
+      "Retorna o perfil completo de uma entidade (com membros) pelo slug da URL. Usado pelas páginas `/entidade/[slug]`.",
     request: {
       params: z.object({
         slug: z.string().openapi({ example: "pet-computacao" }),

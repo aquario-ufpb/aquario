@@ -54,7 +54,7 @@ export function registerCurriculosPaths(registry: OpenAPIRegistry, schemas: Comm
       "Retorna a grade curricular ativa de um curso, organizada por período. Retorna 400 se `cursoId` não for informado e 404 se o curso não tiver grade ativa.",
     request: {
       query: z.object({
-        cursoId: z.string().uuid().openapi({
+        cursoId: z.string().min(1).openapi({
           description: "ID do curso.",
           example: "550e8400-e29b-41d4-a716-446655440000",
         }),

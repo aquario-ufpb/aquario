@@ -71,9 +71,9 @@ export function registerSearchPaths(registry: OpenAPIRegistry, _schemas: CommonS
       "Full-text search em páginas, guias, entidades, vagas, disciplinas, cursos e usuários. Acento-insensível (português). Queries com menos de 3 caracteres retornam resultados vazios.",
     request: {
       query: z.object({
-        q: z.string().min(3).openapi({
+        q: z.string().optional().openapi({
           description:
-            "Termo de busca. Mínimo de 3 caracteres; queries menores retornam resultados vazios.",
+            "Termo de busca. Se ausente ou com menos de 3 caracteres, retorna resultados vazios.",
           example: "computação",
         }),
         limit: z.coerce.number().int().min(1).max(20).default(5).openapi({
