@@ -65,7 +65,9 @@ export function registerCurriculosPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Grade curricular ativa organizada por período.",
         content: { "application/json": { schema: curriculoGradeResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Currículo ativo não encontrado", code: "NOT_FOUND" },
+      }),
     },
   });
 }

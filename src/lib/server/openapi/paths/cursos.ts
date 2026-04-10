@@ -99,7 +99,9 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
         description: "Curso atualizado.",
         content: { "application/json": { schema: cursoResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Curso não encontrado", code: "NOT_FOUND" },
+      }),
     },
   });
 
@@ -124,7 +126,13 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
           },
         },
       },
-      ...errorResponses([404, 409]),
+      ...errorResponses([404, 409], {
+        404: { message: "Curso não encontrado", code: "NOT_FOUND" },
+        409: {
+          message: "Não é possível excluir: existem 2 currículo(s), 1 guia(s) vinculado(s)",
+          code: "HAS_DEPENDENCIES",
+        },
+      }),
     },
   });
 }

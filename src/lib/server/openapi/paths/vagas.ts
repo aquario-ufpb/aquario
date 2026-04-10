@@ -139,7 +139,9 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
         description: "Vaga criada com sucesso.",
         content: { "application/json": { schema: vagaResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Entidade não encontrada", code: "ENTIDADE_NOT_FOUND" },
+      }),
     },
   });
 
@@ -157,7 +159,9 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
         description: "Detalhes da vaga.",
         content: { "application/json": { schema: vagaDetailResponseSchema } },
       },
-      ...errorResponses([404]),
+      ...errorResponses([404], {
+        404: { message: "Vaga não encontrado", code: "NOT_FOUND" },
+      }),
     },
   });
 
@@ -176,7 +180,9 @@ export function registerVagasPaths(registry: OpenAPIRegistry, schemas: CommonSch
       204: {
         description: "Vaga excluída com sucesso. Sem corpo de resposta.",
       },
-      ...errorResponses([404]),
+      ...errorResponses([404], {
+        404: { message: "Vaga não encontrado", code: "NOT_FOUND" },
+      }),
     },
   });
 }

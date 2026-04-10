@@ -163,6 +163,10 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
         content: {
           "application/json": {
             schema: ApiErrorBodySchema,
+            example: {
+              message: "Muitas tentativas de login. Tente novamente em alguns segundos.",
+              code: "RATE_LIMITED",
+            },
           },
         },
       },
@@ -208,7 +212,9 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([400, 409]),
+      ...errorResponses([400, 409], {
+        409: { message: "Este email já está cadastrado", code: "EMAIL_ALREADY_EXISTS" },
+      }),
     },
   });
 

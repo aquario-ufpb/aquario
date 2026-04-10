@@ -121,7 +121,9 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
         description: "Centro atualizado.",
         content: { "application/json": { schema: centroResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Centro não encontrado", code: "NOT_FOUND" },
+      }),
     },
   });
 
@@ -146,7 +148,13 @@ export function registerCentrosPaths(registry: OpenAPIRegistry, schemas: CommonS
           },
         },
       },
-      ...errorResponses([404, 409]),
+      ...errorResponses([404, 409], {
+        404: { message: "Centro não encontrado", code: "NOT_FOUND" },
+        409: {
+          message: "Não é possível excluir: existem 2 curso(s) vinculado(s)",
+          code: "HAS_DEPENDENCIES",
+        },
+      }),
     },
   });
 

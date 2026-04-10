@@ -214,7 +214,12 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([403]),
+      ...errorResponses([403], {
+        403: {
+          message: "Acesso negado. Permissão de administrador necessária.",
+          code: "FORBIDDEN",
+        },
+      }),
     },
   });
 
@@ -243,7 +248,9 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Usuário não encontrado", code: "USER_NOT_FOUND" },
+      }),
     },
   });
 
@@ -278,7 +285,9 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Dados do usuário atualizados.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Usuário não encontrado", code: "USER_NOT_FOUND" },
+      }),
     },
   });
 
@@ -356,7 +365,9 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Papel atualizado com sucesso.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Usuário não encontrado", code: "USER_NOT_FOUND" },
+      }),
     },
   });
 
@@ -388,7 +399,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Slug atualizado.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
-      ...errorResponses([400, 409]),
+      ...errorResponses([400]),
     },
   });
 
@@ -412,7 +423,9 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Perfil do usuário.",
         content: { "application/json": { schema: userProfileSchema } },
       },
-      ...errorResponses([404]),
+      ...errorResponses([404], {
+        404: { message: "Usuário não encontrado", code: "USER_NOT_FOUND" },
+      }),
     },
   });
 
@@ -447,7 +460,9 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Usuário facade criado.",
         content: { "application/json": { schema: adminUserResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Centro não encontrado", code: "NOT_FOUND" },
+      }),
     },
   });
 
@@ -653,7 +668,10 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Membresia criada.",
         content: { "application/json": { schema: membershipResponseSchema } },
       },
-      ...errorResponses([400, 404, 409]),
+      ...errorResponses([400, 404, 409], {
+        404: { message: "Entidade não encontrada", code: "ENTIDADE_NOT_FOUND" },
+        409: { message: "Este usuário já é membro ativo desta entidade", code: "ALREADY_MEMBER" },
+      }),
     },
   });
 
@@ -685,7 +703,9 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Membresia atualizada.",
         content: { "application/json": { schema: membershipResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Membresia não encontrada", code: "MEMBRO_NOT_FOUND" },
+      }),
     },
   });
 
@@ -710,7 +730,9 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([404]),
+      ...errorResponses([404], {
+        404: { message: "Membresia não encontrada", code: "MEMBRO_NOT_FOUND" },
+      }),
     },
   });
 
@@ -921,7 +943,9 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Disciplinas matriculadas substituídas.",
         content: { "application/json": { schema: semestreDisciplinasResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Semestre ativo não encontrado", code: "NOT_FOUND" },
+      }),
     },
   });
 
@@ -956,7 +980,9 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Disciplina atualizada.",
         content: { "application/json": { schema: disciplinaSemestreResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Disciplina do semestre não encontrada", code: "NOT_FOUND" },
+      }),
     },
   });
 }

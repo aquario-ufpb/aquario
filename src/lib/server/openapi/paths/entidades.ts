@@ -177,7 +177,9 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "Perfil da entidade com membros e cargos embutidos.",
         content: { "application/json": { schema: entidadeResponseSchema } },
       },
-      ...errorResponses([404]),
+      ...errorResponses([404], {
+        404: { message: "Entidade não encontrada", code: "ENTIDADE_NOT_FOUND" },
+      }),
     },
   });
 
@@ -215,7 +217,9 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
           },
         },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Entidade não encontrada", code: "ENTIDADE_NOT_FOUND" },
+      }),
     },
   });
 
@@ -249,7 +253,13 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "Membro adicionado.",
         content: { "application/json": { schema: entidadeMembershipResponseSchema } },
       },
-      ...errorResponses([400, 404, 409]),
+      ...errorResponses([400, 404, 409], {
+        404: { message: "Entidade não encontrada", code: "ENTIDADE_NOT_FOUND" },
+        409: {
+          message: "Este usuário já é membro ativo desta entidade",
+          code: "ALREADY_MEMBER",
+        },
+      }),
     },
   });
 
@@ -281,7 +291,9 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "Membro atualizado.",
         content: { "application/json": { schema: entidadeMembershipResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Membresia não encontrada", code: "MEMBRO_NOT_FOUND" },
+      }),
     },
   });
 
@@ -308,7 +320,9 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
           },
         },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Entidade não encontrada", code: "ENTIDADE_NOT_FOUND" },
+      }),
     },
   });
 
@@ -358,7 +372,9 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "Cargo criado.",
         content: { "application/json": { schema: cargoResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Entidade não encontrada", code: "ENTIDADE_NOT_FOUND" },
+      }),
     },
   });
 
@@ -387,7 +403,9 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         description: "Cargo atualizado.",
         content: { "application/json": { schema: cargoResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Cargo não encontrado", code: "CARGO_NOT_FOUND" },
+      }),
     },
   });
 
@@ -418,7 +436,9 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
           },
         },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Cargo não encontrado", code: "CARGO_NOT_FOUND" },
+      }),
     },
   });
 }

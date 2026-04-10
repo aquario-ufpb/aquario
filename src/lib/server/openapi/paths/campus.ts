@@ -61,7 +61,9 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
         description: "Campus criado.",
         content: { "application/json": { schema: campusResponseSchema } },
       },
-      ...errorResponses([400, 409]),
+      ...errorResponses([400, 409], {
+        409: { message: "Já existe um campus com esse nome", code: "CONFLICT" },
+      }),
     },
   });
 
@@ -89,7 +91,9 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
         description: "Campus atualizado.",
         content: { "application/json": { schema: campusResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Campus não encontrado", code: "NOT_FOUND" },
+      }),
     },
   });
 
@@ -114,7 +118,13 @@ export function registerCampusPaths(registry: OpenAPIRegistry, schemas: CommonSc
           },
         },
       },
-      ...errorResponses([404, 409]),
+      ...errorResponses([404, 409], {
+        404: { message: "Campus não encontrado", code: "NOT_FOUND" },
+        409: {
+          message: "Não é possível excluir: existem 3 centro(s) vinculado(s)",
+          code: "HAS_DEPENDENCIES",
+        },
+      }),
     },
   });
 }

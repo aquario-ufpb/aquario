@@ -31,7 +31,10 @@ export type CommonSchemas = {
    * `ApiErrorBody` component. Returned as a closure so each call captures
    * the ApiErrorBody schema bound to the enclosing registry.
    */
-  errorResponses: (codes: number[]) => Record<string, ResponseConfig>;
+  errorResponses: (
+    codes: number[],
+    examples?: Partial<Record<number, { message: string; code: string }>>
+  ) => Record<string, ResponseConfig>;
 };
 
 /**
@@ -123,7 +126,10 @@ export function registerCommonSchemas(registry: OpenAPIRegistry): CommonSchemas 
    * references the same schema registered above. Fresh on every call, which
    * eliminates the risk of cross-registry schema leakage.
    */
-  function errorResponses(codes: number[]): Record<string, ResponseConfig> {
+  function errorResponses(
+    codes: number[],
+    examples?: Partial<Record<number, { message: string; code: string }>>
+  ): Record<string, ResponseConfig> {
     const responses: Record<string, ResponseConfig> = {};
     for (const code of codes) {
       const description = STATUS_DESCRIPTIONS[code];
@@ -132,11 +138,13 @@ export function registerCommonSchemas(registry: OpenAPIRegistry): CommonSchemas 
           `errorResponses(): unknown status code ${code}. Add it to STATUS_DESCRIPTIONS in common-schemas.ts.`
         );
       }
+      const example = examples?.[code];
       responses[String(code)] = {
         description,
         content: {
           "application/json": {
             schema: ApiErrorBodySchema,
+            ...(example && { example }),
           },
         },
       };

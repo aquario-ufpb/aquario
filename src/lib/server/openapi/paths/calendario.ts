@@ -115,7 +115,9 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Semestre criado.",
         content: { "application/json": { schema: semestreResponseSchema } },
       },
-      ...errorResponses([400, 409]),
+      ...errorResponses([400, 409], {
+        409: { message: "Já existe um semestre com este nome", code: "SEMESTRE_NOME_EXISTS" },
+      }),
     },
   });
 
@@ -134,7 +136,9 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Detalhes do semestre.",
         content: { "application/json": { schema: semestreResponseSchema } },
       },
-      ...errorResponses([404]),
+      ...errorResponses([404], {
+        404: { message: "Semestre não encontrado", code: "SEMESTRE_NOT_FOUND" },
+      }),
     },
   });
 
@@ -163,7 +167,10 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Semestre atualizado.",
         content: { "application/json": { schema: semestreResponseSchema } },
       },
-      ...errorResponses([400, 404, 409]),
+      ...errorResponses([400, 404, 409], {
+        404: { message: "Semestre não encontrado", code: "SEMESTRE_NOT_FOUND" },
+        409: { message: "Já existe um semestre com este nome", code: "SEMESTRE_NOME_EXISTS" },
+      }),
     },
   });
 
@@ -188,7 +195,9 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
           },
         },
       },
-      ...errorResponses([404]),
+      ...errorResponses([404], {
+        404: { message: "Semestre não encontrado", code: "SEMESTRE_NOT_FOUND" },
+      }),
     },
   });
 
@@ -207,7 +216,9 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Lista de eventos do semestre.",
         content: { "application/json": { schema: z.array(eventoResponseSchema) } },
       },
-      ...errorResponses([404]),
+      ...errorResponses([404], {
+        404: { message: "Semestre não encontrado", code: "SEMESTRE_NOT_FOUND" },
+      }),
     },
   });
 
@@ -241,7 +252,9 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Evento criado.",
         content: { "application/json": { schema: eventoResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Semestre não encontrado", code: "SEMESTRE_NOT_FOUND" },
+      }),
     },
   });
 
@@ -276,7 +289,9 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
         description: "Evento atualizado.",
         content: { "application/json": { schema: eventoResponseSchema } },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Evento não encontrado", code: "EVENTO_NOT_FOUND" },
+      }),
     },
   });
 
@@ -303,7 +318,9 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
           },
         },
       },
-      ...errorResponses([404]),
+      ...errorResponses([404], {
+        404: { message: "Evento não encontrado", code: "EVENTO_NOT_FOUND" },
+      }),
     },
   });
 
@@ -352,7 +369,9 @@ export function registerCalendarioPaths(registry: OpenAPIRegistry, schemas: Comm
           },
         },
       },
-      ...errorResponses([400, 404]),
+      ...errorResponses([400, 404], {
+        404: { message: "Semestre não encontrado", code: "SEMESTRE_NOT_FOUND" },
+      }),
     },
   });
 }
