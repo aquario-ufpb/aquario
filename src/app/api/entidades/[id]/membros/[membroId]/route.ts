@@ -4,17 +4,11 @@ import { z } from "zod";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
+import { updateMemberSchema } from "@/lib/server/api-schemas/entidades";
 
 type RouteContext = {
   params: Promise<{ id: string; membroId: string }>;
 };
-
-const updateMemberSchema = z.object({
-  papel: z.enum(["ADMIN", "MEMBRO"]).optional(),
-  cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
-  startedAt: z.string().optional(), // ISO date string
-  endedAt: z.string().nullable().optional(), // ISO date string or null
-});
 
 export async function PUT(request: Request, context: RouteContext) {
   return await withAuth(request, async (req, usuario) => {

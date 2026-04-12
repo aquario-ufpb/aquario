@@ -4,12 +4,7 @@ import { z } from "zod";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
-
-const createFacadeUserSchema = z.object({
-  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  centroId: z.string().uuid("Centro inválido"),
-  cursoId: z.string().uuid("Curso inválido"),
-});
+import { createFacadeUserSchema } from "@/lib/server/api-schemas/usuarios";
 
 export async function POST(request: Request) {
   return await withAdmin(request, async () => {
