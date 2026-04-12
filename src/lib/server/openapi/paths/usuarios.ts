@@ -381,7 +381,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     tags: ["Usuários"],
     summary: "Atualizar o slug de um usuário (admin)",
     description:
-      "Endpoint exclusivo para administradores. Altera o slug de URL do usuário. O slug é normalizado (trim e lowercase) no servidor. Envie null para remover o slug. Slugs precisam ser únicos — retorna 409 em caso de colisão.",
+      "Endpoint exclusivo para administradores. Altera o slug de URL do usuário. O slug é normalizado (trim e lowercase) no servidor. Envie null para remover o slug. Slugs são garantidos únicos (auto-resolve colisões).",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
@@ -704,7 +704,11 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
         description: "Membresia atualizada.",
         content: { "application/json": { schema: membershipResponseSchema } },
       },
-      ...errorResponses([400, 404], {
+      ...errorResponses([400, 403, 404], {
+        403: {
+          message: "Você só pode editar suas próprias membresias.",
+          code: "FORBIDDEN",
+        },
         404: { message: "Membresia não encontrada", code: "MEMBRO_NOT_FOUND" },
       }),
     },
@@ -731,7 +735,11 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           },
         },
       },
-      ...errorResponses([404], {
+      ...errorResponses([403, 404], {
+        403: {
+          message: "Você só pode deletar suas próprias membresias.",
+          code: "FORBIDDEN",
+        },
         404: { message: "Membresia não encontrada", code: "MEMBRO_NOT_FOUND" },
       }),
     },

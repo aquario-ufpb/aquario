@@ -323,7 +323,7 @@ export function registerEntidadesPaths(registry: OpenAPIRegistry, schemas: Commo
         },
       },
       ...errorResponses([400, 404], {
-        404: { message: "Entidade não encontrada", code: "ENTIDADE_NOT_FOUND" },
+        404: { message: "Membresia não encontrada", code: "MEMBRO_NOT_FOUND" },
       }),
     },
   });

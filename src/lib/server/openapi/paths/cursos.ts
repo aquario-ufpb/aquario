@@ -79,7 +79,7 @@ export function registerCursosPaths(registry: OpenAPIRegistry, schemas: CommonSc
     tags: ["Cursos"],
     summary: "Atualizar um curso (admin)",
     description:
-      "Endpoint exclusivo para administradores. Atualiza o nome e/ou o centro de um curso.",
+      "Endpoint exclusivo para administradores. Ambos os campos (`nome` e `centroId`) são obrigatórios.",
     security: [{ bearerAuth: [] }],
     request: {
       params: z.object({ id: z.string().uuid() }),
