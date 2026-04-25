@@ -57,8 +57,8 @@ export function getOpenApiDocument(): OpenAPIObject {
       },
     },
     servers: [
-      { url: "https://www.aquarioufpb.com", description: "Produção" },
-      { url: "http://localhost:3000", description: "Desenvolvimento local" },
+      { url: "https://www.aquarioufpb.com/api", description: "Produção" },
+      { url: "http://localhost:3000/api", description: "Desenvolvimento local" },
     ],
     tags: OPENAPI_TAGS.map(tag => ({ ...tag })),
   });

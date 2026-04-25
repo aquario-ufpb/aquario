@@ -36,8 +36,8 @@ describe("getOpenApiDocument", () => {
     const doc = getOpenApiDocument();
     const serverUrls = (doc.servers ?? []).map(s => s.url);
 
-    expect(serverUrls).toContain("https://www.aquarioufpb.com");
-    expect(serverUrls).toContain("http://localhost:3000");
+    expect(serverUrls).toContain("https://www.aquarioufpb.com/api");
+    expect(serverUrls).toContain("http://localhost:3000/api");
   });
 
   it("registers the bearerAuth security scheme", () => {
