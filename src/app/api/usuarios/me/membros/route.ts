@@ -4,18 +4,7 @@ import { z } from "zod";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
-
-const dateStringSchema = z
-  .string()
-  .refine(v => !isNaN(Date.parse(v)), { message: "Data inválida" });
-
-const createOwnMembershipSchema = z.object({
-  entidadeId: z.string().uuid("ID de entidade inválido"),
-  papel: z.enum(["ADMIN", "MEMBRO"]).optional().default("MEMBRO"),
-  cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
-  startedAt: dateStringSchema.optional(),
-  endedAt: dateStringSchema.nullable().optional(),
-});
+import { createOwnMembershipSchema } from "@/lib/server/api-schemas/usuarios";
 
 export function GET(request: Request) {
   return withAuth(request, async (_req, usuario) => {

@@ -3,21 +3,10 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
-import { ALL_CATEGORIAS } from "@/lib/shared/config/calendario-academico";
+import { updateEventoSchema } from "@/lib/server/api-schemas/calendario";
 import type { UpdateEventoInput } from "@/lib/server/db/interfaces/calendario-repository.interface";
 
 type RouteContext = { params: Promise<{ id: string; eventoId: string }> };
-
-const dateString = z
-  .string()
-  .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
-
-const updateEventoSchema = z.object({
-  descricao: z.string().min(1).optional(),
-  dataInicio: dateString.optional(),
-  dataFim: dateString.optional(),
-  categoria: z.enum(ALL_CATEGORIAS).optional(),
-});
 
 export function PUT(request: Request, context: RouteContext) {
   return withAdmin(request, async req => {

@@ -6,12 +6,9 @@ import { formatUserResponse } from "@/lib/server/utils/format-user-response";
 import { z } from "zod";
 import { createLogger } from "@/lib/server/utils/logger";
 import { ApiError, fromZodError } from "@/lib/server/errors";
+import { updatePhotoSchema } from "@/lib/server/api-schemas/usuarios";
 
 const log = createLogger("Photo");
-
-const updatePhotoSchema = z.object({
-  urlFotoPerfil: z.string().url().nullable().optional(),
-});
 
 /**
  * PATCH /api/usuarios/me/photo

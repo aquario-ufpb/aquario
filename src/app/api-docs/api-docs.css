@@ -1,0 +1,54 @@
+/*
+ * Scoped overrides for the /api-docs page.
+ *
+ * This file is only imported by src/app/api-docs/page.tsx, so Next.js only
+ * loads it when the docs page is active. Every rule is additionally scoped
+ * via `body:has(.scalar-app)` or by targeting stable Scalar-specific class
+ * names, so nothing bleeds into other routes of the project even if the
+ * stylesheet happened to leak into the global cascade.
+ *
+ * All overrides use `!important` because Scalar ships its own inline styles
+ * with high specificity from Vue scoped CSS.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Hide the global aquario NavWrapper on /api-docs.
+ *
+ * The Scalar reference is a full-screen documentation surface — it owns its
+ * own sidebar, search and theme controls. Stacking the site's global navbar
+ * on top of it halves the visible viewport and overlaps the Scalar sidebar.
+ *
+ * `:has(.scalar-app)` is a conditional selector that only matches when the
+ * Scalar root component is present in the DOM, which only happens on this
+ * page. In every other route of the site the selector does not match and
+ * the NavWrapper renders normally.
+ * ------------------------------------------------------------------------- */
+body:has(.scalar-app) > div > nav {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * Hide Scalar's upstream "Developer Tools / Configure / Share / Deploy"
+ * toolbar that renders above the main content area.
+ *
+ * These buttons belong to Scalar Cloud / workspace features that are not
+ * part of the aquario's documentation workflow. The `.api-reference-toolbar`
+ * class is a stable, semantically-named Scalar class (verified live on the
+ * rendered DOM) specifically applied to the `<header>` containing those
+ * four buttons.
+ * ------------------------------------------------------------------------- */
+.api-reference-toolbar {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * Hide Scalar's "Generate MCP / VS Code / Cursor" integration block in the
+ * sidebar footer. This is an upstream Scalar feature for wiring the spec
+ * into IDEs via the Model Context Protocol, which the aquario does not use.
+ *
+ * The `.scalar-mcp-layer` class is a namespaced Scalar class (part of the
+ * official `scalar-*` namespace) with a single, well-defined purpose.
+ * ------------------------------------------------------------------------- */
+.scalar-mcp-layer {
+  display: none !important;
+}

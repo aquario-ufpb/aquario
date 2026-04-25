@@ -2,13 +2,9 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import { getContainer } from "@/lib/server/container";
-import { z } from "zod";
+import { updateCompletedDisciplinasSchema } from "@/lib/server/api-schemas/usuarios";
 
 export const dynamic = "force-dynamic";
-
-const updateSchema = z.object({
-  disciplinaIds: z.array(z.string().uuid()),
-});
 
 /**
  * GET /api/usuarios/me/disciplinas
@@ -36,7 +32,7 @@ export function PUT(request: Request) {
   return withAuth(request, async (req, usuario) => {
     try {
       const body = await req.json();
-      const parsed = updateSchema.safeParse(body);
+      const parsed = updateCompletedDisciplinasSchema.safeParse(body);
 
       if (!parsed.success) {
         return ApiError.badRequest("disciplinaIds deve ser um array de UUIDs válidos");
