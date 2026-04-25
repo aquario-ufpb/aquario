@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Landing Page**: Replace animated gradient/blob hero with a cleaner static layout, animated wave divider, blue underwater feature section, and deep-water footer.
+- **Navigation**: Redesign the desktop nav bar with a cleaner top-bar layout, compact tools menu, and static positioning on the landing page.
+- **Search**: Show entity logos in command palette search results when available.
 
 ### Removed
 

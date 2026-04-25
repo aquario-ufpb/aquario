@@ -46,7 +46,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
-      <div className="container relative z-20 mx-auto px-4 pt-24">
+      <div className="container relative z-20 mx-auto px-4 pt-20 md:pt-8">
         {/* Hero Section */}
         <section className="flex min-h-[82vh] flex-col items-center justify-center text-center">
           <div className="mx-auto w-full max-w-4xl px-4">

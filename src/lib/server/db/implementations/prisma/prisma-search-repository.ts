@@ -10,6 +10,18 @@ import type {
   SearchResultUsuario,
 } from "@/lib/shared/types/search.types";
 
+function mapEntidadeImagePath(urlFoto: string | null): string | null {
+  if (!urlFoto) {
+    return null;
+  }
+
+  if (urlFoto.startsWith("/") || urlFoto.startsWith("http")) {
+    return urlFoto;
+  }
+
+  return `/api/content-images/assets/entidades/${urlFoto}`;
+}
+
 export class PrismaSearchRepository implements ISearchRepository {
   async searchGuias(query: string, limit: number): Promise<SearchResultGuia[]> {
     const results = await prisma.$queryRaw<
@@ -32,9 +44,9 @@ export class PrismaSearchRepository implements ISearchRepository {
 
   async searchEntidades(query: string, limit: number): Promise<SearchResultEntidade[]> {
     const results = await prisma.$queryRaw<
-      Array<{ id: string; nome: string; slug: string | null; tipo: string }>
+      Array<{ id: string; nome: string; slug: string | null; tipo: string; urlFoto: string | null }>
     >(Prisma.sql`
-      SELECT id, nome, slug, tipo::text
+      SELECT id, nome, slug, tipo::text, "urlFoto"
       FROM "Entidade"
       WHERE to_tsvector('portuguese', immutable_unaccent(nome || ' ' || coalesce(descricao, '')))
             @@ plainto_tsquery('portuguese', immutable_unaccent(${query}))
@@ -45,7 +57,11 @@ export class PrismaSearchRepository implements ISearchRepository {
       LIMIT ${limit}
     `);
 
-    return results.map(r => ({ kind: "entidade" as const, ...r }));
+    return results.map(({ urlFoto, ...r }) => ({
+      kind: "entidade" as const,
+      ...r,
+      imagePath: mapEntidadeImagePath(urlFoto),
+    }));
   }
 
   async searchVagas(query: string, limit: number): Promise<SearchResultVaga[]> {

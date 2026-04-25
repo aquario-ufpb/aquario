@@ -31,6 +31,10 @@ const searchResultItemSchema = z
         "Score de relevância do full-text search do PostgreSQL (quanto maior, mais relevante).",
       example: 0.87,
     }),
+    imagePath: z.string().nullable().optional().openapi({
+      description: "URL da imagem exibida para resultados que possuem logo/foto.",
+      example: "/api/content-images/assets/entidades/ci.png",
+    }),
   })
   .openapi("SearchResultItem");
 
@@ -116,6 +120,7 @@ export function registerSearchPaths(registry: OpenAPIRegistry, _schemas: CommonS
                     title: "Centro de Informática",
                     subtitle: "CI",
                     url: "/entidade/centro-de-informatica",
+                    imagePath: "/api/content-images/assets/entidades/ci.png",
                     rank: 0.87,
                   },
                 ],
