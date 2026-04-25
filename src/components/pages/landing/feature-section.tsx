@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export type FeatureSectionProps = {
   title: string;
@@ -36,42 +36,36 @@ export function FeatureSection({
   containerClassName,
   carousel,
 }: FeatureSectionProps) {
-  const hasInteractiveContent = !!(children || carousel);
-
-  const card = (
+  return (
     <Card
-      className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-        isDark
-          ? "bg-white/10 border-white/20 hover:bg-white/15"
-          : "bg-white/60 border-blue-200 hover:bg-white/80"
-      } ${containerClassName || ""}`}
+      className={`h-full border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-blue-300/30 ${containerClassName || ""}`}
     >
-      <CardContent className="flex items-center gap-4 overflow-hidden p-6">
+      <CardContent className="flex items-center gap-5 overflow-hidden p-6">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-3">
             <h3
-              className={`font-display text-xl font-bold ${
-                isDark ? "text-white" : "text-aquario-primary"
-              }`}
+              className={`font-display text-xl font-bold ${isDark ? "text-white" : "text-aquario-primary"}`}
             >
               {title}
             </h3>
             {badgeText && <Badge className={badgeClassName}>{badgeText}</Badge>}
           </div>
-          <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
+          <p
+            className={`mb-5 text-sm leading-relaxed ${isDark ? "text-slate-300" : "text-slate-600"}`}
+          >
             {subtitle}
           </p>
           <Button
-            asChild={hasInteractiveContent}
+            asChild
             variant="outline"
             {...buttonProps}
             className={
               isDark
-                ? "border-white text-white hover:bg-white/20"
-                : "border-blue-900 text-blue-900 hover:bg-blue-50"
+                ? "rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10"
+                : "rounded-full border-blue-900/20 bg-white text-blue-900 hover:bg-blue-50"
             }
           >
-            {hasInteractiveContent ? <Link href={buttonUrl}>{buttonText}</Link> : buttonText}
+            <Link href={buttonUrl}>{buttonText}</Link>
           </Button>
           {children}
           {carousel && <div className="w-full min-w-0 max-w-full overflow-hidden">{carousel}</div>}
@@ -89,15 +83,5 @@ export function FeatureSection({
         )}
       </CardContent>
     </Card>
-  );
-
-  if (hasInteractiveContent) {
-    return card;
-  }
-
-  return (
-    <Link href={buttonUrl} className="block">
-      {card}
-    </Link>
   );
 }

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- **Landing Page**: Replace animated gradient/blob hero with a cleaner static layout, animated wave divider, blue underwater feature section, and deep-water footer.
 
 ### Removed
 
