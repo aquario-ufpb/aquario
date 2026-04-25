@@ -214,7 +214,9 @@ export function registerAuthPaths(registry: OpenAPIRegistry, schemas: CommonSche
           },
         },
       },
-      ...errorResponses([400]),
+      ...errorResponses([400, 409], {
+        409: { message: "Este e-mail já está em uso.", code: "EMAIL_ALREADY_EXISTS" },
+      }),
     },
   });
 

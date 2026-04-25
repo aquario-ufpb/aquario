@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     const message = error instanceof Error ? error.message : "Erro no cadastro";
 
-    if (message === "EMAIL_JA_CADASTRADO") {
+    if (message === "Este e-mail já está em uso.") {
       return ApiError.emailExists();
     }
 
