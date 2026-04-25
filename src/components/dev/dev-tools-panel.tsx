@@ -107,9 +107,7 @@ export function DevToolsPanel() {
         id="dev-tools-panel"
         inert={!open}
         className={`absolute bottom-12 left-0 w-72 origin-bottom-left rounded-lg border bg-background/95 shadow-xl backdrop-blur-sm transition-all duration-200 ease-out ${
-          open
-            ? "translate-y-0 scale-100 opacity-100"
-            : "translate-y-2 scale-95 opacity-0"
+          open ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
         }`}
       >
         <div className="flex items-center gap-2 border-b px-3 py-2.5">
@@ -214,7 +212,9 @@ export function DevToolsPanel() {
         aria-controls="dev-tools-panel"
         aria-label="Aquário Dev Tools"
         className={`flex h-10 w-10 items-center justify-center rounded-full bg-aquario-primary text-white shadow-lg transition-all duration-200 hover:bg-aquario-primary/80 ${
-          open ? "rotate-[20deg] ring-2 ring-aquario-primary/30 ring-offset-2 ring-offset-background" : ""
+          open
+            ? "rotate-[20deg] ring-2 ring-aquario-primary/30 ring-offset-2 ring-offset-background"
+            : ""
         }`}
       >
         <Fish className={`h-5 w-5 transition-transform duration-200 ${open ? "scale-110" : ""}`} />
