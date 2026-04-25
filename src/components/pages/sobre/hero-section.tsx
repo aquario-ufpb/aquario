@@ -1,106 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Github } from "lucide-react";
-import WaterRippleEffect from "@/components/ui/water-ripple-effect";
 
 export function HeroSection() {
-  const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const isDark = mounted ? (resolvedTheme || theme) === "dark" : true;
-
-  if (!mounted) {
-    return (
-      <div className="relative overflow-x-hidden overflow-y-hidden w-full h-[85vh] bg-gradient-to-r from-[#1a3a5c] to-[#0f2338] dark:from-[#1a3a5c] dark:to-[#0f2338]" />
-    );
-  }
-
   return (
-    <div className="relative overflow-x-hidden overflow-y-hidden w-full h-[85vh]">
-      {/* Circular gradient background */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: isDark
-            ? "radial-gradient(circle at 25% 50%, #1a3a5c 0%, #0f2338 100%)"
-            : "radial-gradient(circle at 25% 50%, #DCF0FF 0%, #C8E6FA 100%)",
-        }}
-      />
-
-      {/* Blur effect */}
-      <div className="absolute left-0 top-0 bottom-0 w-[50%] z-0">
-        <Image src="/blur.svg" alt="Blur effect" fill className="object-contain object-left" />
-      </div>
-
-      <div className="relative flex flex-col md:flex-row items-center h-full w-full max-w-7xl mx-auto px-4 md:px-8 md:pr-12 pt-24">
-        {/* Fish Image - Left Side */}
-        <div className="hidden md:flex flex-1 relative w-full md:w-2/3 h-full mb-8 md:mb-0 items-center justify-start">
-          <div className="relative w-full h-full -ml-8 md:-ml-16">
-            <div
-              className="relative z-10 w-[120%] h-[120%] -ml-[10%] -mt-[10%]"
-              style={{ transform: "scale(0.8) translateX(-8%) translateY(15%)" }}
-            >
-              <WaterRippleEffect
-                imageSrc={isDark ? "/vector4.svg" : "/vector3.svg"}
-                width={1632}
-                height={1246}
-                className="object-contain object-left"
-                containerClassName="w-full h-full"
-                scale={0.8}
-              />
-            </div>
+    <section className="relative flex min-h-[82vh] items-center overflow-hidden bg-slate-50 pt-24 text-slate-950 dark:bg-slate-950 dark:text-white">
+      <div className="container relative z-30 mx-auto px-4">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center drop-shadow-[0_18px_32px_rgba(14,58,108,0.18)] dark:drop-shadow-[0_18px_32px_rgba(125,211,252,0.16)]">
+            <Image
+              src="/vector3.svg"
+              alt="Logo do Aquário"
+              width={80}
+              height={80}
+              className="h-auto w-full dark:hidden"
+            />
+            <Image
+              src="/vector4.svg"
+              alt="Logo do Aquário"
+              width={80}
+              height={80}
+              className="hidden h-auto w-full dark:block"
+            />
           </div>
-        </div>
-
-        {/* Text Content */}
-        <div className="flex-1 flex flex-col items-center md:items-end justify-center space-y-4 md:pl-8 text-center md:text-right w-full">
-          <h1
-            className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight"
-            style={{ color: isDark ? "#D0EFFF" : "#285A96" }}
-          >
-            <span className="block">Sobre o</span>
-            <span className="block">Aquário</span>
+          <h1 className="font-display text-5xl font-bold leading-tight tracking-tight text-aquario-primary dark:text-white md:text-6xl lg:text-7xl">
+            Sobre o Aquário
           </h1>
-
-          <p
-            className="text-base md:text-lg leading-relaxed max-w-md"
-            style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
-          >
-            Um projeto open source focado em centralizar informações relevantes para os alunos do
-            Centro de Informática (CI) da UFPB.
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-700 dark:text-slate-300 md:text-xl">
+            Um projeto open source feito para centralizar informações relevantes e aproximar a
+            comunidade acadêmica do Centro de Informática da UFPB.
           </p>
-
-          <div className="pt-2">
+          <div className="mt-10 flex justify-center">
             <Button
               asChild
               size="lg"
-              className="rounded-lg font-normal hover:opacity-90 transition-opacity flex items-center gap-1 px-5"
-              style={{
-                backgroundColor: isDark ? "#1a3a5c" : "#ffffff",
-                color: isDark ? "#C8E6FA" : "#0e3a6c",
-              }}
+              className="h-12 rounded-full bg-aquario-primary px-8 text-base font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-aquario-primary/90"
             >
               <Link
                 href="https://github.com/aquario-ufpb/aquario"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Github className="w-6 h-6" />
-                <span className="text-2md">Contribua para o Aquário</span>
+                <Github className="mr-2 h-5 w-5" />
+                Contribua para o Aquário
               </Link>
             </Button>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

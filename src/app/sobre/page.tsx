@@ -1,8 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, AlertCircle, Mail, Users, Search, Zap } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle2, AlertCircle, Mail, Users, Search, Zap, Github } from "lucide-react";
+import Image from "next/image";
 import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { HeroSection } from "@/components/pages/sobre/hero-section";
 import { ContactButton } from "@/components/pages/sobre/contact-button";
+import { WaterTransitionSection } from "@/components/pages/landing/water-transition-section";
 
 const problemsBefore = [
   { icon: AlertCircle, text: "Falta de informação centralizada" },
@@ -22,126 +24,103 @@ const problemsAfter = [
 
 export default function SobrePage() {
   return (
-    <main className="relative pt-0">
-      {/* Hero Section - Client Component for water ripple effect */}
+    <main className="relative overflow-x-hidden bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
       <HeroSection />
 
-      {/* Rest of the content */}
-      <div className="space-y-0">
+      <WaterTransitionSection>
         {/* Problem Statement */}
-        <section className="w-full p-12 md:p-20 bg-white dark:bg-white/5">
-          <div className="container mx-auto max-w-6xl">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-display font-bold mb-4 text-[#0e3a6c] dark:text-[#C8E6FA]">
-                O Problema que Resolvemos
+        <section>
+          <div className="mx-auto max-w-6xl">
+            <header className="mb-12 text-center">
+              <h2 className="font-display text-4xl font-bold text-white md:text-5xl">
+                O problema que resolvemos
               </h2>
-            </div>
+              <p className="mx-auto mt-4 max-w-2xl text-sky-100">
+                O Aquário nasceu para diminuir ruído, aproximar pessoas e transformar informação
+                espalhada em caminhos claros para estudantes do CI.
+              </p>
+            </header>
 
-            <div className="grid md:grid-cols-2 gap-12 md:gap-16">
+            <div className="grid gap-6 md:grid-cols-2">
               {/* Before Card */}
-              <div>
-                <h3 className="text-xl font-semibold mb-8 text-slate-500 dark:text-white/60">
-                  Antes do Aquário
-                </h3>
-                <ul className="space-y-5">
-                  {problemsBefore.map((item, index) => (
-                    <li key={index} className="flex items-start gap-4">
-                      <item.icon className="w-5 h-5 mt-1 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-                      <span className="text-lg leading-relaxed text-slate-700 dark:text-white/90">
-                        {item.text}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <Card className="border-white/10 bg-white/[0.04] shadow-sm">
+                <CardContent className="p-6 md:p-8">
+                  <h3 className="mb-6 text-xl font-semibold text-white/80">Antes do Aquário</h3>
+                  <ul className="space-y-5">
+                    {problemsBefore.map(item => (
+                      <li key={item.text} className="flex items-start gap-4">
+                        <item.icon className="mt-1 h-5 w-5 flex-shrink-0 text-sky-200" />
+                        <span className="text-base leading-relaxed text-sky-50">{item.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
 
               {/* After Card */}
-              <div>
-                <h3 className="text-xl font-semibold mb-8 text-slate-500 dark:text-white/60">
-                  Com o Aquário
-                </h3>
-                <ul className="space-y-5">
-                  {problemsAfter.map((item, index) => (
-                    <li key={index} className="flex items-start gap-4">
-                      <item.icon className="w-5 h-5 mt-1 flex-shrink-0 text-cyan-600 dark:text-cyan-400" />
-                      <span className="text-lg leading-relaxed text-slate-700 dark:text-white/90">
-                        {item.text}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <Card className="border-white/10 bg-white/[0.07] shadow-sm">
+                <CardContent className="p-6 md:p-8">
+                  <h3 className="mb-6 text-xl font-semibold text-white">Com o Aquário</h3>
+                  <ul className="space-y-5">
+                    {problemsAfter.map(item => (
+                      <li key={item.text} className="flex items-start gap-4">
+                        <item.icon className="mt-1 h-5 w-5 flex-shrink-0 text-cyan-200" />
+                        <span className="text-base leading-relaxed text-sky-50">{item.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
 
         {/* Features Section */}
-        <section
-          className="w-full p-12 md:py-16"
-          style={{
-            background:
-              "radial-gradient(circle at 50% 50%, var(--features-bg-start) 0%, var(--features-bg-end) 100%)",
-          }}
-        >
-          <style
-            dangerouslySetInnerHTML={{
-              __html: `
-              :root {
-                --features-bg-start: #DCF0FF;
-                --features-bg-end: #C8E6FA;
-              }
-              .dark {
-                --features-bg-start: #1a3a5c;
-                --features-bg-end: #0f2338;
-              }
-            `,
-            }}
-          />
-          <div className="container mx-auto max-w-4xl">
-            <h2 className="text-4xl font-display font-bold mb-8 text-center text-[#0e3a6c] dark:text-[#C8E6FA]">
-              Funcionalidades
-            </h2>
-            <div className="space-y-6">
-              <p className="text-lg md:text-xl leading-relaxed text-center text-[#0e3a6c] dark:text-[#E5F6FF]">
+        <section className="pt-20">
+          <Card className="mx-auto max-w-4xl border-white/10 bg-white text-slate-800 shadow-sm dark:bg-white/[0.05] dark:text-sky-50">
+            <CardContent className="space-y-6 p-6 text-center md:p-10">
+              <h2 className="font-display text-4xl font-bold text-aquario-primary dark:text-white">
+                Funcionalidades
+              </h2>
+              <p className="text-lg leading-relaxed text-slate-700 dark:text-sky-100 md:text-xl">
                 O Aquário é uma plataforma em constante evolução, desenvolvida para centralizar e
                 organizar informações essenciais para a comunidade acadêmica do Centro de
                 Informática da UFPB. Nosso objetivo é facilitar o acesso a oportunidades, projetos,
                 laboratórios e recursos educacionais, criando um hub completo onde alunos,
                 professores e laboratórios possam se conectar e colaborar.
               </p>
-              <p className="text-lg md:text-xl leading-relaxed text-center text-[#0e3a6c] dark:text-[#E5F6FF]">
+              <p className="text-base leading-relaxed text-slate-600 dark:text-sky-100 md:text-lg">
                 A versão atual, lançada no semestre <strong>2025.2</strong>, já conta com as
                 funcionalidades de <strong>Guias</strong> e <strong>Entidades</strong> totalmente
                 disponíveis. Estes módulos permitem que os alunos encontrem orientações sobre cursos
                 e disciplinas, além de explorarem o diretório completo de laboratórios, grupos de
                 pesquisa, ligas acadêmicas e outras entidades do CI.
               </p>
-              <p className="text-lg md:text-xl leading-relaxed text-center text-[#0e3a6c] dark:text-[#E5F6FF]">
+              <p className="text-base leading-relaxed text-slate-600 dark:text-sky-100 md:text-lg">
                 Estamos trabalhando continuamente para expandir as funcionalidades da plataforma,
                 incluindo sistema de vagas, blog e publicações, achados e perdidos, e muito mais. O
                 Aquário é um projeto open source e novas contribuições são sempre bem-vindas!
               </p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Open Source Section */}
-        <section className="w-full p-12 md:py-16 bg-white dark:bg-white/5">
-          <div className="container mx-auto max-w-4xl">
-            <Card className="p-8 md:p-12 text-center rounded-3xl border-slate-200 bg-white/80 dark:bg-white/5 dark:border-2 dark:border-[rgba(208,239,255,0.7)]">
-              <CardHeader>
-                <CardTitle className="text-4xl font-display font-bold mb-6 text-[#0e3a6c] dark:text-[#C8E6FA]">
-                  Projeto Open Source
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-8">
-                <p className="text-lg md:text-xl leading-relaxed max-w-3xl mx-auto text-[#0e3a6c] dark:text-[#E5F6FF]">
+        <section className="pt-8">
+          <div className="mx-auto max-w-4xl">
+            <Card className="rounded-3xl border-white/10 bg-white/[0.05] text-center shadow-sm">
+              <CardContent className="space-y-8 p-6 md:p-10">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-sky-100">
+                  <Github className="h-6 w-6" />
+                </div>
+                <h2 className="font-display text-4xl font-bold text-white">Projeto Open Source</h2>
+                <p className="mx-auto max-w-3xl text-lg leading-relaxed text-sky-100 md:text-xl">
                   O Aquário é um projeto open source licenciado sob a Licença MIT, e as
                   contribuições são muito bem-vindas! Acreditamos que qualquer pessoa pode
                   contribuir para tornar esta plataforma melhor - seja você um estudante novato no
                   CI, um veterano, ou mesmo alguém de fora da comunidade acadêmica.
                 </p>
-                <p className="text-base md:text-lg leading-relaxed max-w-3xl mx-auto text-[#0e3a6c] dark:text-[#E5F6FF]">
+                <p className="mx-auto max-w-3xl text-base leading-relaxed text-sky-100 md:text-lg">
                   Para começar a contribuir, basta seguir o tutorial detalhado disponível nos
                   arquivos README do repositório. O processo é simples: faça um fork do projeto,
                   crie suas alterações e abra uma Pull Request. Todas as contribuições são revisadas
@@ -150,7 +129,7 @@ export default function SobrePage() {
 
                 {/* GitHub Contributors */}
                 <div className="pt-6">
-                  <p className="text-lg md:text-xl font-semibold mb-6 text-[#0e3a6c] dark:text-[#C8E6FA]">
+                  <p className="mb-6 text-lg font-semibold text-white md:text-xl">
                     Nossos Contribuidores
                   </p>
                   <a
@@ -159,23 +138,25 @@ export default function SobrePage() {
                     rel="noopener noreferrer"
                     className="inline-block transition-transform hover:scale-105"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src="https://contrib.rocks/image?repo=aquario-ufpb/aquario"
                       alt="Contributors"
-                      className="w-full max-w-2xl mx-auto rounded-xl"
+                      width={640}
+                      height={128}
+                      className="mx-auto w-full max-w-2xl rounded-xl"
                     />
                   </a>
-                  <p className="text-sm mt-4 opacity-70 text-[#0e3a6c] dark:text-[#C8E6FA]">
+                  <p className="mt-4 text-sm text-sky-100/75">
                     Clique para ver todos os contribuidores no GitHub
                   </p>
                 </div>
 
-                <div className="flex justify-center gap-4 flex-wrap pt-4">
+                <div className="flex flex-wrap justify-center gap-4 pt-4">
                   <ContributeOnGitHub
                     url="https://github.com/aquario-ufpb/aquario"
                     variant="outline"
                     size="lg"
+                    className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10"
                   />
                   <ContactButton />
                 </div>
@@ -183,7 +164,7 @@ export default function SobrePage() {
             </Card>
           </div>
         </section>
-      </div>
+      </WaterTransitionSection>
     </main>
   );
 }

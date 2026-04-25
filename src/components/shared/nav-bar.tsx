@@ -58,7 +58,8 @@ function NavLogo() {
     <div className="flex items-center justify-start">
       <Link
         href="/"
-        className="flex items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        aria-label="Ir para a página inicial"
+        className="-ml-2 flex cursor-pointer items-center rounded-full p-2 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:hover:bg-white/10"
       >
         <Image
           className="h-7 w-auto dark:hidden"
