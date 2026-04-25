@@ -211,7 +211,7 @@ export default function Home() {
           aria-hidden="true"
           viewBox="0 0 1200 320"
           preserveAspectRatio="none"
-          className="pointer-events-none absolute inset-0 h-full w-full text-blue-950"
+          className="pointer-events-none absolute inset-0 h-full w-full text-blue-950 dark:text-slate-900"
         >
           <title>Silhueta decorativa do fundo do oceano</title>
           <path
