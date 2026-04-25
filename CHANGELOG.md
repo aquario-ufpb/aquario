@@ -8,8 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [1.5.0] - 2026-04-25
+
+### Added
 - **API Docs**: Interactive OpenAPI 3.1 documentation rendered with Scalar UI at `/api-docs`, covering all 56 API endpoints with request/response schemas, examples, and error codes (#149)
 - **API Docs**: JSON spec endpoint at `GET /api/openapi` for tooling integration (Postman, Insomnia, SDK generators)
+- **Auth**: Expand email validation to support all `.ufpb.br` subdomains (#181)
 - **Tests**: Server-side auth service tests — authenticate, register, verify-email, reset-password, forgot-password, resend-verification, and middleware (66 new tests)
 - **Tests**: Admin mutation tests — merge-facade-user service (12 tests), user deletion route, role update route, entity member add/update/delete routes (33 tests)
 - **Tests**: Onboarding state machine integration tests — step ordering, conditional visibility, PAAS availability, semester-based logic, completion/skip mutations (18 tests)
@@ -19,14 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Search**: PostgreSQL Full-Text Search with `unaccent` extension for accent-insensitive Brazilian Portuguese search, ranked by relevance with `ts_rank`
 - **Search**: Recent search history stored in localStorage (up to 8 items)
 
-### Removed
-- **Submodule**: Remove `aquario-vagas` git submodule and all references (repo was deleted). Vagas now fully served via backend API
-
 ### Changed
 - **API**: Extract Zod validation schemas from route handlers into `src/lib/server/api-schemas/` for Next.js 15 App Router compatibility
 - **Onboarding**: Hide onboarding entirely when between semesters — only show it when today falls within an active semester's date range
 - **UI**: Replace native date inputs with DatePicker across all forms — entities, memberships, vagas, and calendar management (#167)
-- **Users**:  Otimiza verificação de unicidade de slug em `prisma-usuarios-repository.ts`, limitando a consulta de existência a `select: { id: true }` para reduzir payload por iteração.
+- **Dev Tools**: Add open/close animation and unify toggle button (#185)
+- **Users**: Otimiza verificação de unicidade de slug em `prisma-usuarios-repository.ts`, limitando a consulta de existência a `select: { id: true }` para reduzir payload por iteração.
+
+### Removed
+- **Submodule**: Remove `aquario-vagas` git submodule and all references (repo was deleted). Vagas now fully served via backend API
 
 ### Fixed
 - **CI**: Skip preview deployment for fork PRs to avoid failures from missing secrets
@@ -390,7 +402,8 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/aquario-ufpb/aquario/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/aquario-ufpb/aquario/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/aquario-ufpb/aquario/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/aquario-ufpb/aquario/compare/v1.1.1...v1.2.0
