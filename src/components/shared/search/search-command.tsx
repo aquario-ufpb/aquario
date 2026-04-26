@@ -55,6 +55,25 @@ const CATEGORY_ORDER: SearchResultKind[] = [
 const categoryLabelClass =
   "text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400";
 
+const ALLOWED_NEXT_IMAGE_HOSTS = new Set(["api.dicebear.com", "contrib.rocks"]);
+
+function isAllowedNextImageSrc(src: string): boolean {
+  if (src.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    const { hostname, protocol } = new URL(src);
+    return (
+      protocol === "https:" &&
+      (ALLOWED_NEXT_IMAGE_HOSTS.has(hostname) ||
+        hostname.endsWith(".public.blob.vercel-storage.com"))
+    );
+  } catch {
+    return false;
+  }
+}
+
 function getItemLabel(item: SearchResultItem): string {
   switch (item.kind) {
     case "pagina":
@@ -113,7 +132,7 @@ function getItemRoute(item: SearchResultItem): string {
 }
 
 function getEntityLogo(item: SearchResultItem): { src: string; alt: string } | null {
-  if (item.kind !== "entidade" || !item.imagePath) {
+  if (item.kind !== "entidade" || !item.imagePath || !isAllowedNextImageSrc(item.imagePath)) {
     return null;
   }
 
@@ -198,8 +217,10 @@ export function SearchCommand() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
+  const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const { data, isLoading } = useSearch(query);
 
   const flatItems = flattenResults(data);
@@ -239,15 +260,19 @@ export function SearchCommand() {
   // Focus input when opened, reset when closed
   useEffect(() => {
     if (open) {
+      previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
       // Small delay to ensure DOM is ready after animation
       const timer = setTimeout(() => inputRef.current?.focus(), 50);
       document.body.style.overflow = "hidden";
-      return () => clearTimeout(timer);
-    } else {
-      setQuery("");
-      setSelectedIndex(-1);
-      document.body.style.overflow = "";
+      return () => {
+        clearTimeout(timer);
+        document.body.style.overflow = "";
+      };
     }
+
+    setQuery("");
+    setSelectedIndex(-1);
+    previouslyFocusedRef.current?.focus();
   }, [open]);
 
   // Scroll selected item into view
@@ -280,6 +305,30 @@ export function SearchCommand() {
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
+        return;
+      }
+
+      if (e.key === "Tab") {
+        const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+
+        if (!focusable?.length) {
+          e.preventDefault();
+          return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+
         return;
       }
 
@@ -316,8 +365,10 @@ export function SearchCommand() {
   if (isMobile) {
     return (
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
+        aria-label="Pesquisar no Aquario"
         className="fixed inset-0 z-[100] bg-background flex flex-col animate-in slide-in-from-top duration-200"
         onKeyDown={handleKeyDown}
       >
@@ -379,15 +430,16 @@ export function SearchCommand() {
   // Desktop: dropdown aligned with navbar
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
+      aria-label="Pesquisar no Aquario"
       className="fixed inset-0 z-[100]"
       onKeyDown={handleKeyDown}
     >
       {/* Soft backdrop to focus attention without feeling modal-heavy. */}
-      <button
-        type="button"
-        aria-label="Fechar pesquisa"
+      <div
+        aria-hidden="true"
         className="absolute inset-0 bg-slate-950/10 backdrop-blur-[2px] dark:bg-slate-950/35"
         onClick={() => setOpen(false)}
       />

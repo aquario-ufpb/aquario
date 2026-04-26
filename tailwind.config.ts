@@ -122,6 +122,14 @@ const config = {
             transform: "translateX(-50%)",
           },
         },
+        "group-marquee": {
+          "0%": {
+            transform: "translateX(0)",
+          },
+          "100%": {
+            transform: "translateX(-50%)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -132,6 +140,7 @@ const config = {
         fourth: "fourth 60s linear infinite",
         fifth: "fifth 70s linear infinite",
         "wave-drift": "wave-drift 12s linear infinite",
+        "group-marquee": "group-marquee 34s linear infinite",
       },
     },
   },

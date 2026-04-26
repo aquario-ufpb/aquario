@@ -1,19 +1,26 @@
 "use client";
 
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 type WaterTransitionSectionProps = {
   children: ReactNode;
 };
 
 export function WaterTransitionSection({ children }: WaterTransitionSectionProps) {
+  const sectionRef = useRef<HTMLElement>(null);
   const shouldReduceMotion = useReducedMotion();
-  const { scrollY } = useScroll();
-  const waveLift = useTransform(scrollY, [180, 680], ["0px", "-140px"]);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "start start"],
+  });
+  const waveLift = useTransform(scrollYProgress, [0, 1], ["0px", "-140px"]);
 
   return (
-    <section className="relative z-10 -mt-56 overflow-visible bg-sky-800 pb-20 pt-[22rem] text-white dark:bg-sky-950 md:-mt-72 md:pt-[28rem]">
+    <section
+      ref={sectionRef}
+      className="relative z-10 -mt-56 overflow-visible bg-sky-800 pb-20 pt-[22rem] text-white dark:bg-sky-950 md:-mt-72 md:pt-[28rem]"
+    >
       <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 top-0 z-10 h-80 w-[200%] text-slate-50 will-change-transform dark:text-slate-950 md:h-96"

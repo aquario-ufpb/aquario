@@ -1,4 +1,4 @@
-// Centralized page header titles and subtitles for FeatureSection
+// Centralized page header titles and subtitles used across app pages.
 // UI text remains em Português
 
 export const PAGE_HEADER_TEXT = {

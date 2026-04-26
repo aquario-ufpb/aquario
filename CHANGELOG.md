@@ -14,10 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Navigation**: Redesign the desktop nav bar with a cleaner top-bar layout, compact tools menu, and static positioning on the landing page.
 - **Search**: Show entity logos in command palette search results when available.
 - **Sobre**: Restyle the about page to match the cleaner underwater landing page visual system.
+- **Landing Page**: Replace the feature screenshots with an illustrated resources grid, including rotating real group logos and a lab map preview.
+- **Landing Page**: Split the feature grid into focused card and illustration components.
+- **Ferramentas**: Reuse feature illustrations on the tools overview page and add a dedicated Minhas Disciplinas illustration.
+- **Ferramentas**: Adapt shared feature illustrations for white tool cards while preserving the underwater landing style.
 
 ### Removed
+- **Landing Page**: Remove the unused legacy `FeatureSection` component after replacing it with the feature card grid.
 
 ### Fixed
+- **API Docs**: Align the `/search` OpenAPI response schema with the actual per-category search result payloads.
+- **Analytics**: Add location metadata to landing page GitHub CTA tracking events.
+- **Landing Page**: Make the underwater wave transition animation track section-relative scroll progress.
+- **Search**: Prevent unsupported external entity logo URLs from being passed to `next/image`.
+- **Search**: Add accessible labels, focus trapping, and a non-focusable backdrop to the command palette dialog.
 
 ## [1.5.1] - 2026-04-25
 

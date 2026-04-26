@@ -1,23 +1,39 @@
 "use client";
 import { trackEvent } from "@/analytics/posthog-client";
-import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
-import { Button } from "@/components/ui/button";
-import { GitBranch, Github, MapIcon } from "lucide-react";
-import { useTheme } from "next-themes";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { EntidadesCarousel } from "@/components/pages/landing/entidades-carousel";
-import { FeatureSection } from "@/components/pages/landing/feature-section";
+import { FeatureCard } from "@/components/pages/landing/features/feature-card";
+import { landingFeatures } from "@/components/pages/landing/features/feature-data";
 import { WaterTransitionSection } from "@/components/pages/landing/water-transition-section";
+import { Button } from "@/components/ui/button";
+import { useEntidades } from "@/lib/client/hooks";
+import { GitBranch, Github, MapIcon } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo } from "react";
 
 export default function Home() {
-  const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { data: entidades = [] } = useEntidades();
 
-  // Prevent hydration mismatch
+  const groups = useMemo(
+    () =>
+      entidades.filter(
+        entidade =>
+          (entidade.tipo === "GRUPO" ||
+            entidade.tipo === "LIGA_ACADEMICA" ||
+            entidade.tipo === "OUTRO") &&
+          entidade.imagePath
+      ),
+    [entidades]
+  );
+
+  const featuredLabs = useMemo(
+    () =>
+      entidades
+        .filter(entidade => entidade.tipo === "LABORATORIO")
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+        .slice(0, 5),
+    [entidades]
+  );
+
   useEffect(() => {
-    setMounted(true);
-
     // Log environment indicator
     if (process.env.NEXT_PUBLIC_IS_STAGING === "true") {
       console.log(
@@ -37,12 +53,6 @@ export default function Home() {
       );
     }
   }, []);
-
-  const isDark = (resolvedTheme || theme) === "dark";
-
-  if (!mounted) {
-    return null;
-  }
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
@@ -90,7 +100,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full px-3 py-2 transition-colors hover:bg-slate-200/70 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white"
-                onClick={() => trackEvent("github_button_clicked")}
+                onClick={() => trackEvent("github_button_clicked", { location: "landing_hero" })}
               >
                 <Github className="h-4 w-4" />
                 Contribuir no GitHub
@@ -101,107 +111,25 @@ export default function Home() {
       </div>
 
       <WaterTransitionSection>
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-8 text-center">
-            <h2 className="font-display text-3xl font-bold text-white md:text-4xl">
-              Ferramentas para atravessar o semestre
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sky-100">
-              Um ponto de partida limpo para navegar pelo CI, planejar disciplinas e se conectar com
-              a comunidade acadêmica.
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 grid gap-6 md:grid-cols-[1fr_0.75fr] md:items-end">
+            <div>
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-sky-200">
+                Recursos
+              </p>
+              <h2 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">
+                Tudo que você precisa, em um só lugar.
+              </h2>
+            </div>
+            <p className="max-w-xl text-base font-medium leading-relaxed text-sky-100 md:text-lg">
+              Ferramentas simples para organizar sua vida acadêmica, encontrar oportunidades e fazer
+              parte da comunidade do CI.
             </p>
           </div>
-          <div className="space-y-6">
-            {/* Tools Section - Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Mapas Section */}
-              <FeatureSection
-                title={PAGE_HEADER_TEXT.mapas.title}
-                subtitle={PAGE_HEADER_TEXT.mapas.extendedSubtitle}
-                buttonText="Ver Mapas"
-                buttonUrl="/mapas"
-                imageSrc={isDark ? "/mapas/dark.png" : "/mapas/light.png"}
-                imageAlt="Mapas"
-                isDark={isDark}
-              />
-
-              {/* Calendario Section */}
-              <FeatureSection
-                title={PAGE_HEADER_TEXT.minhasDisciplinas.title}
-                subtitle={PAGE_HEADER_TEXT.minhasDisciplinas.extendedSubtitle}
-                buttonText="Minhas Disciplinas"
-                buttonUrl="/calendario"
-                imageSrc={isDark ? "/calendario/dark.png" : "/calendario/light.png"}
-                imageAlt="Calendário"
-                isDark={isDark}
-              />
-            </div>
-
-            {/* Calendario Academico Section */}
-            <FeatureSection
-              title={PAGE_HEADER_TEXT.calendarioAcademico.title}
-              subtitle={PAGE_HEADER_TEXT.calendarioAcademico.extendedSubtitle}
-              buttonText="Ver Calendário"
-              buttonUrl="/calendario-academico"
-              imageSrc={
-                isDark ? "/calendario-academico/dark.png" : "/calendario-academico/light.png"
-              }
-              imageAlt="Calendário Acadêmico"
-              isDark={isDark}
-              badgeText="Novo"
-              badgeClassName={
-                isDark
-                  ? "bg-green-500/20 text-green-400 border-green-500/30"
-                  : "bg-green-500/10 text-green-600 border-green-500/30"
-              }
-            />
-
-            {/* Grades Curriculares Section */}
-            <FeatureSection
-              title={PAGE_HEADER_TEXT.gradesCurriculares.title}
-              subtitle={PAGE_HEADER_TEXT.gradesCurriculares.extendedSubtitle}
-              buttonText="Ver Grade"
-              buttonUrl="/grades-curriculares"
-              imageSrc={isDark ? "/grade/dark.png" : "/grade/light.png"}
-              imageAlt="Grades Curriculares"
-              isDark={isDark}
-              badgeText="Novo"
-              badgeClassName={
-                isDark
-                  ? "bg-green-500/20 text-green-400 border-green-500/30"
-                  : "bg-green-500/10 text-green-600 border-green-500/30"
-              }
-            />
-
-            {/* Guias Section */}
-            <FeatureSection
-              title={PAGE_HEADER_TEXT.guias.title}
-              subtitle={PAGE_HEADER_TEXT.guias.extendedSubtitle}
-              buttonText="Explorar Guias"
-              buttonUrl="/guias"
-              imageSrc={isDark ? "/guias/dark.png" : "/guias/light.png"}
-              imageAlt="Guias"
-              isDark={isDark}
-            />
-
-            {/* Sobre Section */}
-            <FeatureSection
-              title={PAGE_HEADER_TEXT.sobre.title}
-              subtitle={PAGE_HEADER_TEXT.sobre.extendedSubtitle}
-              buttonText="Saiba Mais"
-              buttonUrl="/sobre"
-              isDark={isDark}
-            />
-
-            {/* Entidades Section */}
-            <FeatureSection
-              title={PAGE_HEADER_TEXT.entidades.title}
-              subtitle={PAGE_HEADER_TEXT.entidades.extendedSubtitle}
-              buttonText="Ver Todas"
-              buttonUrl="/entidades"
-              isDark={isDark}
-              carousel={<EntidadesCarousel isDark={isDark} />}
-            />
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {landingFeatures.map(feature => (
+              <FeatureCard key={feature.title} {...feature} groups={groups} labs={featuredLabs} />
+            ))}
           </div>
         </div>
       </WaterTransitionSection>
@@ -252,7 +180,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full px-3 py-2 transition-colors hover:bg-white/10 hover:text-white"
-                onClick={() => trackEvent("github_button_clicked")}
+                onClick={() => trackEvent("github_button_clicked", { location: "landing_footer" })}
               >
                 <Github className="h-4 w-4" />
                 GitHub

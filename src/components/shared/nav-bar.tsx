@@ -4,6 +4,7 @@ import Image from "next/image";
 import {
   BookOpen,
   CalendarDays,
+  Activity,
   GitBranch,
   GraduationCap,
   LogOut,
@@ -87,6 +88,7 @@ function ToolsDropdownContent() {
     title: string;
     description: string;
     icon: LucideIcon;
+    external?: boolean;
   }> = [
     {
       href: "/calendario",
@@ -118,6 +120,13 @@ function ToolsDropdownContent() {
       description: "Acompanhe datas importantes da UFPB.",
       icon: GraduationCap,
     },
+    {
+      href: "https://sigaacaiu.com",
+      title: "SIGAA Caiu?",
+      description: "Veja se o SIGAA UFPB está no ar.",
+      icon: Activity,
+      external: true,
+    },
   ];
 
   return (
@@ -130,22 +139,43 @@ function ToolsDropdownContent() {
         {tools.map(tool => (
           <li key={tool.href}>
             <NavigationMenuLink asChild>
-              <Link
-                href={tool.href}
-                className="flex gap-3 rounded-xl p-3 no-underline outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-white/10 dark:focus:bg-white/10"
-              >
-                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
-                  <tool.icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
-                    {tool.title}
+              {tool.external ? (
+                <a
+                  href={tool.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex gap-3 rounded-xl p-3 no-underline outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-white/10 dark:focus:bg-white/10"
+                >
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
+                    <tool.icon className="h-4 w-4" />
                   </div>
-                  <p className="mt-1 text-xs leading-snug text-muted-foreground">
-                    {tool.description}
-                  </p>
-                </div>
-              </Link>
+                  <div>
+                    <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
+                      {tool.title}
+                    </div>
+                    <p className="mt-1 text-xs leading-snug text-muted-foreground">
+                      {tool.description}
+                    </p>
+                  </div>
+                </a>
+              ) : (
+                <Link
+                  href={tool.href}
+                  className="flex gap-3 rounded-xl p-3 no-underline outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-white/10 dark:focus:bg-white/10"
+                >
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
+                    <tool.icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
+                      {tool.title}
+                    </div>
+                    <p className="mt-1 text-xs leading-snug text-muted-foreground">
+                      {tool.description}
+                    </p>
+                  </div>
+                </Link>
+              )}
             </NavigationMenuLink>
           </li>
         ))}
