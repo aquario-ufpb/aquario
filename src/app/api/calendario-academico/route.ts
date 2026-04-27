@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
+import { createSemestreSchema } from "@/lib/server/api-schemas/calendario";
 
 export const dynamic = "force-dynamic";
 
@@ -23,17 +24,6 @@ export async function GET(request: Request) {
     return ApiError.internal("Erro ao buscar semestres");
   }
 }
-
-const dateString = z
-  .string()
-  .min(1, "Data é obrigatória")
-  .refine(s => !isNaN(new Date(s).getTime()), { message: "Data inválida" });
-
-const createSemestreSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório"),
-  dataInicio: dateString,
-  dataFim: dateString,
-});
 
 export function POST(request: Request) {
   return withAdmin(request, async req => {

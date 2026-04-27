@@ -1,6 +1,6 @@
 # Aquário
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg)](CHANGELOG.md)
 [![Changelog](https://img.shields.io/badge/changelog-view-blueviolet)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://github.com/aquario-ufpb/aquario/actions/workflows/tests.yml/badge.svg)](https://github.com/aquario-ufpb/aquario/actions/workflows/tests.yml)
@@ -37,7 +37,7 @@ Job listings, internships, research positions, and volunteer opportunities.
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 15 
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Database**: PostgreSQL + Prisma

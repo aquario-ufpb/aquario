@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 import NavBar from "@/components/shared/nav-bar";
 import HamburgerMenu from "@/components/shared/hamburguer-menu";
@@ -8,6 +9,8 @@ import { SearchCommand } from "@/components/shared/search/search-command";
 
 export default function NavWrapper() {
   const [isDesktop, setIsDesktop] = useState(false);
+  const pathname = usePathname();
+  const isLandingPage = pathname === "/";
 
   useEffect(() => {
     // Function to check window size and update state
@@ -30,7 +33,7 @@ export default function NavWrapper() {
   // Render the appropriate component based on screen size
   return (
     <>
-      {isDesktop ? <NavBar /> : <HamburgerMenu />}
+      {isDesktop ? <NavBar staticPosition={isLandingPage} /> : <HamburgerMenu />}
       <SearchCommand />
     </>
   );

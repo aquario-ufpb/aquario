@@ -4,14 +4,11 @@ import { z } from "zod";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
+import { updateSlugSchema } from "@/lib/server/api-schemas/usuarios";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-const updateSlugSchema = z.object({
-  slug: z.string().nullable(),
-});
 
 export function PATCH(request: Request, context: RouteContext) {
   return withAdmin(request, async req => {

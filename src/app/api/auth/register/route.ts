@@ -4,18 +4,7 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { register } from "@/lib/server/services/auth/register";
 import { ApiError, fromZodError } from "@/lib/server/errors";
-
-const registerSchema = z.object({
-  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  email: z.string().email("Email inválido"),
-  senha: z
-    .string()
-    .min(8, "Senha deve ter pelo menos 8 caracteres")
-    .max(128, "Senha deve ter no máximo 128 caracteres"),
-  centroId: z.string().uuid("Centro inválido"),
-  cursoId: z.string().uuid("Curso inválido"),
-  urlFotoPerfil: z.string().url().optional(),
-});
+import { registerSchema } from "@/lib/server/api-schemas/auth";
 
 export async function POST(request: Request) {
   try {
@@ -45,7 +34,7 @@ export async function POST(request: Request) {
 
     const message = error instanceof Error ? error.message : "Erro no cadastro";
 
-    if (message === "EMAIL_JA_CADASTRADO") {
+    if (message === "Este e-mail já está em uso.") {
       return ApiError.emailExists();
     }
 

@@ -1,31 +1,69 @@
 "use client";
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation";
-import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
-import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
-import { useTheme } from "next-themes";
-import { useEffect, useState, useRef, useMemo } from "react";
-import { Github, Map, GitBranch } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useEntidades } from "@/lib/client/hooks";
 import { trackEvent } from "@/analytics/posthog-client";
+import { FeatureCard } from "@/components/pages/landing/features/feature-card";
+import { landingFeatures } from "@/components/pages/landing/features/feature-data";
+import { WaterTransitionSection } from "@/components/pages/landing/water-transition-section";
+import { Button } from "@/components/ui/button";
+import { useEntidades } from "@/lib/client/hooks";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, GitBranch, Github, MapIcon } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo } from "react";
+
+type LandingStats = {
+  totalUsuarios: number;
+  githubStars: number;
+};
 
 export default function Home() {
-  const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { data: entidades = [] } = useEntidades();
+  const { data: landingStats } = useQuery({
+    queryKey: ["landing-stats"],
+    queryFn: async (): Promise<LandingStats> => {
+      const response = await fetch("/api/landing-stats");
 
-  // Use React Query hook
-  const { data: allEntidades = [] } = useEntidades();
+      if (!response.ok) {
+        throw new Error("Failed to fetch landing stats");
+      }
 
-  // Prevent hydration mismatch
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const aboutStats = [
+    {
+      value: landingStats?.totalUsuarios.toLocaleString("pt-BR") ?? "...",
+      label: "usuários cadastrados",
+    },
+    {
+      value: landingStats?.githubStars.toLocaleString("pt-BR") ?? "...",
+      label: "estrelas no GitHub",
+    },
+    { value: "Open source", label: "feito pela comunidade" },
+  ];
+
+  const groups = useMemo(
+    () =>
+      entidades.filter(
+        entidade =>
+          (entidade.tipo === "GRUPO" ||
+            entidade.tipo === "LIGA_ACADEMICA" ||
+            entidade.tipo === "OUTRO") &&
+          entidade.imagePath
+      ),
+    [entidades]
+  );
+
+  const featuredLabs = useMemo(
+    () =>
+      entidades
+        .filter(entidade => entidade.tipo === "LABORATORIO")
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+    [entidades]
+  );
+
   useEffect(() => {
-    setMounted(true);
-
     // Log environment indicator
     if (process.env.NEXT_PUBLIC_IS_STAGING === "true") {
       console.log(
@@ -46,573 +84,179 @@ export default function Home() {
     }
   }, []);
 
-  // Filter and shuffle entidades for preview (excluding EMPRESA)
-  const entidades = useMemo(() => {
-    if (!mounted || allEntidades.length === 0) {
-      return [];
-    }
-    // Filter out EMPRESA type entidades
-    const filteredData = allEntidades.filter(entidade => entidade.tipo !== "EMPRESA");
-    // Randomize the order using Fisher-Yates shuffle
-    const shuffled = [...filteredData];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }, [mounted, allEntidades]);
-
-  // Auto-scroll functionality
-  useEffect(() => {
-    if (!scrollContainerRef.current || entidades.length === 0 || isScrolling) {
-      return;
-    }
-
-    const container = scrollContainerRef.current;
-    const scrollSpeed = 1.5; // pixels per frame - faster scrolling
-    let animationFrameId: number;
-
-    const autoScroll = () => {
-      if (!isScrolling) {
-        container.scrollLeft += scrollSpeed;
-        // Reset scroll position when we reach halfway (for infinite effect)
-        if (container.scrollLeft >= container.scrollWidth / 2) {
-          container.scrollLeft = 0;
-        }
-      }
-      animationFrameId = requestAnimationFrame(autoScroll);
-    };
-
-    animationFrameId = requestAnimationFrame(autoScroll);
-
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-  }, [entidades.length, isScrolling]);
-
-  const isDark = (resolvedTheme || theme) === "dark";
-
-  // Dark mode colors - fundo escuro com bolas azuis claras (15% mais claras)
-  const darkColors = {
-    gradientStart: "rgb(3, 7, 18)",
-    gradientEnd: "rgb(48, 101, 131)", // rgb(12, 74, 110) clareado em 15%
-    firstColor: "96, 159, 192", // rgb(69, 143, 181) clareado em 15%
-    secondColor: "99, 134, 190", // rgb(72, 113, 179) clareado em 15%
-    thirdColor: "147, 188, 230", // rgb(128, 177, 226) clareado em 15%
-    fourthColor: "214, 242, 255", // rgb(207, 240, 255) clareado em 15%
-    fifthColor: "96, 159, 192", // rgb(69, 143, 181) clareado em 15%
-    pointerColor: "147, 188, 230", // rgb(128, 177, 226) clareado em 15%
-  };
-
-  // Light mode colors - fundo branco com bolas azuis (15% mais claras)
-  const lightColors = {
-    gradientStart: "rgb(250, 250, 250)",
-    gradientEnd: "rgb(255, 255, 255)",
-    firstColor: "48, 101, 131", // rgb(12, 74, 110) clareado em 15%
-    secondColor: "96, 159, 192", // rgb(69, 143, 181) clareado em 15%
-    thirdColor: "99, 134, 190", // rgb(72, 113, 179) clareado em 15%
-    fourthColor: "147, 188, 230", // rgb(128, 177, 226) clareado em 15%
-    fifthColor: "96, 159, 192", // rgb(69, 143, 181) clareado em 15%
-    pointerColor: "99, 134, 190", // rgb(72, 113, 179) clareado em 15%
-  };
-
-  const colors = isDark ? darkColors : lightColors;
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
-    <BackgroundGradientAnimation
-      gradientBackgroundStart={colors.gradientStart}
-      gradientBackgroundEnd={colors.gradientEnd}
-      firstColor={colors.firstColor}
-      secondColor={colors.secondColor}
-      thirdColor={colors.thirdColor}
-      fourthColor={colors.fourthColor}
-      fifthColor={colors.fifthColor}
-      pointerColor={colors.pointerColor}
-    >
-      <main className="container mx-auto p-4 pt-8 overflow-x-hidden">
+    <main className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
+      <div className="container relative z-20 mx-auto px-4 pt-20 md:pt-8">
         {/* Hero Section */}
-        <section className="text-center min-h-screen flex flex-col justify-center items-center">
-          <div className="max-w-4xl mx-auto px-4 w-full">
-            <div
-              className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight mb-6 ${
-                isDark ? "text-white" : "text-aquario-primary"
-              }`}
-            >
-              <TextGenerateEffect
-                words="Bem-vindo ao Aquário"
-                className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight md:whitespace-nowrap`}
-                filter={true}
-                duration={0.8}
-              />
-            </div>
-            <p
-              className={`text-lg md:text-xl lg:text-2xl max-w-2xl mx-auto mb-12 leading-relaxed ${
-                isDark ? "text-white/90" : "text-slate-700"
-              }`}
-            >
-              Seu hub de oportunidades, projetos e conexões
-              <br />
-              no Centro de Informática da UFPB.
+        <section className="flex min-h-[82vh] flex-col items-center justify-center text-center">
+          <div className="mx-auto w-full max-w-4xl px-4">
+            <h1 className="mb-6 font-display text-5xl font-bold leading-tight tracking-tight text-aquario-primary dark:text-white md:text-6xl lg:text-7xl">
+              Tudo que o estudante do CI precisa, em um só lugar.
+            </h1>
+            <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-700 dark:text-slate-300 md:text-xl">
+              Encontre salas, organize disciplinas, explore guias, acompanhe datas acadêmicas e
+              descubra entidades do Centro de Informática.
             </p>
-            <div className="flex flex-col md:flex-row justify-center items-center pointer-events-auto gap-2 md:gap-2">
-              <Link href="/grades-curriculares" className="w-full md:w-auto">
-                <HoverBorderGradient
-                  containerClassName="rounded-full w-full md:w-auto"
-                  className="px-10 py-4 text-lg font-semibold"
-                >
-                  <div className="flex items-center justify-center gap-2 w-full">
-                    <GitBranch className="w-5 h-5" />
-                    Explore a Grade Curricular
-                  </div>
-                </HoverBorderGradient>
-              </Link>
-              <Link href="/mapas" className="w-full md:w-auto">
-                <HoverBorderGradient
-                  containerClassName="rounded-full w-full md:w-auto"
-                  className="px-10 py-4 text-lg font-semibold"
-                >
-                  <div className="flex items-center justify-center gap-2 w-full">
-                    <Map className="w-5 h-5" />
-                    Explore o Mapa
-                  </div>
-                </HoverBorderGradient>
+            <div className="flex flex-col items-center justify-center gap-3 md:flex-row">
+              <Button
+                asChild
+                size="lg"
+                className="h-12 w-full rounded-full bg-aquario-primary px-8 text-base font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-aquario-primary/90 md:w-auto"
+              >
+                <Link href="/recursos">Explorar recursos</Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="h-12 w-full rounded-full border-slate-300 bg-white px-8 text-base font-semibold text-slate-900 hover:bg-slate-100 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 md:w-auto"
+              >
+                <Link href="/mapas">
+                  <MapIcon className="mr-2 h-5 w-5" />
+                  Ver mapa do CI
+                </Link>
+              </Button>
+            </div>
+            <div className="mt-6 hidden items-center justify-center gap-3 text-sm text-slate-600 dark:text-slate-400 sm:flex sm:flex-row">
+              <Link
+                href="/grades-curriculares"
+                className="inline-flex items-center gap-2 rounded-full px-3 py-2 transition-colors hover:bg-slate-200/70 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white"
+              >
+                <GitBranch className="h-4 w-4" />
+                Grade curricular
               </Link>
               <a
                 href="https://github.com/aquario-ufpb/aquario"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full md:w-auto"
-                onClick={() => trackEvent("github_button_clicked")}
+                className="inline-flex items-center gap-2 rounded-full px-3 py-2 transition-colors hover:bg-slate-200/70 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white"
+                onClick={() => trackEvent("github_button_clicked", { location: "landing_hero" })}
               >
-                <HoverBorderGradient
-                  containerClassName="rounded-full w-full md:w-auto"
-                  className="px-10 py-4 text-lg font-semibold"
-                >
-                  <div className="flex items-center justify-center gap-2 w-full">
-                    <Github className="w-6 h-6" />
-                    Contribua
-                  </div>
-                </HoverBorderGradient>
+                <Github className="h-4 w-4" />
+                Contribuir no GitHub
               </a>
             </div>
           </div>
         </section>
+      </div>
 
-        {/* Three Sections */}
-        <section className="py-16">
-          <div className="max-w-4xl mx-auto">
-            <div className="space-y-6">
-              {/* Tools Section - Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Mapas Section */}
-                <Link href="/mapas" className="block">
-                  <Card
-                    className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                      isDark
-                        ? "bg-white/10 border-white/20 hover:bg-white/15"
-                        : "bg-white/60 border-blue-200 hover:bg-white/80"
-                    }`}
-                  >
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="flex-1">
-                        <h3
-                          className={`font-display text-xl font-bold mb-3 ${
-                            isDark ? "text-white" : "text-aquario-primary"
-                          }`}
-                        >
-                          Mapas
-                        </h3>
-                        <p
-                          className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
-                        >
-                          Explore os mapas interativos do CI e encontre salas e laboratórios.
-                        </p>
-                        <Button
-                          variant="outline"
-                          className={
-                            isDark
-                              ? "border-white text-white hover:bg-white/20"
-                              : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                          }
-                        >
-                          Ver Mapas
-                        </Button>
-                      </div>
-                      <div className="flex-shrink-0 hidden sm:block">
-                        <Image
-                          src={isDark ? "/mapas/dark.png" : "/mapas/light.png"}
-                          alt="Mapas"
-                          width={220}
-                          height={120}
-                          className="object-contain rounded-lg shadow-md"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+      <WaterTransitionSection>
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 grid gap-6 md:grid-cols-[1fr_0.75fr] md:items-end">
+            <div>
+              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-sky-200">
+                Recursos
+              </p>
+              <h2 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">
+                Tudo que você precisa, em um só lugar.
+              </h2>
+            </div>
+            <p className="max-w-xl text-base font-medium leading-relaxed text-sky-100 md:text-lg">
+              Recursos simples para organizar sua vida acadêmica, encontrar oportunidades e fazer
+              parte da comunidade do CI.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {landingFeatures.map(feature => (
+              <FeatureCard key={feature.title} {...feature} groups={groups} labs={featuredLabs} />
+            ))}
+          </div>
 
-                {/* Calendario Section */}
-                <Link href="/calendario" className="block">
-                  <Card
-                    className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                      isDark
-                        ? "bg-white/10 border-white/20 hover:bg-white/15"
-                        : "bg-white/60 border-blue-200 hover:bg-white/80"
-                    }`}
-                  >
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="flex-1">
-                        <h3
-                          className={`font-display text-xl font-bold mb-3 ${
-                            isDark ? "text-white" : "text-aquario-primary"
-                          }`}
-                        >
-                          Minhas Disciplinas
-                        </h3>
-                        <p
-                          className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}
-                        >
-                          Gerencie suas disciplinas cursando e visualize seu calendário
-                          personalizado.
-                        </p>
-                        <Button
-                          variant="outline"
-                          className={
-                            isDark
-                              ? "border-white text-white hover:bg-white/20"
-                              : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                          }
-                        >
-                          Minhas Disciplinas
-                        </Button>
-                      </div>
-                      <div className="flex-shrink-0 hidden sm:block">
-                        <Image
-                          src={isDark ? "/calendario/dark.png" : "/calendario/light.png"}
-                          alt="Calendário"
-                          width={220}
-                          height={120}
-                          className="object-contain rounded-lg shadow-md"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+          <section className="pt-20 md:pt-28">
+            <div className="grid gap-8 rounded-[2rem] border border-white/10 bg-white/[0.05] p-6 shadow-sm backdrop-blur-sm md:grid-cols-[0.85fr_1.15fr] md:items-center md:p-10">
+              <div>
+                <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-sky-200">
+                  Sobre
+                </p>
+                <h2 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">
+                  Um ponto de encontro para a comunidade do CI.
+                </h2>
               </div>
-
-              {/* Calendario Academico Section */}
-              <Link href="/calendario-academico" className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
+              <div className="space-y-6">
+                <p className="text-base font-medium leading-relaxed text-sky-100 md:text-lg">
+                  O Aquário centraliza informações acadêmicas, mapas, guias, entidades e
+                  oportunidades para deixar a vida no Centro de Informática mais simples e
+                  conectada.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {aboutStats.map(stat => (
+                    <div key={stat.label} className="rounded-2xl bg-white/[0.06] p-4">
+                      <p className="font-display text-3xl font-bold text-white">{stat.value}</p>
+                      <p className="mt-1 text-sm leading-snug text-sky-100">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                 >
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h3
-                          className={`font-display text-xl font-bold ${
-                            isDark ? "text-white" : "text-aquario-primary"
-                          }`}
-                        >
-                          Calendário Acadêmico
-                        </h3>
-                        <Badge
-                          className={
-                            isDark
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : "bg-green-500/10 text-green-600 border-green-500/30"
-                          }
-                        >
-                          Novo
-                        </Badge>
-                      </div>
-                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                        Consulte as datas importantes do semestre letivo da UFPB.
-                      </p>
-                      <Button
-                        variant="outline"
-                        className={
-                          isDark
-                            ? "border-white text-white hover:bg-white/20"
-                            : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                        }
-                      >
-                        Ver Calendário
-                      </Button>
-                    </div>
-                    <div className="flex-shrink-0 hidden sm:block">
-                      <Image
-                        src={
-                          isDark
-                            ? "/calendario-academico/dark.png"
-                            : "/calendario-academico/light.png"
-                        }
-                        alt="Calendário Acadêmico"
-                        width={220}
-                        height={120}
-                        className="object-contain rounded-lg shadow-md"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              {/* Grades Curriculares Section */}
-              <Link href="/grades-curriculares" className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
-                >
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h3
-                          className={`font-display text-xl font-bold ${
-                            isDark ? "text-white" : "text-aquario-primary"
-                          }`}
-                        >
-                          Grades Curriculares
-                        </h3>
-                        <Badge
-                          className={
-                            isDark
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : "bg-green-500/10 text-green-600 border-green-500/30"
-                          }
-                        >
-                          Novo
-                        </Badge>
-                      </div>
-                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                        Visualize a grade curricular do seu curso de forma interativa com
-                        pré-requisitos e equivalências.
-                      </p>
-                      <Button
-                        variant="outline"
-                        className={
-                          isDark
-                            ? "border-white text-white hover:bg-white/20"
-                            : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                        }
-                      >
-                        Ver Grade
-                      </Button>
-                    </div>
-                    <div className="flex-shrink-0 hidden sm:block">
-                      <Image
-                        src={isDark ? "/grade/dark.png" : "/grade/light.png"}
-                        alt="Grades Curriculares"
-                        width={220}
-                        height={120}
-                        className="object-contain rounded-lg shadow-md"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              {/* Guias Section */}
-              <Link href="/guias" className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
-                >
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="flex-1">
-                      <h3
-                        className={`font-display text-xl font-bold mb-3 ${
-                          isDark ? "text-white" : "text-aquario-primary"
-                        }`}
-                      >
-                        Guias e Recursos
-                      </h3>
-                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                        Encontre orientações, dicas e recursos que vão te ajudar em sua jornada
-                        acadêmica no Centro de Informática.
-                      </p>
-                      <Button
-                        variant="outline"
-                        className={
-                          isDark
-                            ? "border-white text-white hover:bg-white/20"
-                            : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                        }
-                      >
-                        Explorar Guias
-                      </Button>
-                    </div>
-                    <div className="flex-shrink-0 hidden sm:block">
-                      <Image
-                        src={isDark ? "/guias/dark.png" : "/guias/light.png"}
-                        alt="Guias"
-                        width={220}
-                        height={120}
-                        className="object-contain rounded-lg shadow-md"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              {/* Sobre Section */}
-              <Link href="/sobre" className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow cursor-pointer pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
-                >
-                  <CardContent className="p-6">
-                    <h3
-                      className={`font-display text-xl font-bold mb-3 ${
-                        isDark ? "text-white" : "text-aquario-primary"
-                      }`}
-                    >
-                      Sobre o Projeto
-                    </h3>
-                    <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                      Conheça mais sobre o Aquário, nossa missão, visão e como contribuir para este
-                      projeto em constante evolução.
-                    </p>
-                    <Button
-                      variant="outline"
-                      className={
-                        isDark
-                          ? "border-white text-white hover:bg-white/20"
-                          : "border-blue-900 text-blue-900 hover:bg-blue-50"
-                      }
-                    >
-                      Saiba Mais
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              {/* Entidades Section */}
-              <div className="block">
-                <Card
-                  className={`h-full hover:shadow-lg transition-shadow pointer-events-auto ${
-                    isDark
-                      ? "bg-white/10 border-white/20 hover:bg-white/15"
-                      : "bg-white/60 border-blue-200 hover:bg-white/80"
-                  }`}
-                >
-                  <CardContent className="p-6">
-                    <Link href="/entidades" className="block">
-                      <h3
-                        className={`font-display text-xl font-bold mb-3 ${
-                          isDark ? "text-white" : "text-aquario-primary"
-                        }`}
-                      >
-                        Entidades
-                      </h3>
-                      <p className={`text-sm mb-4 ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                        Procure laboratórios, ligas acadêmicas, grupos de pesquisa e outros do
-                        Centro de Informática.
-                      </p>
-                      <Button
-                        variant="outline"
-                        className={
-                          isDark
-                            ? "border-white text-white hover:bg-white/20 mb-4"
-                            : "border-blue-900 text-blue-900 hover:bg-blue-50 mb-4"
-                        }
-                      >
-                        Ver Todas
-                      </Button>
-                    </Link>
-
-                    {/* Entidades Infinite Scroll Preview */}
-                    {entidades.length > 0 && (
-                      <div
-                        ref={scrollContainerRef}
-                        className="mt-4 relative overflow-x-auto overflow-y-hidden scrollbar-hide"
-                        onWheel={() => {
-                          setIsScrolling(true);
-                          setTimeout(() => setIsScrolling(false), 2000);
-                        }}
-                        onMouseDown={() => setIsScrolling(true)}
-                        onMouseUp={() => setTimeout(() => setIsScrolling(false), 1000)}
-                        onTouchStart={() => setIsScrolling(true)}
-                        onTouchEnd={() => setTimeout(() => setIsScrolling(false), 1000)}
-                      >
-                        <style>
-                          {`
-                            .scrollbar-hide::-webkit-scrollbar {
-                              display: none;
-                            }
-                            .scrollbar-hide {
-                              -ms-overflow-style: none;
-                              scrollbar-width: none;
-                            }
-                          `}
-                        </style>
-                        <div className="flex gap-4" style={{ width: "fit-content" }}>
-                          {/* Duplicate entidades for seamless loop */}
-                          {[...entidades, ...entidades].map((entidade, index) => (
-                            <Link
-                              key={`${entidade.id}-${index}`}
-                              href={`/entidade/${entidade.slug}`}
-                              className={`flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0 pointer-events-auto border min-w-[200px] max-w-[250px] ${
-                                isDark ? "border-white/10" : "border-black/10"
-                              }`}
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={entidade.imagePath || ""}
-                                alt={entidade.name}
-                                className="w-12 h-12 object-contain rounded flex-shrink-0"
-                                onError={e => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = "none";
-                                }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p
-                                  className={`text-sm font-medium truncate ${
-                                    isDark ? "text-white" : "text-slate-900"
-                                  }`}
-                                >
-                                  {entidade.name}
-                                </p>
-                                {entidade.subtitle && (
-                                  <p
-                                    className={`text-xs truncate ${
-                                      isDark ? "text-white/60" : "text-slate-600"
-                                    }`}
-                                  >
-                                    {entidade.subtitle}
-                                  </p>
-                                )}
-                              </div>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  <Link href="/sobre">
+                    Conhecer o projeto
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
               </div>
             </div>
+          </section>
+        </div>
+      </WaterTransitionSection>
+
+      <footer className="relative -mt-px overflow-hidden bg-aquario-primary pt-16 text-blue-50 dark:bg-aquario-primary md:pt-24">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 1200 320"
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute inset-0 h-full w-full text-blue-950 dark:text-slate-900"
+        >
+          <title>Silhueta decorativa do fundo do oceano</title>
+          <path
+            d="M0 64C92 46 188 50 290 70C414 94 516 58 640 68C766 78 852 118 980 94C1084 75 1152 54 1200 42V320H0V64Z"
+            fill="currentColor"
+          />
+        </svg>
+        <div className="container relative mx-auto px-4 py-10">
+          <div className="mx-auto flex max-w-4xl flex-col gap-8 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="font-display text-2xl font-bold text-white">Aquário</p>
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-blue-200">
+                Feito por estudantes, para estudantes do Centro de Informática da UFPB.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3 text-sm">
+              <Link
+                href="/sobre"
+                className="rounded-full px-3 py-2 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                Sobre
+              </Link>
+              <Link
+                href="/guias"
+                className="rounded-full px-3 py-2 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                Guias
+              </Link>
+              <Link
+                href="/entidades"
+                className="rounded-full px-3 py-2 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                Entidades
+              </Link>
+              <a
+                href="https://github.com/aquario-ufpb/aquario"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full px-3 py-2 transition-colors hover:bg-white/10 hover:text-white"
+                onClick={() => trackEvent("github_button_clicked", { location: "landing_footer" })}
+              >
+                <Github className="h-4 w-4" />
+                GitHub
+              </a>
+            </div>
           </div>
-        </section>
-      </main>
-    </BackgroundGradientAnimation>
+        </div>
+      </footer>
+    </main>
   );
 }

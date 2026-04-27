@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Link from "next/link";
 import Checkbox from "@/components/pages/vagas/checkbox-filter";
 import VacancyCard from "@/components/pages/vagas/vacancy-card";
-import type { Vaga } from "@/lib/shared/types";
-import { SearchBar1 } from "@/components/ui/searchbar1";
 import { Button } from "@/components/ui/button";
-import { Plus, List, LayoutGrid } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { SearchBar1 } from "@/components/ui/searchbar1";
 import { useVagas } from "@/lib/client/hooks";
-import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { usePrefetchVaga } from "@/lib/client/hooks/use-prefetch";
+import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { cn } from "@/lib/client/utils";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
+import type { Vaga } from "@/lib/shared/types";
 import { ENTIDADE_TIPO_MAP } from "@/lib/shared/types/vaga.types";
+import { LayoutGrid, List, Plus } from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
 type ViewMode = "list" | "grid";
 
@@ -91,11 +93,10 @@ export default function VagasPage() {
   return (
     <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl">
       <div className="mb-12">
-        <div className="flex items-start justify-between gap-4 mb-8">
-          <h1 className="text-4xl md:text-5xl font-display font-bold max-w-3xl">
-            Explore vagas de emprego, estágio e projetos no CI e fora dele
-          </h1>
-        </div>
+        <PageHeader
+          title={PAGE_HEADER_TEXT.vagas.title}
+          subtitle={PAGE_HEADER_TEXT.vagas.subtitle}
+        />
 
         {/* Main Layout */}
         <div className="flex gap-6 mt-10">

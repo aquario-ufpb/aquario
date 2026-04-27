@@ -8,12 +8,13 @@
  * and TypeScript will enforce the correct usage everywhere.
  */
 
-import { TipoEntidade } from "@/lib/shared/types/entidade.types";
+import type { TipoEntidade } from "@/lib/shared/types/entidade.types";
 import type { OnboardingStepId } from "@/lib/shared/types/onboarding.types";
 
 // UI Interaction events
 export type UIInteractionEvent = {
   name: "github_button_clicked";
+  location?: "landing_hero" | "landing_footer";
 };
 
 export type AuthEvent =

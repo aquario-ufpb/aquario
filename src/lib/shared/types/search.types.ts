@@ -29,6 +29,7 @@ export type SearchResultEntidade = {
   nome: string;
   slug: string | null;
   tipo: string;
+  imagePath: string | null;
 };
 
 export type SearchResultVaga = {

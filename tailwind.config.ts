@@ -57,6 +57,8 @@ const config = {
         "light-text": "hsl(240 5.9% 10%)",
         "dark-text": "hsl(0 0% 98%)",
         "aquario-primary": "hsl(var(--aquario-primary))",
+        "aquario-header": "#0e3a6c",
+        "aquario-header-dark": "#C8E6FA",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -112,6 +114,22 @@ const config = {
             transform: "rotate(360deg)",
           },
         },
+        "wave-drift": {
+          "0%": {
+            transform: "translateX(0)",
+          },
+          "100%": {
+            transform: "translateX(-50%)",
+          },
+        },
+        "group-marquee": {
+          "0%": {
+            transform: "translateX(0)",
+          },
+          "100%": {
+            transform: "translateX(-50%)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -121,6 +139,8 @@ const config = {
         third: "third 50s linear infinite",
         fourth: "fourth 60s linear infinite",
         fifth: "fifth 70s linear infinite",
+        "wave-drift": "wave-drift 12s linear infinite",
+        "group-marquee": "group-marquee 34s linear infinite",
       },
     },
   },

@@ -8,19 +8,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [1.6.0] - 2026-04-26
+
+### Added
+
+### Changed
+- **Landing Page**: Replace animated gradient/blob hero with a cleaner static layout, animated wave divider, blue underwater feature section, and deep-water footer.
+- **Navigation**: Redesign the desktop nav bar with a cleaner top-bar layout, compact resources menu, and static positioning on the landing page.
+- **Navigation**: Align the desktop navbar width and horizontal padding with the main page content.
+- **Search**: Show entity logos in command palette search results when available.
+- **Sobre**: Restyle the about page to match the cleaner underwater landing page visual system.
+- **Landing Page**: Replace the feature screenshots with an illustrated resources grid, including rotating real group logos and a lab map preview.
+- **Landing Page**: Split the feature grid into focused card and illustration components.
+- **Landing Page**: Lower the underwater wave divider slightly for a softer transition into the feature section.
+- **Landing Page**: Animate the laboratory illustration as a rotating lab directory that randomizes through all labs in a loop.
+- **Landing Page**: Add a Sobre section below the resources grid with a concise project introduction and live community stats.
+- **Landing Page**: Align the underwater background color with the main title brand color.
+- **Theme**: Align the global default page background with the landing and about pages.
+- **Recursos**: Rename the resources overview route to `/recursos` across navigation, search, and landing links.
+- **Recursos**: Reuse feature illustrations on the resources overview page and add a dedicated Minhas Disciplinas illustration.
+- **Recursos**: Adapt shared feature illustrations for white resource cards while preserving the underwater landing style.
+
+### Removed
+- **Landing Page**: Remove the unused legacy `FeatureSection` component after replacing it with the feature card grid.
+
+### Fixed
+- **API Docs**: Align the `/search` OpenAPI response schema with the actual per-category search result payloads.
+- **Analytics**: Add location metadata to landing page GitHub CTA tracking events.
+- **Landing Page**: Make the underwater wave transition animation track section-relative scroll progress.
+- **Search**: Prevent unsupported external entity logo URLs from being passed to `next/image`.
+- **Search**: Add accessible labels, focus trapping, and a non-focusable backdrop to the command palette dialog.
+
+## [1.5.1] - 2026-04-25
+
+### Fixed
+- **API Docs**: Add `/api` prefix to OpenAPI server URLs so "Try it out" requests in Scalar hit the correct endpoints (e.g. `/api/vagas` instead of `/vagas`)
+
+## [1.5.0] - 2026-04-25
+
+### Added
+- **API Docs**: Interactive OpenAPI 3.1 documentation rendered with Scalar UI at `/api-docs`, covering all 56 API endpoints with request/response schemas, examples, and error codes (#149)
+- **API Docs**: JSON spec endpoint at `GET /api/openapi` for tooling integration (Postman, Insomnia, SDK generators)
+- **Auth**: Expand email validation to support all `.ufpb.br` subdomains (#181)
+- **Tests**: Server-side auth service tests — authenticate, register, verify-email, reset-password, forgot-password, resend-verification, and middleware (66 new tests)
+- **Tests**: Admin mutation tests — merge-facade-user service (12 tests), user deletion route, role update route, entity member add/update/delete routes (33 tests)
+- **Tests**: Onboarding state machine integration tests — step ordering, conditional visibility, PAAS availability, semester-based logic, completion/skip mutations (18 tests)
 - **Grades Curriculares**: Botão para exportar grade curricular como imagem PNG — "Com meu progresso" (barra de progresso e stats) e "Grade limpa" (#169)
 - **UI**: DatePicker component with Calendar popover, pt-BR locale, and date range constraints
 - **Search**: Global search command palette (Ctrl+K) with unified search across pages, guides, entities, jobs, disciplines, courses, and user profiles
 - **Search**: PostgreSQL Full-Text Search with `unaccent` extension for accent-insensitive Brazilian Portuguese search, ranked by relevance with `ts_rank`
 - **Search**: Recent search history stored in localStorage (up to 8 items)
 
+### Changed
+- **API**: Extract Zod validation schemas from route handlers into `src/lib/server/api-schemas/` for Next.js 15 App Router compatibility
+- **Onboarding**: Hide onboarding entirely when between semesters — only show it when today falls within an active semester's date range
+- **UI**: Replace native date inputs with DatePicker across all forms — entities, memberships, vagas, and calendar management (#167)
+- **Dev Tools**: Add open/close animation and unify toggle button (#185)
+- **Users**: Otimiza verificação de unicidade de slug em `prisma-usuarios-repository.ts`, limitando a consulta de existência a `select: { id: true }` para reduzir payload por iteração.
+
 ### Removed
 - **Submodule**: Remove `aquario-vagas` git submodule and all references (repo was deleted). Vagas now fully served via backend API
 
-### Changed
-- **UI**: Replace native date inputs with DatePicker across all forms — entities, memberships, vagas, and calendar management (#167)
-
 ### Fixed
+- **CI**: Skip preview deployment for fork PRs to avoid failures from missing secrets
 - **Search**: Sanitize `limit` query parameter as bounded integer to prevent invalid SQL LIMIT values
 - **Search**: Guard against null `entidade.slug` to prevent navigation to `/entidade/null`
 - **Search**: Fix Prettier formatting and ESLint curly-brace violations across search files
@@ -109,7 +166,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Minhas Disciplinas — Semester Validation**: Uses DB active semester as source of truth; turma selection and calendar are disabled when SACI data doesn't match the current semester, with user-facing warnings
-- **Calendário → Minhas Disciplinas**: Renamed across navigation (desktop dropdown, mobile hamburger, ferramentas page, home page)
+- **Calendário → Minhas Disciplinas**: Renamed across navigation (desktop dropdown, mobile hamburger, recursos page, home page)
 - **Semester Fallback**: When between semesters, the system now falls back to the next upcoming semester instead of returning nothing
 - **Grade Curricular**: Unified click interaction model — first click shows dependencies, second click opens dialog (removed hover-based highlighting)
 - **Grade Curricular**: Completed and cursando states now read directly from server data instead of local optimistic copies
@@ -132,7 +189,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Backend: Repository pattern with Prisma, REST API routes for CRUD on semesters and events (including batch create for CSV import)
   - Admin page (`/admin/calendario-academico`): Manage semesters and events, CSV upload with auto-category detection, editable category dropdowns
   - Public page (`/calendario-academico`): Timeline/list view grouped by month and monthly calendar grid view, semester selector, category filter chips, current-day highlighting
-  - Added to nav bar tools dropdown, main page, and ferramentas page
+  - Added to nav bar resources dropdown, main page, and recursos page
 - **404 Page**: Custom not-found page with themed illustrations — anglerfish for dark mode (centered, glowing text) and empty fishbowl for light mode (side-by-side layout). Responsive design with stacked mobile layout.
 
 ### Changed
@@ -182,7 +239,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Detail dialog on click with navigation through prerequisites and equivalences
   - Auto-selects logged-in user's course, or first available
 - `ICurriculosRepository` and `GET /api/curriculos/grade` endpoint for grade data
-- Added Grades Curriculares to ferramentas page, navigation dropdown, and landing page
+- Added Grades Curriculares to recursos page, navigation dropdown, and landing page
 - Production import script (`db:import-prod`) with batched queries for remote databases
 
 ### Changed
@@ -328,7 +385,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Core Platform
 - **Guides (Guias)**: Course-specific guides for CI-UFPB students
   - Ciência da Computação
-  - Engenharia da Computação  
+  - Engenharia da Computação
   - Ciência de Dados e Inteligência Artificial
 - **Entities (Entidades)**: Directory of labs, research groups, and student organizations
 - **Maps (Mapas)**: Interactive campus maps with room locations
@@ -381,7 +438,10 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/aquario-ufpb/aquario/compare/v1.5.1...v1.6.0
+[1.5.1]: https://github.com/aquario-ufpb/aquario/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/aquario-ufpb/aquario/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/aquario-ufpb/aquario/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/aquario-ufpb/aquario/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/aquario-ufpb/aquario/compare/v1.1.1...v1.2.0

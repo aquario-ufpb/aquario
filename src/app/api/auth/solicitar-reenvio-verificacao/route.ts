@@ -4,15 +4,12 @@ import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
 import { resendVerificationByEmail } from "@/lib/server/services/auth/resend-verification";
 import { fromZodError } from "@/lib/server/errors";
-
-const requestSchema = z.object({
-  email: z.string().email("Email inválido"),
-});
+import { resendVerificationRequestSchema } from "@/lib/server/api-schemas/auth";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email } = requestSchema.parse(body);
+    const { email } = resendVerificationRequestSchema.parse(body);
 
     const container = getContainer();
     const result = await resendVerificationByEmail(

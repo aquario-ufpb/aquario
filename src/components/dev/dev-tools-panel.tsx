@@ -9,7 +9,7 @@ import { usuariosService } from "@/lib/client/api/usuarios";
 import { disciplinaSemestreService } from "@/lib/client/api/disciplina-semestre";
 import { queryKeys } from "@/lib/client/query-keys";
 import { IS_DEV } from "@/lib/shared/config/env";
-import { Fish, X, RotateCcw, Shield, Loader2, Building2, ChevronDown } from "lucide-react";
+import { Fish, RotateCcw, Shield, Loader2, Building2, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 export function DevToolsPanel() {
@@ -101,123 +101,124 @@ export function DevToolsPanel() {
     return null;
   }
 
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-16 z-[99999] flex h-10 w-10 items-center justify-center rounded-full bg-aquario-primary text-white shadow-lg transition-colors hover:bg-aquario-primary/80"
-        title="Aquário Dev Tools"
-      >
-        <Fish className="h-5 w-5" />
-      </button>
-    );
-  }
-
   return (
-    <div className="fixed bottom-3 left-14 z-[99999] w-72 rounded-lg border bg-background shadow-xl">
-      <div className="flex items-center justify-between border-b px-3 py-2">
-        <div className="flex items-center gap-2">
+    <div className="fixed bottom-4 left-16 z-[99999]">
+      <div
+        id="dev-tools-panel"
+        inert={!open}
+        className={`absolute bottom-12 left-0 w-72 origin-bottom-left rounded-lg border bg-background/95 shadow-xl backdrop-blur-sm transition-all duration-200 ease-out ${
+          open ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
+        }`}
+      >
+        <div className="flex items-center gap-2 border-b px-3 py-2.5">
           <Fish className="h-4 w-4 text-aquario-primary" />
           <span className="text-sm font-semibold">Dev Tools</span>
         </div>
-        <button
-          onClick={() => setOpen(false)}
-          className="rounded p-0.5 hover:bg-muted transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
 
-      <div className="p-3 space-y-3">
-        <div className="space-y-1.5">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Onboarding
-          </p>
-          <button
-            onClick={handleClearOnboarding}
-            disabled={clearOnboarding.isPending || !isAuthenticated}
-            className="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
-          >
-            {clearOnboarding.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <RotateCcw className="h-3.5 w-3.5" />
-            )}
-            Resetar onboarding
-          </button>
-        </div>
-
-        <div className="space-y-1.5">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Permissões
-          </p>
-          <button
-            onClick={handleToggleRole}
-            disabled={toggleRole.isPending || !isAuthenticated}
-            className="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
-          >
-            {toggleRole.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Shield className="h-3.5 w-3.5" />
-            )}
-            {isAdmin ? "Tornar USER" : "Tornar MASTER_ADMIN"}
-          </button>
-        </div>
-
-        <div className="space-y-1.5">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Admin de Entidade
-          </p>
-          <div className="relative">
-            <select
-              value={selectedEntidadeId}
-              onChange={e => setSelectedEntidadeId(e.target.value)}
-              disabled={!isAuthenticated}
-              className="w-full appearance-none rounded-md border bg-background px-3 py-2 pr-8 text-sm transition-colors hover:bg-muted disabled:opacity-50"
-            >
-              <option value="">Selecione uma entidade</option>
-              {entidades
-                ?.slice()
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map(e => (
-                  <option key={e.id} value={e.id}>
-                    {e.name}
-                    {memberships?.some(
-                      m => m.entidade.id === e.id && !m.endedAt && m.papel === "ADMIN"
-                    )
-                      ? " (Admin)"
-                      : memberships?.some(m => m.entidade.id === e.id && !m.endedAt)
-                        ? " (Membro)"
-                        : ""}
-                  </option>
-                ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          </div>
-          {selectedEntidadeId && (
+        <div className="p-3 space-y-3">
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Onboarding
+            </p>
             <button
-              type="button"
-              onClick={handleToggleEntidadeAdmin}
-              disabled={toggleEntidadeAdmin.isPending || !isAuthenticated}
+              onClick={handleClearOnboarding}
+              disabled={clearOnboarding.isPending || !isAuthenticated}
               className="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
             >
-              {toggleEntidadeAdmin.isPending ? (
+              {clearOnboarding.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Building2 className="h-3.5 w-3.5" />
+                <RotateCcw className="h-3.5 w-3.5" />
               )}
-              {isMembro && isEntidadeAdmin
-                ? "Deixar de ser admin"
-                : isMembro
-                  ? "Tornar admin"
-                  : "Tornar admin"}
+              Resetar onboarding
             </button>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Permissões
+            </p>
+            <button
+              onClick={handleToggleRole}
+              disabled={toggleRole.isPending || !isAuthenticated}
+              className="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
+            >
+              {toggleRole.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Shield className="h-3.5 w-3.5" />
+              )}
+              {isAdmin ? "Tornar USER" : "Tornar MASTER_ADMIN"}
+            </button>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Admin de Entidade
+            </p>
+            <div className="relative">
+              <select
+                value={selectedEntidadeId}
+                onChange={e => setSelectedEntidadeId(e.target.value)}
+                disabled={!isAuthenticated}
+                className="w-full appearance-none rounded-md border bg-background px-3 py-2 pr-8 text-sm transition-colors hover:bg-muted disabled:opacity-50"
+              >
+                <option value="">Selecione uma entidade</option>
+                {entidades
+                  ?.slice()
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(e => (
+                    <option key={e.id} value={e.id}>
+                      {e.name}
+                      {memberships?.some(
+                        m => m.entidade.id === e.id && !m.endedAt && m.papel === "ADMIN"
+                      )
+                        ? " (Admin)"
+                        : memberships?.some(m => m.entidade.id === e.id && !m.endedAt)
+                          ? " (Membro)"
+                          : ""}
+                    </option>
+                  ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            </div>
+            {selectedEntidadeId && (
+              <button
+                type="button"
+                onClick={handleToggleEntidadeAdmin}
+                disabled={toggleEntidadeAdmin.isPending || !isAuthenticated}
+                className="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
+              >
+                {toggleEntidadeAdmin.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Building2 className="h-3.5 w-3.5" />
+                )}
+                {isMembro && isEntidadeAdmin ? "Deixar de ser admin" : "Tornar admin"}
+              </button>
+            )}
+          </div>
+
+          {!isAuthenticated && (
+            <p className="text-xs text-muted-foreground">Faça login primeiro.</p>
           )}
         </div>
-
-        {!isAuthenticated && <p className="text-xs text-muted-foreground">Faça login primeiro.</p>}
       </div>
+
+      <button
+        type="button"
+        onClick={() => setOpen(prev => !prev)}
+        aria-expanded={open}
+        aria-controls="dev-tools-panel"
+        aria-label="Aquário Dev Tools"
+        className={`flex h-10 w-10 items-center justify-center rounded-full bg-aquario-primary text-white shadow-lg transition-all duration-200 hover:bg-aquario-primary/80 ${
+          open
+            ? "rotate-[20deg] ring-2 ring-aquario-primary/30 ring-offset-2 ring-offset-background"
+            : ""
+        }`}
+      >
+        <Fish className={`h-5 w-5 transition-transform duration-200 ${open ? "scale-110" : ""}`} />
+      </button>
     </div>
   );
 }
