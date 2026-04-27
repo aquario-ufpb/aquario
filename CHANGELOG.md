@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+
+### Removed
+
+### Fixed
+
+## [1.6.0] - 2026-04-26
+
+### Added
+
+### Changed
 - **Landing Page**: Replace animated gradient/blob hero with a cleaner static layout, animated wave divider, blue underwater feature section, and deep-water footer.
 - **Navigation**: Redesign the desktop nav bar with a cleaner top-bar layout, compact resources menu, and static positioning on the landing page.
 - **Navigation**: Align the desktop navbar width and horizontal padding with the main page content.
@@ -428,7 +438,9 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/aquario-ufpb/aquario/compare/v1.5.1...v1.6.0
+[1.5.1]: https://github.com/aquario-ufpb/aquario/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/aquario-ufpb/aquario/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/aquario-ufpb/aquario/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/aquario-ufpb/aquario/compare/v1.2.0...v1.3.0
