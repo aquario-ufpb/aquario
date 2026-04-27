@@ -37,7 +37,7 @@ export default function Home() {
       label: "usuários cadastrados",
     },
     {
-      value: landingStats?.githubStars.toLocaleString("pt-BR") ?? "75",
+      value: landingStats?.githubStars.toLocaleString("pt-BR") ?? "...",
       label: "estrelas no GitHub",
     },
     { value: "Open source", label: "feito pela comunidade" },
@@ -117,7 +117,7 @@ export default function Home() {
                 </Link>
               </Button>
             </div>
-            <div className="mt-6 flex flex-col items-center justify-center gap-3 text-sm text-slate-600 dark:text-slate-400 sm:flex-row">
+            <div className="mt-6 hidden items-center justify-center gap-3 text-sm text-slate-600 dark:text-slate-400 sm:flex sm:flex-row">
               <Link
                 href="/grades-curriculares"
                 className="inline-flex items-center gap-2 rounded-full px-3 py-2 transition-colors hover:bg-slate-200/70 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white"
@@ -202,7 +202,7 @@ export default function Home() {
         </div>
       </WaterTransitionSection>
 
-      <footer className="relative -mt-px overflow-hidden bg-sky-800 pt-16 text-blue-50 dark:bg-sky-950 md:pt-24">
+      <footer className="relative -mt-px overflow-hidden bg-aquario-primary pt-16 text-blue-50 dark:bg-aquario-primary md:pt-24">
         <svg
           aria-hidden="true"
           viewBox="0 0 1200 320"

@@ -19,7 +19,7 @@ export function WaterTransitionSection({ children }: WaterTransitionSectionProps
   return (
     <section
       ref={sectionRef}
-      className="relative z-10 -mt-56 overflow-visible bg-sky-800 pb-20 pt-[22rem] text-white dark:bg-sky-950 md:-mt-72 md:pt-[28rem]"
+      className="relative z-10 -mt-56 overflow-visible bg-aquario-primary pb-20 pt-[22rem] text-white dark:bg-aquario-primary md:-mt-72 md:pt-[28rem]"
     >
       <motion.div
         aria-hidden="true"

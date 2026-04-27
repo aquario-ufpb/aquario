@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Landing Page**: Lower the underwater wave divider slightly for a softer transition into the feature section.
 - **Landing Page**: Animate the laboratory illustration as a rotating lab directory that randomizes through all labs in a loop.
 - **Landing Page**: Add a Sobre section below the resources grid with a concise project introduction and live community stats.
+- **Landing Page**: Align the underwater background color with the main title brand color.
 - **Theme**: Align the global default page background with the landing and about pages.
 - **Recursos**: Rename the resources overview route to `/recursos` across navigation, search, and landing links.
 - **Recursos**: Reuse feature illustrations on the resources overview page and add a dedicated Minhas Disciplinas illustration.
