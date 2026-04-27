@@ -45,8 +45,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br" suppressHydrationWarning>
-      <body className={`${outfit.variable} font-sans bg-white dark:bg-transparent`}>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className={`${outfit.variable} bg-slate-50 font-sans dark:bg-slate-950`}>
         <PostHogProvider>
           <ReactQueryProvider>
             <AuthProvider>
@@ -57,7 +57,7 @@ export default function RootLayout({
                 disableTransitionOnChange
               >
                 <OnboardingProvider>
-                  <div className="flex flex-1 flex-col bg-white dark:bg-transparent">
+                  <div className="flex flex-1 flex-col bg-slate-50 dark:bg-slate-950">
                     <NavWrapper />
                     <div className="pt-0">{children}</div>
                   </div>

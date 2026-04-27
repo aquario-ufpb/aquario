@@ -6,7 +6,7 @@ import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import { Activity, BookOpen, Calendar, CalendarDays, GitBranch, MapIcon } from "lucide-react";
 import Link from "next/link";
 
-const ferramentas: Array<{
+const recursos: Array<{
   id: string;
   title: string;
   description: string;
@@ -72,33 +72,33 @@ const ferramentas: Array<{
   },
 ];
 
-export default function FerramentasPage() {
+export default function RecursosPage() {
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
       {/* Header */}
       <PageHeader
-        title={PAGE_HEADER_TEXT.ferramentas.title}
-        subtitle={PAGE_HEADER_TEXT.ferramentas.subtitle}
+        title={PAGE_HEADER_TEXT.recursos.title}
+        subtitle={PAGE_HEADER_TEXT.recursos.subtitle}
       />
 
-      {/* Ferramentas Grid */}
+      {/* Recursos Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {ferramentas.map(ferramenta => {
-          const Icon = ferramenta.icon;
+        {recursos.map(recurso => {
+          const Icon = recurso.icon;
           const card = (
             <Card className="h-full cursor-pointer border-slate-200 bg-white transition-all hover:border-slate-300 hover:shadow-lg dark:border-white/20 dark:bg-white/5 dark:hover:bg-white/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-[#0e3a6c] dark:text-[#C8E6FA]">
                   <Icon className="w-6 h-6" />
-                  {ferramenta.title}
+                  {recurso.title}
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 <p className="text-sm leading-relaxed text-[#0e3a6c] dark:text-[#E5F6FF]">
-                  {ferramenta.description}
+                  {recurso.description}
                 </p>
                 <FeatureIllustration
-                  variant={ferramenta.illustration}
+                  variant={recurso.illustration}
                   groups={[]}
                   labs={[]}
                   appearance="surface"
@@ -107,21 +107,16 @@ export default function FerramentasPage() {
             </Card>
           );
 
-          if (ferramenta.external) {
+          if (recurso.external) {
             return (
-              <a
-                key={ferramenta.id}
-                href={ferramenta.href}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a key={recurso.id} href={recurso.href} target="_blank" rel="noopener noreferrer">
                 {card}
               </a>
             );
           }
 
           return (
-            <Link key={ferramenta.id} href={ferramenta.href}>
+            <Link key={recurso.id} href={recurso.href}>
               {card}
             </Link>
           );

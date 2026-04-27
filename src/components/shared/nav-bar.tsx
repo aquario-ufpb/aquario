@@ -60,7 +60,7 @@ function NavLogo() {
       <Link
         href="/"
         aria-label="Ir para a página inicial"
-        className="-ml-2 flex cursor-pointer items-center rounded-full p-2 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:hover:bg-white/10"
+        className="-ml-2 flex cursor-pointer items-center rounded-full p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <Image
           className="h-7 w-auto dark:hidden"
@@ -81,9 +81,9 @@ function NavLogo() {
   );
 }
 
-// Tools Dropdown Content Component
-function ToolsDropdownContent() {
-  const tools: Array<{
+// Resources Dropdown Content Component
+function ResourcesDropdownContent() {
+  const resources: Array<{
     href: string;
     title: string;
     description: string;
@@ -132,46 +132,46 @@ function ToolsDropdownContent() {
   return (
     <div className="w-[520px] p-3">
       <div className="mb-2 px-2">
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">Ferramentas</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">Recursos</p>
         <p className="text-xs text-muted-foreground">Atalhos úteis para o dia a dia no CI.</p>
       </div>
       <ul className="grid grid-cols-2 gap-1">
-        {tools.map(tool => (
-          <li key={tool.href}>
+        {resources.map(resource => (
+          <li key={resource.href}>
             <NavigationMenuLink asChild>
-              {tool.external ? (
+              {resource.external ? (
                 <a
-                  href={tool.href}
+                  href={resource.href}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex gap-3 rounded-xl p-3 no-underline outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-white/10 dark:focus:bg-white/10"
                 >
                   <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
-                    <tool.icon className="h-4 w-4" />
+                    <resource.icon className="h-4 w-4" />
                   </div>
                   <div>
                     <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
-                      {tool.title}
+                      {resource.title}
                     </div>
                     <p className="mt-1 text-xs leading-snug text-muted-foreground">
-                      {tool.description}
+                      {resource.description}
                     </p>
                   </div>
                 </a>
               ) : (
                 <Link
-                  href={tool.href}
+                  href={resource.href}
                   className="flex gap-3 rounded-xl p-3 no-underline outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-white/10 dark:focus:bg-white/10"
                 >
                   <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
-                    <tool.icon className="h-4 w-4" />
+                    <resource.icon className="h-4 w-4" />
                   </div>
                   <div>
                     <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
-                      {tool.title}
+                      {resource.title}
                     </div>
                     <p className="mt-1 text-xs leading-snug text-muted-foreground">
-                      {tool.description}
+                      {resource.description}
                     </p>
                   </div>
                 </Link>
@@ -183,10 +183,10 @@ function ToolsDropdownContent() {
       <div className="mt-2 border-t pt-2 dark:border-white/10">
         <NavigationMenuLink asChild>
           <Link
-            href="/ferramentas"
+            href="/recursos"
             className="block rounded-lg px-3 py-2 text-sm font-medium text-aquario-primary transition-colors hover:bg-slate-100 dark:text-sky-200 dark:hover:bg-white/10"
           >
-            Ver todas as ferramentas
+            Ver todos os recursos
           </Link>
         </NavigationMenuLink>
       </div>
@@ -194,8 +194,8 @@ function ToolsDropdownContent() {
   );
 }
 
-// Tools Navigation Component
-function ToolsNavigation() {
+// Resources Navigation Component
+function ResourcesNavigation() {
   return (
     <NavigationMenu>
       <NavigationMenuList>
@@ -203,10 +203,10 @@ function ToolsNavigation() {
           <NavigationMenuTrigger
             className={`${navLinkClass} h-auto bg-transparent data-[active]:bg-slate-100 data-[state=open]:bg-slate-100 dark:data-[active]:bg-white/10 dark:data-[state=open]:bg-white/10`}
           >
-            Ferramentas
+            Recursos
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ToolsDropdownContent />
+            <ResourcesDropdownContent />
           </NavigationMenuContent>
         </NavigationMenuItem>
       </NavigationMenuList>
@@ -294,7 +294,7 @@ function NavLinks() {
       <Link href="/sobre" className={navLinkClass}>
         Sobre
       </Link>
-      <ToolsNavigation />
+      <ResourcesNavigation />
       <Link href="/entidades" className={navLinkClass}>
         Entidades
       </Link>
@@ -341,7 +341,7 @@ export default function NavBar({ staticPosition = false }: NavBarProps) {
         staticPosition ? "relative" : "fixed"
       }`}
     >
-      <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
         <NavLogo />
         <div className="flex items-center justify-end gap-3">
           <NavLinks />

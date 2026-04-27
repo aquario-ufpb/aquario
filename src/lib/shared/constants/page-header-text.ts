@@ -30,11 +30,11 @@ export const PAGE_HEADER_TEXT = {
     extendedSubtitle:
       "Encontre orientações, dicas e recursos que vão te ajudar em sua jornada acadêmica no Centro de Informática.",
   },
-  ferramentas: {
-    title: "Ferramentas",
-    subtitle: "Ferramentas úteis para estudantes do Centro de Informática",
+  recursos: {
+    title: "Recursos",
+    subtitle: "Recursos úteis para estudantes do Centro de Informática",
     extendedSubtitle:
-      "Acesse ferramentas úteis para facilitar sua vida acadêmica, desde calculadoras de CR até gerenciadores de tarefas.",
+      "Acesse recursos úteis para facilitar sua vida acadêmica, desde calculadoras de CR até gerenciadores de tarefas.",
   },
   sobre: {
     title: "Sobre o Projeto",

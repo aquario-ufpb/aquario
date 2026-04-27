@@ -41,8 +41,8 @@ export const landingFeatures: LandingFeature[] = [
   },
   {
     title: "Veja todos os recursos",
-    description: "Acesse a lista completa de ferramentas, guias e páginas úteis do Aquário.",
-    href: "/ferramentas",
+    description: "Acesse a lista completa de recursos, guias e páginas úteis do Aquário.",
+    href: "/recursos",
     icon: BookOpen,
     illustration: "guides",
   },

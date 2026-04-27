@@ -14,7 +14,7 @@ export function WaterTransitionSection({ children }: WaterTransitionSectionProps
     target: sectionRef,
     offset: ["start end", "start start"],
   });
-  const waveLift = useTransform(scrollYProgress, [0, 1], ["0px", "-140px"]);
+  const waveLift = useTransform(scrollYProgress, [0, 1], ["0px", "-120px"]);
 
   return (
     <section
@@ -34,7 +34,7 @@ export function WaterTransitionSection({ children }: WaterTransitionSectionProps
           <title>Divisória em ondas</title>
           <path
             fill="currentColor"
-            d="M0 0H2880V88C2760 101 2640 101 2520 88C2340 68 2160 68 1980 88C1800 108 1620 108 1440 88C1320 75 1200 75 1080 88C900 108 720 108 540 88C360 68 180 68 0 88V0Z"
+            d="M0 0H2880V104C2760 117 2640 117 2520 104C2340 84 2160 84 1980 104C1800 124 1620 124 1440 104C1320 91 1200 91 1080 104C900 124 720 124 540 104C360 84 180 84 0 104V0Z"
           />
         </svg>
       </motion.div>

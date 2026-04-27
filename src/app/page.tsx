@@ -5,12 +5,43 @@ import { landingFeatures } from "@/components/pages/landing/features/feature-dat
 import { WaterTransitionSection } from "@/components/pages/landing/water-transition-section";
 import { Button } from "@/components/ui/button";
 import { useEntidades } from "@/lib/client/hooks";
-import { GitBranch, Github, MapIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, GitBranch, Github, MapIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo } from "react";
 
+type LandingStats = {
+  totalUsuarios: number;
+  githubStars: number;
+};
+
 export default function Home() {
   const { data: entidades = [] } = useEntidades();
+  const { data: landingStats } = useQuery({
+    queryKey: ["landing-stats"],
+    queryFn: async (): Promise<LandingStats> => {
+      const response = await fetch("/api/landing-stats");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch landing stats");
+      }
+
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const aboutStats = [
+    {
+      value: landingStats?.totalUsuarios.toLocaleString("pt-BR") ?? "...",
+      label: "usuários cadastrados",
+    },
+    {
+      value: landingStats?.githubStars.toLocaleString("pt-BR") ?? "75",
+      label: "estrelas no GitHub",
+    },
+    { value: "Open source", label: "feito pela comunidade" },
+  ];
 
   const groups = useMemo(
     () =>
@@ -28,8 +59,7 @@ export default function Home() {
     () =>
       entidades
         .filter(entidade => entidade.tipo === "LABORATORIO")
-        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
-        .slice(0, 5),
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
     [entidades]
   );
 
@@ -73,7 +103,7 @@ export default function Home() {
                 size="lg"
                 className="h-12 w-full rounded-full bg-aquario-primary px-8 text-base font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-aquario-primary/90 md:w-auto"
               >
-                <Link href="/ferramentas">Explorar ferramentas</Link>
+                <Link href="/recursos">Explorar recursos</Link>
               </Button>
               <Button
                 asChild
@@ -122,7 +152,7 @@ export default function Home() {
               </h2>
             </div>
             <p className="max-w-xl text-base font-medium leading-relaxed text-sky-100 md:text-lg">
-              Ferramentas simples para organizar sua vida acadêmica, encontrar oportunidades e fazer
+              Recursos simples para organizar sua vida acadêmica, encontrar oportunidades e fazer
               parte da comunidade do CI.
             </p>
           </div>
@@ -131,6 +161,44 @@ export default function Home() {
               <FeatureCard key={feature.title} {...feature} groups={groups} labs={featuredLabs} />
             ))}
           </div>
+
+          <section className="pt-20 md:pt-28">
+            <div className="grid gap-8 rounded-[2rem] border border-white/10 bg-white/[0.05] p-6 shadow-sm backdrop-blur-sm md:grid-cols-[0.85fr_1.15fr] md:items-center md:p-10">
+              <div>
+                <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-sky-200">
+                  Sobre
+                </p>
+                <h2 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl">
+                  Um ponto de encontro para a comunidade do CI.
+                </h2>
+              </div>
+              <div className="space-y-6">
+                <p className="text-base font-medium leading-relaxed text-sky-100 md:text-lg">
+                  O Aquário centraliza informações acadêmicas, mapas, guias, entidades e
+                  oportunidades para deixar a vida no Centro de Informática mais simples e
+                  conectada.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {aboutStats.map(stat => (
+                    <div key={stat.label} className="rounded-2xl bg-white/[0.06] p-4">
+                      <p className="font-display text-3xl font-bold text-white">{stat.value}</p>
+                      <p className="mt-1 text-sm leading-snug text-sky-100">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                >
+                  <Link href="/sobre">
+                    Conhecer o projeto
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>
         </div>
       </WaterTransitionSection>
 
