@@ -21,10 +21,10 @@ const STATIC_PAGES: StaticPage[] = [
     url: "/mapas",
   },
   {
-    id: "ferramentas",
-    titulo: "Ferramentas",
+    id: "recursos",
+    titulo: "Recursos",
     descricao: "Disciplinas, guias, mapas, grades e calendario academico",
-    url: "/ferramentas",
+    url: "/recursos",
   },
   {
     id: "calendario-academico",

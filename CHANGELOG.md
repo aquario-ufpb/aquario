@@ -10,10 +10,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- **Landing Page**: Replace animated gradient/blob hero with a cleaner static layout, animated wave divider, blue underwater feature section, and deep-water footer.
+- **Navigation**: Redesign the desktop nav bar with a cleaner top-bar layout, compact resources menu, and static positioning on the landing page.
+- **Navigation**: Align the desktop navbar width and horizontal padding with the main page content.
+- **Search**: Show entity logos in command palette search results when available.
+- **Sobre**: Restyle the about page to match the cleaner underwater landing page visual system.
+- **Landing Page**: Replace the feature screenshots with an illustrated resources grid, including rotating real group logos and a lab map preview.
+- **Landing Page**: Split the feature grid into focused card and illustration components.
+- **Landing Page**: Lower the underwater wave divider slightly for a softer transition into the feature section.
+- **Landing Page**: Animate the laboratory illustration as a rotating lab directory that randomizes through all labs in a loop.
+- **Landing Page**: Add a Sobre section below the resources grid with a concise project introduction and live community stats.
+- **Landing Page**: Align the underwater background color with the main title brand color.
+- **Theme**: Align the global default page background with the landing and about pages.
+- **Recursos**: Rename the resources overview route to `/recursos` across navigation, search, and landing links.
+- **Recursos**: Reuse feature illustrations on the resources overview page and add a dedicated Minhas Disciplinas illustration.
+- **Recursos**: Adapt shared feature illustrations for white resource cards while preserving the underwater landing style.
 
 ### Removed
+- **Landing Page**: Remove the unused legacy `FeatureSection` component after replacing it with the feature card grid.
 
 ### Fixed
+- **API Docs**: Align the `/search` OpenAPI response schema with the actual per-category search result payloads.
+- **Analytics**: Add location metadata to landing page GitHub CTA tracking events.
+- **Landing Page**: Make the underwater wave transition animation track section-relative scroll progress.
+- **Search**: Prevent unsupported external entity logo URLs from being passed to `next/image`.
+- **Search**: Add accessible labels, focus trapping, and a non-focusable backdrop to the command palette dialog.
 
 ## [1.5.1] - 2026-04-25
 
@@ -135,7 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Minhas Disciplinas — Semester Validation**: Uses DB active semester as source of truth; turma selection and calendar are disabled when SACI data doesn't match the current semester, with user-facing warnings
-- **Calendário → Minhas Disciplinas**: Renamed across navigation (desktop dropdown, mobile hamburger, ferramentas page, home page)
+- **Calendário → Minhas Disciplinas**: Renamed across navigation (desktop dropdown, mobile hamburger, recursos page, home page)
 - **Semester Fallback**: When between semesters, the system now falls back to the next upcoming semester instead of returning nothing
 - **Grade Curricular**: Unified click interaction model — first click shows dependencies, second click opens dialog (removed hover-based highlighting)
 - **Grade Curricular**: Completed and cursando states now read directly from server data instead of local optimistic copies
@@ -158,7 +179,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Backend: Repository pattern with Prisma, REST API routes for CRUD on semesters and events (including batch create for CSV import)
   - Admin page (`/admin/calendario-academico`): Manage semesters and events, CSV upload with auto-category detection, editable category dropdowns
   - Public page (`/calendario-academico`): Timeline/list view grouped by month and monthly calendar grid view, semester selector, category filter chips, current-day highlighting
-  - Added to nav bar tools dropdown, main page, and ferramentas page
+  - Added to nav bar resources dropdown, main page, and recursos page
 - **404 Page**: Custom not-found page with themed illustrations — anglerfish for dark mode (centered, glowing text) and empty fishbowl for light mode (side-by-side layout). Responsive design with stacked mobile layout.
 
 ### Changed
@@ -208,7 +229,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Detail dialog on click with navigation through prerequisites and equivalences
   - Auto-selects logged-in user's course, or first available
 - `ICurriculosRepository` and `GET /api/curriculos/grade` endpoint for grade data
-- Added Grades Curriculares to ferramentas page, navigation dropdown, and landing page
+- Added Grades Curriculares to recursos page, navigation dropdown, and landing page
 - Production import script (`db:import-prod`) with batched queries for remote databases
 
 ### Changed

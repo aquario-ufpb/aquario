@@ -1,13 +1,24 @@
 "use client";
 
-import React from "react";
 import Image from "next/image";
-import { User, LogOut, Settings, Moon, Sun } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  Activity,
+  GitBranch,
+  GraduationCap,
+  LogOut,
+  MapPinned,
+  Moon,
+  Settings,
+  Sun,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 
-import LinkHover from "@/components/shared/link-hover";
 import { SearchTrigger } from "@/components/shared/search/search-trigger";
 import { ModeToggle } from "@/components/shared/mode-toggle";
 import Link from "next/link";
@@ -32,6 +43,9 @@ import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { Button } from "@/components/ui/button";
 import type { User as UserType } from "@/lib/client/api/usuarios";
 
+const navLinkClass =
+  "rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-aquario-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white";
+
 // Helper function
 function getInitials(name: string): string {
   const names = name.split(" ");
@@ -42,112 +56,157 @@ function getInitials(name: string): string {
 // Logo Component
 function NavLogo() {
   return (
-    <div className="flex items-center justify-start select-none">
+    <div className="flex items-center justify-start">
       <Link
         href="/"
-        className="flex items-center gap-2 cursor-pointer select-none"
-        tabIndex={-1}
-        draggable={false}
+        aria-label="Ir para a página inicial"
+        className="-ml-2 flex cursor-pointer items-center rounded-full p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <Image
-          className="h-6 w-auto dark:hidden select-none pointer-events-none"
+          className="h-7 w-auto dark:hidden"
           src="/logo2.svg"
           width={60}
           height={50}
           alt="Aquario's logo"
-          draggable={false}
-          style={{ userSelect: "none" }}
         />
         <Image
-          className="h-6 w-auto hidden dark:block select-none pointer-events-none"
+          className="hidden h-7 w-auto dark:block"
           src="/logo3.svg"
           width={60}
           height={50}
           alt="Aquario's logo"
-          draggable={false}
-          style={{ userSelect: "none" }}
         />
       </Link>
     </div>
   );
 }
 
-// Tools Dropdown Content Component
-function ToolsDropdownContent({ isDark }: { isDark: boolean }) {
-  const tools = [
+// Resources Dropdown Content Component
+function ResourcesDropdownContent() {
+  const resources: Array<{
+    href: string;
+    title: string;
+    description: string;
+    icon: LucideIcon;
+    external?: boolean;
+  }> = [
     {
       href: "/calendario",
-      image: isDark ? "/calendario/dark.png" : "/calendario/light.png",
       title: "Minhas Disciplinas",
-      description: "Gerencie disciplinas e horários",
+      description: "Organize disciplinas, turmas e horários.",
+      icon: CalendarDays,
     },
     {
       href: "/guias",
-      image: isDark ? "/guias/dark.png" : "/guias/light.png",
       title: "Guias",
-      description: "Documentação e tutoriais",
+      description: "Orientações para atravessar o curso.",
+      icon: BookOpen,
     },
     {
       href: "/mapas",
-      image: isDark ? "/mapas/dark.png" : "/mapas/light.png",
       title: "Mapas",
-      description: "Localização de salas",
+      description: "Encontre salas e laboratórios do CI.",
+      icon: MapPinned,
     },
     {
       href: "/grades-curriculares",
-      image: isDark ? "/grade/dark.png" : "/grade/light.png",
-      title: "Grades",
-      description: "Grades curriculares",
+      title: "Grades Curriculares",
+      description: "Veja requisitos, períodos e equivalências.",
+      icon: GitBranch,
     },
     {
       href: "/calendario-academico",
-      image: isDark ? "/calendario-academico/dark.png" : "/calendario-academico/light.png",
-      title: "Cal. Acadêmico",
-      description: "Calendário acadêmico UFPB",
+      title: "Calendário Acadêmico",
+      description: "Acompanhe datas importantes da UFPB.",
+      icon: GraduationCap,
+    },
+    {
+      href: "https://sigaacaiu.com",
+      title: "SIGAA Caiu?",
+      description: "Veja se o SIGAA UFPB está no ar.",
+      icon: Activity,
+      external: true,
     },
   ];
 
   return (
-    <ul className="flex gap-4 p-4 w-auto">
-      {tools.map(tool => (
-        <li key={tool.href}>
-          <NavigationMenuLink asChild>
-            <Link
-              href={tool.href}
-              className="flex flex-col items-center gap-2 select-none rounded-md p-4 min-w-[180px] no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-            >
-              {tool.image && (
-                <Image
-                  src={tool.image}
-                  alt={tool.title}
-                  width={120}
-                  height={80}
-                  className="object-contain rounded-lg"
-                />
+    <div className="w-[520px] p-3">
+      <div className="mb-2 px-2">
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">Recursos</p>
+        <p className="text-xs text-muted-foreground">Atalhos úteis para o dia a dia no CI.</p>
+      </div>
+      <ul className="grid grid-cols-2 gap-1">
+        {resources.map(resource => (
+          <li key={resource.href}>
+            <NavigationMenuLink asChild>
+              {resource.external ? (
+                <a
+                  href={resource.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex gap-3 rounded-xl p-3 no-underline outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-white/10 dark:focus:bg-white/10"
+                >
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
+                    <resource.icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
+                      {resource.title}
+                    </div>
+                    <p className="mt-1 text-xs leading-snug text-muted-foreground">
+                      {resource.description}
+                    </p>
+                  </div>
+                </a>
+              ) : (
+                <Link
+                  href={resource.href}
+                  className="flex gap-3 rounded-xl p-3 no-underline outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-white/10 dark:focus:bg-white/10"
+                >
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
+                    <resource.icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
+                      {resource.title}
+                    </div>
+                    <p className="mt-1 text-xs leading-snug text-muted-foreground">
+                      {resource.description}
+                    </p>
+                  </div>
+                </Link>
               )}
-              <div className="text-sm font-medium leading-none text-center">{tool.title}</div>
-              <p className="text-xs leading-snug text-muted-foreground text-center">
-                {tool.description}
-              </p>
-            </Link>
-          </NavigationMenuLink>
-        </li>
-      ))}
-    </ul>
+            </NavigationMenuLink>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-2 border-t pt-2 dark:border-white/10">
+        <NavigationMenuLink asChild>
+          <Link
+            href="/recursos"
+            className="block rounded-lg px-3 py-2 text-sm font-medium text-aquario-primary transition-colors hover:bg-slate-100 dark:text-sky-200 dark:hover:bg-white/10"
+          >
+            Ver todos os recursos
+          </Link>
+        </NavigationMenuLink>
+      </div>
+    </div>
   );
 }
 
-// Tools Navigation Component
-function ToolsNavigation({ isDark }: { isDark: boolean }) {
+// Resources Navigation Component
+function ResourcesNavigation() {
   return (
-    <NavigationMenu className="[&>div>div]:!mt-6">
+    <NavigationMenu>
       <NavigationMenuList>
-        <NavigationMenuItem className="!h-auto !p-0 !m-0 !flex !items-start">
-          <NavigationMenuTrigger className="!h-auto !rounded-none !bg-transparent !px-0 !py-0 !font-normal hover:!bg-transparent focus:!bg-transparent focus:!outline-none data-[state=open]:!bg-transparent data-[active]:!bg-transparent">
-            <LinkHover href="/ferramentas">FERRAMENTAS</LinkHover>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger
+            className={`${navLinkClass} h-auto bg-transparent data-[active]:bg-slate-100 data-[state=open]:bg-slate-100 dark:data-[active]:bg-white/10 dark:data-[state=open]:bg-white/10`}
+          >
+            Recursos
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ToolsDropdownContent isDark={isDark} />
+            <ResourcesDropdownContent />
           </NavigationMenuContent>
         </NavigationMenuItem>
       </NavigationMenuList>
@@ -165,7 +224,7 @@ function UserDropdownMenu({ user, isDark }: { user: UserType; isDark: boolean })
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="relative h-8 w-8 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 hover:ring-2 hover:ring-blue-500 dark:hover:ring-blue-400 hover:ring-offset-2 transition-all duration-100"
+          className="relative h-9 w-9 rounded-full border border-slate-200 bg-white p-0 shadow-sm transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
         >
           <Avatar className="h-8 w-8">
             <AvatarImage
@@ -229,12 +288,16 @@ function UserDropdownMenu({ user, isDark }: { user: UserType; isDark: boolean })
 }
 
 // Navigation Links Component
-function NavLinks({ isDark }: { isDark: boolean }) {
+function NavLinks() {
   return (
-    <div className="flex items-center justify-end gap-4">
-      <LinkHover href="/sobre">SOBRE</LinkHover>
-      <ToolsNavigation isDark={isDark} />
-      <LinkHover href="/entidades">ENTIDADES</LinkHover>
+    <div className="flex items-center justify-end gap-1">
+      <Link href="/sobre" className={navLinkClass}>
+        Sobre
+      </Link>
+      <ResourcesNavigation />
+      <Link href="/entidades" className={navLinkClass}>
+        Entidades
+      </Link>
     </div>
   );
 }
@@ -255,20 +318,33 @@ function AuthSection() {
     return <UserDropdownMenu user={user} isDark={isDark} />;
   }
 
-  return <LinkHover href="/login">ENTRAR</LinkHover>;
+  return (
+    <Button
+      asChild
+      size="sm"
+      className="rounded-full bg-aquario-primary px-4 text-white hover:bg-aquario-primary/90"
+    >
+      <Link href="/login">Entrar</Link>
+    </Button>
+  );
 }
 
-// Main NavBar Component
-export default function NavBar() {
-  const { theme, resolvedTheme } = useTheme();
-  const isDark = (resolvedTheme || theme) === "dark";
+type NavBarProps = {
+  staticPosition?: boolean;
+};
 
+// Main NavBar Component
+export default function NavBar({ staticPosition = false }: NavBarProps) {
   return (
-    <nav className="fixed top-4 z-50 w-full flex justify-center">
-      <div className="grid grid-cols-2 lg:grid-cols-2 items-center h-[60px] px-6 gap-4 rounded-full bg-white/50 dark:bg-black/50 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg w-full max-w-4xl">
+    <nav
+      className={`inset-x-0 top-0 z-50 bg-slate-50/90 backdrop-blur-xl dark:bg-slate-950/85 ${
+        staticPosition ? "relative" : "fixed"
+      }`}
+    >
+      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
         <NavLogo />
-        <div className="flex items-center justify-end gap-4">
-          <NavLinks isDark={isDark} />
+        <div className="flex items-center justify-end gap-3">
+          <NavLinks />
           <AuthSection />
           <SearchTrigger
             onClick={() => {

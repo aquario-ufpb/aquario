@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   FileText,
   BookOpen,
@@ -50,6 +51,28 @@ const CATEGORY_ORDER: SearchResultKind[] = [
   "curso",
   "usuario",
 ];
+
+const categoryLabelClass =
+  "text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400";
+
+const ALLOWED_NEXT_IMAGE_HOSTS = new Set(["api.dicebear.com", "contrib.rocks"]);
+
+function isAllowedNextImageSrc(src: string): boolean {
+  if (src.startsWith("/")) {
+    return true;
+  }
+
+  try {
+    const { hostname, protocol } = new URL(src);
+    return (
+      protocol === "https:" &&
+      (ALLOWED_NEXT_IMAGE_HOSTS.has(hostname) ||
+        hostname.endsWith(".public.blob.vercel-storage.com"))
+    );
+  } catch {
+    return false;
+  }
+}
 
 function getItemLabel(item: SearchResultItem): string {
   switch (item.kind) {
@@ -106,6 +129,17 @@ function getItemRoute(item: SearchResultItem): string {
     case "usuario":
       return item.slug ? `/usuarios/${item.slug}` : `/perfil`;
   }
+}
+
+function getEntityLogo(item: SearchResultItem): { src: string; alt: string } | null {
+  if (item.kind !== "entidade" || !item.imagePath || !isAllowedNextImageSrc(item.imagePath)) {
+    return null;
+  }
+
+  return {
+    src: item.imagePath,
+    alt: `Logo de ${item.nome}`,
+  };
 }
 
 function highlightMatch(text: string, query: string): React.ReactNode {
@@ -183,8 +217,10 @@ export function SearchCommand() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
+  const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const { data, isLoading } = useSearch(query);
 
   const flatItems = flattenResults(data);
@@ -224,21 +260,20 @@ export function SearchCommand() {
   // Focus input when opened, reset when closed
   useEffect(() => {
     if (open) {
+      previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
       // Small delay to ensure DOM is ready after animation
       const timer = setTimeout(() => inputRef.current?.focus(), 50);
       document.body.style.overflow = "hidden";
-      return () => clearTimeout(timer);
-    } else {
-      setQuery("");
-      setSelectedIndex(-1);
-      document.body.style.overflow = "";
+      return () => {
+        clearTimeout(timer);
+        document.body.style.overflow = "";
+      };
     }
-  }, [open]);
 
-  // Reset selection when results change
-  useEffect(() => {
+    setQuery("");
     setSelectedIndex(-1);
-  }, [data]);
+    previouslyFocusedRef.current?.focus();
+  }, [open]);
 
   // Scroll selected item into view
   useEffect(() => {
@@ -263,12 +298,37 @@ export function SearchCommand() {
 
   const handleHistorySelect = useCallback((term: string) => {
     setQuery(term);
+    setSelectedIndex(-1);
   }, []);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
+        return;
+      }
+
+      if (e.key === "Tab") {
+        const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+
+        if (!focusable?.length) {
+          e.preventDefault();
+          return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+
         return;
       }
 
@@ -305,12 +365,17 @@ export function SearchCommand() {
   if (isMobile) {
     return (
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Pesquisar no Aquario"
         className="fixed inset-0 z-[100] bg-background flex flex-col animate-in slide-in-from-top duration-200"
         onKeyDown={handleKeyDown}
       >
         {/* Input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
           <button
+            type="button"
             onClick={() => setOpen(false)}
             className="shrink-0 p-1 rounded-full hover:bg-accent"
             aria-label="Fechar pesquisa"
@@ -321,13 +386,17 @@ export function SearchCommand() {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={e => {
+              setQuery(e.target.value);
+              setSelectedIndex(-1);
+            }}
             placeholder="Pesquisar no Aquario..."
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             aria-label="Pesquisar"
           />
           {query && (
             <button
+              type="button"
               onClick={() => {
                 setQuery("");
                 inputRef.current?.focus();
@@ -360,46 +429,63 @@ export function SearchCommand() {
 
   // Desktop: dropdown aligned with navbar
   return (
-    <div className="fixed inset-0 z-[100]" onKeyDown={handleKeyDown}>
-      {/* Invisible backdrop to capture outside clicks */}
-      <div className="absolute inset-0" onClick={() => setOpen(false)} />
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Pesquisar no Aquario"
+      className="fixed inset-0 z-[100]"
+      onKeyDown={handleKeyDown}
+    >
+      {/* Soft backdrop to focus attention without feeling modal-heavy. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-slate-950/10 backdrop-blur-[2px] dark:bg-slate-950/35"
+        onClick={() => setOpen(false)}
+      />
 
       {/* Search card — aligned with navbar (max-w-4xl, centered, below nav) */}
-      <div className="absolute inset-x-0 top-[84px] flex justify-center px-6 animate-in slide-in-from-top-2 duration-150">
-        <div className="w-full max-w-4xl">
-          <div className="rounded-xl border border-border bg-background overflow-hidden">
+      <div className="absolute inset-x-0 top-[72px] flex justify-center px-6 animate-in slide-in-from-top-2 duration-150">
+        <div className="w-full max-w-3xl">
+          <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-2xl shadow-slate-950/10 dark:border-white/10 dark:bg-slate-950 dark:shadow-black/30">
             {/* Input row */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-              <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <div className="flex items-center gap-3 border-b border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
+                <Search className="h-4 w-4" />
+              </div>
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
-                onChange={e => setQuery(e.target.value)}
+                onChange={e => {
+                  setQuery(e.target.value);
+                  setSelectedIndex(-1);
+                }}
                 placeholder="Pesquisar no Aquario..."
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                className="flex-1 bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
                 aria-label="Pesquisar"
               />
               {query && (
                 <button
+                  type="button"
                   onClick={() => {
                     setQuery("");
                     inputRef.current?.focus();
                   }}
-                  className="shrink-0 p-1 rounded-full hover:bg-accent"
+                  className="shrink-0 rounded-full p-1.5 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900 dark:hover:bg-white/10 dark:hover:text-white"
                   aria-label="Limpar pesquisa"
                 >
-                  <X className="h-4 w-4 text-muted-foreground" />
+                  <X className="h-4 w-4" />
                 </button>
               )}
-              <kbd className="shrink-0 ml-1 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-muted rounded border border-border">
+              <kbd className="ml-1 shrink-0 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-500 dark:border-white/10 dark:bg-white/10 dark:text-slate-300">
                 ESC
               </kbd>
             </div>
 
             {/* Results (same card, continuous) */}
             {showResults && (
-              <div ref={resultsRef} className="max-h-[70vh] overflow-y-auto">
+              <div ref={resultsRef} className="max-h-[58vh] overflow-y-auto p-2">
                 <SearchResults
                   hasQuery={hasQuery}
                   isLoading={isLoading}
@@ -444,13 +530,17 @@ function SearchResults({
 }) {
   // Loading
   if (hasQuery && isLoading) {
-    return <div className="py-8 text-center text-sm text-muted-foreground">Buscando...</div>;
+    return (
+      <div className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+        Buscando...
+      </div>
+    );
   }
 
   // No results
   if (hasQuery && !isLoading && !hasResults) {
     return (
-      <div className="py-8 text-center text-sm text-muted-foreground">
+      <div className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
         Nenhum resultado para &quot;{query.trim()}&quot;
       </div>
     );
@@ -474,37 +564,50 @@ function SearchResults({
 
           return (
             <div key={kind} className="py-2">
-              <div className="flex items-center gap-2 px-4 py-2">
-                <Icon className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs font-medium tracking-wider text-muted-foreground">
-                  {config.label}
-                </span>
+              <div className="flex items-center gap-2 px-3 py-2">
+                <Icon className="h-4 w-4 text-slate-400" />
+                <span className={categoryLabelClass}>{config.label}</span>
               </div>
               {items.map(item => {
                 const idx = globalIndex++;
                 const isSelected = idx === selectedIndex;
                 const snippet = getItemSnippet(item);
+                const entityLogo = getEntityLogo(item);
 
                 return (
                   <button
+                    type="button"
                     key={`${item.kind}-${item.id}`}
                     data-search-item
                     onClick={() => onSelect(item)}
-                    className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer ${
-                      isSelected ? "bg-accent" : "hover:bg-accent/50"
+                    className={`flex w-full cursor-pointer items-start gap-3 rounded-2xl px-3 py-3 text-left transition-colors ${
+                      isSelected
+                        ? "bg-sky-100 text-slate-950 dark:bg-white/10 dark:text-white"
+                        : "hover:bg-slate-100 dark:hover:bg-white/[0.06]"
                     }`}
                   >
+                    {entityLogo && (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white p-1.5 dark:border-white/10 dark:bg-white/5">
+                        <Image
+                          src={entityLogo.src}
+                          alt={entityLogo.alt}
+                          width={32}
+                          height={32}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium leading-tight">
+                      <div className="text-sm font-semibold leading-tight text-slate-900 dark:text-white">
                         {highlightMatch(getItemLabel(item), query)}
                       </div>
                       {snippet && (
-                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                           {snippet}
                         </p>
                       )}
                     </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
+                    <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
                   </button>
                 );
               })}
@@ -519,22 +622,25 @@ function SearchResults({
   if (!hasQuery && history.length > 0) {
     return (
       <div className="py-2">
-        <div className="flex items-center gap-2 px-4 py-2">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-xs font-medium tracking-wider text-muted-foreground">RECENTES</span>
+        <div className="flex items-center gap-2 px-3 py-2">
+          <Clock className="h-4 w-4 text-slate-400" />
+          <span className={categoryLabelClass}>RECENTES</span>
         </div>
         {history.map((term, idx) => {
           const isSelected = idx === selectedIndex;
           return (
             <button
+              type="button"
               key={`history-${term}`}
               data-search-item
               onClick={() => onHistorySelect(term)}
-              className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors cursor-pointer ${
-                isSelected ? "bg-accent" : "hover:bg-accent/50"
+              className={`flex w-full cursor-pointer items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors ${
+                isSelected
+                  ? "bg-sky-100 text-slate-950 dark:bg-white/10 dark:text-white"
+                  : "hover:bg-slate-100 dark:hover:bg-white/[0.06]"
               }`}
             >
-              <span className="text-sm">{term}</span>
+              <span className="text-sm font-medium">{term}</span>
             </button>
           );
         })}

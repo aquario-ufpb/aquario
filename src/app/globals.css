@@ -82,7 +82,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-white dark:bg-transparent text-foreground;
+    @apply bg-slate-50 text-foreground dark:bg-slate-950;
   }
 }
 

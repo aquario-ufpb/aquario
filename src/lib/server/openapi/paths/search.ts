@@ -3,36 +3,147 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
 import type { CommonSchemas } from "../common-schemas";
 
-/**
- * Shape mínimo compartilhado pelos itens de resultado da busca. Cada categoria
- * tem campos ligeiramente diferentes (entidades têm sigla, disciplinas têm
- * código, etc), mas todos incluem pelo menos `id`, `title` e `url`.
- */
-const searchResultItemSchema = z
+const searchResultPaginaSchema = z
   .object({
+    kind: z.literal("pagina"),
     id: z.string().openapi({
-      description: "Identificador do item (UUID para itens do banco, slug para páginas estáticas).",
-      example: "550e8400-e29b-41d4-a716-446655440000",
+      description: "Identificador da página estática.",
+      example: "mapas",
     }),
-    title: z.string().openapi({
-      description: "Texto principal exibido para o item.",
-      example: "Centro de Informática",
+    titulo: z.string().openapi({
+      description: "Título da página.",
+      example: "Mapas do Campus",
     }),
-    subtitle: z.string().nullable().optional().openapi({
-      description: "Texto secundário (sigla, categoria, etc).",
-      example: "CI",
+    descricao: z.string().openapi({
+      description: "Descrição curta da página.",
+      example: "Visualize mapas, prédios e laboratórios da UFPB",
     }),
     url: z.string().openapi({
-      description: "URL interna para navegar até o item completo.",
-      example: "/entidade/centro-de-informatica",
-    }),
-    rank: z.number().optional().openapi({
-      description:
-        "Score de relevância do full-text search do PostgreSQL (quanto maior, mais relevante).",
-      example: 0.87,
+      description: "URL interna da página.",
+      example: "/mapas",
     }),
   })
-  .openapi("SearchResultItem");
+  .openapi("SearchResultPagina");
+
+const searchResultGuiaSchema = z
+  .object({
+    kind: z.literal("guia"),
+    id: z.string().openapi({
+      description: "Identificador do guia.",
+      example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    }),
+    titulo: z.string().openapi({
+      description: "Título do guia.",
+      example: "Guia do Calouro de Ciência da Computação",
+    }),
+    slug: z.string().openapi({
+      description: "Slug usado na rota do guia.",
+      example: "guia-do-calouro",
+    }),
+    descricao: z.string().nullable().openapi({
+      description: "Descrição curta do guia.",
+      example: "Orientações para novos estudantes",
+    }),
+  })
+  .openapi("SearchResultGuia");
+
+const searchResultEntidadeSchema = z
+  .object({
+    kind: z.literal("entidade"),
+    id: z.string().openapi({
+      description: "Identificador da entidade.",
+      example: "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+    }),
+    nome: z.string().openapi({
+      description: "Nome da entidade.",
+      example: "Centro de Informática",
+    }),
+    slug: z.string().nullable().openapi({
+      description: "Slug usado na rota da entidade.",
+      example: "centro-de-informatica",
+    }),
+    tipo: z.string().openapi({
+      description: "Tipo da entidade.",
+      example: "CENTRO_ACADEMICO",
+    }),
+    imagePath: z.string().nullable().openapi({
+      description: "URL da imagem exibida para resultados que possuem logo/foto.",
+      example: "/api/content-images/assets/entidades/ci.png",
+    }),
+  })
+  .openapi("SearchResultEntidade");
+
+const searchResultVagaSchema = z
+  .object({
+    kind: z.literal("vaga"),
+    id: z.string().openapi({
+      description: "Identificador da vaga.",
+      example: "c3d4e5f6-a7b8-9012-cdef-345678901234",
+    }),
+    titulo: z.string().openapi({
+      description: "Título da vaga.",
+      example: "Estágio em Desenvolvimento Web",
+    }),
+    tipoVaga: z.string().openapi({
+      description: "Tipo da vaga.",
+      example: "ESTAGIO",
+    }),
+  })
+  .openapi("SearchResultVaga");
+
+const searchResultDisciplinaSchema = z
+  .object({
+    kind: z.literal("disciplina"),
+    id: z.string().openapi({
+      description: "Identificador da disciplina.",
+      example: "d4e5f6a7-b8c9-0123-defa-456789012345",
+    }),
+    codigo: z.string().openapi({
+      description: "Código da disciplina.",
+      example: "DCE1001",
+    }),
+    nome: z.string().openapi({
+      description: "Nome da disciplina.",
+      example: "Introdução à Computação",
+    }),
+  })
+  .openapi("SearchResultDisciplina");
+
+const searchResultCursoSchema = z
+  .object({
+    kind: z.literal("curso"),
+    id: z.string().openapi({
+      description: "Identificador do curso.",
+      example: "e5f6a7b8-c9d0-1234-efab-567890123456",
+    }),
+    nome: z.string().openapi({
+      description: "Nome do curso.",
+      example: "Ciência da Computação",
+    }),
+  })
+  .openapi("SearchResultCurso");
+
+const searchResultUsuarioSchema = z
+  .object({
+    kind: z.literal("usuario"),
+    id: z.string().openapi({
+      description: "Identificador do usuário.",
+      example: "f6a7b8c9-d0e1-2345-fabc-678901234567",
+    }),
+    nome: z.string().openapi({
+      description: "Nome do usuário.",
+      example: "Maria Silva",
+    }),
+    slug: z.string().nullable().openapi({
+      description: "Slug usado na rota do perfil público.",
+      example: "maria-silva",
+    }),
+    urlFotoPerfil: z.string().nullable().openapi({
+      description: "URL da foto de perfil, quando disponível.",
+      example: "https://api.dicebear.com/9.x/initials/svg?seed=Maria%20Silva",
+    }),
+  })
+  .openapi("SearchResultUsuario");
 
 /**
  * Resposta unificada da busca. Resultados são agrupados por categoria para que
@@ -46,13 +157,13 @@ const searchResponseSchema = z
     }),
     results: z
       .object({
-        paginas: z.array(searchResultItemSchema),
-        guias: z.array(searchResultItemSchema),
-        entidades: z.array(searchResultItemSchema),
-        vagas: z.array(searchResultItemSchema),
-        disciplinas: z.array(searchResultItemSchema),
-        cursos: z.array(searchResultItemSchema),
-        usuarios: z.array(searchResultItemSchema),
+        paginas: z.array(searchResultPaginaSchema),
+        guias: z.array(searchResultGuiaSchema),
+        entidades: z.array(searchResultEntidadeSchema),
+        vagas: z.array(searchResultVagaSchema),
+        disciplinas: z.array(searchResultDisciplinaSchema),
+        cursos: z.array(searchResultCursoSchema),
+        usuarios: z.array(searchResultUsuarioSchema),
       })
       .openapi({
         description:
@@ -95,47 +206,46 @@ export function registerSearchPaths(registry: OpenAPIRegistry, _schemas: CommonS
               results: {
                 paginas: [
                   {
+                    kind: "pagina",
                     id: "curriculos",
-                    title: "Currículos",
-                    subtitle: "Grades curriculares dos cursos",
+                    titulo: "Currículos",
+                    descricao: "Grades curriculares dos cursos",
                     url: "/curriculos",
                   },
                 ],
                 guias: [
                   {
+                    kind: "guia",
                     id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                    title: "Guia do Calouro de Ciência da Computação",
-                    subtitle: "Guia",
-                    url: "/guias/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                    rank: 0.92,
+                    titulo: "Guia do Calouro de Ciência da Computação",
+                    slug: "guia-do-calouro",
+                    descricao: "Orientações para novos estudantes",
                   },
                 ],
                 entidades: [
                   {
+                    kind: "entidade",
                     id: "b2c3d4e5-f6a7-8901-bcde-f23456789012",
-                    title: "Centro de Informática",
-                    subtitle: "CI",
-                    url: "/entidade/centro-de-informatica",
-                    rank: 0.87,
+                    nome: "Centro de Informática",
+                    slug: "centro-de-informatica",
+                    tipo: "CENTRO_ACADEMICO",
+                    imagePath: "/api/content-images/assets/entidades/ci.png",
                   },
                 ],
                 vagas: [],
                 disciplinas: [
                   {
+                    kind: "disciplina",
                     id: "c3d4e5f6-a7b8-9012-cdef-345678901234",
-                    title: "Introdução à Computação",
-                    subtitle: "DCE1001",
-                    url: "/disciplinas/dce1001",
-                    rank: 0.81,
+                    codigo: "DCE1001",
+                    nome: "Introdução à Computação",
                   },
                 ],
                 cursos: [
                   {
+                    kind: "curso",
                     id: "d4e5f6a7-b8c9-0123-defa-456789012345",
-                    title: "Ciência da Computação",
-                    subtitle: "Bacharelado",
-                    url: "/curso/ciencia-da-computacao",
-                    rank: 0.95,
+                    nome: "Ciência da Computação",
                   },
                 ],
                 usuarios: [],
