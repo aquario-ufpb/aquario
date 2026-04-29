@@ -103,3 +103,33 @@ export async function canManageVagaForEntidade(
   const membership = await membrosRepository.findActiveByUsuarioAndEntidade(usuario.id, entidadeId);
   return membership?.papel === "ADMIN";
 }
+
+/**
+ * Check if user can manage a projeto (edit/delete/publish/replace authors).
+ * Allowed:
+ *   - MASTER_ADMIN
+ *   - any user listed as a user-author of the projeto
+ *   - active ADMIN of any entidade-author of the projeto
+ */
+export async function canManageProjeto(
+  usuario: UsuarioWithRelations,
+  autores: { usuarioId: string | null; entidadeId: string | null }[]
+): Promise<boolean> {
+  if (usuario.papelPlataforma === "MASTER_ADMIN") {
+    return true;
+  }
+
+  if (autores.some(a => a.usuarioId === usuario.id)) {
+    return true;
+  }
+
+  const entidadeIds = autores.map(a => a.entidadeId).filter((id): id is string => id !== null);
+
+  for (const entidadeId of entidadeIds) {
+    if (await canManageVagaForEntidade(usuario, entidadeId)) {
+      return true;
+    }
+  }
+
+  return false;
+}

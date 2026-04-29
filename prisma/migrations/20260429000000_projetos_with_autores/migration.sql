@@ -1,9 +1,6 @@
 -- CreateEnum
 CREATE TYPE "StatusProjeto" AS ENUM ('RASCUNHO', 'PUBLICADO', 'ARQUIVADO');
 
--- CreateEnum
-CREATE TYPE "TipoConteudo" AS ENUM ('MARKDOWN', 'HTML', 'TEXTO_SIMPLES');
-
 -- CreateTable
 CREATE TABLE "Projeto" (
     "id" TEXT NOT NULL,
@@ -12,7 +9,6 @@ CREATE TABLE "Projeto" (
     "subtitulo" TEXT,
     "descricao" TEXT,
     "textContent" TEXT,
-    "tipoConteudo" "TipoConteudo" NOT NULL DEFAULT 'MARKDOWN',
     "urlImagem" TEXT,
     "status" "StatusProjeto" NOT NULL DEFAULT 'RASCUNHO',
     "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
@@ -20,11 +16,10 @@ CREATE TABLE "Projeto" (
     "dataFim" TIMESTAMP(3),
     "urlRepositorio" TEXT,
     "urlDemo" TEXT,
-    "urlPublicacao" TEXT,
+    "urlOutro" TEXT,
     "criadoEm" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "atualizadoEm" TIMESTAMP(3) NOT NULL,
     "publicadoEm" TIMESTAMP(3),
-    "entidadeId" TEXT,
 
     CONSTRAINT "Projeto_pkey" PRIMARY KEY ("id")
 );
@@ -33,7 +28,8 @@ CREATE TABLE "Projeto" (
 CREATE TABLE "ProjetoAutor" (
     "id" TEXT NOT NULL,
     "projetoId" TEXT NOT NULL,
-    "usuarioId" TEXT NOT NULL,
+    "usuarioId" TEXT,
+    "entidadeId" TEXT,
     "autorPrincipal" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "ProjetoAutor_pkey" PRIMARY KEY ("id")
@@ -49,9 +45,6 @@ CREATE INDEX "Projeto_slug_idx" ON "Projeto"("slug");
 CREATE INDEX "Projeto_status_idx" ON "Projeto"("status");
 
 -- CreateIndex
-CREATE INDEX "Projeto_entidadeId_idx" ON "Projeto"("entidadeId");
-
--- CreateIndex
 CREATE INDEX "Projeto_criadoEm_idx" ON "Projeto"("criadoEm");
 
 -- CreateIndex
@@ -64,16 +57,23 @@ CREATE INDEX "ProjetoAutor_projetoId_idx" ON "ProjetoAutor"("projetoId");
 CREATE INDEX "ProjetoAutor_usuarioId_idx" ON "ProjetoAutor"("usuarioId");
 
 -- CreateIndex
-CREATE INDEX "ProjetoAutor_autorPrincipal_idx" ON "ProjetoAutor"("autorPrincipal");
+CREATE INDEX "ProjetoAutor_entidadeId_idx" ON "ProjetoAutor"("entidadeId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ProjetoAutor_projetoId_usuarioId_key" ON "ProjetoAutor"("projetoId", "usuarioId");
-
--- AddForeignKey
-ALTER TABLE "Projeto" ADD CONSTRAINT "Projeto_entidadeId_fkey" FOREIGN KEY ("entidadeId") REFERENCES "Entidade"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+CREATE INDEX "ProjetoAutor_autorPrincipal_idx" ON "ProjetoAutor"("autorPrincipal");
 
 -- AddForeignKey
 ALTER TABLE "ProjetoAutor" ADD CONSTRAINT "ProjetoAutor_projetoId_fkey" FOREIGN KEY ("projetoId") REFERENCES "Projeto"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ProjetoAutor" ADD CONSTRAINT "ProjetoAutor_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "Usuario"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjetoAutor" ADD CONSTRAINT "ProjetoAutor_entidadeId_fkey" FOREIGN KEY ("entidadeId") REFERENCES "Entidade"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Require at least one of usuarioId / entidadeId
+ALTER TABLE "ProjetoAutor" ADD CONSTRAINT "ProjetoAutor_author_required" CHECK ("usuarioId" IS NOT NULL OR "entidadeId" IS NOT NULL);
+
+-- A given user / entidade can appear at most once per projeto
+CREATE UNIQUE INDEX "ProjetoAutor_projetoId_usuarioId_unique" ON "ProjetoAutor"("projetoId", "usuarioId") WHERE "usuarioId" IS NOT NULL;
+CREATE UNIQUE INDEX "ProjetoAutor_projetoId_entidadeId_unique" ON "ProjetoAutor"("projetoId", "entidadeId") WHERE "entidadeId" IS NOT NULL;

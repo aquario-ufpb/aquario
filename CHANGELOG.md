@@ -8,10 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Projetos**: `ProjetoAutor` rows now reference a `usuario`, an `entidade`, or both — entidades can be authors of a projeto.
+- **Projetos**: Server-side authorization on all mutating routes (`POST /api/projetos`, `PATCH/DELETE /api/projetos/[slug]`, publish, autores) — only listed authors, admins of listed entidade-authors, or `MASTER_ADMIN` can act.
+- **Auth**: New `canManageProjeto` helper in `services/auth/middleware.ts`.
+- **Navbar**: Add Projetos link to desktop navigation.
+- **Projetos**: "Novo Projeto" button on `/projetos` is always visible; opens a login prompt dialog when not authenticated. Mobile FAB now only shows on small screens.
 
 ### Changed
+- **Projetos**: Renamed `urlPublicacao` → `urlOutro`; field label updated to a generic "Outro link".
 
 ### Removed
+- **Projetos**: Drop `entidadeId` from `Projeto` (entidade affiliation now lives on `ProjetoAutor`).
+- **Projetos**: Drop `tipoConteudo` enum and column — `textContent` is treated as a single content type.
 
 ### Fixed
 

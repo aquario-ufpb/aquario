@@ -38,7 +38,7 @@ export function NovoProjetoModal({ open, onOpenChange, onSuccess }: NovoProjetoM
   const [subtitulo, setSubtitulo] = useState("");
   const [urlRepositorio, setUrlRepositorio] = useState("");
   const [urlDemo, setUrlDemo] = useState("");
-  const [urlPublicacao, setUrlPublicacao] = useState(""); // Medium
+  const [urlOutro, setUrlOutro] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [markdownContent, setMarkdownContent] = useState("");
   const [isUploadingCover, setIsUploadingCover] = useState(false);
@@ -73,7 +73,7 @@ export function NovoProjetoModal({ open, onOpenChange, onSuccess }: NovoProjetoM
     setSubtitulo("");
     setUrlRepositorio("");
     setUrlDemo("");
-    setUrlPublicacao("");
+    setUrlOutro("");
     setCoverImageUrl(null);
     setMarkdownContent("");
     setCoAutores([]);
@@ -194,12 +194,11 @@ export function NovoProjetoModal({ open, onOpenChange, onSuccess }: NovoProjetoM
         subtitulo: subtitulo || null,
         descricao: subtitulo || null, // Using subtitle as short desc for now
         textContent: markdownContent,
-        tipoConteudo: "HTML",
         urlImagem: coverImageUrl,
         status: "PUBLICADO",
         urlRepositorio: urlRepositorio || null,
         urlDemo: urlDemo || null,
-        urlPublicacao: urlPublicacao || null,
+        urlOutro: urlOutro || null,
         autores: autoresList,
       };
 
@@ -348,14 +347,14 @@ export function NovoProjetoModal({ open, onOpenChange, onSuccess }: NovoProjetoM
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="medium" className="text-xs">
-                  Post no Medium/Dribbble
+                <Label htmlFor="outro" className="text-xs">
+                  Outro link
                 </Label>
                 <Input
-                  id="medium"
-                  placeholder="https://medium.com/..."
-                  value={urlPublicacao}
-                  onChange={e => setUrlPublicacao(e.target.value)}
+                  id="outro"
+                  placeholder="https://..."
+                  value={urlOutro}
+                  onChange={e => setUrlOutro(e.target.value)}
                 />
               </div>
             </div>

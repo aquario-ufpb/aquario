@@ -6,17 +6,31 @@ import ProjectCard from "@/components/shared/project-card";
 import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { useProjetos } from "@/lib/client/hooks/use-projetos";
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUser } from "@/lib/client/hooks";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { LoginPromptDialog } from "@/components/shared/login-prompt-dialog";
+import { PageHeader } from "@/components/ui/page-header";
+import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 
 export default function Projetos() {
+  const router = useRouter();
   const { data: user } = useCurrentUser();
   const { data: projetosResponse, isLoading, error } = useProjetos();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+
+  const handleNovoProjetoClick = () => {
+    if (user) {
+      router.push("/projetos/novo");
+    } else {
+      setLoginPromptOpen(true);
+    }
+  };
 
   const projetos = useMemo(
     () => (projetosResponse?.projetos ?? []).map(mapProjetoToCard),
@@ -60,25 +74,19 @@ export default function Projetos() {
     <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl">
       <div className="mb-12">
         <div className="flex items-start justify-between gap-4 mb-8">
-          <div className="space-y-2">
-            <h1 className="text-4xl md:text-5xl font-display font-bold max-w-3xl">
-              Explore os projetos do Centro de Informática
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Nosso mural de projetos permite visualizar projetos de qualquer laboratório, grupo,
-              liga ou pessoa.
-            </p>
+          <PageHeader
+            title={PAGE_HEADER_TEXT.projetos.title}
+            subtitle={PAGE_HEADER_TEXT.projetos.extendedSubtitle}
+          />
+          <div className="hidden md:flex flex-shrink-0">
+            <Button
+              className="rounded-full bg-aquario-primary text-white hover:bg-aquario-primary/90"
+              onClick={handleNovoProjetoClick}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Projeto
+            </Button>
           </div>
-          {user && (
-            <div className="hidden md:flex flex-shrink-0">
-              <Button className="rounded-full" asChild>
-                <Link href="/projetos/novo">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Divulgar um projeto
-                </Link>
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* Search and Filters */}
@@ -128,19 +136,22 @@ export default function Projetos() {
       )}
 
       {/* Floating Action Button */}
-      {user && (
-        <div className="fixed bottom-8 left-8 z-50">
-          <Link href="/projetos/novo">
-            <Button
-              size="icon"
-              className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all"
-            >
-              <Plus className="h-6 w-6" />
-              <span className="sr-only">Divulgar um projeto</span>
-            </Button>
-          </Link>
-        </div>
-      )}
+      <div className="fixed bottom-8 left-8 z-50 md:hidden">
+        <Button
+          size="icon"
+          className="h-14 w-14 rounded-full bg-aquario-primary text-white shadow-lg hover:bg-aquario-primary/90 hover:shadow-xl transition-all"
+          onClick={handleNovoProjetoClick}
+        >
+          <Plus className="h-6 w-6" />
+          <span className="sr-only">Novo Projeto</span>
+        </Button>
+      </div>
+
+      <LoginPromptDialog
+        open={loginPromptOpen}
+        onOpenChange={setLoginPromptOpen}
+        description="Você precisa estar logado para criar um novo projeto."
+      />
     </div>
   );
 }

@@ -298,6 +298,9 @@ function NavLinks() {
       <Link href="/entidades" className={navLinkClass}>
         Entidades
       </Link>
+      <Link href="/projetos" className={navLinkClass}>
+        Projetos
+      </Link>
     </div>
   );
 }

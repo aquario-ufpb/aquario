@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getContainer } from "@/lib/server/container";
 import { createProjetoSchema, listProjetosSchema } from "@/lib/shared/validations/projeto";
 import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
+import { withAuth, canManageVagaForEntidade } from "@/lib/server/services/auth/middleware";
 import type { ProjetosListResponse } from "@/lib/shared/types/projeto";
 
 /**
- * GET /api/projetos
- * Lista todos os projetos com paginação e filtros
+ * GET /api/projetos — public, paginated list with filters.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -51,39 +51,57 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/projetos
- * Cria um novo projeto com autores
+ * POST /api/projetos — authenticated. The requester must:
+ *   - be among the user-authors (or MASTER_ADMIN), AND
+ *   - be ADMIN of every entidade-author listed (or MASTER_ADMIN).
  */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+export function POST(request: NextRequest) {
+  return withAuth(request, async (req, usuario) => {
+    try {
+      const body = await req.json();
 
-    const validation = createProjetoSchema.safeParse(body);
+      const validation = createProjetoSchema.safeParse(body);
+      if (!validation.success) {
+        return fromZodError(validation.error);
+      }
 
-    if (!validation.success) {
-      return fromZodError(validation.error);
+      const { autores, ...projetoData } = validation.data;
+      const isMasterAdmin = usuario.papelPlataforma === "MASTER_ADMIN";
+
+      const usuarioIds = autores.map(a => a.usuarioId).filter((id): id is string => !!id);
+      const entidadeIds = autores.map(a => a.entidadeId).filter((id): id is string => !!id);
+
+      if (!isMasterAdmin && !usuarioIds.includes(usuario.id)) {
+        return ApiError.forbidden("Você só pode criar projetos em que esteja listado como autor.");
+      }
+
+      for (const entidadeId of entidadeIds) {
+        if (!(await canManageVagaForEntidade(usuario, entidadeId))) {
+          return ApiError.forbidden(
+            "Você não tem permissão de admin em uma das entidades listadas como autor."
+          );
+        }
+      }
+
+      const { projetosRepository } = getContainer();
+
+      if (await projetosRepository.slugExists(projetoData.slug)) {
+        return ApiError.slugExists();
+      }
+
+      if (!(await projetosRepository.usuariosExist(usuarioIds))) {
+        return ApiError.badRequest("Um ou mais usuários não existem");
+      }
+
+      if (!(await projetosRepository.entidadesExist(entidadeIds))) {
+        return ApiError.badRequest("Uma ou mais entidades não existem");
+      }
+
+      const projeto = await projetosRepository.create(projetoData, autores);
+      return NextResponse.json(projeto, { status: 201 });
+    } catch (error) {
+      console.error("Error creating projeto:", error);
+      return ApiError.internal("Erro ao criar projeto");
     }
-
-    const { autores, ...projetoData } = validation.data;
-    const { projetosRepository } = getContainer();
-
-    // Check if slug already exists
-    if (await projetosRepository.slugExists(projetoData.slug)) {
-      return ApiError.slugExists();
-    }
-
-    // Verify all usuarios exist
-    const usuarioIds = autores.map(a => a.usuarioId);
-    if (!(await projetosRepository.usuariosExist(usuarioIds))) {
-      return ApiError.badRequest("Um ou mais usuários não existem");
-    }
-
-    // Create projeto with autores
-    const projeto = await projetosRepository.create(projetoData, autores);
-
-    return NextResponse.json(projeto, { status: 201 });
-  } catch (error) {
-    console.error("Error creating projeto:", error);
-    return ApiError.internal("Erro ao criar projeto");
-  }
+  });
 }

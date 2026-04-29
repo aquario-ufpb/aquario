@@ -9,9 +9,6 @@ import type {
   CreateProjetoAutorInput,
 } from "@/lib/server/db/interfaces/projetos-repository.interface";
 
-/**
- * Select padrão para dados públicos do usuario (sem PII)
- */
 const autorUsuarioSelect = {
   id: true,
   nome: true,
@@ -19,24 +16,7 @@ const autorUsuarioSelect = {
   slug: true,
 } as const;
 
-/**
- * Include padrão para autores com usuario
- */
-const autoresInclude = {
-  include: {
-    usuario: {
-      select: autorUsuarioSelect,
-    },
-  },
-  orderBy: {
-    autorPrincipal: "desc" as const,
-  },
-} as const;
-
-/**
- * Select padrão para entidade em listagem
- */
-const entidadeListSelect = {
+const autorEntidadeSelect = {
   id: true,
   nome: true,
   slug: true,
@@ -44,13 +24,14 @@ const entidadeListSelect = {
   urlFoto: true,
 } as const;
 
-/**
- * Select padrão para entidade em detalhe
- */
-const entidadeDetailSelect = {
-  ...entidadeListSelect,
-  website: true,
-  descricao: true,
+const autoresInclude = {
+  include: {
+    usuario: { select: autorUsuarioSelect },
+    entidade: { select: autorEntidadeSelect },
+  },
+  orderBy: {
+    autorPrincipal: "desc" as const,
+  },
 } as const;
 
 export class PrismaProjetosRepository implements IProjetosRepository {
@@ -65,7 +46,9 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     }
 
     if (entidadeId) {
-      where.entidadeId = entidadeId;
+      where.autores = {
+        some: { entidadeId },
+      };
     }
 
     if (tags) {
@@ -83,6 +66,7 @@ export class PrismaProjetosRepository implements IProjetosRepository {
 
     if (usuarioId) {
       where.autores = {
+        ...(where.autores ?? {}),
         some: { usuarioId },
       };
     }
@@ -97,12 +81,7 @@ export class PrismaProjetosRepository implements IProjetosRepository {
         skip,
         take: limit,
         orderBy: orderByClause,
-        include: {
-          autores: autoresInclude,
-          entidade: {
-            select: entidadeListSelect,
-          },
-        },
+        include: { autores: autoresInclude },
       }),
       prisma.projeto.count({ where }),
     ]);
@@ -116,12 +95,7 @@ export class PrismaProjetosRepository implements IProjetosRepository {
   async findBySlug(slug: string): Promise<ProjetoWithRelations | null> {
     const projeto = await prisma.projeto.findUnique({
       where: { slug },
-      include: {
-        autores: autoresInclude,
-        entidade: {
-          select: entidadeDetailSelect,
-        },
-      },
+      include: { autores: autoresInclude },
     });
 
     return projeto as unknown as ProjetoWithRelations | null;
@@ -151,11 +125,25 @@ export class PrismaProjetosRepository implements IProjetosRepository {
   }
 
   async usuariosExist(ids: string[]): Promise<boolean> {
-    const existingUsuarios = await prisma.usuario.findMany({
+    if (ids.length === 0) {
+      return true;
+    }
+    const existing = await prisma.usuario.findMany({
       where: { id: { in: ids } },
       select: { id: true },
     });
-    return existingUsuarios.length === ids.length;
+    return existing.length === ids.length;
+  }
+
+  async entidadesExist(ids: string[]): Promise<boolean> {
+    if (ids.length === 0) {
+      return true;
+    }
+    const existing = await prisma.entidade.findMany({
+      where: { id: { in: ids } },
+      select: { id: true },
+    });
+    return existing.length === ids.length;
   }
 
   async create(
@@ -167,15 +155,13 @@ export class PrismaProjetosRepository implements IProjetosRepository {
         ...(data as Prisma.ProjetoCreateInput),
         autores: {
           create: autores.map(autor => ({
-            usuarioId: autor.usuarioId,
+            usuarioId: autor.usuarioId ?? null,
+            entidadeId: autor.entidadeId ?? null,
             autorPrincipal: autor.autorPrincipal,
           })),
         },
       },
-      include: {
-        autores: autoresInclude,
-        entidade: true,
-      },
+      include: { autores: autoresInclude },
     });
 
     return projeto as unknown as ProjetoWithRelations;
@@ -185,10 +171,7 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     const projeto = await prisma.projeto.update({
       where: { slug },
       data: data as Prisma.ProjetoUpdateInput,
-      include: {
-        autores: autoresInclude,
-        entidade: true,
-      },
+      include: { autores: autoresInclude },
     });
 
     return projeto as unknown as ProjetoWithRelations;
@@ -208,10 +191,7 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     const projeto = await prisma.projeto.update({
       where: { slug },
       data: { status, publicadoEm },
-      include: {
-        autores: autoresInclude,
-        entidade: true,
-      },
+      include: { autores: autoresInclude },
     });
 
     return projeto as unknown as ProjetoWithRelations;
@@ -229,7 +209,8 @@ export class PrismaProjetosRepository implements IProjetosRepository {
       prisma.projetoAutor.createMany({
         data: autores.map(autor => ({
           projetoId,
-          usuarioId: autor.usuarioId,
+          usuarioId: autor.usuarioId ?? null,
+          entidadeId: autor.entidadeId ?? null,
           autorPrincipal: autor.autorPrincipal,
         })),
       }),

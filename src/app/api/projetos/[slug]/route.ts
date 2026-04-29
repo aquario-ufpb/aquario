@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getContainer } from "@/lib/server/container";
 import { updateProjetoSchema } from "@/lib/shared/validations/projeto";
 import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
+import { withAuth, canManageProjeto } from "@/lib/server/services/auth/middleware";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
 };
 
 /**
- * GET /api/projetos/[slug]
- * Obtém detalhes de um projeto específico pelo slug
+ * GET /api/projetos/[slug] — public.
  */
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
@@ -30,68 +30,69 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 }
 
 /**
- * PATCH /api/projetos/[slug]
- * Atualiza um projeto (não atualiza autores)
+ * PATCH /api/projetos/[slug] — authenticated, only autores or entidade-admins.
  */
-export async function PATCH(request: NextRequest, context: RouteContext) {
-  try {
-    const { slug } = await context.params;
-    const body = await request.json();
+export function PATCH(request: NextRequest, context: RouteContext) {
+  return withAuth(request, async (req, usuario) => {
+    try {
+      const { slug } = await context.params;
+      const body = await req.json();
 
-    const validation = updateProjetoSchema.safeParse(body);
-
-    if (!validation.success) {
-      return fromZodError(validation.error);
-    }
-
-    const data = validation.data;
-    const { projetosRepository } = getContainer();
-
-    // Check if projeto exists
-    const existingProjeto = await projetosRepository.findBySlugBasic(slug);
-
-    if (!existingProjeto) {
-      return ApiError.notFound("Projeto");
-    }
-
-    // Check if new slug already exists (if changing slug)
-    if (data.slug && data.slug !== slug) {
-      if (await projetosRepository.slugExists(data.slug)) {
-        return ApiError.slugExists();
+      const validation = updateProjetoSchema.safeParse(body);
+      if (!validation.success) {
+        return fromZodError(validation.error);
       }
+
+      const data = validation.data;
+      const { projetosRepository } = getContainer();
+
+      const existingProjeto = await projetosRepository.findBySlugWithAutores(slug);
+      if (!existingProjeto) {
+        return ApiError.notFound("Projeto");
+      }
+
+      if (!(await canManageProjeto(usuario, existingProjeto.autores))) {
+        return ApiError.forbidden("Você não tem permissão para editar este projeto.");
+      }
+
+      if (data.slug && data.slug !== slug) {
+        if (await projetosRepository.slugExists(data.slug)) {
+          return ApiError.slugExists();
+        }
+      }
+
+      const projeto = await projetosRepository.update(slug, data);
+      return NextResponse.json(projeto);
+    } catch (error) {
+      console.error("Error updating projeto:", error);
+      return ApiError.internal("Erro ao atualizar projeto");
     }
-
-    const projeto = await projetosRepository.update(slug, data);
-
-    return NextResponse.json(projeto);
-  } catch (error) {
-    console.error("Error updating projeto:", error);
-    return ApiError.internal("Erro ao atualizar projeto");
-  }
+  });
 }
 
 /**
- * DELETE /api/projetos/[slug]
- * Remove um projeto
+ * DELETE /api/projetos/[slug] — authenticated, only autores or entidade-admins.
  */
-export async function DELETE(_request: NextRequest, context: RouteContext) {
-  try {
-    const { slug } = await context.params;
-    const { projetosRepository } = getContainer();
+export function DELETE(request: NextRequest, context: RouteContext) {
+  return withAuth(request, async (_req, usuario) => {
+    try {
+      const { slug } = await context.params;
+      const { projetosRepository } = getContainer();
 
-    // Check if projeto exists
-    const projeto = await projetosRepository.findBySlugBasic(slug);
+      const projeto = await projetosRepository.findBySlugWithAutores(slug);
+      if (!projeto) {
+        return ApiError.notFound("Projeto");
+      }
 
-    if (!projeto) {
-      return ApiError.notFound("Projeto");
+      if (!(await canManageProjeto(usuario, projeto.autores))) {
+        return ApiError.forbidden("Você não tem permissão para remover este projeto.");
+      }
+
+      await projetosRepository.delete(slug);
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting projeto:", error);
+      return ApiError.internal("Erro ao remover projeto");
     }
-
-    // Delete projeto (cascade will delete ProjetoAutor relations)
-    await projetosRepository.delete(slug);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting projeto:", error);
-    return ApiError.internal("Erro ao remover projeto");
-  }
+  });
 }

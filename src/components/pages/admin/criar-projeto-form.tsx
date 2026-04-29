@@ -109,7 +109,6 @@ export function CriarProjetoForm() {
         subtitulo: subtitulo || undefined,
         descricao: descricao || undefined,
         textContent: null,
-        tipoConteudo: "MARKDOWN",
         urlImagem: imageUrl || undefined,
         status: "RASCUNHO",
         tags: [],

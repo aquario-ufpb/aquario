@@ -1,17 +1,29 @@
 import { z } from "zod";
 
 /**
- * Schema de validação para autor do projeto
- * Apenas autores internos (usuários do sistema)
+ * Accepts either an absolute URL or a server-relative path (starting with "/").
+ * Used for `urlImagem` because the blob storage backend returns absolute URLs in
+ * production (Vercel Blob) but relative paths in local dev.
  */
-export const projetoAutorSchema = z.object({
-  usuarioId: z.string().uuid("ID de usuário inválido"),
-  autorPrincipal: z.boolean().default(false),
+const internalUrlSchema = z.string().refine(v => v.startsWith("/") || /^https?:\/\//i.test(v), {
+  message: "Deve ser uma URL absoluta ou caminho começando com /",
 });
 
 /**
- * Schema de validação para criação de projeto
+ * Um autor de projeto referencia um usuario, uma entidade, ou ambos.
+ * Pelo menos um dos dois ids precisa estar presente.
  */
+export const projetoAutorSchema = z
+  .object({
+    usuarioId: z.string().uuid("ID de usuário inválido").optional().nullable(),
+    entidadeId: z.string().uuid("ID de entidade inválido").optional().nullable(),
+    autorPrincipal: z.boolean().default(false),
+  })
+  .refine(a => !!a.usuarioId || !!a.entidadeId, {
+    message: "Cada autor deve referenciar um usuário ou uma entidade",
+    path: ["usuarioId"],
+  });
+
 const createProjetoBaseSchema = z.object({
   titulo: z.string().min(1).max(255),
   slug: z
@@ -21,17 +33,15 @@ const createProjetoBaseSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   subtitulo: z.string().max(500).optional().nullable(),
   descricao: z.string().max(1000).optional().nullable(),
-  textContent: z.string().optional().nullable(),
-  tipoConteudo: z.enum(["MARKDOWN", "HTML", "TEXTO_SIMPLES"]).default("MARKDOWN"),
-  urlImagem: z.string().url().optional().nullable(),
+  textContent: z.string().max(50000).optional().nullable(),
+  urlImagem: internalUrlSchema.optional().nullable(),
   status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).default("RASCUNHO"),
   tags: z.array(z.string().max(50)).default([]),
   dataInicio: z.coerce.date().optional().nullable(),
   dataFim: z.coerce.date().optional().nullable(),
   urlRepositorio: z.string().url().optional().nullable(),
   urlDemo: z.string().url().optional().nullable(),
-  urlPublicacao: z.string().url().optional().nullable(),
-  entidadeId: z.string().uuid().optional().nullable(),
+  urlOutro: z.string().url().optional().nullable(),
   autores: z.array(projetoAutorSchema).min(1),
 });
 
@@ -48,65 +58,35 @@ export const createProjetoSchema = createProjetoBaseSchema
       path: ["dataFim"],
     }
   )
-  .refine(
-    data => {
-      return data.autores.some(a => a.autorPrincipal);
-    },
-    {
-      message: "Pelo menos um autor deve ser principal",
-      path: ["autores"],
-    }
-  );
+  .refine(data => data.autores.some(a => a.autorPrincipal), {
+    message: "Pelo menos um autor deve ser principal",
+    path: ["autores"],
+  });
 
-/**
- * Schema de validação para atualização de projeto
- */
 export const updateProjetoSchema = createProjetoBaseSchema.partial().omit({ autores: true });
 
-/**
- * Schema de validação para adicionar/atualizar autores de um projeto
- */
 export const updateProjetoAutoresSchema = z
   .object({
     autores: z.array(projetoAutorSchema).min(1, "Pelo menos um autor é obrigatório"),
   })
-  .refine(
-    data => {
-      return data.autores.some(a => a.autorPrincipal);
-    },
-    {
-      message: "Pelo menos um autor deve ser marcado como principal",
-      path: ["autores"],
-    }
-  );
+  .refine(data => data.autores.some(a => a.autorPrincipal), {
+    message: "Pelo menos um autor deve ser marcado como principal",
+    path: ["autores"],
+  });
 
-/**
- * Schema de validação para publicação de projeto
- */
 export const publishProjetoSchema = z.object({
   id: z.string().uuid("ID de projeto inválido"),
 });
 
-/**
- * Schema de validação para listagem de projetos (query params)
- */
 export const listProjetosSchema = z.object({
   page: z.coerce.number().min(1).default(1),
-
   limit: z.coerce.number().min(1).max(100).default(10),
-
   status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).optional(),
-
   entidadeId: z.string().uuid().optional(),
-
   usuarioId: z.string().uuid().optional(),
-
   tags: z.string().optional(),
-
   search: z.string().optional(),
-
   orderBy: z.enum(["criadoEm", "publicadoEm", "titulo"]).default("criadoEm"),
-
   order: z.enum(["asc", "desc"]).default("desc"),
 });
 

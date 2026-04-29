@@ -79,12 +79,6 @@ enum StatusProjeto {
   ARQUIVADO
 }
 
-enum TipoConteudo {
-  MARKDOWN
-  HTML
-  TEXTO_SIMPLES
-}
-
 // ============================================================================
 // CAMPUS & CENTRO & CURSO (Core organizational structure)
 // ============================================================================
@@ -201,7 +195,7 @@ model Entidade {
   membros MembroEntidade[]
   cargos  Cargo[]
   vagas    Vaga[]
-  projetos Projeto[]
+  projetosAutor ProjetoAutor[]
 
   @@unique([nome, tipo])
   @@index([slug])
@@ -497,7 +491,6 @@ model Projeto {
   subtitulo      String?
   descricao      String?
   textContent    String?
-  tipoConteudo   TipoConteudo  @default(MARKDOWN)
   urlImagem      String?
   status         StatusProjeto @default(RASCUNHO)
   tags           String[]      @default([])
@@ -505,33 +498,34 @@ model Projeto {
   dataFim        DateTime?
   urlRepositorio String?
   urlDemo        String?
-  urlPublicacao  String?
+  urlOutro       String?
   criadoEm       DateTime      @default(now())
   atualizadoEm   DateTime      @updatedAt
   publicadoEm    DateTime?
 
-  autores    ProjetoAutor[]
-  entidadeId String?
-  entidade   Entidade?      @relation(fields: [entidadeId], references: [id])
+  autores ProjetoAutor[]
 
   @@index([slug])
   @@index([status])
-  @@index([entidadeId])
   @@index([criadoEm])
   @@index([publicadoEm])
 }
 
+/// An autor row attaches a Projeto to either a Usuario, an Entidade, or both.
+/// At least one of usuarioId / entidadeId must be set (enforced by CHECK constraint).
 model ProjetoAutor {
   id              String   @id @default(uuid())
   projetoId       String
-  usuarioId       String
+  usuarioId       String?
+  entidadeId      String?
   autorPrincipal  Boolean  @default(false)
 
-  projeto Projeto  @relation(fields: [projetoId], references: [id], onDelete: Cascade)
-  usuario Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  projeto  Projeto   @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  usuario  Usuario?  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  entidade Entidade? @relation(fields: [entidadeId], references: [id], onDelete: Cascade)
 
-  @@unique([projetoId, usuarioId])
   @@index([projetoId])
   @@index([usuarioId])
+  @@index([entidadeId])
   @@index([autorPrincipal])
 }
