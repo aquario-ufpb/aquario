@@ -76,7 +76,7 @@ export default function ProjetoPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-8 mt-8 max-w-7xl">
+    <div className="container mx-auto p-4 md:p-8 mt-8 max-w-7xl pb-32">
       <div className="flex items-center justify-between mb-8">
         <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-primary" asChild>
           <Link href="/projetos">

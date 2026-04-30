@@ -86,7 +86,7 @@ export default function Projetos() {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl">
+    <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl pb-32">
       <div className="mb-12">
         <div className="flex items-start justify-between gap-4 mb-8">
           <PageHeader

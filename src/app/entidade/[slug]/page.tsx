@@ -80,7 +80,7 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="mt-24">
-      <div className="container mx-auto max-w-7xl px-6 md:px-8 lg:px-16">
+      <div className="container mx-auto max-w-7xl px-6 md:px-8 lg:px-16 pb-32">
         <EntidadeBackButton />
 
         <EntidadeHeroSection

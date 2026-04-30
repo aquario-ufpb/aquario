@@ -179,11 +179,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
   }
 
   return (
-    <main className="container mx-auto max-w-7xl px-6 md:px-8 lg:px-16 pt-24">
-      {/* Profile Header */}
-      <div className="flex flex-col items-center text-center mb-8 pb-8 border-b">
-        <div className="relative mb-6 w-24 h-24 mx-auto">
-          {/* Avatar */}
+    <main className="container mx-auto max-w-7xl px-6 md:px-8 lg:px-16 pt-36 pb-32">
+      {/* Profile Header — Dribbble-style: avatar left, info right, group centered */}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-center gap-8 md:gap-10 mb-8">
+        {/* Avatar */}
+        <div className="relative w-24 h-24 md:w-28 md:h-28 shrink-0 mx-auto md:mx-0">
           <div className="relative group w-full h-full">
             <Avatar className="w-full h-full">
               <AvatarImage
@@ -266,38 +266,23 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
           )}
         </div>
 
-        <h1 className="text-3xl font-bold mb-2">{user.nome}</h1>
-        <p className="text-lg text-muted-foreground mb-6">{user.email}</p>
+        {/* Right column — name + info + actions */}
+        <div className="flex flex-col gap-1 min-w-0 text-center md:text-left">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-1">{user.nome}</h1>
+          <p className="text-base md:text-lg text-foreground/80">
+            {user.centro.sigla} — {user.centro.nome}
+          </p>
+          <p className="text-base text-muted-foreground">{user.curso.nome}</p>
+          {user.email && <p className="text-sm text-muted-foreground">{user.email}</p>}
 
-        {/* Info Grid */}
-        <div className="grid gap-4 md:grid-cols-2 w-full">
-          <div className="flex flex-col space-y-1 text-left">
-            <span className="text-sm font-semibold text-muted-foreground">Centro</span>
-            <span className="text-base">
-              {user.centro.sigla} - {user.centro.nome}
-            </span>
-          </div>
-          <div className="flex flex-col space-y-1 text-left">
-            <span className="text-sm font-semibold text-muted-foreground">Curso</span>
-            <span className="text-base">{user.curso.nome}</span>
-          </div>
-          {user.papelPlataforma === "MASTER_ADMIN" && (
-            <div className="flex flex-col space-y-1 text-left">
-              <span className="text-sm font-semibold text-muted-foreground">
-                Papel na Plataforma
-              </span>
-              <span className="text-base">Administrador</span>
+          {isOwnProfile && user.papelPlataforma === "MASTER_ADMIN" && (
+            <div className="flex justify-center md:justify-start mt-2">
+              <Link href="/admin">
+                <Button className="rounded-full">Painel de Administração</Button>
+              </Link>
             </div>
           )}
         </div>
-
-        {isOwnProfile && user.papelPlataforma === "MASTER_ADMIN" && (
-          <div className="mt-6 w-full">
-            <Link href="/admin">
-              <Button className="w-full">Painel de Administração</Button>
-            </Link>
-          </div>
-        )}
       </div>
 
       {/* Course progress */}
@@ -311,17 +296,29 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
         </div>
       )}
 
-      {/* Tabs for Entidades, Projetos and Timeline */}
-      <div className="mt-8">
-        <Tabs defaultValue="entidades" className="w-full">
+      {/* Tabs for Projetos, Entidades and Timeline */}
+      <div className="mt-24">
+        <Tabs defaultValue="projetos" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="entidades">Entidades</TabsTrigger>
-            <TabsTrigger value="projetos">Projetos</TabsTrigger>
+            <TabsTrigger value="projetos">
+              Projetos
+              {projetos && projetos.length > 0 && (
+                <span className="ml-2 text-xs text-muted-foreground">{projetos.length}</span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="entidades">
+              Entidades
+              {memberships && memberships.length > 0 && (
+                <span className="ml-2 text-xs text-muted-foreground">{memberships.length}</span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="timeline">Linha do Tempo</TabsTrigger>
           </TabsList>
 
+          <div className="border-b border-border/60 my-6" />
+
           {/* Entidades */}
-          <TabsContent value="entidades" className="mt-6">
+          <TabsContent value="entidades" className="mt-0">
             <EntidadesTab
               memberships={memberships}
               isLoading={membershipsLoading}
@@ -338,7 +335,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
           </TabsContent>
 
           {/* Projetos */}
-          <TabsContent value="projetos" className="mt-6">
+          <TabsContent value="projetos" className="mt-0">
             <h2 className="text-xl font-semibold mb-6">
               {isOwnProfile ? "Meus Projetos" : "Projetos"}
             </h2>
@@ -378,7 +375,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
           </TabsContent>
 
           {/* Timeline */}
-          <TabsContent value="timeline" className="mt-6">
+          <TabsContent value="timeline" className="mt-0">
             <TimelineTab
               memberships={memberships}
               isLoading={membershipsLoading}
