@@ -8,8 +8,12 @@ export function EntidadeBackButton() {
   const router = useRouter();
 
   return (
-    <div className="px-6 md:px-8 lg:px-16 pt-8 pb-4">
-      <Button variant="ghost" onClick={() => router.back()} className="flex items-center gap-2">
+    <div className="pt-8 pb-4">
+      <Button
+        variant="ghost"
+        onClick={() => router.back()}
+        className="flex items-center gap-2 pl-0 hover:bg-transparent hover:text-primary"
+      >
         <ArrowLeft className="w-4 h-4" />
         Voltar
       </Button>

@@ -33,6 +33,7 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
   // Use React Query hooks
   const { data: entidade, isLoading, error: queryError } = useEntidadeBySlug(slug);
   const { data: allEntidades = [] } = useEntidades();
+  const { data: projetos = [] } = useProjetosByEntidade(entidade?.id);
 
   // Compute other entidades of the same type
   const otherEntidades = useMemo(() => {
@@ -43,6 +44,14 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
       .filter(e => e.tipo === entidade.tipo && e.slug !== entidade.slug)
       .slice(0, 8);
   }, [entidade, allEntidades]);
+
+  // Active member count (membros without endedAt are still active)
+  const activeMemberCount = useMemo(
+    () => entidade?.membros?.filter(m => !m.endedAt).length ?? 0,
+    [entidade]
+  );
+
+  const projetoCount = projetos.length;
 
   const canEdit =
     user &&
@@ -71,7 +80,7 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="mt-24">
-      <div className="container mx-auto max-w-7xl">
+      <div className="container mx-auto max-w-7xl px-6 md:px-8 lg:px-16">
         <EntidadeBackButton />
 
         <EntidadeHeroSection
@@ -81,23 +90,33 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
         />
 
         {/* Tabs */}
-        <Tabs defaultValue="projetos" className="mt-2">
-          <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0 h-auto gap-0">
-            {(["Projetos", "Pessoas", "Sobre"] as const).map(tab => (
+        <Tabs defaultValue="projetos" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            {(
+              [
+                { label: "Projetos", count: projetoCount },
+                { label: "Pessoas", count: activeMemberCount },
+                { label: "Sobre", count: null },
+              ] as const
+            ).map(tab => (
               <TabsTrigger
-                key={tab}
-                value={tab
+                key={tab.label}
+                value={tab.label
                   .toLowerCase()
                   .normalize("NFD")
                   .replace(/[\u0300-\u036f]/g, "")}
-                className="rounded-none border-b-2 border-transparent px-6 py-3 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none bg-transparent"
               >
-                {tab}
+                {tab.label}
+                {tab.count !== null && tab.count > 0 && (
+                  <span className="ml-2 text-xs text-muted-foreground">{tab.count}</span>
+                )}
               </TabsTrigger>
             ))}
           </TabsList>
 
-          <TabsContent value="projetos" className="mt-6">
+          <div className="border-b border-border/60 my-6" />
+
+          <TabsContent value="projetos" className="mt-0">
             <ProjetosTab entidadeId={entidade.id} />
           </TabsContent>
 
@@ -105,14 +124,15 @@ export default function EntidadeDetailPage({ params }: { params: Promise<{ slug:
             <EntidadeMembersSection entidade={entidade} />
           </TabsContent>
 
-          <TabsContent value="sobre" className="mt-6">
+          <TabsContent value="sobre" className="mt-0">
             <EntidadeDescriptionSection entidade={entidade} />
             <EntidadeMapSection entidade={entidade} />
+            <EntidadeOtherEntitiesSection
+              currentEntidade={entidade}
+              otherEntidades={otherEntidades}
+            />
           </TabsContent>
         </Tabs>
-
-        {/* "Outros..." section always visible below tabs */}
-        <EntidadeOtherEntitiesSection currentEntidade={entidade} otherEntidades={otherEntidades} />
       </div>
 
       {/* Edit Dialog */}
@@ -173,14 +193,12 @@ function ProjetosTab({ entidadeId }: ProjetosTabProps) {
   const cards = projetos.map(mapProjetoToCard);
 
   return (
-    <div className="max-w-6xl">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pb-12">
-        {cards.map(card => (
-          <Link key={card.id} href={`/projetos/${card.id}`}>
-            <ProjectCard projeto={card} />
-          </Link>
-        ))}
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-12">
+      {cards.map(card => (
+        <Link key={card.id} href={`/projetos/${card.id}`}>
+          <ProjectCard projeto={card} />
+        </Link>
+      ))}
     </div>
   );
 }
