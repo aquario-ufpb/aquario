@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import Tiptap from "@/components/shared/tiptap";
 import { Input } from "@/components/ui/input";
@@ -16,23 +16,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
+import { useProjetoBySlug } from "@/lib/client/hooks/use-projetos";
+import { useUpdateProjeto, useUpdateProjetoAutores } from "@/lib/client/hooks/use-criar-projeto";
+import { canEditProjeto } from "@/lib/client/utils/projeto-permissions";
 import { mapImagePath } from "@/lib/client/api/entidades";
 import { CoAutoresPicker, type CoAutor } from "@/components/shared/co-autores-picker";
 import { ImageIcon } from "lucide-react";
 import { apiClient } from "@/lib/client/api/api-client";
-import { throwApiError } from "@/lib/client/errors";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import Image from "next/image";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-// Limits aligned with the server-side Zod schema in
-// src/lib/shared/validations/projeto.ts
+// Limits aligned with the server-side Zod schema in src/lib/shared/validations/projeto.ts
 const MAX_TITULO_LEN = 255;
 const MAX_SUBTITULO_LEN = 500;
 const MAX_TEXT_CONTENT_LEN = 50_000;
 
 const POSTAR_COMO_USUARIO = "__usuario__";
+
+const STATUS_OPTIONS = ["PUBLICADO", "RASCUNHO", "ARQUIVADO"] as const;
+type Status = (typeof STATUS_OPTIONS)[number];
 
 function CharCount({ length, max }: { length: number; max: number }) {
   const over = length > max;
@@ -48,10 +52,15 @@ function CharCount({ length, max }: { length: number; max: number }) {
   );
 }
 
-export default function NovoProjetoPage() {
+export default function EditarProjetoPage() {
   const router = useRouter();
+  const { id: slug } = useParams<{ id: string }>();
   const { data: usuario, isLoading: isLoadingUser } = useCurrentUser();
   const { data: memberships = [] } = useMyMemberships();
+  const { data: projeto, isLoading: isLoadingProjeto, error } = useProjetoBySlug(slug);
+
+  const updateProjeto = useUpdateProjeto(slug);
+  const updateAutores = useUpdateProjetoAutores(slug);
 
   const [titulo, setTitulo] = useState("");
   const [subtitulo, setSubtitulo] = useState("");
@@ -59,30 +68,31 @@ export default function NovoProjetoPage() {
   const [urlDemo, setUrlDemo] = useState("");
   const [urlOutro, setUrlOutro] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
-  const [markdownContent, setMarkdownContent] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
+  const [textContent, setTextContent] = useState("");
+  const [status, setStatus] = useState<Status>("PUBLICADO");
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // "Postando como" — selected entidade id, or POSTAR_COMO_USUARIO when posting
-  // as the personal profile.
+  // "Postando como" — selected entidade id, or POSTAR_COMO_USUARIO. The principal autor.
   const [postandoComo, setPostandoComo] = useState<string>(POSTAR_COMO_USUARIO);
 
-  // Co-autores
+  // Co-autores (anyone NOT the principal — can be users and/or entidades)
   const [coAutores, setCoAutores] = useState<CoAutor[]>([]);
 
-  // Track all uploaded blobs for this session so we can delete them if cancelled
+  // Track only NEW uploads in this session — deletable on cancel.
   const [uploadedBlobs, setUploadedBlobs] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!isLoadingUser && !usuario) {
-      toast.error("Ops, você não está logado! Por isso não pode acessar aqui");
-      router.push("/");
-    }
-  }, [isLoadingUser, usuario, router]);
+  // Snapshot of original autores so we can detect changes on save.
+  const [originalAutoresKey, setOriginalAutoresKey] = useState<string>("");
 
-  // Entidades the user is an active ADMIN of — these are the "post as" options
-  // beyond the personal profile.
+  const myAdminEntidadeIds = useMemo(
+    () =>
+      new Set(memberships.filter(m => m.papel === "ADMIN" && !m.endedAt).map(m => m.entidade.id)),
+    [memberships]
+  );
+
   const adminEntidades = useMemo(
     () =>
       memberships
@@ -95,6 +105,77 @@ export default function NovoProjetoPage() {
     [memberships]
   );
   const hasAdminEntidades = adminEntidades.length > 0;
+
+  const canEdit = useMemo(
+    () =>
+      canEditProjeto(
+        usuario,
+        projeto?.autores.map(a => ({ usuarioId: a.usuarioId, entidadeId: a.entidadeId })) ?? [],
+        myAdminEntidadeIds
+      ),
+    [usuario, projeto, myAdminEntidadeIds]
+  );
+
+  // Hydrate state from projeto once it loads. We use a state flag (not a ref)
+  // so the render that gates Tiptap can react to hydration completing — Tiptap's
+  // `content` prop is only consumed at editor init.
+  const [hasHydrated, setHasHydrated] = useState(false);
+  useEffect(() => {
+    if (!projeto || hasHydrated) {
+      return;
+    }
+
+    setTitulo(projeto.titulo);
+    setSubtitulo(projeto.subtitulo ?? "");
+    setUrlRepositorio(projeto.urlRepositorio ?? "");
+    setUrlDemo(projeto.urlDemo ?? "");
+    setUrlOutro(projeto.urlOutro ?? "");
+    setCoverImageUrl(projeto.urlImagem ?? null);
+    setTagsInput((projeto.tags ?? []).join(", "));
+    setTextContent(projeto.textContent ?? "");
+    setStatus(projeto.status as Status);
+
+    // Determine the principal autor and the co-autores
+    const principal = projeto.autores.find(a => a.autorPrincipal) ?? projeto.autores[0];
+    if (principal?.entidade) {
+      setPostandoComo(principal.entidade.id);
+    } else {
+      setPostandoComo(POSTAR_COMO_USUARIO);
+    }
+
+    const principalUserId = principal?.usuario?.id;
+    const principalEntidadeId = principal?.entidade?.id;
+
+    const coAutorList: CoAutor[] = projeto.autores.flatMap(a => {
+      const out: CoAutor[] = [];
+      if (a.usuario && a.usuario.id !== principalUserId) {
+        out.push({ kind: "user", id: a.usuario.id, nome: a.usuario.nome });
+      }
+      if (a.entidade && a.entidade.id !== principalEntidadeId) {
+        out.push({ kind: "entidade", id: a.entidade.id, nome: a.entidade.nome });
+      }
+      return out;
+    });
+    setCoAutores(coAutorList);
+
+    setOriginalAutoresKey(autoresKey(projeto.autores));
+    setHasHydrated(true);
+  }, [projeto, hasHydrated]);
+
+  // Auth + permission gating
+  useEffect(() => {
+    if (!isLoadingUser && !usuario) {
+      toast.error("Você precisa estar logado para editar projetos.");
+      router.push(`/projetos/${slug}`);
+    }
+  }, [isLoadingUser, usuario, router, slug]);
+
+  useEffect(() => {
+    if (projeto && usuario && !canEdit) {
+      toast.error("Você não tem permissão para editar este projeto.");
+      router.push(`/projetos/${slug}`);
+    }
+  }, [projeto, usuario, canEdit, router, slug]);
 
   const registerBlob = (url: string) => {
     setUploadedBlobs(prev => [...prev, url]);
@@ -111,11 +192,12 @@ export default function NovoProjetoPage() {
   };
 
   const handleCancel = async () => {
+    // Only delete blobs uploaded *in this session* — leave original image intact.
     if (uploadedBlobs.length > 0) {
       toast.info("Limpando arquivos temporários...");
       await Promise.all(uploadedBlobs.map(url => deleteBlob(url)));
     }
-    router.back();
+    router.push(`/projetos/${slug}`);
   };
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,12 +205,10 @@ export default function NovoProjetoPage() {
     if (!file) {
       return;
     }
-
     if (!file.type.startsWith("image/")) {
       toast.error("Por favor, selecione uma imagem.");
       return;
     }
-
     if (file.size > MAX_FILE_SIZE) {
       toast.error("A imagem selecionada é muito grande (máximo 5MB).");
       return;
@@ -137,7 +217,8 @@ export default function NovoProjetoPage() {
     setIsUploadingCover(true);
     const toastId = toast.loading("Fazendo upload da capa...");
 
-    if (coverImageUrl) {
+    // If the previous cover was an in-session upload, delete it before replacing.
+    if (coverImageUrl && uploadedBlobs.includes(coverImageUrl)) {
       try {
         await apiClient(`/upload/projeto-image?url=${encodeURIComponent(coverImageUrl)}`, {
           method: "DELETE",
@@ -151,16 +232,13 @@ export default function NovoProjetoPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-
       const response = await apiClient("/upload/projeto-image", {
         method: "POST",
         body: formData,
       });
-
       if (!response.ok) {
         throw new Error("Falha no upload");
       }
-
       const data = await response.json();
       setCoverImageUrl(data.url);
       registerBlob(data.url);
@@ -172,23 +250,10 @@ export default function NovoProjetoPage() {
     }
   };
 
-  const generateSlug = (text: string) => {
-    return (
-      text
-        .toString()
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[̀-ͯ]/g, "")
-        .replace(/[^\w\s-]/g, "")
-        .replace(/[\s_-]+/g, "-")
-        .replace(/^-+|-+$/g, "") + `-${Date.now().toString().slice(-4)}`
-    );
-  };
-
   const isOverLimit =
     titulo.length > MAX_TITULO_LEN ||
     subtitulo.length > MAX_SUBTITULO_LEN ||
-    markdownContent.length > MAX_TEXT_CONTENT_LEN;
+    textContent.length > MAX_TEXT_CONTENT_LEN;
 
   const handleSave = async () => {
     if (!titulo.trim()) {
@@ -205,74 +270,63 @@ export default function NovoProjetoPage() {
     }
 
     setIsSaving(true);
-    const toastId = toast.loading("Salvando projeto...");
+    const toastId = toast.loading("Salvando alterações...");
 
     try {
-      const slug = generateSlug(titulo);
+      // 1) Update projeto fields
+      const tags = tagsInput
+        .split(/[,;]/)
+        .map(t => t.trim())
+        .filter(Boolean);
 
-      // Principal is whatever "Postando como" picked. Co-autores are exactly
-      // what the user has in the list — no auto-injection.
-      const autoresList: Array<{
-        usuarioId?: string;
-        entidadeId?: string;
-        autorPrincipal: boolean;
-      }> =
-        postandoComo === POSTAR_COMO_USUARIO
-          ? [{ usuarioId: usuario.id, autorPrincipal: true }]
-          : [{ entidadeId: postandoComo, autorPrincipal: true }];
-
-      for (const co of coAutores) {
-        if (co.kind === "user") {
-          autoresList.push({ usuarioId: co.id, autorPrincipal: false });
-        } else {
-          autoresList.push({ entidadeId: co.id, autorPrincipal: false });
-        }
-      }
-
-      const body = {
+      await updateProjeto.mutateAsync({
         titulo,
-        slug,
         subtitulo: subtitulo || null,
-        textContent: markdownContent,
+        textContent: textContent || null,
         urlImagem: coverImageUrl,
-        status: "PUBLICADO",
         urlRepositorio: urlRepositorio || null,
         urlDemo: urlDemo || null,
         urlOutro: urlOutro || null,
-        autores: autoresList,
-      };
-
-      const res = await apiClient("/projetos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        tags,
+        status,
       });
 
-      if (!res.ok) {
-        await throwApiError(res);
+      // 2) If autores changed, update them via the dedicated endpoint
+      const newAutoresList = buildAutores({
+        postandoComo,
+        usuarioId: usuario.id,
+        coAutores,
+      });
+      const newKey = autoresKeyFromInput(newAutoresList);
+      if (newKey !== originalAutoresKey) {
+        await updateAutores.mutateAsync({ autores: newAutoresList });
       }
 
-      toast.success("Projeto criado com sucesso!", { id: toastId });
+      toast.success("Projeto atualizado com sucesso!", { id: toastId });
       setUploadedBlobs([]);
-      router.push("/projetos");
+      router.push(`/projetos/${slug}`);
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Erro ao salvar projeto.";
+      const message = e instanceof Error ? e.message : "Erro ao salvar alterações.";
       toast.error(message, { id: toastId });
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (isLoadingUser) {
+  if (isLoadingUser || isLoadingProjeto || (projeto && !hasHydrated)) {
     return <div className="p-8 text-center text-muted-foreground">Carregando...</div>;
   }
 
-  if (!usuario) {
+  if (error || !projeto) {
     return (
       <div className="p-8 text-center text-red-500">
-        Ops, você não está logado! Por isso não pode acessar aqui
+        {error instanceof Error ? error.message : "Projeto não encontrado."}
       </div>
     );
+  }
+
+  if (!usuario || !canEdit) {
+    return null; // already redirecting
   }
 
   const userAvatarUrl = usuario.urlFotoPerfil || getDefaultAvatarUrl(usuario.id, usuario.nome);
@@ -281,18 +335,18 @@ export default function NovoProjetoPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8 mt-24 max-w-6xl space-y-6">
       <div className="space-y-1">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Novo Projeto</h1>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Editar Projeto</h1>
         <p className="text-muted-foreground">
-          Compartilhe um projeto com a comunidade do Centro de Informática.
+          Atualize as informações do projeto. As mudanças entram em produção imediatamente.
         </p>
       </div>
 
       <Card className="shadow-lg border-border/50">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* MAIN COLUMN — cover, title, subtitle, body editor */}
+            {/* MAIN COLUMN */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Imagem de Capa */}
+              {/* Cover */}
               <div className="space-y-3">
                 <Label>Imagem de Capa do Projeto</Label>
                 <div
@@ -306,7 +360,9 @@ export default function NovoProjetoPage() {
                   role="button"
                   tabIndex={isUploadingCover ? -1 : 0}
                   aria-label="Upload de capa do projeto"
-                  className={`relative w-full h-48 sm:h-64 rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors bg-muted/20 flex flex-col items-center justify-center overflow-hidden group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${isUploadingCover ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  className={`relative w-full h-48 sm:h-64 rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors bg-muted/20 flex flex-col items-center justify-center overflow-hidden group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                    isUploadingCover ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                  }`}
                 >
                   {coverImageUrl ? (
                     <>
@@ -336,7 +392,7 @@ export default function NovoProjetoPage() {
                 </div>
               </div>
 
-              {/* Título e Subtítulo (stacked) */}
+              {/* Title + Subtitle */}
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="titulo">Título *</Label>
@@ -361,7 +417,7 @@ export default function NovoProjetoPage() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN — postando como, links, co-autores */}
+            {/* RIGHT COLUMN */}
             <div className="lg:col-span-1 space-y-6">
               {/* Postando como */}
               <div className="space-y-2">
@@ -419,7 +475,36 @@ export default function NovoProjetoPage() {
                 )}
               </div>
 
-              {/* Links Externos */}
+              {/* Status */}
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={status} onValueChange={v => setStatus(v as Status)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map(s => (
+                      <SelectItem key={s} value={s}>
+                        {s.charAt(0) + s.slice(1).toLowerCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label htmlFor="tags">Tags</Label>
+                <Input
+                  id="tags"
+                  placeholder="ex: react, web, ai"
+                  value={tagsInput}
+                  onChange={e => setTagsInput(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Separadas por vírgula.</p>
+              </div>
+
+              {/* Links */}
               <div className="space-y-3 border-t pt-4">
                 <h3 className="text-sm font-semibold text-muted-foreground">Links Externos</h3>
                 <div className="space-y-3">
@@ -474,20 +559,16 @@ export default function NovoProjetoPage() {
             </div>
           </div>
 
-          {/* Editor de Texto — full width below the two columns */}
+          {/* Body editor — full width */}
           <div className="space-y-1.5 mt-6 pt-6 border-t">
             <Label>Corpo do Projeto</Label>
             <div className="border border-input rounded-md overflow-hidden bg-background">
-              <Tiptap
-                value={markdownContent}
-                onChange={setMarkdownContent}
-                onImageUpload={registerBlob}
-              />
+              <Tiptap value={textContent} onChange={setTextContent} onImageUpload={registerBlob} />
             </div>
-            <CharCount length={markdownContent.length} max={MAX_TEXT_CONTENT_LEN} />
+            <CharCount length={textContent.length} max={MAX_TEXT_CONTENT_LEN} />
           </div>
 
-          {/* Footer / Ações */}
+          {/* Footer */}
           <div className="flex items-center justify-between border-t pt-6 mt-6">
             <Button type="button" variant="outline" onClick={handleCancel} disabled={isSaving}>
               Cancelar
@@ -498,11 +579,64 @@ export default function NovoProjetoPage() {
               disabled={isSaving || isOverLimit}
               className="bg-aquario-primary text-white hover:bg-aquario-primary/90"
             >
-              {isSaving ? "Salvando..." : "Continuar"}
+              {isSaving ? "Salvando..." : "Salvar alterações"}
             </Button>
           </div>
         </CardContent>
       </Card>
     </div>
   );
+}
+
+// --- helpers ---
+
+type AutorPayload = {
+  usuarioId?: string;
+  entidadeId?: string;
+  autorPrincipal: boolean;
+};
+
+function buildAutores({
+  postandoComo,
+  usuarioId,
+  coAutores,
+}: {
+  postandoComo: string;
+  usuarioId: string;
+  coAutores: CoAutor[];
+}): AutorPayload[] {
+  // Principal is whatever "Postando como" picked. Co-autores are exactly what the
+  // user has in the list — no auto-injection of the current user.
+  const principal: AutorPayload =
+    postandoComo === POSTAR_COMO_USUARIO
+      ? { usuarioId, autorPrincipal: true }
+      : { entidadeId: postandoComo, autorPrincipal: true };
+
+  const autores: AutorPayload[] = [principal];
+  for (const co of coAutores) {
+    if (co.kind === "user") {
+      autores.push({ usuarioId: co.id, autorPrincipal: false });
+    } else {
+      autores.push({ entidadeId: co.id, autorPrincipal: false });
+    }
+  }
+  return autores;
+}
+
+/** Stable string key from existing autores (server-shape) for change detection. */
+function autoresKey(
+  autores: { usuarioId: string | null; entidadeId: string | null; autorPrincipal: boolean }[]
+): string {
+  return autores
+    .map(a => `${a.entidadeId ?? ""}:${a.usuarioId ?? ""}:${a.autorPrincipal ? "1" : "0"}`)
+    .sort()
+    .join("|");
+}
+
+/** Same key shape from the input we'd send to PUT /autores. */
+function autoresKeyFromInput(autores: AutorPayload[]): string {
+  return autores
+    .map(a => `${a.entidadeId ?? ""}:${a.usuarioId ?? ""}:${a.autorPrincipal ? "1" : "0"}`)
+    .sort()
+    .join("|");
 }

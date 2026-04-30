@@ -17,6 +17,7 @@ export type Publicador = {
 
 export type Colaborador = {
   id: string;
+  tipo: "USUARIO" | "ENTIDADE";
   nome: string;
   slug: string;
   urlFotoPerfil?: string | null;

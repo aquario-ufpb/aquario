@@ -49,21 +49,32 @@ export function mapProjetoToCard(p: ProjetoWithRelations): Projeto {
     };
   }
 
-  // Colaboradores list: the user-authors (entidade-only rows aren't really
-  // collaborators in the people-row sense)
+  // Colaboradores list: every author reference — both users and entidades.
+  // A row can carry both (e.g., "user X on behalf of entidade Y"), in which
+  // case both show up.
   const colaboradores: Colaborador[] = p.autores.flatMap(a => {
-    if (!a.usuario) {
-      return [];
-    }
-    return [
-      {
+    const items: Colaborador[] = [];
+    if (a.usuario) {
+      items.push({
         id: a.usuario.id,
+        tipo: "USUARIO",
         nome: a.usuario.nome,
         slug: a.usuario.slug ?? a.usuario.id,
         urlFotoPerfil: a.usuario.urlFotoPerfil,
         autorPrincipal: a.autorPrincipal,
-      },
-    ];
+      });
+    }
+    if (a.entidade) {
+      items.push({
+        id: a.entidade.id,
+        tipo: "ENTIDADE",
+        nome: a.entidade.nome,
+        slug: a.entidade.slug ?? a.entidade.id,
+        urlFotoPerfil: a.entidade.urlFoto,
+        autorPrincipal: a.autorPrincipal,
+      });
+    }
+    return items;
   });
 
   return {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -9,17 +9,52 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { useProjetoBySlug } from "@/lib/client/hooks/use-projetos";
-import { ArrowLeft, Github, ExternalLink, FolderKanban } from "lucide-react";
+import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
+import { canEditProjeto } from "@/lib/client/utils/projeto-permissions";
+import { ArrowLeft, Github, ExternalLink, FolderKanban, Pencil } from "lucide-react";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import DOMPurify from "dompurify";
 import Link from "next/link";
 
 export default function ProjetoPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const { data: raw, isLoading, error } = useProjetoBySlug(id);
+  const { data: usuario } = useCurrentUser();
+  const { data: memberships = [] } = useMyMemberships();
 
   const projeto = useMemo(() => (raw ? mapProjetoToCard(raw) : null), [raw]);
+
+  // Display order: entidades first, then users; principal first within each group.
+  const orderedColaboradores = useMemo(() => {
+    if (!projeto) {
+      return [];
+    }
+    return [...projeto.colaboradores].sort((a, b) => {
+      if (a.tipo !== b.tipo) {
+        return a.tipo === "ENTIDADE" ? -1 : 1;
+      }
+      if (a.autorPrincipal !== b.autorPrincipal) {
+        return a.autorPrincipal ? -1 : 1;
+      }
+      return 0;
+    });
+  }, [projeto]);
+
+  const myAdminEntidadeIds = useMemo(
+    () =>
+      new Set(memberships.filter(m => m.papel === "ADMIN" && !m.endedAt).map(m => m.entidade.id)),
+    [memberships]
+  );
+
+  const canEdit = useMemo(
+    () =>
+      canEditProjeto(
+        usuario,
+        raw?.autores.map(a => ({ usuarioId: a.usuarioId, entidadeId: a.entidadeId })) ?? [],
+        myAdminEntidadeIds
+      ),
+    [usuario, raw, myAdminEntidadeIds]
+  );
 
   if (isLoading) {
     return <Skeleton className="h-screen w-full" />;
@@ -35,14 +70,22 @@ export default function ProjetoPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-8 mt-8 max-w-7xl">
-      <Button
-        variant="ghost"
-        className="mb-8 pl-0 hover:bg-transparent hover:text-primary"
-        onClick={() => router.back()}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Voltar
-      </Button>
+      <div className="flex items-center justify-between mb-8">
+        <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-primary" asChild>
+          <Link href="/projetos">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Link>
+        </Button>
+        {canEdit && (
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/projetos/${id}/editar`}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Editar
+            </Link>
+          </Button>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Column */}
@@ -132,37 +175,56 @@ export default function ProjetoPage() {
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
               Colaboradores
             </h3>
-            {projeto.colaboradores.length > 0 ? (
+            {orderedColaboradores.length > 0 ? (
               <div className="space-y-1">
-                {projeto.colaboradores.map(colaborador => (
-                  <Link
-                    key={colaborador.id}
-                    href={`/usuarios/${colaborador.slug}`}
-                    className="flex items-center gap-3 -ml-2 rounded-lg p-2 transition-colors hover:bg-muted/50"
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage
-                        src={
-                          colaborador.urlFotoPerfil ||
-                          getDefaultAvatarUrl(colaborador.id, colaborador.nome)
-                        }
-                        alt={colaborador.nome}
-                      />
-                      <AvatarFallback>{colaborador.nome?.[0] ?? "U"}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm font-medium truncate">{colaborador.nome}</span>
-                      {colaborador.autorPrincipal && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] px-2 py-0 border-primary text-primary shrink-0"
-                        >
-                          Autor Principal
-                        </Badge>
+                {orderedColaboradores.map(colaborador => {
+                  const isEntidade = colaborador.tipo === "ENTIDADE";
+                  const href = isEntidade
+                    ? `/entidade/${colaborador.slug}`
+                    : `/usuarios/${colaborador.slug}`;
+                  return (
+                    <Link
+                      key={`${colaborador.tipo}-${colaborador.id}`}
+                      href={href}
+                      className="flex items-center gap-3 -ml-2 rounded-lg p-2 transition-colors hover:bg-muted/50"
+                    >
+                      {isEntidade ? (
+                        <div className="relative h-8 w-8 rounded-md overflow-hidden border bg-muted shrink-0">
+                          {colaborador.urlFotoPerfil && (
+                            <Image
+                              src={colaborador.urlFotoPerfil}
+                              alt={colaborador.nome}
+                              fill
+                              className="object-cover"
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage
+                            src={
+                              colaborador.urlFotoPerfil ||
+                              getDefaultAvatarUrl(colaborador.id, colaborador.nome)
+                            }
+                            alt={colaborador.nome}
+                          />
+                          <AvatarFallback>{colaborador.nome?.[0] ?? "U"}</AvatarFallback>
+                        </Avatar>
                       )}
-                    </div>
-                  </Link>
-                ))}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm font-medium truncate">{colaborador.nome}</span>
+                        {colaborador.autorPrincipal && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-2 py-0 border-primary text-primary shrink-0"
+                          >
+                            Autor Principal
+                          </Badge>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">Nenhum colaborador registrado.</p>
