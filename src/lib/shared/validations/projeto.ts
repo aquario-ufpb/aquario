@@ -1,4 +1,41 @@
 import { z } from "zod";
+import DOMPurify from "isomorphic-dompurify";
+
+/**
+ * Sanitize project body HTML at write time. Defense in depth — the detail page
+ * already DOMPurify's on render, but storing pre-sanitized HTML means any
+ * future consumer (RSS digest, SSR meta, admin tooling, etc.) is safe even if
+ * it forgets to sanitize. Allowed tags/attrs match what the Tiptap editor can
+ * actually emit (paragraphs, headings, lists, formatting, links, images).
+ */
+function sanitizeProjetoHtml(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      "p",
+      "br",
+      "strong",
+      "em",
+      "u",
+      "s",
+      "code",
+      "pre",
+      "blockquote",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "ul",
+      "ol",
+      "li",
+      "a",
+      "img",
+    ],
+    ALLOWED_ATTR: ["href", "target", "rel", "src", "alt", "title"],
+    // Belt-and-suspenders — the schema also blocks these in URL fields, but
+    // DOMPurify's URL filter is the actual enforcement here for embedded links.
+    ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|\/)/i,
+  });
+}
 
 /**
  * Accepts either an absolute URL or a server-relative path (starting with "/").
@@ -44,7 +81,18 @@ const createProjetoBaseSchema = z.object({
     .max(255)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   subtitulo: z.string().max(500).optional().nullable(),
-  textContent: z.string().max(50000).optional().nullable(),
+  // Sanitize at write time — the detail page already sanitizes on render, but
+  // storing safe HTML means future renderers (RSS digest, SSR meta, admin
+  // tooling) can't accidentally reintroduce stored XSS. Run sanitize first,
+  // then enforce the length cap on the cleaned output.
+  textContent: z
+    .string()
+    .optional()
+    .nullable()
+    .transform(v => (v == null ? v : sanitizeProjetoHtml(v)))
+    .refine(v => v == null || v.length <= 50000, {
+      message: "Conteúdo excede o limite de 50.000 caracteres",
+    }),
   urlImagem: internalUrlSchema.optional().nullable(),
   status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).default("RASCUNHO"),
   // Normalize tags to lowercase + trimmed at validation time so search and

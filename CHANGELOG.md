@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Projetos**: Replace `as unknown as ProjetoWithRelations` casts in the Prisma repository with a `Prisma.validator`-derived shared args + single conversion site.
 - **Projetos**: `/api/upload/projeto-image` now uses the project-wide `ApiError` pattern instead of raw `NextResponse.json({ error })`.
 - **Projetos**: `PATCH /api/projetos/[slug]` no longer lets callers bypass `/publish`. Status transitions to `PUBLICADO` now run the same readiness checks (titulo, autores) and set `publicadoEm`; transitions away from `PUBLICADO` clear it.
+- **Projetos**: Sanitize `textContent` HTML at write time via `isomorphic-dompurify`. The detail page already sanitizes on render — storing pre-sanitized HTML protects future consumers (RSS digest, SSR meta, admin tooling) from inheriting stored XSS if they forget to sanitize.
 
 ## [1.6.0] - 2026-04-26
 
