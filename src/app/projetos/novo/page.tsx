@@ -19,6 +19,7 @@ import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuario
 import { mapImagePath } from "@/lib/client/api/entidades";
 import { CoAutoresPicker, type CoAutor } from "@/components/shared/co-autores-picker";
 import { PeriodoPicker } from "@/components/shared/periodo-picker";
+import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
 import { ImageIcon } from "lucide-react";
 import { apiClient } from "@/lib/client/api/api-client";
 import { throwApiError } from "@/lib/client/errors";
@@ -77,6 +78,11 @@ export default function NovoProjetoPage() {
   const [uploadedBlobs, setUploadedBlobs] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Crop dialog state — when a file is picked, we read it locally and open the
+  // crop dialog before uploading the resulting blob.
+  const [cropDataUrl, setCropDataUrl] = useState<string | null>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+
   useEffect(() => {
     if (!isLoadingUser && !usuario) {
       toast.error("Ops, você não está logado! Por isso não pode acessar aqui");
@@ -121,26 +127,41 @@ export default function NovoProjetoPage() {
     router.back();
   };
 
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Reset the input so picking the same file again still triggers onChange
+    e.target.value = "";
     if (!file) {
       return;
     }
-
     if (!file.type.startsWith("image/")) {
       toast.error("Por favor, selecione uma imagem.");
       return;
     }
-
     if (file.size > MAX_FILE_SIZE) {
       toast.error("A imagem selecionada é muito grande (máximo 5MB).");
       return;
     }
 
+    // Read locally as data URL → open the crop dialog.
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropDataUrl(reader.result as string);
+      setCropDialogOpen(true);
+    };
+    reader.onerror = () => toast.error("Não foi possível ler o arquivo.");
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropConfirm = async (croppedBlob: Blob) => {
+    setCropDialogOpen(false);
+    setCropDataUrl(null);
+
     setIsUploadingCover(true);
     const toastId = toast.loading("Fazendo upload da capa...");
 
-    if (coverImageUrl) {
+    // If replacing, clean up the previous blob (only if it was uploaded this session)
+    if (coverImageUrl && uploadedBlobs.includes(coverImageUrl)) {
       try {
         await apiClient(`/upload/projeto-image?url=${encodeURIComponent(coverImageUrl)}`, {
           method: "DELETE",
@@ -153,7 +174,7 @@ export default function NovoProjetoPage() {
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", croppedBlob, `cover-${Date.now()}.jpg`);
 
       const response = await apiClient("/upload/projeto-image", {
         method: "POST",
@@ -341,7 +362,7 @@ export default function NovoProjetoPage() {
                     ref={fileInputRef}
                     className="hidden"
                     accept="image/*"
-                    onChange={handleCoverUpload}
+                    onChange={handleCoverPick}
                     disabled={isUploadingCover}
                   />
                 </div>
@@ -550,6 +571,22 @@ export default function NovoProjetoPage() {
           </div>
         </CardContent>
       </Card>
+
+      {cropDataUrl && (
+        <PhotoCropDialog
+          open={cropDialogOpen}
+          imageUrl={cropDataUrl}
+          aspect={16 / 9}
+          cropShape="rect"
+          title="Ajustar capa do projeto"
+          description="Posicione e dê zoom na área 16:9 que será usada como capa."
+          onCancel={() => {
+            setCropDialogOpen(false);
+            setCropDataUrl(null);
+          }}
+          onConfirm={handleCropConfirm}
+        />
+      )}
     </div>
   );
 }
