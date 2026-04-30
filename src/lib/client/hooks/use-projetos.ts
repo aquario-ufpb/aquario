@@ -65,20 +65,6 @@ export function useProjetosByUsuario(usuarioId?: string, status?: ProjetoStatus)
   });
 }
 
-// Projetos de uma entidade onde o usuário participa
-export function useProjetosDaEntidadeDoUsuario(entidadeId?: string, usuarioId?: string) {
-  return useQuery({
-    queryKey: queryKeys.projetos.byEntidadeUsuario(entidadeId ?? "", usuarioId ?? ""),
-    queryFn: () =>
-      fetchProjetos({
-        entidadeId,
-        usuarioId,
-      }),
-    enabled: !!entidadeId && !!usuarioId,
-    staleTime: 5 * 60 * 1000,
-  });
-}
-
 export type ProjetoOrderBy = "criadoEm" | "publicadoEm" | "titulo" | "autoresCount";
 export type ProjetoOrder = "asc" | "desc";
 

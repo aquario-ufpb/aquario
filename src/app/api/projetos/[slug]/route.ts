@@ -3,6 +3,7 @@ import { getContainer } from "@/lib/server/container";
 import { updateProjetoSchema } from "@/lib/shared/validations/projeto";
 import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
 import { withAuth, canManageProjeto, getOptionalUser } from "@/lib/server/services/auth/middleware";
+import { StatusProjeto } from "@prisma/client";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
@@ -74,6 +75,30 @@ export function PATCH(request: NextRequest, context: RouteContext) {
       if (data.slug && data.slug !== slug) {
         if (await projetosRepository.slugExists(data.slug)) {
           return ApiError.slugExists();
+        }
+      }
+
+      // Status transitions have semantics beyond a plain field write —
+      // PUBLICADO needs readiness checks (matching /publish) and tracks
+      // publicadoEm. Apply that here so PATCH can't be used to bypass /publish.
+      const targetStatus = data.status as StatusProjeto | undefined;
+      if (targetStatus && targetStatus !== existingProjeto.status) {
+        if (targetStatus === StatusProjeto.PUBLICADO) {
+          // Use the patched titulo if provided, otherwise the stored one.
+          const effectiveTitulo = data.titulo ?? existingProjeto.titulo;
+          if (!effectiveTitulo) {
+            return ApiError.badRequest("Projeto deve ter título para ser publicado");
+          }
+          if (existingProjeto.autores.length === 0) {
+            return ApiError.badRequest("Projeto deve ter pelo menos um autor para ser publicado");
+          }
+          // Cast lets the Prisma update accept the extra publicadoEm field —
+          // /publish keeps owning the dedicated fast-path; this is the bypass guard.
+          (data as Record<string, unknown>).publicadoEm = new Date();
+        } else if (existingProjeto.status === StatusProjeto.PUBLICADO) {
+          // Leaving PUBLICADO (→ ARQUIVADO or RASCUNHO) clears publicadoEm
+          // so re-publishing later resets the timestamp.
+          (data as Record<string, unknown>).publicadoEm = null;
         }
       }
 

@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Projetos**: Drop `entidadeId` from `Projeto` (entidade affiliation now lives on `ProjetoAutor`).
 - **Projetos**: Drop `tipoConteudo` enum and column — `textContent` is treated as a single content type.
 - **Projetos**: Delete duplicate `/admin/projetos` page and `CriarProjetoForm` — master admins use `/projetos/novo` like everyone else.
-- **Projetos**: Delete unused `NovoProjetoModal`, `useProjetos` (single-page hook), and `publishProjetoSchema`.
+- **Projetos**: Delete unused `NovoProjetoModal`, `useProjetos` (single-page hook), `publishProjetoSchema`, and `useProjetosDaEntidadeDoUsuario` (declared but never imported).
 
 ### Fixed
 - **Projetos**: Block `javascript:`/`data:` URLs in `urlRepositorio`/`urlDemo`/`urlOutro` (was `z.string().url()` which permits any scheme — XSS via `<a href>`).
@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Projetos**: `scopedToMe` now parses strictly as `"true" | "false"` instead of `z.coerce.boolean`, which would have treated `"false"` as truthy.
 - **Projetos**: Replace `as unknown as ProjetoWithRelations` casts in the Prisma repository with a `Prisma.validator`-derived shared args + single conversion site.
 - **Projetos**: `/api/upload/projeto-image` now uses the project-wide `ApiError` pattern instead of raw `NextResponse.json({ error })`.
+- **Projetos**: `PATCH /api/projetos/[slug]` no longer lets callers bypass `/publish`. Status transitions to `PUBLICADO` now run the same readiness checks (titulo, autores) and set `publicadoEm`; transitions away from `PUBLICADO` clear it.
 
 ## [1.6.0] - 2026-04-26
 
