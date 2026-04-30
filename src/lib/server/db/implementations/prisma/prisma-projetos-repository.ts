@@ -83,8 +83,9 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     if (Object.keys(autorFilter).length > 0) {
       where.autores = { some: autorFilter };
     } else if (tipoEntidade === "PESSOAL") {
-      // Only user-author projects (no entidade-author at all)
-      where.autores = { every: { entidadeId: null }, some: {} };
+      // Projects whose *principal* autor is a person (no entidade on the
+      // principal row). Co-authors can still be entidades.
+      where.autores = { some: { autorPrincipal: true, entidadeId: null } };
     }
 
     const orderByClause: Prisma.ProjetoOrderByWithRelationInput = {
