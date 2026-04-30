@@ -15,6 +15,13 @@ import { ArrowLeft, Github, ExternalLink, FolderKanban, Pencil } from "lucide-re
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import DOMPurify from "dompurify";
 import Link from "next/link";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale/pt-BR";
+
+/** "jan/2025" — empty string if no date. */
+function formatMonthYear(d: Date | string | null | undefined): string {
+  return d ? format(new Date(d), "MMM/yyyy", { locale: ptBR }).replace(".", "") : "";
+}
 
 export default function ProjetoPage() {
   const { id } = useParams<{ id: string }>();
@@ -230,6 +237,29 @@ export default function ProjetoPage() {
               <p className="text-sm text-muted-foreground">Nenhum colaborador registrado.</p>
             )}
           </section>
+
+          {/* Período */}
+          {(raw?.dataInicio || raw?.dataFim) && (
+            <section>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Período
+              </h3>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                <dt className="text-muted-foreground">Início</dt>
+                <dd className="text-foreground capitalize">
+                  {formatMonthYear(raw.dataInicio) || (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </dd>
+                <dt className="text-muted-foreground">Fim</dt>
+                <dd className="capitalize">
+                  {formatMonthYear(raw.dataFim) || (
+                    <span className="text-muted-foreground italic">em andamento</span>
+                  )}
+                </dd>
+              </dl>
+            </section>
+          )}
 
           {/* Tags */}
           {projeto.tags.length > 0 && (

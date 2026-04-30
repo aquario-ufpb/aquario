@@ -62,7 +62,21 @@ export const createProjetoSchema = createProjetoBaseSchema
     path: ["autores"],
   });
 
-export const updateProjetoSchema = createProjetoBaseSchema.partial().omit({ autores: true });
+export const updateProjetoSchema = createProjetoBaseSchema
+  .partial()
+  .omit({ autores: true })
+  .refine(
+    data => {
+      if (data.dataInicio && data.dataFim) {
+        return data.dataFim >= data.dataInicio;
+      }
+      return true;
+    },
+    {
+      message: "Data de fim deve ser posterior à data de início",
+      path: ["dataFim"],
+    }
+  );
 
 export const updateProjetoAutoresSchema = z
   .object({

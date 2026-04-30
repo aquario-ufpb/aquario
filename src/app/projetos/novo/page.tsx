@@ -18,6 +18,7 @@ import {
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { mapImagePath } from "@/lib/client/api/entidades";
 import { CoAutoresPicker, type CoAutor } from "@/components/shared/co-autores-picker";
+import { PeriodoPicker } from "@/components/shared/periodo-picker";
 import { ImageIcon } from "lucide-react";
 import { apiClient } from "@/lib/client/api/api-client";
 import { throwApiError } from "@/lib/client/errors";
@@ -59,6 +60,8 @@ export default function NovoProjetoPage() {
   const [urlDemo, setUrlDemo] = useState("");
   const [urlOutro, setUrlOutro] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
   const [markdownContent, setMarkdownContent] = useState("");
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -190,6 +193,8 @@ export default function NovoProjetoPage() {
     subtitulo.length > MAX_SUBTITULO_LEN ||
     markdownContent.length > MAX_TEXT_CONTENT_LEN;
 
+  const isPeriodoInvalid = !!dataInicio && !!dataFim && dataFim < dataInicio;
+
   const handleSave = async () => {
     if (!titulo.trim()) {
       toast.error("O título do projeto é obrigatório.");
@@ -201,6 +206,10 @@ export default function NovoProjetoPage() {
     }
     if (isOverLimit) {
       toast.error("Algum campo excede o tamanho permitido. Revise os contadores.");
+      return;
+    }
+    if (isPeriodoInvalid) {
+      toast.error("A data de fim deve ser posterior à data de início.");
       return;
     }
 
@@ -239,6 +248,8 @@ export default function NovoProjetoPage() {
         urlRepositorio: urlRepositorio || null,
         urlDemo: urlDemo || null,
         urlOutro: urlOutro || null,
+        dataInicio: dataInicio || null,
+        dataFim: dataFim || null,
         autores: autoresList,
       };
 
@@ -419,6 +430,42 @@ export default function NovoProjetoPage() {
                 )}
               </div>
 
+              {/* Período */}
+              <div className="space-y-3 border-t pt-4">
+                <h3 className="text-sm font-semibold text-muted-foreground">Período</h3>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="dataInicio" className="text-xs">
+                      Início
+                    </Label>
+                    <PeriodoPicker
+                      id="dataInicio"
+                      value={dataInicio}
+                      onChange={setDataInicio}
+                      kind="start"
+                      placeholder="Quando começou"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="dataFim" className="text-xs">
+                      Fim
+                    </Label>
+                    <PeriodoPicker
+                      id="dataFim"
+                      value={dataFim}
+                      onChange={setDataFim}
+                      kind="end"
+                      placeholder="Em andamento"
+                    />
+                  </div>
+                  {isPeriodoInvalid && (
+                    <p className="text-xs text-destructive">
+                      A data de fim deve ser posterior à data de início.
+                    </p>
+                  )}
+                </div>
+              </div>
+
               {/* Links Externos */}
               <div className="space-y-3 border-t pt-4">
                 <h3 className="text-sm font-semibold text-muted-foreground">Links Externos</h3>
@@ -495,7 +542,7 @@ export default function NovoProjetoPage() {
             <Button
               type="button"
               onClick={handleSave}
-              disabled={isSaving || isOverLimit}
+              disabled={isSaving || isOverLimit || isPeriodoInvalid}
               className="bg-aquario-primary text-white hover:bg-aquario-primary/90"
             >
               {isSaving ? "Salvando..." : "Continuar"}
