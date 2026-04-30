@@ -116,3 +116,6 @@ test-results/
 
 # Local uploads (development mode)
 public/uploads/
+
+# Superset (worktree tooling)
+.superset/
