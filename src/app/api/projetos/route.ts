@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
       entidadeId: searchParams.get("entidadeId") ?? undefined,
       tags: searchParams.get("tags") ?? undefined,
       search: searchParams.get("search") ?? undefined,
+      tipoEntidade: searchParams.get("tipoEntidade") ?? undefined,
       orderBy: searchParams.get("orderBy") ?? undefined,
       order: searchParams.get("order") ?? undefined,
       usuarioId: searchParams.get("usuarioId") ?? undefined,

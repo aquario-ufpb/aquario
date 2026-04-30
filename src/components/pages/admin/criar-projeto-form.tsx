@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Image as ImageIcon } from "lucide-react";
 import { useUploadProjetoImage, useCreateProjeto } from "@/lib/client/hooks/use-criar-projeto";
@@ -17,7 +16,6 @@ export function CriarProjetoForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [titulo, setTitulo] = useState("");
   const [subtitulo, setSubtitulo] = useState("");
-  const [descricao, setDescricao] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string>("");
 
@@ -107,7 +105,6 @@ export function CriarProjetoForm() {
         titulo,
         slug,
         subtitulo: subtitulo || undefined,
-        descricao: descricao || undefined,
         textContent: null,
         urlImagem: imageUrl || undefined,
         status: "RASCUNHO",
@@ -123,7 +120,6 @@ export function CriarProjetoForm() {
       // Resetar form
       setTitulo("");
       setSubtitulo("");
-      setDescricao("");
       setImageUrl(null);
       setImageName("");
     } catch (_error) {
@@ -195,17 +191,6 @@ export function CriarProjetoForm() {
               value={subtitulo}
               onChange={e => setSubtitulo(e.target.value)}
               className="mt-2"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="descricao">Descrição</Label>
-            <Textarea
-              id="descricao"
-              placeholder="Descrição detalhada do projeto (markdown)"
-              value={descricao}
-              onChange={e => setDescricao(e.target.value)}
-              className="mt-2 min-h-[200px]"
             />
           </div>
 

@@ -4,8 +4,8 @@ import { SearchBar } from "@/components/shared/search-bar";
 import { FilterBar } from "@/components/shared/filter-bar";
 import ProjectCard from "@/components/shared/project-card";
 import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
-import { useProjetos } from "@/lib/client/hooks/use-projetos";
-import { useState, useMemo } from "react";
+import { useProjetosInfinite } from "@/lib/client/hooks/use-projetos";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,13 +16,66 @@ import { LoginPromptDialog } from "@/components/shared/login-prompt-dialog";
 import { PageHeader } from "@/components/ui/page-header";
 import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 
+// Map page-level filter ids to TipoEntidade enum values that the server expects.
+// `null` → no filter; "PESSOAL" → only user-author projects; rest match Prisma's
+// TipoEntidade enum (LABORATORIO, GRUPO, LIGA_ACADEMICA).
+const FILTER_TO_TIPO: Record<string, string | undefined> = {
+  pessoais: "PESSOAL",
+  laboratorios: "LABORATORIO",
+  grupos: "GRUPO",
+  ligas: "LIGA_ACADEMICA",
+};
+
+function useDebounced<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function Projetos() {
   const router = useRouter();
   const { data: user } = useCurrentUser();
-  const { data: projetosResponse, isLoading, error } = useProjetos();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+
+  const debouncedSearch = useDebounced(searchQuery);
+  const tipoEntidade = activeFilter ? FILTER_TO_TIPO[activeFilter] : undefined;
+
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useProjetosInfinite({
+      search: debouncedSearch,
+      tipoEntidade,
+      pageSize: 12,
+    });
+
+  const projetos = useMemo(
+    () => data?.pages.flatMap(p => p.projetos.map(mapProjetoToCard)) ?? [],
+    [data]
+  );
+  const total = data?.pages[0]?.pagination.total ?? 0;
+
+  // Sentinel that triggers loading the next page when scrolled into view.
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasNextPage || isFetchingNextPage) {
+      return;
+    }
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0]?.isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "300px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleNovoProjetoClick = () => {
     if (user) {
@@ -31,44 +84,6 @@ export default function Projetos() {
       setLoginPromptOpen(true);
     }
   };
-
-  const projetos = useMemo(
-    () => (projetosResponse?.projetos ?? []).map(mapProjetoToCard),
-    [projetosResponse]
-  );
-
-  const filteredProjetos = useMemo(() => {
-    let filtered = projetos;
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        projeto =>
-          projeto.nome.toLowerCase().includes(query) ||
-          projeto.descricao.toLowerCase().includes(query) ||
-          projeto.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-
-    if (activeFilter) {
-      switch (activeFilter) {
-        case "pessoais":
-          filtered = filtered.filter(p => p.tipo === "PESSOAL");
-          break;
-        case "laboratorios":
-          filtered = filtered.filter(p => p.tipo === "LABORATORIO");
-          break;
-        case "grupos":
-          filtered = filtered.filter(p => p.tipo === "GRUPO");
-          break;
-        case "ligas":
-          filtered = filtered.filter(p => p.tipo === "LIGA");
-          break;
-      }
-    }
-
-    return filtered;
-  }, [projetos, searchQuery, activeFilter]);
 
   return (
     <div className="container mx-auto p-4 md:p-8 mt-24 max-w-7xl">
@@ -111,7 +126,7 @@ export default function Projetos() {
         </div>
       </div>
 
-      {isLoading ? (
+      {isLoading && projetos.length === 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, index) => (
             <Skeleton key={index} className="h-[20rem] w-full rounded-xl" />
@@ -120,19 +135,41 @@ export default function Projetos() {
       ) : error ? (
         <div className="text-center text-destructive py-12">Erro ao carregar projetos.</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
-          {filteredProjetos.length > 0 ? (
-            filteredProjetos.map(projeto => (
-              <Link href={`/projetos/${projeto.id}`} key={projeto.id} className="h-full">
-                <ProjectCard projeto={projeto} />
-              </Link>
-            ))
-          ) : (
-            <div className="col-span-full text-center text-muted-foreground py-12">
-              Nenhum projeto encontrado com os filtros selecionados.
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
+            {projetos.length > 0 ? (
+              projetos.map(projeto => (
+                <Link href={`/projetos/${projeto.id}`} key={projeto.id} className="h-full">
+                  <ProjectCard projeto={projeto} />
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-full text-center text-muted-foreground py-12">
+                Nenhum projeto encontrado com os filtros selecionados.
+              </div>
+            )}
+          </div>
+
+          {/* Loading skeletons for the next page */}
+          {isFetchingNextPage && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-[20rem] w-full rounded-xl" />
+              ))}
             </div>
           )}
-        </div>
+
+          {/* Sentinel for IntersectionObserver — triggers next-page load */}
+          {hasNextPage && <div ref={sentinelRef} className="h-px" aria-hidden />}
+
+          {projetos.length > 0 && (
+            <p className="text-sm text-muted-foreground text-center mt-10">
+              {hasNextPage
+                ? `Mostrando ${projetos.length} de ${total} projetos…`
+                : `${total} ${total === 1 ? "projeto" : "projetos"} no total.`}
+            </p>
+          )}
+        </>
       )}
 
       {/* Floating Action Button */}

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/client/api/api-client";
 import { throwApiError } from "@/lib/client/errors";
 import { queryKeys } from "@/lib/client/query-keys";
@@ -71,16 +71,89 @@ export function useProjetosDaEntidadeDoUsuario(entidadeId?: string, usuarioId?: 
   });
 }
 
-// Lista paginada de todos os projetos publicados
-export function useProjetos() {
+type UseProjetosParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  tipoEntidade?: string;
+};
+
+function buildProjetosQuery({ page, limit, search, tipoEntidade }: UseProjetosParams): string {
+  const qs = new URLSearchParams();
+  qs.set("page", String(page ?? 1));
+  qs.set("limit", String(limit ?? 12));
+  if (search?.trim()) {
+    qs.set("search", search.trim());
+  }
+  if (tipoEntidade) {
+    qs.set("tipoEntidade", tipoEntidade);
+  }
+  return qs.toString();
+}
+
+/**
+ * Single-page projetos listing with server-side filters.
+ * Use `useProjetosInfinite` for the infinite-scroll list page.
+ */
+export function useProjetos(params: UseProjetosParams = {}) {
   return useQuery({
-    queryKey: queryKeys.projetos.all,
+    queryKey: [
+      ...queryKeys.projetos.all,
+      {
+        page: params.page ?? 1,
+        limit: params.limit ?? 12,
+        search: params.search ?? "",
+        tipoEntidade: params.tipoEntidade ?? "",
+      },
+    ],
     queryFn: async (): Promise<ProjetosListResponse> => {
-      const res = await apiClient("/projetos");
+      const res = await apiClient(`/projetos?${buildProjetosQuery(params)}`);
       if (!res.ok) {
         await throwApiError(res);
       }
       return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+    placeholderData: prev => prev,
+  });
+}
+
+type UseProjetosInfiniteParams = {
+  search?: string;
+  tipoEntidade?: string;
+  pageSize?: number;
+};
+
+/**
+ * Infinite-scroll projetos listing — fetches successive pages and concatenates them.
+ * The query key includes search/tipoEntidade so filter changes reset the list.
+ */
+export function useProjetosInfinite(params: UseProjetosInfiniteParams = {}) {
+  const { search, tipoEntidade, pageSize = 12 } = params;
+
+  return useInfiniteQuery({
+    queryKey: [
+      ...queryKeys.projetos.all,
+      "infinite",
+      { search: search ?? "", tipoEntidade: tipoEntidade ?? "", pageSize },
+    ],
+    queryFn: async ({ pageParam = 1 }): Promise<ProjetosListResponse> => {
+      const qs = buildProjetosQuery({
+        page: pageParam,
+        limit: pageSize,
+        search,
+        tipoEntidade,
+      });
+      const res = await apiClient(`/projetos?${qs}`);
+      if (!res.ok) {
+        await throwApiError(res);
+      }
+      return res.json();
+    },
+    initialPageParam: 1,
+    getNextPageParam: lastPage => {
+      const { page, totalPages } = lastPage.pagination;
+      return page < totalPages ? page + 1 : undefined;
     },
     staleTime: 5 * 60 * 1000,
   });

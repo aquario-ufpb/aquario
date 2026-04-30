@@ -32,7 +32,6 @@ const createProjetoBaseSchema = z.object({
     .max(255)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   subtitulo: z.string().max(500).optional().nullable(),
-  descricao: z.string().max(1000).optional().nullable(),
   textContent: z.string().max(50000).optional().nullable(),
   urlImagem: internalUrlSchema.optional().nullable(),
   status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).default("RASCUNHO"),
@@ -86,6 +85,18 @@ export const listProjetosSchema = z.object({
   usuarioId: z.string().uuid().optional(),
   tags: z.string().optional(),
   search: z.string().optional(),
+  tipoEntidade: z
+    .enum([
+      "PESSOAL",
+      "LABORATORIO",
+      "GRUPO",
+      "LIGA_ACADEMICA",
+      "EMPRESA",
+      "ATLETICA",
+      "CENTRO_ACADEMICO",
+      "OUTRO",
+    ])
+    .optional(),
   orderBy: z.enum(["criadoEm", "publicadoEm", "titulo"]).default("criadoEm"),
   order: z.enum(["asc", "desc"]).default("desc"),
 });

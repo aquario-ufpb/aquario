@@ -69,7 +69,7 @@ export function mapProjetoToCard(p: ProjetoWithRelations): Projeto {
   return {
     id: p.slug,
     nome: p.titulo,
-    descricao: p.descricao ?? "",
+    subtitulo: p.subtitulo ?? "",
     imagem: p.urlImagem ?? null,
     tipo,
     tags: p.tags ?? [],
@@ -78,5 +78,6 @@ export function mapProjetoToCard(p: ProjetoWithRelations): Projeto {
     colaboradores,
     linkRepositorio: p.urlRepositorio ?? undefined,
     linkPrototipo: p.urlDemo ?? undefined,
+    linkOutro: p.urlOutro ?? undefined,
   };
 }

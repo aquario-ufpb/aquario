@@ -235,7 +235,6 @@ export default function NovoProjetoPage() {
         titulo,
         slug,
         subtitulo: subtitulo || null,
-        descricao: subtitulo || null, // Using subtitle as short desc for now
         textContent: markdownContent,
         urlImagem: coverImageUrl,
         status: "PUBLICADO",

@@ -36,19 +36,24 @@ const autoresInclude = {
 
 export class PrismaProjetosRepository implements IProjetosRepository {
   async findMany(params: FindManyProjetosParams): Promise<FindManyProjetosResult> {
-    const { page, limit, status, entidadeId, usuarioId, tags, search, orderBy, order } = params;
+    const {
+      page,
+      limit,
+      status,
+      entidadeId,
+      usuarioId,
+      tags,
+      search,
+      tipoEntidade,
+      orderBy,
+      order,
+    } = params;
     const skip = (page - 1) * limit;
 
     const where: Prisma.ProjetoWhereInput = {};
 
     if (status) {
       where.status = status as Prisma.EnumStatusProjetoFilter;
-    }
-
-    if (entidadeId) {
-      where.autores = {
-        some: { entidadeId },
-      };
     }
 
     if (tags) {
@@ -60,15 +65,26 @@ export class PrismaProjetosRepository implements IProjetosRepository {
       where.OR = [
         { titulo: { contains: search, mode: "insensitive" } },
         { subtitulo: { contains: search, mode: "insensitive" } },
-        { descricao: { contains: search, mode: "insensitive" } },
       ];
     }
 
+    // Compose autor-related filters into a single `autores: { some: ... }` so
+    // they don't clobber each other.
+    const autorFilter: Prisma.ProjetoAutorWhereInput = {};
+    if (entidadeId) {
+      autorFilter.entidadeId = entidadeId;
+    }
     if (usuarioId) {
-      where.autores = {
-        ...(where.autores ?? {}),
-        some: { usuarioId },
-      };
+      autorFilter.usuarioId = usuarioId;
+    }
+    if (tipoEntidade && tipoEntidade !== "PESSOAL") {
+      autorFilter.entidade = { tipo: tipoEntidade as Prisma.EnumTipoEntidadeFilter["equals"] };
+    }
+    if (Object.keys(autorFilter).length > 0) {
+      where.autores = { some: autorFilter };
+    } else if (tipoEntidade === "PESSOAL") {
+      // Only user-author projects (no entidade-author at all)
+      where.autores = { every: { entidadeId: null }, some: {} };
     }
 
     const orderByClause: Prisma.ProjetoOrderByWithRelationInput = {

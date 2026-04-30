@@ -192,7 +192,6 @@ export function NovoProjetoModal({ open, onOpenChange, onSuccess }: NovoProjetoM
         titulo,
         slug,
         subtitulo: subtitulo || null,
-        descricao: subtitulo || null, // Using subtitle as short desc for now
         textContent: markdownContent,
         urlImagem: coverImageUrl,
         status: "PUBLICADO",

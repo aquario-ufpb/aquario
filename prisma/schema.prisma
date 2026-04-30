@@ -489,7 +489,6 @@ model Projeto {
   titulo         String
   slug           String        @unique
   subtitulo      String?
-  descricao      String?
   textContent    String?
   urlImagem      String?
   status         StatusProjeto @default(RASCUNHO)

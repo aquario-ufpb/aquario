@@ -30,8 +30,8 @@ export function POST(request: NextRequest, context: RouteContext) {
         return ApiError.badRequest("Projeto já está publicado");
       }
 
-      if (!projeto.titulo || !projeto.descricao) {
-        return ApiError.badRequest("Projeto deve ter título e descrição para ser publicado");
+      if (!projeto.titulo) {
+        return ApiError.badRequest("Projeto deve ter título para ser publicado");
       }
 
       if (projeto.autores.length === 0) {

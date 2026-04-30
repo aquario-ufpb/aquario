@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users } from "lucide-react";
+import { Users, FolderKanban } from "lucide-react";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
@@ -28,7 +28,7 @@ export type TipoProjeto = "PESSOAL" | "LABORATORIO" | "GRUPO" | "LIGA";
 export type Projeto = {
   id: string;
   nome: string;
-  descricao: string;
+  subtitulo: string;
   imagem?: string | null;
   publicador: Publicador;
   tipo: TipoProjeto;
@@ -36,16 +36,12 @@ export type Projeto = {
   colaboradores: Colaborador[];
   linkRepositorio?: string;
   linkPrototipo?: string;
+  linkOutro?: string;
   criadoEm: string;
 };
 
 type ProjectCardProps = {
   projeto: Projeto;
-};
-
-// Server-safe HTML stripping using regex
-const stripHtml = (html: string): string => {
-  return html.replace(/<[^>]*>/g, "").trim();
 };
 
 export const formatProjetoTipo = (tipo: TipoProjeto) => {
@@ -67,12 +63,13 @@ const ProjectCard = ({ projeto }: ProjectCardProps) => {
   return (
     <Card className="w-full max-w-sm overflow-hidden hover:bg-accent/20 transition-all duration-200 border-border/90 flex flex-col h-full">
       <div className="relative h-48 w-full border-b border-border/50 shrink-0">
-        <Image
-          src={projeto.imagem || "/lab.jpg"}
-          alt={projeto.nome}
-          fill
-          className="object-cover"
-        />
+        {projeto.imagem ? (
+          <Image src={projeto.imagem} alt={projeto.nome} fill className="object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-aquario-primary/15 via-sky-100 to-aquario-primary/5 dark:from-aquario-primary/30 dark:via-slate-800 dark:to-aquario-primary/10">
+            <FolderKanban className="h-12 w-12 text-aquario-primary/60 dark:text-sky-200/60" />
+          </div>
+        )}
         <div className="absolute top-2 right-2">
           <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm shadow-sm">
             {formatProjetoTipo(projeto.tipo)}
@@ -84,7 +81,7 @@ const ProjectCard = ({ projeto }: ProjectCardProps) => {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between">
         <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem] mb-4">
-          {stripHtml(projeto.descricao)}
+          {projeto.subtitulo}
         </p>
 
         <div className="flex items-center justify-between pt-2 border-t border-border/50">

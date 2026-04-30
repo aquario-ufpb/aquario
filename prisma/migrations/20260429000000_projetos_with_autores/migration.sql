@@ -7,7 +7,6 @@ CREATE TABLE "Projeto" (
     "titulo" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "subtitulo" TEXT,
-    "descricao" TEXT,
     "textContent" TEXT,
     "urlImagem" TEXT,
     "status" "StatusProjeto" NOT NULL DEFAULT 'RASCUNHO',

@@ -45,6 +45,11 @@ export type FindManyProjetosParams = {
   usuarioId?: string;
   tags?: string;
   search?: string;
+  /**
+   * "PESSOAL" → only user-author projects (no entidade-author).
+   * Other values match the TipoEntidade enum and filter by entidade.tipo of any autor.
+   */
+  tipoEntidade?: string;
   orderBy: string;
   order: string;
 };
@@ -70,7 +75,6 @@ export type CreateProjetoInput = {
   titulo: string;
   slug: string;
   subtitulo?: string | null;
-  descricao?: string | null;
   textContent?: string | null;
   urlImagem?: string | null;
   status?: string;
