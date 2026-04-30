@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auth**: New `canManageProjeto` helper in `services/auth/middleware.ts`.
 - **Navbar**: Add Projetos link to desktop navigation.
 - **Projetos**: "Novo Projeto" button on `/projetos` is always visible; opens a login prompt dialog when not authenticated. Mobile FAB now only shows on small screens.
+- **Projetos**: Archive/Unarchive flow on the detail page using a generalized `ConfirmDeleteDialog` (now supports custom labels and a non-destructive variant).
+- **Projetos**: Sort dropdown on `/projetos` (recent, oldest, A–Z, Z–A, more authors, fewer authors) — repository handles `autoresCount` via Prisma `_count`.
+- **Projetos**: Status tabs on `/projetos` split into `Publicados`, `Meus Publicados`, `Rascunhos`, `Arquivados` with conditional display based on per-status counts.
+- **Projetos**: `scopedToMe` query param on `GET /api/projetos` — restricts results to the caller's own work (own authorship, or admin of an entidade that is the **principal** author). Used by "Meus Publicados".
+- **Projetos**: Status tabs on user (`/usuarios/[slug]`, own profile only) and entidade (`/entidade/[slug]`, admins only) pages so authors and entidade admins can see drafts/arquivados in context.
+- **Projetos**: New client hooks `useUsuarioProjetoCounts` and `useEntidadeProjetoCounts` for per-status counts.
 
 ### Changed
 - **Projetos**: Renamed `urlPublicacao` → `urlOutro`; field label updated to a generic "Outro link".
@@ -22,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Projetos**: Drop `tipoConteudo` enum and column — `textContent` is treated as a single content type.
 
 ### Fixed
+- **Projetos**: `scopedToMe` now parses strictly as `"true" | "false"` instead of `z.coerce.boolean`, which would have treated `"false"` as truthy.
 
 ## [1.6.0] - 2026-04-26
 

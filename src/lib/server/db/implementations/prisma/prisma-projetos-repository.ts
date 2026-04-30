@@ -45,6 +45,9 @@ export class PrismaProjetosRepository implements IProjetosRepository {
       tags,
       search,
       tipoEntidade,
+      visibleToUserId,
+      visibleToEntidadeIds,
+      requireEntidadeAsPrincipal,
       orderBy,
       order,
     } = params;
@@ -88,9 +91,32 @@ export class PrismaProjetosRepository implements IProjetosRepository {
       where.autores = { some: { autorPrincipal: true, entidadeId: null } };
     }
 
-    const orderByClause: Prisma.ProjetoOrderByWithRelationInput = {
-      [orderBy]: order as Prisma.SortOrder,
-    };
+    // Visibility scoping: when set, restrict to projects where the caller is
+    // an autor or admin of an entidade-author. Combined with whatever autor
+    // filter we already set via AND.
+    if (visibleToUserId !== undefined || visibleToEntidadeIds !== undefined) {
+      const visibilityOR: Prisma.ProjetoAutorWhereInput[] = [];
+      if (visibleToUserId) {
+        visibilityOR.push({ usuarioId: visibleToUserId });
+      }
+      if (visibleToEntidadeIds && visibleToEntidadeIds.length > 0) {
+        // requireEntidadeAsPrincipal: only count entidade-admin matches when the
+        // entidade is the principal author. Used by "Meus Publicados".
+        visibilityOR.push(
+          requireEntidadeAsPrincipal
+            ? { entidadeId: { in: visibleToEntidadeIds }, autorPrincipal: true }
+            : { entidadeId: { in: visibleToEntidadeIds } }
+        );
+      }
+      const visibilityFilter: Prisma.ProjetoWhereInput =
+        visibilityOR.length > 0 ? { autores: { some: { OR: visibilityOR } } } : { id: { in: [] } }; // not authorized to see anything
+      where.AND = [...((where.AND as Prisma.ProjetoWhereInput[]) ?? []), visibilityFilter];
+    }
+
+    const orderByClause: Prisma.ProjetoOrderByWithRelationInput =
+      orderBy === "autoresCount"
+        ? { autores: { _count: order as Prisma.SortOrder } }
+        : { [orderBy]: order as Prisma.SortOrder };
 
     const [projetos, total] = await Promise.all([
       prisma.projeto.findMany({

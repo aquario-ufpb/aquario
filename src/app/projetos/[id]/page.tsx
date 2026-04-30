@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -9,14 +9,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { useProjetoBySlug } from "@/lib/client/hooks/use-projetos";
+import { useUpdateProjeto } from "@/lib/client/hooks/use-criar-projeto";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { canEditProjeto } from "@/lib/client/utils/projeto-permissions";
-import { ArrowLeft, Github, ExternalLink, FolderKanban, Pencil } from "lucide-react";
+import {
+  ArrowLeft,
+  Github,
+  ExternalLink,
+  FolderKanban,
+  Pencil,
+  Archive,
+  ArchiveRestore,
+} from "lucide-react";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import DOMPurify from "dompurify";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale/pt-BR";
+import { toast } from "sonner";
+import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 
 /** "jan/2025" — empty string if no date. */
 function formatMonthYear(d: Date | string | null | undefined): string {
@@ -25,9 +36,12 @@ function formatMonthYear(d: Date | string | null | undefined): string {
 
 export default function ProjetoPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const { data: raw, isLoading, error } = useProjetoBySlug(id);
   const { data: usuario } = useCurrentUser();
   const { data: memberships = [] } = useMyMemberships();
+  const updateProjeto = useUpdateProjeto(id);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   const projeto = useMemo(() => (raw ? mapProjetoToCard(raw) : null), [raw]);
 
@@ -63,6 +77,32 @@ export default function ProjetoPage() {
     [usuario, raw, myAdminEntidadeIds]
   );
 
+  const isArchived = raw?.status === "ARQUIVADO";
+
+  const handleArchiveToggle = async () => {
+    if (!raw) {
+      return;
+    }
+    const nextStatus = isArchived ? "PUBLICADO" : "ARQUIVADO";
+    const verb = isArchived ? "Desarquivando" : "Arquivando";
+    const verbDone = isArchived ? "desarquivado" : "arquivado";
+    const toastId = toast.loading(`${verb} projeto...`);
+    try {
+      await updateProjeto.mutateAsync({ status: nextStatus });
+      toast.success(`Projeto ${verbDone}.`, { id: toastId });
+      setArchiveOpen(false);
+      if (!isArchived) {
+        // After archiving, send the user back to the list — the project won't
+        // appear in the public Publicados view anymore.
+        router.push("/projetos");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao alterar status do projeto.", {
+        id: toastId,
+      });
+    }
+  };
+
   if (isLoading) {
     return <Skeleton className="h-screen w-full" />;
   }
@@ -85,12 +125,27 @@ export default function ProjetoPage() {
           </Link>
         </Button>
         {canEdit && (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/projetos/${id}/editar`}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Editar
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/projetos/${id}/editar`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Editar
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setArchiveOpen(true)}>
+              {isArchived ? (
+                <>
+                  <ArchiveRestore className="mr-2 h-4 w-4" />
+                  Desarquivar
+                </>
+              ) : (
+                <>
+                  <Archive className="mr-2 h-4 w-4" />
+                  Arquivar
+                </>
+              )}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -322,6 +377,22 @@ export default function ProjetoPage() {
           )}
         </aside>
       </div>
+
+      <ConfirmDeleteDialog
+        open={archiveOpen}
+        onOpenChange={setArchiveOpen}
+        title={isArchived ? "Desarquivar projeto?" : "Arquivar projeto?"}
+        description={
+          isArchived
+            ? "O projeto voltará a aparecer publicamente em /projetos."
+            : "O projeto deixará de aparecer no mural público. Você pode desarquivar a qualquer momento."
+        }
+        confirmLabel={isArchived ? "Desarquivar" : "Arquivar"}
+        pendingLabel={isArchived ? "Desarquivando..." : "Arquivando..."}
+        variant="default"
+        onConfirm={handleArchiveToggle}
+        isPending={updateProjeto.isPending}
+      />
     </div>
   );
 }

@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
 import { ProgressoCursoCard } from "@/components/pages/perfil/progresso-curso-card";
-import { useProjetosByUsuario } from "@/lib/client/hooks/use-projetos";
+import { useProjetosByUsuario, useUsuarioProjetoCounts } from "@/lib/client/hooks/use-projetos";
 import ProjectCard from "@/components/shared/project-card";
 import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { trackEvent } from "@/analytics/posthog-client";
@@ -36,14 +36,23 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
   const [showAllEntities, setShowAllEntities] = useState(false);
+  const [projetoStatus, setProjetoStatus] = useState<"PUBLICADO" | "RASCUNHO" | "ARQUIVADO">(
+    "PUBLICADO"
+  );
+
+  // Check if this is the current user's own profile
+  const isOwnProfile = currentUser?.id === user?.id;
+
   const {
     data: projetos,
     isLoading: projetosLoading,
     error: projetosError,
-  } = useProjetosByUsuario(user?.id);
+  } = useProjetosByUsuario(user?.id, isOwnProfile ? projetoStatus : undefined);
 
-  // Check if this is the current user's own profile
-  const isOwnProfile = currentUser?.id === user?.id;
+  // Status counts only matter on own profile (others can't see drafts/arquivados).
+  const projetoCounts = useUsuarioProjetoCounts(user?.id, isOwnProfile);
+  const showProjetoStatusTabs =
+    isOwnProfile && (projetoCounts.rascunho > 0 || projetoCounts.arquivado > 0);
 
   // Track profile views of other users
   useEffect(() => {
@@ -273,7 +282,9 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
             {user.centro.sigla} — {user.centro.nome}
           </p>
           <p className="text-base text-muted-foreground">{user.curso.nome}</p>
-          {user.email && <p className="text-sm text-muted-foreground">{user.email}</p>}
+          {isOwnProfile && user.email && (
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+          )}
 
           {isOwnProfile && user.papelPlataforma === "MASTER_ADMIN" && (
             <div className="flex justify-center md:justify-start mt-2">
@@ -285,8 +296,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
         </div>
       </div>
 
-      {/* Course progress */}
-      {user && (
+      {/* Course progress — only on own profile (private data) */}
+      {user && isOwnProfile && (
         <div className="mt-6">
           <ProgressoCursoCard
             cursoId={user.curso.id}
@@ -302,9 +313,16 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="projetos">
               Projetos
-              {projetos && projetos.length > 0 && (
-                <span className="ml-2 text-xs text-muted-foreground">{projetos.length}</span>
-              )}
+              {(() => {
+                // For own profile, the listing reflects the active status tab — but
+                // the tab badge should show total publicados (the public-facing count).
+                const publicadoTotal = isOwnProfile
+                  ? projetoCounts.publicado
+                  : (projetos?.length ?? 0);
+                return publicadoTotal > 0 ? (
+                  <span className="ml-2 text-xs text-muted-foreground">{publicadoTotal}</span>
+                ) : null;
+              })()}
             </TabsTrigger>
             <TabsTrigger value="entidades">
               Entidades
@@ -336,9 +354,45 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
 
           {/* Projetos */}
           <TabsContent value="projetos" className="mt-0">
-            <h2 className="text-xl font-semibold mb-6">
-              {isOwnProfile ? "Meus Projetos" : "Projetos"}
-            </h2>
+            <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
+              <h2 className="text-xl font-semibold">
+                {isOwnProfile ? "Meus Projetos" : "Projetos"}
+              </h2>
+
+              {showProjetoStatusTabs && (
+                <Tabs
+                  value={projetoStatus}
+                  onValueChange={v => setProjetoStatus(v as "PUBLICADO" | "RASCUNHO" | "ARQUIVADO")}
+                >
+                  <TabsList>
+                    <TabsTrigger value="PUBLICADO">
+                      Publicados
+                      {projetoCounts.publicado > 0 && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {projetoCounts.publicado}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                    {projetoCounts.rascunho > 0 && (
+                      <TabsTrigger value="RASCUNHO">
+                        Rascunhos
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {projetoCounts.rascunho}
+                        </span>
+                      </TabsTrigger>
+                    )}
+                    {projetoCounts.arquivado > 0 && (
+                      <TabsTrigger value="ARQUIVADO">
+                        Arquivados
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {projetoCounts.arquivado}
+                        </span>
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
+                </Tabs>
+              )}
+            </div>
 
             {projetosLoading && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -355,7 +409,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
             {!projetosLoading && !projetosError && (!projetos || projetos.length === 0) && (
               <p className="text-muted-foreground text-sm">
                 {isOwnProfile
-                  ? "Você ainda não publicou nenhum projeto."
+                  ? projetoStatus === "RASCUNHO"
+                    ? "Você não tem projetos em rascunho."
+                    : projetoStatus === "ARQUIVADO"
+                      ? "Você não tem projetos arquivados."
+                      : "Você ainda não publicou nenhum projeto."
                   : "Este usuário ainda não publicou projetos."}
               </p>
             )}

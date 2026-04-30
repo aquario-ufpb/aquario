@@ -2,16 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getContainer } from "@/lib/server/container";
 import { updateProjetoSchema } from "@/lib/shared/validations/projeto";
 import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
-import { withAuth, canManageProjeto } from "@/lib/server/services/auth/middleware";
+import { withAuth, canManageProjeto, getOptionalUser } from "@/lib/server/services/auth/middleware";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
 };
 
 /**
- * GET /api/projetos/[slug] — public.
+ * GET /api/projetos/[slug]
+ * - PUBLICADO projects are public.
+ * - RASCUNHO / ARQUIVADO projects require an authenticated MASTER_ADMIN or
+ *   someone listed as autor / entidade-admin (canManageProjeto).
  */
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { slug } = await context.params;
     const { projetosRepository } = getContainer();
@@ -20,6 +23,19 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     if (!projeto) {
       return ApiError.notFound("Projeto");
+    }
+
+    if (projeto.status !== "PUBLICADO") {
+      const user = await getOptionalUser(request);
+      if (!user) {
+        return ApiError.notFound("Projeto");
+      }
+      if (
+        user.papelPlataforma !== "MASTER_ADMIN" &&
+        !(await canManageProjeto(user, projeto.autores))
+      ) {
+        return ApiError.notFound("Projeto");
+      }
     }
 
     return NextResponse.json(projeto);

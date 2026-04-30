@@ -94,7 +94,12 @@ export const publishProjetoSchema = z.object({
 export const listProjetosSchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(10),
-  status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).optional(),
+  /**
+   * Defaults to PUBLICADO on the list endpoint to keep public listings safe.
+   * Non-public statuses require authentication and are filtered server-side
+   * to projects the caller is authorized to see.
+   */
+  status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).default("PUBLICADO"),
   entidadeId: z.string().uuid().optional(),
   usuarioId: z.string().uuid().optional(),
   tags: z.string().optional(),
@@ -111,8 +116,20 @@ export const listProjetosSchema = z.object({
       "OUTRO",
     ])
     .optional(),
-  orderBy: z.enum(["criadoEm", "publicadoEm", "titulo"]).default("criadoEm"),
+  orderBy: z.enum(["criadoEm", "publicadoEm", "titulo", "autoresCount"]).default("criadoEm"),
   order: z.enum(["asc", "desc"]).default("desc"),
+  /**
+   * When true, restrict results to projects the caller authors or admins —
+   * for any status. Lets the same listing endpoint power "Meus publicados"
+   * without changing status semantics for master admins.
+   *
+   * Parsed strictly: only the literal "true" enables it. Avoids `z.coerce.boolean`
+   * which would treat "false" (a non-empty string) as truthy.
+   */
+  scopedToMe: z
+    .enum(["true", "false"])
+    .optional()
+    .transform(v => v === "true"),
 });
 
 export type ProjetoAutorInput = z.infer<typeof projetoAutorSchema>;

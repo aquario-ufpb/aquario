@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { getContainer } from "@/lib/server/container";
 import { createProjetoSchema, listProjetosSchema } from "@/lib/shared/validations/projeto";
 import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
-import { withAuth, canManageVagaForEntidade } from "@/lib/server/services/auth/middleware";
+import {
+  withAuth,
+  canManageVagaForEntidade,
+  getOptionalUser,
+} from "@/lib/server/services/auth/middleware";
 import type { ProjetosListResponse } from "@/lib/shared/types/projeto";
+import type { FindManyProjetosParams } from "@/lib/server/db/interfaces/projetos-repository.interface";
 
 /**
- * GET /api/projetos — public, paginated list with filters.
+ * GET /api/projetos — paginated list with filters.
+ *
+ * - status=PUBLICADO (default): public; anyone can list.
+ * - status=RASCUNHO or ARQUIVADO: requires auth. Master admins see all;
+ *   other users only see projects they author or admin (entidade-admin).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -23,16 +32,48 @@ export async function GET(request: NextRequest) {
       orderBy: searchParams.get("orderBy") ?? undefined,
       order: searchParams.get("order") ?? undefined,
       usuarioId: searchParams.get("usuarioId") ?? undefined,
+      scopedToMe: searchParams.get("scopedToMe") ?? undefined,
     });
 
     if (!validation.success) {
       return fromZodError(validation.error);
     }
 
+    const { scopedToMe, ...rest } = validation.data;
+    const params: FindManyProjetosParams = { ...rest };
+
+    // Apply visibility scoping for non-PUBLICADO listings or when scopedToMe is set.
+    // - Non-PUBLICADO: master admins see everything; others get auto-scoped.
+    // - scopedToMe=true: caller explicitly asked for "their own" — always scope,
+    //   even for MASTER_ADMIN, since the intent is to filter to their content.
+    //   For "Meus Publicados" we additionally require that entidade-admin matches
+    //   only count when the entidade is the *principal* author (so being admin of
+    //   a co-author entidade doesn't surface the project in your "Meus" tab).
+    const needsScoping = params.status !== "PUBLICADO" || scopedToMe === true;
+    if (needsScoping) {
+      const user = await getOptionalUser(request);
+      if (!user) {
+        return ApiError.tokenMissing();
+      }
+      const isMasterAdmin = user.papelPlataforma === "MASTER_ADMIN";
+      if (!isMasterAdmin || scopedToMe === true) {
+        const { membrosRepository } = getContainer();
+        const memberships = await membrosRepository.findByUsuarioId(user.id);
+        const adminEntidadeIds = memberships
+          .filter(m => m.papel === "ADMIN" && !m.endedAt)
+          .map(m => m.entidade.id);
+        params.visibleToUserId = user.id;
+        params.visibleToEntidadeIds = adminEntidadeIds;
+        if (scopedToMe === true) {
+          params.requireEntidadeAsPrincipal = true;
+        }
+      }
+    }
+
     const { projetosRepository } = getContainer();
 
-    const { page, limit } = validation.data;
-    const { projetos, total } = await projetosRepository.findMany(validation.data);
+    const { page, limit } = params;
+    const { projetos, total } = await projetosRepository.findMany(params);
 
     const response: ProjetosListResponse = {
       projetos,

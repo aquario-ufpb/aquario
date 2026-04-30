@@ -50,6 +50,20 @@ export type FindManyProjetosParams = {
    * Other values match the TipoEntidade enum and filter by entidade.tipo of any autor.
    */
   tipoEntidade?: string;
+  /**
+   * If set, additionally restrict results to projects where the caller is an
+   * autor (usuarioId) OR the caller is admin of an entidade-author. Used to
+   * scope non-PUBLICADO listings to the calling user's own work.
+   */
+  visibleToUserId?: string;
+  visibleToEntidadeIds?: string[];
+  /**
+   * When true, the entidade leg of the visibility OR also requires
+   * `autorPrincipal=true`. Used by "Meus Publicados" so an admin of a
+   * co-author entidade doesn't see the project as theirs — only when the
+   * entidade is the principal author. The user leg is unaffected.
+   */
+  requireEntidadeAsPrincipal?: boolean;
   orderBy: string;
   order: string;
 };
