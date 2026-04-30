@@ -34,6 +34,27 @@ const autoresInclude = {
   },
 } as const;
 
+/**
+ * Canonical args for any query that returns a `ProjetoWithRelations`.
+ * Built via `Prisma.validator` so the result type is inferable from the args
+ * and stays in sync with the Prisma schema — eliminates the previous
+ * `as unknown as ProjetoWithRelations` casts.
+ */
+const projetoWithAutoresArgs = Prisma.validator<Prisma.ProjetoDefaultArgs>()({
+  include: { autores: autoresInclude },
+});
+
+/**
+ * Asserts that the Prisma-inferred row shape matches the public
+ * `ProjetoWithRelations` contract. If the schema or the interface drifts,
+ * this cast site will fail to compile — the only place the conversion happens.
+ */
+function asProjetoWithRelations(
+  row: Prisma.ProjetoGetPayload<typeof projetoWithAutoresArgs>
+): ProjetoWithRelations {
+  return row as ProjetoWithRelations;
+}
+
 export class PrismaProjetosRepository implements IProjetosRepository {
   async findMany(params: FindManyProjetosParams): Promise<FindManyProjetosResult> {
     const {
@@ -124,13 +145,13 @@ export class PrismaProjetosRepository implements IProjetosRepository {
         skip,
         take: limit,
         orderBy: orderByClause,
-        include: { autores: autoresInclude },
+        ...projetoWithAutoresArgs,
       }),
       prisma.projeto.count({ where }),
     ]);
 
     return {
-      projetos: projetos as unknown as ProjetoWithRelations[],
+      projetos: projetos.map(asProjetoWithRelations),
       total,
     };
   }
@@ -138,10 +159,10 @@ export class PrismaProjetosRepository implements IProjetosRepository {
   async findBySlug(slug: string): Promise<ProjetoWithRelations | null> {
     const projeto = await prisma.projeto.findUnique({
       where: { slug },
-      include: { autores: autoresInclude },
+      ...projetoWithAutoresArgs,
     });
 
-    return projeto as unknown as ProjetoWithRelations | null;
+    return projeto ? asProjetoWithRelations(projeto) : null;
   }
 
   async findBySlugBasic(slug: string): Promise<Projeto | null> {
@@ -204,20 +225,20 @@ export class PrismaProjetosRepository implements IProjetosRepository {
           })),
         },
       },
-      include: { autores: autoresInclude },
+      ...projetoWithAutoresArgs,
     });
 
-    return projeto as unknown as ProjetoWithRelations;
+    return asProjetoWithRelations(projeto);
   }
 
   async update(slug: string, data: Partial<CreateProjetoInput>): Promise<ProjetoWithRelations> {
     const projeto = await prisma.projeto.update({
       where: { slug },
       data: data as Prisma.ProjetoUpdateInput,
-      include: { autores: autoresInclude },
+      ...projetoWithAutoresArgs,
     });
 
-    return projeto as unknown as ProjetoWithRelations;
+    return asProjetoWithRelations(projeto);
   }
 
   async delete(slug: string): Promise<void> {
@@ -234,10 +255,10 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     const projeto = await prisma.projeto.update({
       where: { slug },
       data: { status, publicadoEm },
-      include: { autores: autoresInclude },
+      ...projetoWithAutoresArgs,
     });
 
-    return projeto as unknown as ProjetoWithRelations;
+    return asProjetoWithRelations(projeto);
   }
 
   async replaceAutores(

@@ -10,6 +10,18 @@ const internalUrlSchema = z.string().refine(v => v.startsWith("/") || /^https?:\
 });
 
 /**
+ * URL whitelist for user-provided project links — http(s) only.
+ * z.string().url() alone accepts `javascript:`, `data:`, etc. which become XSS
+ * vectors when rendered as <a href={...}>.
+ */
+const httpUrlSchema = z
+  .string()
+  .url()
+  .refine(v => /^https?:\/\//i.test(v), {
+    message: "Apenas URLs http(s) são permitidas",
+  });
+
+/**
  * Um autor de projeto referencia um usuario, uma entidade, ou ambos.
  * Pelo menos um dos dois ids precisa estar presente.
  */
@@ -38,9 +50,9 @@ const createProjetoBaseSchema = z.object({
   tags: z.array(z.string().max(50)).default([]),
   dataInicio: z.coerce.date().optional().nullable(),
   dataFim: z.coerce.date().optional().nullable(),
-  urlRepositorio: z.string().url().optional().nullable(),
-  urlDemo: z.string().url().optional().nullable(),
-  urlOutro: z.string().url().optional().nullable(),
+  urlRepositorio: httpUrlSchema.optional().nullable(),
+  urlDemo: httpUrlSchema.optional().nullable(),
+  urlOutro: httpUrlSchema.optional().nullable(),
   autores: z.array(projetoAutorSchema).min(1),
 });
 
@@ -57,8 +69,8 @@ export const createProjetoSchema = createProjetoBaseSchema
       path: ["dataFim"],
     }
   )
-  .refine(data => data.autores.some(a => a.autorPrincipal), {
-    message: "Pelo menos um autor deve ser principal",
+  .refine(data => data.autores.filter(a => a.autorPrincipal).length === 1, {
+    message: "Exatamente um autor deve ser marcado como principal",
     path: ["autores"],
   });
 
@@ -82,14 +94,10 @@ export const updateProjetoAutoresSchema = z
   .object({
     autores: z.array(projetoAutorSchema).min(1, "Pelo menos um autor é obrigatório"),
   })
-  .refine(data => data.autores.some(a => a.autorPrincipal), {
-    message: "Pelo menos um autor deve ser marcado como principal",
+  .refine(data => data.autores.filter(a => a.autorPrincipal).length === 1, {
+    message: "Exatamente um autor deve ser marcado como principal",
     path: ["autores"],
   });
-
-export const publishProjetoSchema = z.object({
-  id: z.string().uuid("ID de projeto inválido"),
-});
 
 export const listProjetosSchema = z.object({
   page: z.coerce.number().min(1).default(1),
@@ -136,5 +144,4 @@ export type ProjetoAutorInput = z.infer<typeof projetoAutorSchema>;
 export type CreateProjetoInput = z.infer<typeof createProjetoSchema>;
 export type UpdateProjetoInput = z.infer<typeof updateProjetoSchema>;
 export type UpdateProjetoAutoresInput = z.infer<typeof updateProjetoAutoresSchema>;
-export type PublishProjetoInput = z.infer<typeof publishProjetoSchema>;
 export type ListProjetosInput = z.infer<typeof listProjetosSchema>;

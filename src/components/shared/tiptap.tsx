@@ -82,6 +82,9 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
       Link.configure({
         openOnClick: false,
         autolink: true,
+        // Restrict to safe protocols — block javascript:/data: which would render
+        // as <a href="javascript:..."> XSS once the HTML is sanitized and shown.
+        protocols: ["http", "https", "mailto"],
       }),
     ],
     content: value,
@@ -165,6 +168,13 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
 
     if (url === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+
+    // Belt and suspenders — Link.configure already filters protocols, but
+    // validating here gives the user immediate feedback instead of silently dropping.
+    if (!/^(https?:\/\/|mailto:)/i.test(url)) {
+      window.alert("Apenas links http(s) ou mailto: são permitidos.");
       return;
     }
 

@@ -26,9 +26,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **Projetos**: Drop `entidadeId` from `Projeto` (entidade affiliation now lives on `ProjetoAutor`).
 - **Projetos**: Drop `tipoConteudo` enum and column — `textContent` is treated as a single content type.
+- **Projetos**: Delete duplicate `/admin/projetos` page and `CriarProjetoForm` — master admins use `/projetos/novo` like everyone else.
+- **Projetos**: Delete unused `NovoProjetoModal`, `useProjetos` (single-page hook), and `publishProjetoSchema`.
 
 ### Fixed
+- **Projetos**: Block `javascript:`/`data:` URLs in `urlRepositorio`/`urlDemo`/`urlOutro` (was `z.string().url()` which permits any scheme — XSS via `<a href>`).
+- **Projetos**: Tiptap link editor now restricts to `http(s)`/`mailto:` protocols and validates the URL from `window.prompt` before applying.
+- **Projetos**: Sanitize user-supplied `file.name` when building the upload blob key (path-traversal hardening) and validate the host on delete against the configured blob storage.
+- **Projetos**: Bump generated slug suffix from 4 digits to 8 hex chars to make collision-induced 409s vanishingly rare.
+- **Projetos**: Enforce **exactly one** `autorPrincipal: true` in create / replace-autores schemas (previously only checked `some`).
 - **Projetos**: `scopedToMe` now parses strictly as `"true" | "false"` instead of `z.coerce.boolean`, which would have treated `"false"` as truthy.
+- **Projetos**: Replace `as unknown as ProjetoWithRelations` casts in the Prisma repository with a `Prisma.validator`-derived shared args + single conversion site.
+- **Projetos**: `/api/upload/projeto-image` now uses the project-wide `ApiError` pattern instead of raw `NextResponse.json({ error })`.
 
 ## [1.6.0] - 2026-04-26
 

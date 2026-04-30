@@ -127,33 +127,6 @@ function buildProjetosQuery({
   return qs.toString();
 }
 
-/**
- * Single-page projetos listing with server-side filters.
- * Use `useProjetosInfinite` for the infinite-scroll list page.
- */
-export function useProjetos(params: UseProjetosParams = {}) {
-  return useQuery({
-    queryKey: [
-      ...queryKeys.projetos.all,
-      {
-        page: params.page ?? 1,
-        limit: params.limit ?? 12,
-        search: params.search ?? "",
-        tipoEntidade: params.tipoEntidade ?? "",
-      },
-    ],
-    queryFn: async (): Promise<ProjetosListResponse> => {
-      const res = await apiClient(`/projetos?${buildProjetosQuery(params)}`);
-      if (!res.ok) {
-        await throwApiError(res);
-      }
-      return res.json();
-    },
-    staleTime: 5 * 60 * 1000,
-    placeholderData: prev => prev,
-  });
-}
-
 type UseProjetosInfiniteParams = {
   search?: string;
   tipoEntidade?: string;

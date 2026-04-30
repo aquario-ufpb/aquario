@@ -197,6 +197,10 @@ export default function NovoProjetoPage() {
   };
 
   const generateSlug = (text: string) => {
+    // Suffix uses 8 hex chars (~4 billion possibilities) to make accidental
+    // collisions vanishingly rare. The API still returns 409 on slug collision,
+    // but at this entropy a retry shouldn't be necessary in practice.
+    const suffix = Math.random().toString(16).slice(2, 10).padEnd(8, "0");
     return (
       text
         .toString()
@@ -205,7 +209,7 @@ export default function NovoProjetoPage() {
         .replace(/[̀-ͯ]/g, "")
         .replace(/[^\w\s-]/g, "")
         .replace(/[\s_-]+/g, "-")
-        .replace(/^-+|-+$/g, "") + `-${Date.now().toString().slice(-4)}`
+        .replace(/^-+|-+$/g, "") + `-${suffix}`
     );
   };
 
