@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Projetos**: `scopedToMe` query param on `GET /api/projetos` — restricts results to the caller's own work (own authorship, or admin of an entidade that is the **principal** author). Used by "Meus Publicados".
 - **Projetos**: Status tabs on user (`/usuarios/[slug]`, own profile only) and entidade (`/entidade/[slug]`, admins only) pages so authors and entidade admins can see drafts/arquivados in context.
 - **Projetos**: New client hooks `useUsuarioProjetoCounts` and `useEntidadeProjetoCounts` for per-status counts.
+- **Projetos**: Search bar now also matches against tags. Tags are normalized to lowercase + deduped at save time so search is case-insensitive regardless of input casing.
 
 ### Changed
 - **Projetos**: Renamed `urlPublicacao` → `urlOutro`; field label updated to a generic "Outro link".

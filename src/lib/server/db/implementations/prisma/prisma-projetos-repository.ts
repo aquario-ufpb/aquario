@@ -86,9 +86,13 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     }
 
     if (search) {
+      // Tags are normalized to lowercase at save time (Zod transform), so a
+      // lowercased exact match is consistent regardless of how the user types
+      // the search query.
       where.OR = [
         { titulo: { contains: search, mode: "insensitive" } },
         { subtitulo: { contains: search, mode: "insensitive" } },
+        { tags: { has: search.toLowerCase() } },
       ];
     }
 

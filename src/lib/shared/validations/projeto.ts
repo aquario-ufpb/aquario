@@ -47,7 +47,13 @@ const createProjetoBaseSchema = z.object({
   textContent: z.string().max(50000).optional().nullable(),
   urlImagem: internalUrlSchema.optional().nullable(),
   status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).default("RASCUNHO"),
-  tags: z.array(z.string().max(50)).default([]),
+  // Normalize tags to lowercase + trimmed at validation time so search and
+  // dedup are trivially consistent. Drop empties so a trailing comma in the
+  // input field doesn't create a "" tag.
+  tags: z
+    .array(z.string().max(50))
+    .default([])
+    .transform(arr => Array.from(new Set(arr.map(t => t.trim().toLowerCase()).filter(Boolean)))),
   dataInicio: z.coerce.date().optional().nullable(),
   dataFim: z.coerce.date().optional().nullable(),
   urlRepositorio: httpUrlSchema.optional().nullable(),
