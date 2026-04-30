@@ -8,39 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Projetos**: `ProjetoAutor` rows now reference a `usuario`, an `entidade`, or both — entidades can be authors of a projeto.
-- **Projetos**: Server-side authorization on all mutating routes (`POST /api/projetos`, `PATCH/DELETE /api/projetos/[slug]`, publish, autores) — only listed authors, admins of listed entidade-authors, or `MASTER_ADMIN` can act.
-- **Auth**: New `canManageProjeto` helper in `services/auth/middleware.ts`.
-- **Navbar**: Add Projetos link to desktop navigation.
-- **Projetos**: "Novo Projeto" button on `/projetos` is always visible; opens a login prompt dialog when not authenticated. Mobile FAB now only shows on small screens.
-- **Projetos**: Archive/Unarchive flow on the detail page using a generalized `ConfirmDeleteDialog` (now supports custom labels and a non-destructive variant).
-- **Projetos**: Sort dropdown on `/projetos` (recent, oldest, A–Z, Z–A, more authors, fewer authors) — repository handles `autoresCount` via Prisma `_count`.
-- **Projetos**: Status tabs on `/projetos` split into `Publicados`, `Meus Publicados`, `Rascunhos`, `Arquivados` with conditional display based on per-status counts.
-- **Projetos**: `scopedToMe` query param on `GET /api/projetos` — restricts results to the caller's own work (own authorship, or admin of an entidade that is the **principal** author). Used by "Meus Publicados".
-- **Projetos**: Status tabs on user (`/usuarios/[slug]`, own profile only) and entidade (`/entidade/[slug]`, admins only) pages so authors and entidade admins can see drafts/arquivados in context.
-- **Projetos**: New client hooks `useUsuarioProjetoCounts` and `useEntidadeProjetoCounts` for per-status counts.
-- **Projetos**: Search bar now also matches against tags. Tags are normalized to lowercase + deduped at save time so search is case-insensitive regardless of input casing.
+- **Projetos**: New `/projetos` feature — create, edit, publish/unpublish, archive, and delete projects, with cover image, rich-text body (Tiptap with image + link upload), tags, period, and external links.
+- **Projetos**: Multi-author model — each `ProjetoAutor` references a `usuario`, an `entidade`, or both, with one `autorPrincipal`. Authorship grants edit access; entidade admins inherit it.
+- **Projetos**: Listing page with search (titulo/subtitulo/tags), tipo filter, sort (recent/title/author count), and status tabs (`Publicados`, `Meus Publicados`, `Rascunhos`, `Arquivados`). Profile and entidade pages get the same status tabs for owners/admins.
+- **Projetos**: Server-side authorization (`canManageProjeto` middleware helper) enforced on every mutating route; non-`PUBLICADO` listings are auto-scoped to the caller.
 
 ### Changed
-- **Projetos**: Renamed `urlPublicacao` → `urlOutro`; field label updated to a generic "Outro link".
-
-### Removed
-- **Projetos**: Drop `entidadeId` from `Projeto` (entidade affiliation now lives on `ProjetoAutor`).
-- **Projetos**: Drop `tipoConteudo` enum and column — `textContent` is treated as a single content type.
-- **Projetos**: Delete duplicate `/admin/projetos` page and `CriarProjetoForm` — master admins use `/projetos/novo` like everyone else.
-- **Projetos**: Delete unused `NovoProjetoModal`, `useProjetos` (single-page hook), `publishProjetoSchema`, and `useProjetosDaEntidadeDoUsuario` (declared but never imported).
+- **ConfirmDeleteDialog**: Generalized — now accepts custom labels and a non-destructive variant (used by archive/unarchive flow).
+- **Navbar**: Add Projetos link to desktop navigation.
 
 ### Fixed
-- **Projetos**: Block `javascript:`/`data:` URLs in `urlRepositorio`/`urlDemo`/`urlOutro` (was `z.string().url()` which permits any scheme — XSS via `<a href>`).
-- **Projetos**: Tiptap link editor now restricts to `http(s)`/`mailto:` protocols and validates the URL from `window.prompt` before applying.
-- **Projetos**: Sanitize user-supplied `file.name` when building the upload blob key (path-traversal hardening) and validate the host on delete against the configured blob storage.
-- **Projetos**: Bump generated slug suffix from 4 digits to 8 hex chars to make collision-induced 409s vanishingly rare.
-- **Projetos**: Enforce **exactly one** `autorPrincipal: true` in create / replace-autores schemas (previously only checked `some`).
-- **Projetos**: `scopedToMe` now parses strictly as `"true" | "false"` instead of `z.coerce.boolean`, which would have treated `"false"` as truthy.
-- **Projetos**: Replace `as unknown as ProjetoWithRelations` casts in the Prisma repository with a `Prisma.validator`-derived shared args + single conversion site.
-- **Projetos**: `/api/upload/projeto-image` now uses the project-wide `ApiError` pattern instead of raw `NextResponse.json({ error })`.
-- **Projetos**: `PATCH /api/projetos/[slug]` no longer lets callers bypass `/publish`. Status transitions to `PUBLICADO` now run the same readiness checks (titulo, autores) and set `publicadoEm`; transitions away from `PUBLICADO` clear it.
-- **Projetos**: Sanitize `textContent` HTML at write time via `isomorphic-dompurify`. The detail page already sanitizes on render — storing pre-sanitized HTML protects future consumers (RSS digest, SSR meta, admin tooling) from inheriting stored XSS if they forget to sanitize.
+- **Projetos**: User-supplied URLs (`urlRepositorio`/`urlDemo`/`urlOutro`) and Tiptap links restricted to `http(s)`/`mailto:` to block `javascript:`/`data:` XSS vectors.
+- **Projetos**: Image upload sanitizes filenames (path-traversal) and validates the delete URL against the configured blob backend.
+- **Projetos**: Rich-text `textContent` is sanitized with DOMPurify on both write (Zod transform) and render — defense in depth so future consumers can't reintroduce stored XSS.
 
 ## [1.6.0] - 2026-04-26
 
