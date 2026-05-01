@@ -4,8 +4,12 @@ import { z } from "zod";
  * Accepts either an absolute URL or a server-relative path (starting with "/").
  * Used for `urlImagem` because the blob storage backend returns absolute URLs in
  * production (Vercel Blob) but relative paths in local dev.
+ *
+ * Rejects protocol-relative paths (`//host/path`) — the leading-slash branch is
+ * for true server-relative paths, not URLs the browser resolves to an
+ * arbitrary host.
  */
-const internalUrlSchema = z.string().refine(v => v.startsWith("/") || /^https?:\/\//i.test(v), {
+const internalUrlSchema = z.string().refine(v => /^\/(?!\/)/.test(v) || /^https?:\/\//i.test(v), {
   message: "Deve ser uma URL absoluta ou caminho começando com /",
 });
 

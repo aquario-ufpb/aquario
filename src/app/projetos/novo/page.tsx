@@ -157,15 +157,11 @@ export default function NovoProjetoPage() {
     setIsUploadingCover(true);
     const toastId = toast.loading("Fazendo upload da capa...");
 
-    // If replacing, clean up the previous blob (only if it was uploaded this session)
-    if (coverImageUrl && uploadedBlobs.includes(coverImageUrl)) {
-      try {
-        await deleteProjetoImage(coverImageUrl);
-        setUploadedBlobs(prev => prev.filter(url => url !== coverImageUrl));
-      } catch (err) {
-        console.error("Failed to delete old cover", err);
-      }
-    }
+    // Upload first; only delete the previous session blob after the new one
+    // is confirmed. Reverse order would leave the user with no cover if the
+    // upload fails (network blip, server reject, etc.).
+    const previousSessionBlob =
+      coverImageUrl && uploadedBlobs.includes(coverImageUrl) ? coverImageUrl : null;
 
     try {
       const file = new File([croppedBlob], `cover-${Date.now()}.jpg`, { type: "image/jpeg" });
@@ -173,6 +169,15 @@ export default function NovoProjetoPage() {
       setCoverImageUrl(url);
       registerBlob(url);
       toast.success("Capa enviada com sucesso!", { id: toastId });
+
+      if (previousSessionBlob) {
+        try {
+          await deleteProjetoImage(previousSessionBlob);
+          setUploadedBlobs(prev => prev.filter(u => u !== previousSessionBlob));
+        } catch (err) {
+          console.error("Failed to delete old cover", err);
+        }
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao enviar imagem de capa.";
       toast.error(message, { id: toastId });

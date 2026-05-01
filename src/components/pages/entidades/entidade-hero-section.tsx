@@ -18,8 +18,17 @@ function formatFoundingYear(date: string | null | undefined): string | null {
   if (!date) {
     return null;
   }
-  const year = new Date(date).getFullYear();
-  return Number.isNaN(year) ? null : String(year);
+  // Parse the year portion directly. `new Date("YYYY-MM-DD")` is interpreted
+  // as UTC midnight; in negative-offset timezones `.getFullYear()` rolls back
+  // to the previous local day (and potentially year). String parse avoids the
+  // round-trip through Date entirely.
+  const match = /^(\d{4})/.exec(date);
+  if (!match) {
+    const parsed = new Date(date);
+    const fallback = parsed.getUTCFullYear();
+    return Number.isNaN(fallback) ? null : String(fallback);
+  }
+  return match[1];
 }
 
 export function EntidadeHeroSection({ entidade, canEdit, onEditClick }: EntidadeHeroSectionProps) {

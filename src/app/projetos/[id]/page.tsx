@@ -248,15 +248,29 @@ export default function ProjetoPage() {
               <div className="space-y-1">
                 {orderedColaboradores.map(colaborador => {
                   const isEntidade = colaborador.tipo === "ENTIDADE";
-                  const href = isEntidade
-                    ? `/entidade/${colaborador.slug}`
-                    : `/usuarios/${colaborador.slug}`;
+                  // Slugs are nullable on both Usuario and Entidade — render
+                  // a non-clickable row when missing instead of routing to
+                  // /usuarios/null. The body is identical either way.
+                  const href = colaborador.slug
+                    ? isEntidade
+                      ? `/entidade/${colaborador.slug}`
+                      : `/usuarios/${colaborador.slug}`
+                    : null;
+                  const Wrapper = (props: { children: React.ReactNode }) =>
+                    href ? (
+                      <Link
+                        href={href}
+                        className="flex items-center gap-3 -ml-2 rounded-lg p-2 transition-colors hover:bg-muted/50"
+                      >
+                        {props.children}
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-3 -ml-2 rounded-lg p-2 transition-colors">
+                        {props.children}
+                      </div>
+                    );
                   return (
-                    <Link
-                      key={`${colaborador.tipo}-${colaborador.id}`}
-                      href={href}
-                      className="flex items-center gap-3 -ml-2 rounded-lg p-2 transition-colors hover:bg-muted/50"
-                    >
+                    <Wrapper key={`${colaborador.tipo}-${colaborador.id}`}>
                       {isEntidade ? (
                         <div className="relative h-8 w-8 rounded-md overflow-hidden border bg-muted shrink-0">
                           {colaborador.urlFotoPerfil && (
@@ -291,7 +305,7 @@ export default function ProjetoPage() {
                           </Badge>
                         )}
                       </div>
-                    </Link>
+                    </Wrapper>
                   );
                 })}
               </div>

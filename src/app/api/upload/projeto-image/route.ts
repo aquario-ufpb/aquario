@@ -41,9 +41,12 @@ function isOurBlobUrl(parsed: URL): boolean {
 export function POST(req: NextRequest) {
   return withAuth(req, async (req, usuario) => {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file");
 
-    if (!file) {
+    // formData.get returns `string | File | null`. A crafted multipart payload
+    // can send "file" as a string field — without this check the cast lies
+    // and downstream `.type`/`.size`/`.arrayBuffer()` accesses misbehave.
+    if (!(file instanceof File)) {
       return ApiError.badRequest("Arquivo não fornecido");
     }
 

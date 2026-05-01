@@ -80,6 +80,19 @@ export function PATCH(request: NextRequest, context: RouteContext) {
         }
       }
 
+      // Date invariant guard — Zod's refine on createProjetoBaseSchema can
+      // only see what's in the payload. Partial PATCHes that change just one
+      // of {dataInicio, dataFim} would slip through, so check here against
+      // the merged effective dates.
+      if (data.dataInicio !== undefined || data.dataFim !== undefined) {
+        const effectiveStart =
+          data.dataInicio !== undefined ? data.dataInicio : existingProjeto.dataInicio;
+        const effectiveEnd = data.dataFim !== undefined ? data.dataFim : existingProjeto.dataFim;
+        if (effectiveStart && effectiveEnd && effectiveEnd < effectiveStart) {
+          return ApiError.badRequest("Data de fim deve ser posterior à data de início");
+        }
+      }
+
       // Status transitions have semantics beyond a plain field write —
       // PUBLICADO needs readiness checks (matching /publish) and tracks
       // publicadoEm. Apply that here so PATCH can't be used to bypass /publish.

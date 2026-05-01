@@ -578,13 +578,19 @@ async function loadProjetosFromContent(): Promise<{ created: number; skipped: nu
       .split(";")
       .map(s => s.trim())
       .filter(Boolean);
-    const principalEntidadeId = entidadeNames
-      .map(n => entidadeByName.get(n.toLowerCase()))
-      .find((id): id is string => !!id);
+    // The CSV's first entidade is the *intended* principal — use it directly
+    // and fail loudly if unresolvable. Picking the first *resolvable* entry
+    // would silently shift authorship when the principal name has a typo.
+    const declaredPrincipal = entidadeNames[0];
+    const principalEntidadeId = declaredPrincipal
+      ? entidadeByName.get(declaredPrincipal.toLowerCase())
+      : undefined;
 
     if (!principalEntidadeId) {
       missingEntidade++;
-      console.log(`  SKIP "${titulo}": entidade não encontrada (csv=${entidadeNames.join(",")})`);
+      console.log(
+        `  SKIP "${titulo}": entidade principal "${declaredPrincipal ?? ""}" não encontrada`
+      );
       continue;
     }
 
