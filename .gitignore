@@ -120,6 +120,9 @@ public/uploads/
 # Superset (worktree tooling)
 .superset/
 
+# Claude Code per-user settings
+.claude/settings.local.json
+
 # Local-only data (bulk CSVs, source dumps) — used post-merge to backfill prod.
 # The curated subset that ships with the repo lives in content/aquario-projetos/.
 data/
