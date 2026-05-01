@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/client/api/api-client";
-import { throwApiError } from "@/lib/client/errors";
 import { queryKeys } from "@/lib/client/query-keys";
+import {
+  createProjeto,
+  updateProjeto,
+  updateProjetoAutores,
+  uploadProjetoImage,
+} from "@/lib/client/api/projetos";
 import type {
   CreateProjetoInput,
   UpdateProjetoInput,
@@ -11,22 +15,7 @@ import { toast } from "sonner";
 
 export const useUploadProjetoImage = () => {
   return useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await apiClient("/upload/projeto-image", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        await throwApiError(response);
-      }
-
-      const data = await response.json();
-      return data.url;
-    },
+    mutationFn: (file: File) => uploadProjetoImage(file),
   });
 };
 
@@ -34,19 +23,7 @@ export const useCreateProjeto = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateProjetoInput) => {
-      const response = await apiClient("/projetos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        await throwApiError(response);
-      }
-
-      return response.json();
-    },
+    mutationFn: (data: CreateProjetoInput) => createProjeto(data),
     onSuccess: () => {
       toast.success("Projeto criado com sucesso!");
       queryClient.invalidateQueries({ queryKey: queryKeys.projetos.all });
@@ -64,17 +41,7 @@ export const useUpdateProjeto = (slug: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: UpdateProjetoInput) => {
-      const response = await apiClient(`/projetos/${slug}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        await throwApiError(response);
-      }
-      return response.json();
-    },
+    mutationFn: (data: UpdateProjetoInput) => updateProjeto(slug, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projetos.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.projetos.bySlug(slug) });
@@ -87,17 +54,7 @@ export const useUpdateProjetoAutores = (slug: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: UpdateProjetoAutoresInput) => {
-      const response = await apiClient(`/projetos/${slug}/autores`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        await throwApiError(response);
-      }
-      return response.json();
-    },
+    mutationFn: (data: UpdateProjetoAutoresInput) => updateProjetoAutores(slug, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projetos.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.projetos.bySlug(slug) });

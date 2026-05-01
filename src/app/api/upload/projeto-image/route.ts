@@ -70,6 +70,16 @@ export function POST(req: NextRequest) {
   });
 }
 
+/**
+ * DELETE /api/upload/projeto-image — session cleanup only. The caller must
+ * have uploaded the blob themselves (path segment starts with "<usuario.id>-").
+ * Used by the create / edit flows to drop a session-uploaded blob the user
+ * abandoned before saving (cover-replace + cancel).
+ *
+ * For replacing a *committed* cover: don't call this. The PATCH handler on
+ * `/api/projetos/[slug]` automatically deletes the old blob when `urlImagem`
+ * changes, regardless of who originally uploaded it.
+ */
 export function DELETE(req: NextRequest) {
   return withAuth(req, async (req, usuario) => {
     try {
@@ -98,7 +108,6 @@ export function DELETE(req: NextRequest) {
 
       const pathSegments = parsedUrl.pathname.split("/");
       const projetosIndex = pathSegments.findIndex(s => s === "projetos");
-      // The next segment must start with "<userId>-" — your own uploads only.
       if (projetosIndex === -1 || !pathSegments[projetosIndex + 1]?.startsWith(`${usuario.id}-`)) {
         return ApiError.forbidden("Não autorizado a deletar este arquivo");
       }

@@ -105,6 +105,21 @@ export function PATCH(request: NextRequest, context: RouteContext) {
       }
 
       const projeto = await projetosRepository.update(slug, data);
+
+      // GC the old cover blob if urlImagem changed. Fire-and-forget — failure
+      // here would leak a blob but shouldn't fail the user-facing update.
+      // Triggers regardless of who originally uploaded the old blob, which is
+      // why server-side cleanup matters: an entidade admin replacing a cover
+      // uploaded by a co-admin can't delete it via the user-scoped DELETE.
+      const oldUrl = existingProjeto.urlImagem;
+      const newUrl = projeto.urlImagem;
+      if (oldUrl && oldUrl !== newUrl) {
+        const { blobStorage } = getContainer();
+        blobStorage.delete(oldUrl).catch(err => {
+          console.error("Failed to delete old cover blob", { url: oldUrl, err });
+        });
+      }
+
       return NextResponse.json(projeto);
     } catch (error) {
       // Race window: slugExists() above could pass, then a concurrent write

@@ -21,8 +21,7 @@ import { CoAutoresPicker, type CoAutor } from "@/components/shared/co-autores-pi
 import { PeriodoPicker } from "@/components/shared/periodo-picker";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
 import { ImageIcon } from "lucide-react";
-import { apiClient } from "@/lib/client/api/api-client";
-import { throwApiError } from "@/lib/client/errors";
+import { createProjeto, deleteProjetoImage, uploadProjetoImage } from "@/lib/client/api/projetos";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import Image from "next/image";
 
@@ -111,9 +110,7 @@ export default function NovoProjetoPage() {
 
   const deleteBlob = async (url: string) => {
     try {
-      await apiClient(`/upload/projeto-image?url=${encodeURIComponent(url)}`, {
-        method: "DELETE",
-      });
+      await deleteProjetoImage(url);
     } catch (e) {
       console.error("Failed to delete blob", url, e);
     }
@@ -163,9 +160,7 @@ export default function NovoProjetoPage() {
     // If replacing, clean up the previous blob (only if it was uploaded this session)
     if (coverImageUrl && uploadedBlobs.includes(coverImageUrl)) {
       try {
-        await apiClient(`/upload/projeto-image?url=${encodeURIComponent(coverImageUrl)}`, {
-          method: "DELETE",
-        });
+        await deleteProjetoImage(coverImageUrl);
         setUploadedBlobs(prev => prev.filter(url => url !== coverImageUrl));
       } catch (err) {
         console.error("Failed to delete old cover", err);
@@ -173,24 +168,14 @@ export default function NovoProjetoPage() {
     }
 
     try {
-      const formData = new FormData();
-      formData.append("file", croppedBlob, `cover-${Date.now()}.jpg`);
-
-      const response = await apiClient("/upload/projeto-image", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Falha no upload");
-      }
-
-      const data = await response.json();
-      setCoverImageUrl(data.url);
-      registerBlob(data.url);
+      const file = new File([croppedBlob], `cover-${Date.now()}.jpg`, { type: "image/jpeg" });
+      const url = await uploadProjetoImage(file);
+      setCoverImageUrl(url);
+      registerBlob(url);
       toast.success("Capa enviada com sucesso!", { id: toastId });
-    } catch (_error) {
-      toast.error("Erro ao enviar imagem de capa.", { id: toastId });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao enviar imagem de capa.";
+      toast.error(message, { id: toastId });
     } finally {
       setIsUploadingCover(false);
     }
@@ -278,15 +263,7 @@ export default function NovoProjetoPage() {
         autores: autoresList,
       };
 
-      const res = await apiClient("/projetos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        await throwApiError(res);
-      }
+      await createProjeto(body as Parameters<typeof createProjeto>[0]);
 
       toast.success("Projeto criado com sucesso!", { id: toastId });
       setUploadedBlobs([]);

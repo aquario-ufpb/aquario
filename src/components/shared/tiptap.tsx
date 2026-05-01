@@ -18,8 +18,7 @@ import {
 } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { apiClient } from "@/lib/client/api/api-client";
-import { throwApiError } from "@/lib/client/errors";
+import { uploadProjetoImage } from "@/lib/client/api/projetos";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -44,22 +43,10 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
 
       const loadingToastId = toast.loading("Fazendo upload da imagem...");
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const response = await apiClient("/upload/projeto-image", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          // Surface the server's actual message ("Tipo de arquivo não permitido",
-          // "Arquivo muito grande", etc.) instead of a generic toast.
-          await throwApiError(response);
-        }
-
-        const data = await response.json();
-        const url = data.url;
+        // The service throws ApiError with the server's actual message
+        // ("Tipo de arquivo não permitido", size errors, etc.) instead of
+        // collapsing to a generic "Falha no upload".
+        const url = await uploadProjetoImage(file);
 
         if (onImageUpload) {
           onImageUpload(url);

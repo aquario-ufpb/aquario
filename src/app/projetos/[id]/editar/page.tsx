@@ -24,7 +24,7 @@ import { CoAutoresPicker, type CoAutor } from "@/components/shared/co-autores-pi
 import { PeriodoPicker } from "@/components/shared/periodo-picker";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
 import { ImageIcon } from "lucide-react";
-import { apiClient } from "@/lib/client/api/api-client";
+import { deleteProjetoImage, uploadProjetoImage } from "@/lib/client/api/projetos";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import Image from "next/image";
 
@@ -198,9 +198,7 @@ export default function EditarProjetoPage() {
 
   const deleteBlob = async (url: string) => {
     try {
-      await apiClient(`/upload/projeto-image?url=${encodeURIComponent(url)}`, {
-        method: "DELETE",
-      });
+      await deleteProjetoImage(url);
     } catch (e) {
       console.error("Failed to delete blob", url, e);
     }
@@ -247,11 +245,11 @@ export default function EditarProjetoPage() {
     const toastId = toast.loading("Fazendo upload da capa...");
 
     // If the previous cover was an in-session upload, delete it before replacing.
+    // (For a *committed* cover, the PATCH handler GCs the old blob automatically
+    // when urlImagem changes — no client cleanup needed for that path.)
     if (coverImageUrl && uploadedBlobs.includes(coverImageUrl)) {
       try {
-        await apiClient(`/upload/projeto-image?url=${encodeURIComponent(coverImageUrl)}`, {
-          method: "DELETE",
-        });
+        await deleteProjetoImage(coverImageUrl);
         setUploadedBlobs(prev => prev.filter(url => url !== coverImageUrl));
       } catch (err) {
         console.error("Failed to delete old cover", err);
@@ -259,21 +257,14 @@ export default function EditarProjetoPage() {
     }
 
     try {
-      const formData = new FormData();
-      formData.append("file", croppedBlob, `cover-${Date.now()}.jpg`);
-      const response = await apiClient("/upload/projeto-image", {
-        method: "POST",
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error("Falha no upload");
-      }
-      const data = await response.json();
-      setCoverImageUrl(data.url);
-      registerBlob(data.url);
+      const file = new File([croppedBlob], `cover-${Date.now()}.jpg`, { type: "image/jpeg" });
+      const url = await uploadProjetoImage(file);
+      setCoverImageUrl(url);
+      registerBlob(url);
       toast.success("Capa enviada com sucesso!", { id: toastId });
-    } catch (_error) {
-      toast.error("Erro ao enviar imagem de capa.", { id: toastId });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao enviar imagem de capa.";
+      toast.error(message, { id: toastId });
     } finally {
       setIsUploadingCover(false);
     }

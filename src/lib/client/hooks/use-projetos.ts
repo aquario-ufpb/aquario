@@ -1,49 +1,15 @@
 import { useQuery, useInfiniteQuery, useQueries } from "@tanstack/react-query";
-import { apiClient } from "@/lib/client/api/api-client";
-import { throwApiError } from "@/lib/client/errors";
 import { queryKeys } from "@/lib/client/query-keys";
-import type { ProjetoWithRelations, ProjetosListResponse } from "@/lib/shared/types/projeto";
+import {
+  fetchProjetos,
+  getProjetoBySlug,
+  listProjetos,
+  type ProjetoOrder,
+  type ProjetoOrderBy,
+  type ProjetoStatus,
+} from "@/lib/client/api/projetos";
 
-type ProjetoStatus = "PUBLICADO" | "RASCUNHO" | "ARQUIVADO";
-
-type FetchProjetosParams = {
-  entidadeId?: string;
-  usuarioId?: string;
-  status?: ProjetoStatus;
-  limit?: number;
-};
-
-async function fetchProjetos({
-  entidadeId,
-  usuarioId,
-  status,
-  limit = 50,
-}: FetchProjetosParams): Promise<ProjetoWithRelations[]> {
-  const params = new URLSearchParams();
-
-  if (entidadeId) {
-    params.append("entidadeId", entidadeId);
-  }
-
-  if (usuarioId) {
-    params.append("usuarioId", usuarioId);
-  }
-
-  if (status) {
-    params.append("status", status);
-  }
-
-  params.append("limit", limit.toString());
-
-  const res = await apiClient(`/projetos?${params.toString()}`);
-
-  if (!res.ok) {
-    await throwApiError(res);
-  }
-
-  const data = await res.json();
-  return data.projetos as ProjetoWithRelations[];
-}
+export type { ProjetoOrder, ProjetoOrderBy, ProjetoStatus };
 
 // Projetos de uma entidade — accepts optional status filter (admins want drafts/arquivados)
 export function useProjetosByEntidade(entidadeId?: string, status?: ProjetoStatus) {
@@ -63,54 +29,6 @@ export function useProjetosByUsuario(usuarioId?: string, status?: ProjetoStatus)
     enabled: !!usuarioId,
     staleTime: 5 * 60 * 1000,
   });
-}
-
-export type ProjetoOrderBy = "criadoEm" | "publicadoEm" | "titulo" | "autoresCount";
-export type ProjetoOrder = "asc" | "desc";
-
-type UseProjetosParams = {
-  page?: number;
-  limit?: number;
-  search?: string;
-  tipoEntidade?: string;
-  status?: ProjetoStatus;
-  orderBy?: ProjetoOrderBy;
-  order?: ProjetoOrder;
-  scopedToMe?: boolean;
-};
-
-function buildProjetosQuery({
-  page,
-  limit,
-  search,
-  tipoEntidade,
-  status,
-  orderBy,
-  order,
-  scopedToMe,
-}: UseProjetosParams): string {
-  const qs = new URLSearchParams();
-  qs.set("page", String(page ?? 1));
-  qs.set("limit", String(limit ?? 12));
-  if (search?.trim()) {
-    qs.set("search", search.trim());
-  }
-  if (tipoEntidade) {
-    qs.set("tipoEntidade", tipoEntidade);
-  }
-  if (status) {
-    qs.set("status", status);
-  }
-  if (orderBy) {
-    qs.set("orderBy", orderBy);
-  }
-  if (order) {
-    qs.set("order", order);
-  }
-  if (scopedToMe) {
-    qs.set("scopedToMe", "true");
-  }
-  return qs.toString();
 }
 
 type UseProjetosInfiniteParams = {
@@ -144,8 +62,8 @@ export function useProjetosInfinite(params: UseProjetosInfiniteParams = {}) {
         pageSize,
       },
     ],
-    queryFn: async ({ pageParam = 1 }): Promise<ProjetosListResponse> => {
-      const qs = buildProjetosQuery({
+    queryFn: ({ pageParam = 1 }) =>
+      listProjetos({
         page: pageParam,
         limit: pageSize,
         search,
@@ -154,13 +72,7 @@ export function useProjetosInfinite(params: UseProjetosInfiniteParams = {}) {
         orderBy,
         order,
         scopedToMe,
-      });
-      const res = await apiClient(`/projetos?${qs}`);
-      if (!res.ok) {
-        await throwApiError(res);
-      }
-      return res.json();
-    },
+      }),
     initialPageParam: 1,
     getNextPageParam: lastPage => {
       const { page, totalPages } = lastPage.pagination;
@@ -191,12 +103,7 @@ export function useUserProjetoCounts(usuarioId: string | undefined, isMasterAdmi
       {
         queryKey: [...queryKeys.projetos.all, "statusCount", { status: "PUBLICADO", scope: "ALL" }],
         queryFn: async () => {
-          const qs = buildProjetosQuery({ page: 1, limit: 1, status: "PUBLICADO" });
-          const res = await apiClient(`/projetos?${qs}`);
-          if (!res.ok) {
-            await throwApiError(res);
-          }
-          const data = (await res.json()) as ProjetosListResponse;
+          const data = await listProjetos({ page: 1, limit: 1, status: "PUBLICADO" });
           return data.pagination.total;
         },
         staleTime: 60 * 1000,
@@ -211,17 +118,12 @@ export function useUserProjetoCounts(usuarioId: string | undefined, isMasterAdmi
           if (!usuarioId) {
             return 0;
           }
-          const qs = buildProjetosQuery({
+          const data = await listProjetos({
             page: 1,
             limit: 1,
             status: "PUBLICADO",
             scopedToMe: true,
           });
-          const res = await apiClient(`/projetos?${qs}`);
-          if (!res.ok) {
-            await throwApiError(res);
-          }
-          const data = (await res.json()) as ProjetosListResponse;
           return data.pagination.total;
         },
         enabled,
@@ -244,17 +146,12 @@ export function useUserProjetoCounts(usuarioId: string | undefined, isMasterAdmi
           // Pass scopedToMe explicitly for non-master users instead of relying
           // on the server's auto-scoping branch — keeps the intent local and
           // robust if that branch ever changes.
-          const qs = buildProjetosQuery({
+          const data = await listProjetos({
             page: 1,
             limit: 1,
             status: "RASCUNHO",
             scopedToMe: !isMasterAdmin,
           });
-          const res = await apiClient(`/projetos?${qs}`);
-          if (!res.ok) {
-            await throwApiError(res);
-          }
-          const data = (await res.json()) as ProjetosListResponse;
           return data.pagination.total;
         },
         enabled,
@@ -274,17 +171,12 @@ export function useUserProjetoCounts(usuarioId: string | undefined, isMasterAdmi
           if (!usuarioId) {
             return 0;
           }
-          const qs = buildProjetosQuery({
+          const data = await listProjetos({
             page: 1,
             limit: 1,
             status: "ARQUIVADO",
             scopedToMe: !isMasterAdmin,
           });
-          const res = await apiClient(`/projetos?${qs}`);
-          if (!res.ok) {
-            await throwApiError(res);
-          }
-          const data = (await res.json()) as ProjetosListResponse;
           return data.pagination.total;
         },
         enabled,
@@ -322,12 +214,7 @@ export function useUsuarioProjetoCounts(usuarioId: string | undefined, enabled: 
         if (!usuarioId) {
           return 0;
         }
-        const qs = buildProjetosQuery({ page: 1, limit: 1, status });
-        const res = await apiClient(`/projetos?${qs}&usuarioId=${encodeURIComponent(usuarioId)}`);
-        if (!res.ok) {
-          await throwApiError(res);
-        }
-        const data = (await res.json()) as ProjetosListResponse;
+        const data = await listProjetos({ page: 1, limit: 1, status, usuarioId });
         return data.pagination.total;
       },
       // PUBLICADO is always public; RASCUNHO/ARQUIVADO require auth as the user.
@@ -365,12 +252,7 @@ export function useEntidadeProjetoCounts(entidadeId: string | undefined, canSeeA
         if (!entidadeId) {
           return 0;
         }
-        const qs = buildProjetosQuery({ page: 1, limit: 1, status });
-        const res = await apiClient(`/projetos?${qs}&entidadeId=${encodeURIComponent(entidadeId)}`);
-        if (!res.ok) {
-          await throwApiError(res);
-        }
-        const data = (await res.json()) as ProjetosListResponse;
+        const data = await listProjetos({ page: 1, limit: 1, status, entidadeId });
         return data.pagination.total;
       },
       // PUBLICADO is always public; RASCUNHO/ARQUIVADO require canSeeAll.
@@ -391,13 +273,7 @@ export function useEntidadeProjetoCounts(entidadeId: string | undefined, canSeeA
 export function useProjetoBySlug(slug?: string) {
   return useQuery({
     queryKey: queryKeys.projetos.bySlug(slug ?? ""),
-    queryFn: async (): Promise<ProjetoWithRelations> => {
-      const res = await apiClient(`/projetos/${slug}`);
-      if (!res.ok) {
-        await throwApiError(res);
-      }
-      return res.json();
-    },
+    queryFn: () => getProjetoBySlug(slug as string),
     enabled: !!slug,
     staleTime: 5 * 60 * 1000,
   });
