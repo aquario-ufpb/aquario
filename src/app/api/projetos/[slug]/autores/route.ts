@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
-import { updateProjetoAutoresSchema } from "@/lib/shared/validations/projeto";
-import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
+import { updateProjetoAutoresSchema } from "@/lib/shared/validations/projetos";
+import { ApiError, fromZodError } from "@/lib/server/errors";
 import { withAuth, canManageProjeto } from "@/lib/server/services/auth/middleware";
 
 type RouteContext = {

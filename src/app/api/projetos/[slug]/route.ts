@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
-import { updateProjetoSchema } from "@/lib/shared/validations/projeto";
-import { ApiError, fromZodError } from "@/lib/server/errors/api-error";
+import { updateProjetoSchema } from "@/lib/shared/validations/projetos";
+import { ApiError, fromZodError } from "@/lib/server/errors";
 import { withAuth, canManageProjeto, getOptionalUser } from "@/lib/server/services/auth/middleware";
 import { StatusProjeto } from "@prisma/client";
 

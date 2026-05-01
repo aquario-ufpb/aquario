@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
 import { withAuth } from "@/lib/server/services/auth/middleware";
-import { ApiError } from "@/lib/server/errors/api-error";
+import { ApiError } from "@/lib/server/errors";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 

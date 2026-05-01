@@ -30,7 +30,7 @@ import Image from "next/image";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-// Limits aligned with the server-side Zod schema in src/lib/shared/validations/projeto.ts
+// Limits aligned with the server-side Zod schema in src/lib/shared/validations/projetos.ts
 const MAX_TITULO_LEN = 255;
 const MAX_SUBTITULO_LEN = 500;
 const MAX_TEXT_CONTENT_LEN = 50_000;

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
 import { StatusProjeto } from "@prisma/client";
-import { ApiError } from "@/lib/server/errors/api-error";
+import { ApiError } from "@/lib/server/errors";
 import { withAuth, canManageProjeto } from "@/lib/server/services/auth/middleware";
 
 type RouteContext = {

@@ -6,7 +6,7 @@ import type {
   CreateProjetoInput,
   UpdateProjetoInput,
   UpdateProjetoAutoresInput,
-} from "@/lib/shared/validations/projeto";
+} from "@/lib/shared/validations/projetos";
 import { toast } from "sonner";
 
 export const useUploadProjetoImage = () => {
