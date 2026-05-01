@@ -120,8 +120,6 @@ export type IProjetosRepository = {
 
   update(slug: string, data: Partial<CreateProjetoInput>): Promise<ProjetoWithRelations>;
 
-  delete(slug: string): Promise<void>;
-
   updateStatus(
     slug: string,
     status: StatusProjeto,

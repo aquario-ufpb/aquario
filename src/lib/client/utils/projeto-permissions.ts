@@ -6,13 +6,14 @@
  *
  * Allowed:
  *   - MASTER_ADMIN (any project)
- *   - any user listed as a user-author
- *   - active ADMIN of any entidade-author
+ *   - any user listed as a user-author (principal or co-author)
+ *   - active ADMIN of the *principal* entidade-author
  */
 
 type ProjetoAutor = {
   usuarioId?: string | null;
   entidadeId?: string | null;
+  autorPrincipal: boolean;
 };
 
 type CurrentUser = {
@@ -34,7 +35,8 @@ export function canEditProjeto(
   if (autores.some(a => a.usuarioId === user.id)) {
     return true;
   }
-  if (autores.some(a => a.entidadeId && myAdminEntidadeIds.has(a.entidadeId))) {
+  const principalEntidadeId = autores.find(a => a.autorPrincipal && a.entidadeId)?.entidadeId;
+  if (principalEntidadeId && myAdminEntidadeIds.has(principalEntidadeId)) {
     return true;
   }
   return false;

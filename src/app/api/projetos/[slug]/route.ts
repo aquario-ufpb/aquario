@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
+import { StatusProjeto } from "@prisma/client";
 import { getContainer } from "@/lib/server/container";
 import { updateProjetoSchema } from "@/lib/shared/validations/projetos";
 import { ApiError, fromZodError } from "@/lib/server/errors";
+import { SlugConflictError } from "@/lib/server/db/errors";
 import { withAuth, canManageProjeto, getOptionalUser } from "@/lib/server/services/auth/middleware";
-import { StatusProjeto } from "@prisma/client";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
@@ -106,35 +107,14 @@ export function PATCH(request: NextRequest, context: RouteContext) {
       const projeto = await projetosRepository.update(slug, data);
       return NextResponse.json(projeto);
     } catch (error) {
+      // Race window: slugExists() above could pass, then a concurrent write
+      // takes the new slug before we UPDATE. Repo translates Prisma's
+      // unique-constraint error into a domain SlugConflictError.
+      if (error instanceof SlugConflictError) {
+        return ApiError.slugExists();
+      }
       console.error("Error updating projeto:", error);
       return ApiError.internal("Erro ao atualizar projeto");
-    }
-  });
-}
-
-/**
- * DELETE /api/projetos/[slug] — authenticated, only autores or entidade-admins.
- */
-export function DELETE(request: NextRequest, context: RouteContext) {
-  return withAuth(request, async (_req, usuario) => {
-    try {
-      const { slug } = await context.params;
-      const { projetosRepository } = getContainer();
-
-      const projeto = await projetosRepository.findBySlugWithAutores(slug);
-      if (!projeto) {
-        return ApiError.notFound("Projeto");
-      }
-
-      if (!(await canManageProjeto(usuario, projeto.autores))) {
-        return ApiError.forbidden("Você não tem permissão para remover este projeto.");
-      }
-
-      await projetosRepository.delete(slug);
-      return NextResponse.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting projeto:", error);
-      return ApiError.internal("Erro ao remover projeto");
     }
   });
 }

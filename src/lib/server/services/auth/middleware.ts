@@ -108,12 +108,16 @@ export async function canManageVagaForEntidade(
  * Check if user can manage a projeto (edit/delete/publish/replace authors).
  * Allowed:
  *   - MASTER_ADMIN
- *   - any user listed as a user-author of the projeto
- *   - active ADMIN of any entidade-author of the projeto
+ *   - any user listed as a user-author of the projeto (principal or co-author)
+ *   - active ADMIN of the *principal* entidade-author of the projeto
+ *
+ * Note: admins of co-author entidades do NOT inherit edit rights — only the
+ * principal entidade's admins do. Mirrors the intent of "the entidade that
+ * owns this project gets to manage it; co-authorship is just attribution."
  */
 export async function canManageProjeto(
   usuario: UsuarioWithRelations,
-  autores: { usuarioId: string | null; entidadeId: string | null }[]
+  autores: { usuarioId: string | null; entidadeId: string | null; autorPrincipal: boolean }[]
 ): Promise<boolean> {
   if (usuario.papelPlataforma === "MASTER_ADMIN") {
     return true;
@@ -123,12 +127,9 @@ export async function canManageProjeto(
     return true;
   }
 
-  const entidadeIds = autores.map(a => a.entidadeId).filter((id): id is string => id !== null);
-
-  for (const entidadeId of entidadeIds) {
-    if (await canManageVagaForEntidade(usuario, entidadeId)) {
-      return true;
-    }
+  const principalEntidadeId = autores.find(a => a.autorPrincipal && a.entidadeId)?.entidadeId;
+  if (principalEntidadeId && (await canManageVagaForEntidade(usuario, principalEntidadeId))) {
+    return true;
   }
 
   return false;

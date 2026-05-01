@@ -38,9 +38,6 @@ CREATE TABLE "ProjetoAutor" (
 CREATE UNIQUE INDEX "Projeto_slug_key" ON "Projeto"("slug");
 
 -- CreateIndex
-CREATE INDEX "Projeto_slug_idx" ON "Projeto"("slug");
-
--- CreateIndex
 CREATE INDEX "Projeto_status_idx" ON "Projeto"("status");
 
 -- CreateIndex
@@ -72,6 +69,11 @@ ALTER TABLE "ProjetoAutor" ADD CONSTRAINT "ProjetoAutor_entidadeId_fkey" FOREIGN
 
 -- Require at least one of usuarioId / entidadeId
 ALTER TABLE "ProjetoAutor" ADD CONSTRAINT "ProjetoAutor_author_required" CHECK ("usuarioId" IS NOT NULL OR "entidadeId" IS NOT NULL);
+
+-- Exactly one principal author per projeto. Zod enforces this on every write,
+-- but the partial unique index protects against any path that bypasses
+-- validation (raw SQL, replaceAutores bugs, future scripts).
+CREATE UNIQUE INDEX "ProjetoAutor_projetoId_principal_unique" ON "ProjetoAutor"("projetoId") WHERE "autorPrincipal" = true;
 
 -- A given user / entidade can appear at most once per projeto
 CREATE UNIQUE INDEX "ProjetoAutor_projetoId_usuarioId_unique" ON "ProjetoAutor"("projetoId", "usuarioId") WHERE "usuarioId" IS NOT NULL;

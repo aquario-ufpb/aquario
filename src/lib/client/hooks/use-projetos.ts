@@ -241,7 +241,15 @@ export function useUserProjetoCounts(usuarioId: string | undefined, isMasterAdmi
           if (!usuarioId) {
             return 0;
           }
-          const qs = buildProjetosQuery({ page: 1, limit: 1, status: "RASCUNHO" });
+          // Pass scopedToMe explicitly for non-master users instead of relying
+          // on the server's auto-scoping branch — keeps the intent local and
+          // robust if that branch ever changes.
+          const qs = buildProjetosQuery({
+            page: 1,
+            limit: 1,
+            status: "RASCUNHO",
+            scopedToMe: !isMasterAdmin,
+          });
           const res = await apiClient(`/projetos?${qs}`);
           if (!res.ok) {
             await throwApiError(res);
@@ -266,7 +274,12 @@ export function useUserProjetoCounts(usuarioId: string | undefined, isMasterAdmi
           if (!usuarioId) {
             return 0;
           }
-          const qs = buildProjetosQuery({ page: 1, limit: 1, status: "ARQUIVADO" });
+          const qs = buildProjetosQuery({
+            page: 1,
+            limit: 1,
+            status: "ARQUIVADO",
+            scopedToMe: !isMasterAdmin,
+          });
           const res = await apiClient(`/projetos?${qs}`);
           if (!res.ok) {
             await throwApiError(res);

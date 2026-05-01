@@ -6,6 +6,12 @@ import { ApiError } from "@/lib/server/errors";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+// SVG is intentionally excluded — `next.config.mjs` has `dangerouslyAllowSVG: true`
+// for legitimate uses elsewhere, and an SVG can carry <script> + event handlers.
+// Mirrors `/api/upload/photo`. Renderer-side defenses (CSP, react-markdown) are
+// secondary; the upload boundary is the primary control.
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+
 /**
  * Sanitize a user-supplied filename for use inside a storage key.
  * Strips path-traversal chars, separators, and anything outside [A-Za-z0-9._-].
@@ -41,8 +47,8 @@ export function POST(req: NextRequest) {
       return ApiError.badRequest("Arquivo não fornecido");
     }
 
-    if (!file.type.startsWith("image/")) {
-      return ApiError.badRequest("O arquivo deve ser uma imagem");
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return ApiError.badRequest("Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF.");
     }
 
     if (file.size > MAX_FILE_SIZE) {

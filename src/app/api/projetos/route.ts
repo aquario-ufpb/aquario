@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
 import { createProjetoSchema, listProjetosSchema } from "@/lib/shared/validations/projetos";
 import { ApiError, fromZodError } from "@/lib/server/errors";
+import { SlugConflictError } from "@/lib/server/db/errors";
 import {
   withAuth,
   canManageVagaForEntidade,
@@ -157,6 +158,13 @@ export function POST(request: NextRequest) {
       const projeto = await projetosRepository.create(projetoData, autores);
       return NextResponse.json(projeto, { status: 201 });
     } catch (error) {
+      // Race window: slugExists() above could pass, then a concurrent create
+      // takes the slug before we INSERT. The repo translates the Prisma
+      // unique-constraint error into a domain SlugConflictError so this
+      // route stays decoupled from the persistence layer.
+      if (error instanceof SlugConflictError) {
+        return ApiError.slugExists();
+      }
       console.error("Error creating projeto:", error);
       return ApiError.internal("Erro ao criar projeto");
     }

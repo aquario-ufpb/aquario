@@ -504,7 +504,6 @@ model Projeto {
 
   autores ProjetoAutor[]
 
-  @@index([slug])
   @@index([status])
   @@index([criadoEm])
   @@index([publicadoEm])

@@ -19,6 +19,7 @@ import {
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/client/api/api-client";
+import { throwApiError } from "@/lib/client/errors";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -52,7 +53,9 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         });
 
         if (!response.ok) {
-          throw new Error("Falha no upload");
+          // Surface the server's actual message ("Tipo de arquivo não permitido",
+          // "Arquivo muito grande", etc.) instead of a generic toast.
+          await throwApiError(response);
         }
 
         const data = await response.json();
@@ -64,8 +67,9 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
 
         toast.success("Upload concluído com sucesso!", { id: loadingToastId });
         return url;
-      } catch (_error) {
-        toast.error("Erro ao fazer upload da imagem", { id: loadingToastId });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Erro ao fazer upload da imagem";
+        toast.error(message, { id: loadingToastId });
         return null;
       }
     },

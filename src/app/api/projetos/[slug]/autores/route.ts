@@ -39,13 +39,16 @@ export function PUT(request: NextRequest, context: RouteContext) {
         return ApiError.forbidden("Você não tem permissão para alterar autores deste projeto.");
       }
 
-      // Permission must also hold for the *new* author set
+      // Permission must also hold for the *new* author set — prevents handing
+      // a projeto off to entidades you don't admin (or removing yourself from
+      // the principal slot in a way that locks others in).
       if (
         !(await canManageProjeto(
           usuario,
           autores.map(a => ({
             usuarioId: a.usuarioId ?? null,
             entidadeId: a.entidadeId ?? null,
+            autorPrincipal: a.autorPrincipal,
           }))
         ))
       ) {

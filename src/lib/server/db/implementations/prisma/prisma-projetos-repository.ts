@@ -8,6 +8,24 @@ import type {
   CreateProjetoInput,
   CreateProjetoAutorInput,
 } from "@/lib/server/db/interfaces/projetos-repository.interface";
+import { SlugConflictError } from "@/lib/server/db/errors";
+
+/**
+ * Translate Prisma's persistence-layer errors into domain errors so callers
+ * (routes, services) don't need to import Prisma to recognize them. Currently
+ * just slug-uniqueness conflicts; extend as more cases come up.
+ */
+function translatePrismaError(error: unknown, slug: string | undefined): never {
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002" &&
+    Array.isArray(error.meta?.target) &&
+    (error.meta.target as string[]).includes("slug")
+  ) {
+    throw new SlugConflictError(slug ?? "");
+  }
+  throw error;
+}
 
 const autorUsuarioSelect = {
   id: true,
@@ -218,37 +236,37 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     data: CreateProjetoInput,
     autores: CreateProjetoAutorInput[]
   ): Promise<ProjetoWithRelations> {
-    const projeto = await prisma.projeto.create({
-      data: {
-        ...(data as Prisma.ProjetoCreateInput),
-        autores: {
-          create: autores.map(autor => ({
-            usuarioId: autor.usuarioId ?? null,
-            entidadeId: autor.entidadeId ?? null,
-            autorPrincipal: autor.autorPrincipal,
-          })),
+    try {
+      const projeto = await prisma.projeto.create({
+        data: {
+          ...(data as Prisma.ProjetoCreateInput),
+          autores: {
+            create: autores.map(autor => ({
+              usuarioId: autor.usuarioId ?? null,
+              entidadeId: autor.entidadeId ?? null,
+              autorPrincipal: autor.autorPrincipal,
+            })),
+          },
         },
-      },
-      ...projetoWithAutoresArgs,
-    });
-
-    return asProjetoWithRelations(projeto);
+        ...projetoWithAutoresArgs,
+      });
+      return asProjetoWithRelations(projeto);
+    } catch (error) {
+      translatePrismaError(error, data.slug);
+    }
   }
 
   async update(slug: string, data: Partial<CreateProjetoInput>): Promise<ProjetoWithRelations> {
-    const projeto = await prisma.projeto.update({
-      where: { slug },
-      data: data as Prisma.ProjetoUpdateInput,
-      ...projetoWithAutoresArgs,
-    });
-
-    return asProjetoWithRelations(projeto);
-  }
-
-  async delete(slug: string): Promise<void> {
-    await prisma.projeto.delete({
-      where: { slug },
-    });
+    try {
+      const projeto = await prisma.projeto.update({
+        where: { slug },
+        data: data as Prisma.ProjetoUpdateInput,
+        ...projetoWithAutoresArgs,
+      });
+      return asProjetoWithRelations(projeto);
+    } catch (error) {
+      translatePrismaError(error, data.slug);
+    }
   }
 
   async updateStatus(

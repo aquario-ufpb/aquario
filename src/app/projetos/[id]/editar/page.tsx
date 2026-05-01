@@ -118,7 +118,11 @@ export default function EditarProjetoPage() {
     () =>
       canEditProjeto(
         usuario,
-        projeto?.autores.map(a => ({ usuarioId: a.usuarioId, entidadeId: a.entidadeId })) ?? [],
+        projeto?.autores.map(a => ({
+          usuarioId: a.usuarioId,
+          entidadeId: a.entidadeId,
+          autorPrincipal: a.autorPrincipal,
+        })) ?? [],
         myAdminEntidadeIds
       ),
     [usuario, projeto, myAdminEntidadeIds]
