@@ -94,9 +94,16 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/projetos — authenticated. The requester must:
- *   - be among the user-authors (or MASTER_ADMIN), AND
- *   - be ADMIN of every entidade-author listed (or MASTER_ADMIN).
+ * POST /api/projetos — authenticated. The requester must satisfy two rules:
+ *
+ * 1. Be MASTER_ADMIN, OR be a user-author, OR be admin of at least one
+ *    entidade-author. Mirrors `canManageProjeto` semantics — same OR rule that
+ *    PATCH/DELETE/publish/autores use, so creating a projeto matches the auth
+ *    surface for editing it. (Without this, "Postando como entidade" with no
+ *    co-authors would 403 even for the entidade admin.)
+ *
+ * 2. Independently, the caller must be admin of *every* entidade listed as an
+ *    author — prevents attributing a projeto to entidades you don't admin.
  */
 export function POST(request: NextRequest) {
   return withAuth(request, async (req, usuario) => {
@@ -114,16 +121,23 @@ export function POST(request: NextRequest) {
       const usuarioIds = autores.map(a => a.usuarioId).filter((id): id is string => !!id);
       const entidadeIds = autores.map(a => a.entidadeId).filter((id): id is string => !!id);
 
-      if (!isMasterAdmin && !usuarioIds.includes(usuario.id)) {
-        return ApiError.forbidden("Você só pode criar projetos em que esteja listado como autor.");
+      // Rule 2 first — also doubles as the data we need for rule 1's entidade leg.
+      const entidadeAdminFlags = await Promise.all(
+        entidadeIds.map(id => canManageVagaForEntidade(usuario, id))
+      );
+      if (!isMasterAdmin && entidadeAdminFlags.some(ok => !ok)) {
+        return ApiError.forbidden(
+          "Você não tem permissão de admin em uma das entidades listadas como autor."
+        );
       }
 
-      for (const entidadeId of entidadeIds) {
-        if (!(await canManageVagaForEntidade(usuario, entidadeId))) {
-          return ApiError.forbidden(
-            "Você não tem permissão de admin em uma das entidades listadas como autor."
-          );
-        }
+      // Rule 1 — at least one of the three claims must hold.
+      const isUserAuthor = usuarioIds.includes(usuario.id);
+      const adminsAnyEntidadeAuthor = entidadeAdminFlags.some(ok => ok);
+      if (!isMasterAdmin && !isUserAuthor && !adminsAnyEntidadeAuthor) {
+        return ApiError.forbidden(
+          "Você só pode criar projetos em que esteja listado como autor ou admin de uma entidade autora."
+        );
       }
 
       const { projetosRepository } = getContainer();
