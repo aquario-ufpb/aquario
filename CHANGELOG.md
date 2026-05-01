@@ -15,12 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **ConfirmDeleteDialog**: Generalized — now accepts custom labels and a non-destructive variant (used by archive/unarchive flow).
-- **Navbar**: Add Projetos link to desktop navigation.
+- **Projetos**: `textContent` is now plain markdown end-to-end. Tiptap serializes via `tiptap-markdown`; the detail page renders via `react-markdown` (`remark-gfm`). No HTML in storage, no `dangerouslySetInnerHTML` — XSS becomes structurally unreachable. Drops `sanitize-html` and `dompurify`.
+- **Navbar**: Projetos link hidden until prod has the post-merge backfill (route still URL-reachable for QA).
+
+### Added
+- **Seed**: Curated subset of ~32 projetos shipped via `content/aquario-projetos/projetos.csv`. Idempotent by slug; entidade is the principal author (person-authors skipped). Bulk CSVs and ingest scripts are local-only — used post-merge against prod.
 
 ### Fixed
 - **Projetos**: User-supplied URLs (`urlRepositorio`/`urlDemo`/`urlOutro`) and Tiptap links restricted to `http(s)`/`mailto:` to block `javascript:`/`data:` XSS vectors.
 - **Projetos**: Image upload sanitizes filenames (path-traversal) and validates the delete URL against the configured blob backend.
-- **Projetos**: Rich-text `textContent` is sanitized with DOMPurify on both write (Zod transform) and render — defense in depth so future consumers can't reintroduce stored XSS.
 
 ## [1.6.0] - 2026-04-26
 

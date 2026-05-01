@@ -22,7 +22,8 @@ import {
   ArchiveRestore,
 } from "lucide-react";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
-import DOMPurify from "dompurify";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale/pt-BR";
@@ -177,10 +178,12 @@ export default function ProjetoPage() {
           </div>
 
           {raw?.textContent && (
-            <div
-              className="prose dark:prose-invert max-w-none text-base leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(raw.textContent) }}
-            />
+            <div className="prose dark:prose-invert max-w-none text-base leading-relaxed">
+              {/* react-markdown renders React nodes — never raw HTML — so any
+                  embedded <script> or javascript: link is structurally safe.
+                  remark-gfm adds tables, strikethrough, autolink, task lists. */}
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{raw.textContent}</ReactMarkdown>
+            </div>
           )}
         </div>
 

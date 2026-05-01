@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
+import { Markdown } from "tiptap-markdown";
 import {
   Bold,
   Italic,
@@ -77,19 +78,30 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
       Underline,
       Image.configure({
         inline: true,
-        allowBase64: true,
+        // No base64 — images go through the upload endpoint and are referenced
+        // by URL. Inline base64 bloats the markdown toward the 50K cap.
+        allowBase64: false,
       }),
       Link.configure({
         openOnClick: false,
         autolink: true,
-        // Restrict to safe protocols — block javascript:/data: which would render
-        // as <a href="javascript:..."> XSS once the HTML is sanitized and shown.
+        // Restrict to safe protocols — block javascript:/data: as a defense layer
+        // even though we now render via react-markdown (which won't emit raw
+        // HTML anyway).
         protocols: ["http", "https", "mailto"],
+      }),
+      // Serialize editor state to markdown on update; parse markdown when
+      // hydrating with `value`. Keeps storage as plain markdown end-to-end.
+      Markdown.configure({
+        html: false,
+        breaks: true,
+        transformPastedText: true,
+        transformCopiedText: true,
       }),
     ],
     content: value,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      onChange(editor.storage.markdown.getMarkdown());
     },
     editorProps: {
       attributes: {

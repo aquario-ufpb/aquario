@@ -20,7 +20,8 @@
       "Bash(awk -F',' 'NR>1 {print NR-1\"\\) \"$2\" | \"$3}' data/tail-source/projeto.csv)",
       "Bash(gh pr *)",
       "Read(//tmp/**)",
-      "Bash(awk '/^diff --git a\\\\/prisma\\\\/migrations\\\\/20260429000000/,/^diff --git/' /tmp/pr141.diff)"
+      "Bash(awk '/^diff --git a\\\\/prisma\\\\/migrations\\\\/20260429000000/,/^diff --git/' /tmp/pr141.diff)",
+      "Bash(git *)"
     ]
   }
 }

@@ -439,6 +439,192 @@ async function loadCurriculosFromContent(
   };
 }
 
+/**
+ * Multiline-aware CSV parser. Unlike the simpler `parseCsv` above (which splits
+ * on `\n` first and breaks for any quoted field containing newlines), this one
+ * walks character-by-character so long body fields parse correctly.
+ */
+function parseMultilineCsv(input: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let i = 0;
+  let inQuotes = false;
+  if (input.charCodeAt(0) === 0xfeff) {
+    i = 1;
+  }
+  while (i < input.length) {
+    const c = input[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (input[i + 1] === '"') {
+          field += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+        i++;
+        continue;
+      }
+      field += c;
+      i++;
+      continue;
+    }
+    if (c === '"') {
+      inQuotes = true;
+      i++;
+      continue;
+    }
+    if (c === ",") {
+      row.push(field);
+      field = "";
+      i++;
+      continue;
+    }
+    if (c === "\n" || c === "\r") {
+      row.push(field);
+      field = "";
+      rows.push(row);
+      row = [];
+      if (c === "\r" && input[i + 1] === "\n") {
+        i += 2;
+      } else {
+        i++;
+      }
+      continue;
+    }
+    field += c;
+    i++;
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows.filter(r => r.length > 1 || (r.length === 1 && r[0].length > 0));
+}
+
+/** Slugify the same way the API/UI does so backfill scripts converge on the same key. */
+function projetoTituloToSlug(titulo: string): string {
+  return titulo
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/**
+ * Seed a curated subset of projects from `content/aquario-projetos/projetos.csv`.
+ * Step 1 of the rollout: ship a small set with the release. Step 2 (post-merge)
+ * uses the full local-only CSVs via `scripts/ingest-projetos.ts` against prod —
+ * that script also dedupes by slug, so the seeded subset is skipped automatically.
+ *
+ * Idempotent: skips any projeto whose generated slug already exists. Person
+ * authors in the CSV are intentionally ignored (those users may not exist on
+ * prod yet); only the first entidade is linked as principal author.
+ */
+async function loadProjetosFromContent(): Promise<{ created: number; skipped: number }> {
+  const filePath = path.join(__dirname, "..", "content", "aquario-projetos", "projetos.csv");
+  if (!fs.existsSync(filePath)) {
+    console.log("  No projetos.csv found, skipping projeto seed");
+    return { created: 0, skipped: 0 };
+  }
+
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const rows = parseMultilineCsv(raw);
+  if (rows.length < 2) {
+    return { created: 0, skipped: 0 };
+  }
+
+  const header = rows[0];
+  const idx = (h: string) => header.indexOf(h);
+  const tituloIdx = idx("titulo");
+  const subtituloIdx = idx("subtitulo");
+  const textIdx = idx("text");
+  const tagsIdx = idx("tags");
+  const urlRepoIdx = idx("urlRepo");
+  const urlDemoIdx = idx("urlDemo");
+  const urlOutroIdx = idx("urlOutro");
+  const entidadesIdx = idx("entidades");
+
+  // Resolve entidade names → ids. The CSV uses the human-readable name from
+  // the entidades reference table; entidades are seeded via the submodule.
+  const allEntidades = await prisma.entidade.findMany({ select: { id: true, nome: true } });
+  const entidadeByName = new Map(allEntidades.map(e => [e.nome.toLowerCase(), e.id]));
+
+  let created = 0;
+  let skipped = 0;
+  let missingEntidade = 0;
+
+  for (const r of rows.slice(1)) {
+    const titulo = (r[tituloIdx] ?? "").trim();
+    if (!titulo) {
+      continue;
+    }
+    const slug = projetoTituloToSlug(titulo);
+    if (!slug) {
+      continue;
+    }
+
+    const existing = await prisma.projeto.findUnique({ where: { slug }, select: { id: true } });
+    if (existing) {
+      skipped++;
+      continue;
+    }
+
+    const entidadeNames = (r[entidadesIdx] ?? "")
+      .split(";")
+      .map(s => s.trim())
+      .filter(Boolean);
+    const principalEntidadeId = entidadeNames
+      .map(n => entidadeByName.get(n.toLowerCase()))
+      .find((id): id is string => !!id);
+
+    if (!principalEntidadeId) {
+      missingEntidade++;
+      console.log(`  SKIP "${titulo}": entidade não encontrada (csv=${entidadeNames.join(",")})`);
+      continue;
+    }
+
+    const tags = (r[tagsIdx] ?? "")
+      .split(";")
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean);
+
+    await prisma.projeto.create({
+      data: {
+        titulo: titulo.slice(0, 255),
+        slug,
+        subtitulo: (r[subtituloIdx] ?? "").trim() || null,
+        textContent: (r[textIdx] ?? "").trim() || null,
+        urlImagem: null, // Seeded projects ship without images — uploaded later.
+        status: "PUBLICADO",
+        publicadoEm: new Date(),
+        tags,
+        urlRepositorio: (r[urlRepoIdx] ?? "").trim() || null,
+        urlDemo: (r[urlDemoIdx] ?? "").trim() || null,
+        urlOutro: (r[urlOutroIdx] ?? "").trim() || null,
+        autores: {
+          create: [
+            {
+              entidadeId: principalEntidadeId,
+              autorPrincipal: true,
+            },
+          ],
+        },
+      },
+    });
+    created++;
+  }
+
+  if (missingEntidade > 0) {
+    console.log(`  ⚠️  ${missingEntidade} projeto(s) skipped due to missing entidades`);
+  }
+  return { created, skipped };
+}
+
 async function main() {
   console.log("🌱 Starting database seed...\n");
 
@@ -535,6 +721,15 @@ async function main() {
   console.log(
     `✅ Curriculos loaded: ${curriculoStats.curriculos} curriculos, ` +
       `${curriculoStats.disciplinas} disciplinas, ${curriculoStats.prereqs} prerequisites, ${curriculoStats.equivs} equivalences`
+  );
+
+  // ============================================================================
+  // PROJETOS (curated subset from content/aquario-projetos)
+  // ============================================================================
+
+  const projetoStats = await loadProjetosFromContent();
+  console.log(
+    `✅ Projetos seeded: ${projetoStats.created} created, ${projetoStats.skipped} skipped (already exist)`
   );
 
   // ============================================================================
@@ -997,6 +1192,7 @@ async function main() {
 ║    - Entidades: ${String(entidadeCount).padEnd(3)} (from aquario-entidades)             ║
 ║    - Guias: 3 example guides with sections                     ║
 ║    - Curriculos: ${String(curriculoStats.curriculos).padEnd(2)} (${curriculoStats.disciplinas} disc, ${curriculoStats.prereqs} prereqs, ${curriculoStats.equivs} equivs) ║
+║    - Projetos: ${String(projetoStats.created).padEnd(3)} created, ${String(projetoStats.skipped).padEnd(3)} skipped                  ║
 ║    - Calendário: 4 semestres, 41 eventos                     ║
 ╚════════════════════════════════════════════════════════════════╝
 
