@@ -187,12 +187,6 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     return projeto ? asProjetoWithRelations(projeto) : null;
   }
 
-  async findBySlugBasic(slug: string): Promise<Projeto | null> {
-    return await prisma.projeto.findUnique({
-      where: { slug },
-    });
-  }
-
   async findBySlugWithAutores(
     slug: string
   ): Promise<(Projeto & { autores: ProjetoAutor[] }) | null> {

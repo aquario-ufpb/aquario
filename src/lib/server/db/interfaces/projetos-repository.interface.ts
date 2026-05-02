@@ -132,7 +132,5 @@ export type IProjetosRepository = {
     autores: CreateProjetoAutorInput[]
   ): Promise<ProjetoWithRelations | null>;
 
-  findBySlugBasic(slug: string): Promise<Projeto | null>;
-
   findBySlugWithAutores(slug: string): Promise<(Projeto & { autores: ProjetoAutor[] }) | null>;
 };
