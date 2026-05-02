@@ -1,7 +1,6 @@
 "use client";
 
 import { trackEvent } from "@/analytics/posthog-client";
-import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { SearchBar } from "@/components/shared/search-bar";
 import { Badge } from "@/components/ui/badge";
@@ -186,12 +185,6 @@ export default function EntidadesPage() {
             title={PAGE_HEADER_TEXT.entidades.title}
             subtitle={PAGE_HEADER_TEXT.entidades.subtitle}
           />
-          <div className="hidden md:flex flex-shrink-0">
-            <ContributeOnGitHub
-              url="https://github.com/aquario-ufpb/aquario-entidades"
-              className="rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
-            />
-          </div>
         </div>
 
         {/* Search and Filters */}

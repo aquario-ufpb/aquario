@@ -298,6 +298,12 @@ function NavLinks() {
       <Link href="/entidades" className={navLinkClass}>
         Entidades
       </Link>
+      {/* Hidden until prod has the projetos backfill — re-enable after the
+          ingest script populates real content (the route stays reachable by URL
+          for QA in the meantime). */}
+      {/* <Link href="/projetos" className={navLinkClass}>
+        Projetos
+      </Link> */}
     </div>
   );
 }

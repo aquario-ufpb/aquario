@@ -8,12 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Projetos**: New `/projetos` feature — create, edit, publish/unpublish, archive, and delete projects with cover image, markdown body (Tiptap editor with image + link upload), tags, period, and external links.
+- **Projetos**: Multi-author model — each `ProjetoAutor` references a `usuario`, an `entidade`, or both, with one `autorPrincipal`. Authorship grants edit access; entidade admins inherit it.
+- **Projetos**: Listing page with search (titulo/subtitulo/tags), tipo filter, sort (recent/title/author count), and status tabs (`Publicados`, `Meus Publicados`, `Rascunhos`, `Arquivados`). Profile and entidade pages get the same status tabs for owners/admins.
+- **Projetos**: Server-side authorization on every mutating route; non-`PUBLICADO` listings are auto-scoped to the caller.
+- **Projetos**: Initial set of curated projects seeded from `content/aquario-projetos/projetos.csv`.
 
 ### Changed
-
-### Removed
-
-### Fixed
+- **ConfirmDeleteDialog**: Generalized — now accepts custom labels and a non-destructive variant.
 
 ## [1.6.0] - 2026-04-26
 

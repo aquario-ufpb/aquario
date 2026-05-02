@@ -20,6 +20,9 @@ import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { PhotoCropDialog } from "@/components/shared/photo-crop-dialog";
 import { ProgressoCursoCard } from "@/components/pages/perfil/progresso-curso-card";
+import { useProjetosByUsuario, useUsuarioProjetoCounts } from "@/lib/client/hooks/use-projetos";
+import ProjectCard from "@/components/shared/project-card";
+import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { trackEvent } from "@/analytics/posthog-client";
 
 export default function UserProfilePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -33,9 +36,23 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
   const [showAllEntities, setShowAllEntities] = useState(false);
+  const [projetoStatus, setProjetoStatus] = useState<"PUBLICADO" | "RASCUNHO" | "ARQUIVADO">(
+    "PUBLICADO"
+  );
 
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser?.id === user?.id;
+
+  const {
+    data: projetos,
+    isLoading: projetosLoading,
+    error: projetosError,
+  } = useProjetosByUsuario(user?.id, isOwnProfile ? projetoStatus : undefined);
+
+  // Status counts only matter on own profile (others can't see drafts/arquivados).
+  const projetoCounts = useUsuarioProjetoCounts(user?.id, isOwnProfile);
+  const showProjetoStatusTabs =
+    isOwnProfile && (projetoCounts.rascunho > 0 || projetoCounts.arquivado > 0);
 
   // Track profile views of other users
   useEffect(() => {
@@ -171,11 +188,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
   }
 
   return (
-    <main className="container mx-auto max-w-7xl px-6 md:px-8 lg:px-16 pt-24">
-      {/* Profile Header */}
-      <div className="flex flex-col items-center text-center mb-8 pb-8 border-b">
-        <div className="relative mb-6 w-24 h-24 mx-auto">
-          {/* Avatar */}
+    <main className="container mx-auto max-w-7xl px-6 md:px-8 lg:px-16 pt-36 pb-32">
+      {/* Profile Header — Dribbble-style: avatar left, info right, group centered */}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-center gap-8 md:gap-10 mb-8">
+        {/* Avatar */}
+        <div className="relative w-24 h-24 md:w-28 md:h-28 shrink-0 mx-auto md:mx-0">
           <div className="relative group w-full h-full">
             <Avatar className="w-full h-full">
               <AvatarImage
@@ -258,42 +275,29 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
           )}
         </div>
 
-        <h1 className="text-3xl font-bold mb-2">{user.nome}</h1>
-        <p className="text-lg text-muted-foreground mb-6">{user.email}</p>
+        {/* Right column — name + info + actions */}
+        <div className="flex flex-col gap-1 min-w-0 text-center md:text-left">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-1">{user.nome}</h1>
+          <p className="text-base md:text-lg text-foreground/80">
+            {user.centro.sigla} — {user.centro.nome}
+          </p>
+          <p className="text-base text-muted-foreground">{user.curso.nome}</p>
+          {isOwnProfile && user.email && (
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+          )}
 
-        {/* Info Grid */}
-        <div className="grid gap-4 md:grid-cols-2 w-full">
-          <div className="flex flex-col space-y-1 text-left">
-            <span className="text-sm font-semibold text-muted-foreground">Centro</span>
-            <span className="text-base">
-              {user.centro.sigla} - {user.centro.nome}
-            </span>
-          </div>
-          <div className="flex flex-col space-y-1 text-left">
-            <span className="text-sm font-semibold text-muted-foreground">Curso</span>
-            <span className="text-base">{user.curso.nome}</span>
-          </div>
-          {user.papelPlataforma === "MASTER_ADMIN" && (
-            <div className="flex flex-col space-y-1 text-left">
-              <span className="text-sm font-semibold text-muted-foreground">
-                Papel na Plataforma
-              </span>
-              <span className="text-base">Administrador</span>
+          {isOwnProfile && user.papelPlataforma === "MASTER_ADMIN" && (
+            <div className="flex justify-center md:justify-start mt-2">
+              <Link href="/admin">
+                <Button className="rounded-full">Painel de Administração</Button>
+              </Link>
             </div>
           )}
         </div>
-
-        {isOwnProfile && user.papelPlataforma === "MASTER_ADMIN" && (
-          <div className="mt-6 w-full">
-            <Link href="/admin">
-              <Button className="w-full">Painel de Administração</Button>
-            </Link>
-          </div>
-        )}
       </div>
 
-      {/* Course progress */}
-      {user && (
+      {/* Course progress — only on own profile (private data) */}
+      {user && isOwnProfile && (
         <div className="mt-6">
           <ProgressoCursoCard
             cursoId={user.curso.id}
@@ -303,15 +307,36 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
         </div>
       )}
 
-      {/* Tabs for Entidades and Timeline */}
-      <div className="mt-8">
-        <Tabs defaultValue="entidades" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="entidades">Entidades</TabsTrigger>
+      {/* Tabs for Projetos, Entidades and Timeline */}
+      <div className="mt-24">
+        <Tabs defaultValue="projetos" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="projetos">
+              Projetos
+              {(() => {
+                // For own profile, the listing reflects the active status tab — but
+                // the tab badge should show total publicados (the public-facing count).
+                const publicadoTotal = isOwnProfile
+                  ? projetoCounts.publicado
+                  : (projetos?.length ?? 0);
+                return publicadoTotal > 0 ? (
+                  <span className="ml-2 text-xs text-muted-foreground">{publicadoTotal}</span>
+                ) : null;
+              })()}
+            </TabsTrigger>
+            <TabsTrigger value="entidades">
+              Entidades
+              {memberships && memberships.length > 0 && (
+                <span className="ml-2 text-xs text-muted-foreground">{memberships.length}</span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="timeline">Linha do Tempo</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="entidades" className="mt-6">
+          <div className="border-b border-border/60 my-6" />
+
+          {/* Entidades */}
+          <TabsContent value="entidades" className="mt-0">
             <EntidadesTab
               memberships={memberships}
               isLoading={membershipsLoading}
@@ -327,7 +352,88 @@ export default function UserProfilePage({ params }: { params: Promise<{ slug: st
             />
           </TabsContent>
 
-          <TabsContent value="timeline" className="mt-6">
+          {/* Projetos */}
+          <TabsContent value="projetos" className="mt-0">
+            <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
+              <h2 className="text-xl font-semibold">
+                {isOwnProfile ? "Meus Projetos" : "Projetos"}
+              </h2>
+
+              {showProjetoStatusTabs && (
+                <Tabs
+                  value={projetoStatus}
+                  onValueChange={v => setProjetoStatus(v as "PUBLICADO" | "RASCUNHO" | "ARQUIVADO")}
+                >
+                  <TabsList>
+                    <TabsTrigger value="PUBLICADO">
+                      Publicados
+                      {projetoCounts.publicado > 0 && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {projetoCounts.publicado}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                    {projetoCounts.rascunho > 0 && (
+                      <TabsTrigger value="RASCUNHO">
+                        Rascunhos
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {projetoCounts.rascunho}
+                        </span>
+                      </TabsTrigger>
+                    )}
+                    {projetoCounts.arquivado > 0 && (
+                      <TabsTrigger value="ARQUIVADO">
+                        Arquivados
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {projetoCounts.arquivado}
+                        </span>
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
+                </Tabs>
+              )}
+            </div>
+
+            {projetosLoading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-64 rounded-xl" />
+                ))}
+              </div>
+            )}
+
+            {!projetosLoading && projetosError && (
+              <p className="text-destructive text-sm">Erro ao carregar projetos.</p>
+            )}
+
+            {!projetosLoading && !projetosError && (!projetos || projetos.length === 0) && (
+              <p className="text-muted-foreground text-sm">
+                {isOwnProfile
+                  ? projetoStatus === "RASCUNHO"
+                    ? "Você não tem projetos em rascunho."
+                    : projetoStatus === "ARQUIVADO"
+                      ? "Você não tem projetos arquivados."
+                      : "Você ainda não publicou nenhum projeto."
+                  : "Este usuário ainda não publicou projetos."}
+              </p>
+            )}
+
+            {!projetosLoading && !projetosError && projetos && projetos.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {projetos.map(p => {
+                  const card = mapProjetoToCard(p);
+                  return (
+                    <Link key={card.id} href={`/projetos/${card.id}`}>
+                      <ProjectCard projeto={card} />
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Timeline */}
+          <TabsContent value="timeline" className="mt-0">
             <TimelineTab
               memberships={memberships}
               isLoading={membershipsLoading}

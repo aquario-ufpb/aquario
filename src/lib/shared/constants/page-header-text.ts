@@ -53,4 +53,9 @@ export const PAGE_HEADER_TEXT = {
     subtitle: "Oportunidades de estágio e emprego",
     extendedSubtitle: "Veja oportunidades de estágio, emprego e projetos.",
   },
+  projetos: {
+    title: "Projetos",
+    subtitle: "Mural de projetos do Centro de Informática",
+    extendedSubtitle: "Visualize projetos de qualquer laboratório, grupo, liga ou pessoa do CI.",
+  },
 };

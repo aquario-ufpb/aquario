@@ -168,8 +168,8 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
     (user.papelPlataforma === "MASTER_ADMIN" || isUserAdminOfEntidade(user.id, entidade.membros));
 
   return (
-    <div className="px-6 md:px-8 lg:px-16 pb-12">
-      <div className="border-t border-border/30 pt-8">
+    <div className="pb-12">
+      <div className="pt-2">
         {/* Header with filter toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">

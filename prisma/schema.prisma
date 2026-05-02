@@ -73,6 +73,12 @@ enum TipoVaga {
   OUTRO
 }
 
+enum StatusProjeto {
+  RASCUNHO
+  PUBLICADO
+  ARQUIVADO
+}
+
 // ============================================================================
 // CAMPUS & CENTRO & CURSO (Core organizational structure)
 // ============================================================================
@@ -140,6 +146,7 @@ model Usuario {
   disciplinasConcluidas  DisciplinaConcluida[]
   disciplinasSemestre    DisciplinaSemestre[]
   vagasCriadas           Vaga[]
+  projetosAutor          ProjetoAutor[]
 
   @@index([email])
   @@index([matricula])
@@ -187,7 +194,8 @@ model Entidade {
   centro  Centro           @relation(fields: [centroId], references: [id])
   membros MembroEntidade[]
   cargos  Cargo[]
-  vagas   Vaga[]
+  vagas    Vaga[]
+  projetosAutor ProjetoAutor[]
 
   @@unique([nome, tipo])
   @@index([slug])
@@ -470,4 +478,52 @@ model DisciplinaSemestre {
   @@unique([usuarioId, semestreLetivoId, disciplinaId])
   @@index([usuarioId])
   @@index([usuarioId, semestreLetivoId])
+}
+
+// ============================================================================
+// PROJETOS E AUTORES
+// ============================================================================
+
+model Projeto {
+  id             String        @id @default(uuid())
+  titulo         String
+  slug           String        @unique
+  subtitulo      String?
+  textContent    String?
+  urlImagem      String?
+  status         StatusProjeto @default(RASCUNHO)
+  tags           String[]      @default([])
+  dataInicio     DateTime?
+  dataFim        DateTime?
+  urlRepositorio String?
+  urlDemo        String?
+  urlOutro       String?
+  criadoEm       DateTime      @default(now())
+  atualizadoEm   DateTime      @updatedAt
+  publicadoEm    DateTime?
+
+  autores ProjetoAutor[]
+
+  @@index([status])
+  @@index([criadoEm])
+  @@index([publicadoEm])
+}
+
+/// An autor row attaches a Projeto to either a Usuario, an Entidade, or both.
+/// At least one of usuarioId / entidadeId must be set (enforced by CHECK constraint).
+model ProjetoAutor {
+  id              String   @id @default(uuid())
+  projetoId       String
+  usuarioId       String?
+  entidadeId      String?
+  autorPrincipal  Boolean  @default(false)
+
+  projeto  Projeto   @relation(fields: [projetoId], references: [id], onDelete: Cascade)
+  usuario  Usuario?  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  entidade Entidade? @relation(fields: [entidadeId], references: [id], onDelete: Cascade)
+
+  @@index([projetoId])
+  @@index([usuarioId])
+  @@index([entidadeId])
+  @@index([autorPrincipal])
 }

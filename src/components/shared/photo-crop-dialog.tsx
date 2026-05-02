@@ -20,6 +20,14 @@ type PhotoCropDialogProps = {
   imageUrl: string;
   onCancel: () => void;
   onConfirm: (croppedBlob: Blob) => void;
+  /** Aspect ratio of the crop area (width / height). Default 1 (square). */
+  aspect?: number;
+  /** "round" for profile-style avatar; "rect" for banners/covers. Default "round". */
+  cropShape?: "round" | "rect";
+  /** Dialog title. */
+  title?: string;
+  /** Dialog description. */
+  description?: string;
 };
 
 /**
@@ -74,7 +82,22 @@ const createCroppedImage = async (imageSrc: string, cropArea: Area): Promise<Blo
   });
 };
 
-export function PhotoCropDialog({ open, imageUrl, onCancel, onConfirm }: PhotoCropDialogProps) {
+export function PhotoCropDialog({
+  open,
+  imageUrl,
+  onCancel,
+  onConfirm,
+  aspect = 1,
+  cropShape = "round",
+  title = "Ajustar Foto de Perfil",
+  description = "Ajuste o zoom e a posição da imagem. A área quadrada será usada como sua foto de perfil.",
+}: PhotoCropDialogProps) {
+  // For rectangular crops (banners, covers) we let the user zoom out below 1
+  // and pan freely so the whole image can fit inside the crop frame.
+  // Avatars stay fully covered (cover-style cropping).
+  const isRect = cropShape === "rect";
+  const minZoom = isRect ? 0.3 : 1;
+
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -104,10 +127,8 @@ export function PhotoCropDialog({ open, imageUrl, onCancel, onConfirm }: PhotoCr
     <Dialog open={open} onOpenChange={open => !open && onCancel()}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Ajustar Foto de Perfil</DialogTitle>
-          <DialogDescription>
-            Ajuste o zoom e a posição da imagem. A área quadrada será usada como sua foto de perfil.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <div className="relative w-full h-[400px] bg-neutral-100 dark:bg-neutral-900 rounded-lg overflow-hidden">
@@ -115,9 +136,12 @@ export function PhotoCropDialog({ open, imageUrl, onCancel, onConfirm }: PhotoCr
             image={imageUrl}
             crop={crop}
             zoom={zoom}
-            aspect={1}
-            cropShape="round"
-            showGrid={false}
+            minZoom={minZoom}
+            aspect={aspect}
+            cropShape={cropShape}
+            showGrid={isRect}
+            objectFit={isRect ? "contain" : "cover"}
+            restrictPosition={!isRect}
             onCropChange={setCrop}
             onCropComplete={onCropComplete}
             onZoomChange={setZoom}
@@ -129,9 +153,9 @@ export function PhotoCropDialog({ open, imageUrl, onCancel, onConfirm }: PhotoCr
           <Slider
             value={[zoom]}
             onValueChange={(values: number[]) => setZoom(values[0])}
-            min={1}
+            min={minZoom}
             max={3}
-            step={0.1}
+            step={0.05}
             className="flex-1"
           />
         </div>

@@ -56,7 +56,7 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
 
   if (!mapsData && !isLoading) {
     return (
-      <div className="px-6 md:px-8 lg:px-16 py-6 border-t border-border/40">
+      <div className="py-6 border-t border-border/40">
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/20">
           <div className="flex items-center gap-3 text-red-800 dark:text-red-200">
             <MapPin className="h-5 w-5" />
@@ -86,7 +86,7 @@ export function EntidadeMapSection({ entidade }: EntidadeMapSectionProps) {
   };
 
   return (
-    <div className="px-6 md:px-8 lg:px-16 py-8 border-t border-border/40">
+    <div className="py-8 border-t border-border/40">
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
           <h2 className="text-2xl font-bold flex items-center gap-2">

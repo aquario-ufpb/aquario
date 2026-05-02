@@ -11,6 +11,9 @@ export default function NavWrapper() {
   const [isDesktop, setIsDesktop] = useState(false);
   const pathname = usePathname();
   const isLandingPage = pathname === "/";
+  // Project detail pages: /projetos/[slug] (but NOT /projetos or /projetos/novo)
+  const isProjetoDetail = /^\/projetos\/[^/]+$/.test(pathname) && pathname !== "/projetos/novo";
+  const useStatic = isLandingPage || isProjetoDetail;
 
   useEffect(() => {
     // Function to check window size and update state
@@ -33,7 +36,7 @@ export default function NavWrapper() {
   // Render the appropriate component based on screen size
   return (
     <>
-      {isDesktop ? <NavBar staticPosition={isLandingPage} /> : <HamburgerMenu />}
+      {isDesktop ? <NavBar staticPosition={useStatic} /> : <HamburgerMenu />}
       <SearchCommand />
     </>
   );

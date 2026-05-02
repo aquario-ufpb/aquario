@@ -19,7 +19,7 @@ export function ContributeOnGitHub({
 }: ContributeOnGitHubProps) {
   const defaultClassName =
     variant === "default"
-      ? "rounded-full hover:bg-primary/90 transition-all text-white dark:text-black font-normal"
+      ? "rounded-full bg-aquario-primary text-white hover:bg-aquario-primary/90 transition-all font-normal"
       : "rounded-full";
 
   return (

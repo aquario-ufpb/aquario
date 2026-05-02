@@ -1,0 +1,259 @@
+titulo,subtitulo,text,tags,urlRepo,urlDemo,urlOutro,urlImagem,entidades,autores
+(Extra) Introdução a linguagem python aplicada a modelagem.,Foco em ensinar Python focado em modelagem.,"Material introdutório voltado a ensinar Python no contexto de modelagem estatística e Machine Learning. O conteúdo cobre os fundamentos de manipulação de dados e a lógica básica para construir modelos preditivos, servindo como ponto de partida para os novos integrantes da liga. O repositório com os notebooks está hospedado no GitHub da TAIL.
+
+_Projeto da diretoria de Aplicação — período(s): 2021.1 — 3 integrantes._
+
+---
+
+Autores: Manuel Ferreira, André Castro, Yann Nicholas",Aplicação;2021.1,,,,,TAIL,
+AIpp,"Esse projeto consistiu na criação de uma plataforma que faz uma automatização de análise de sentimentos de reviews de aplicativos da Play Store, capaz de filtrar as principais avaliações e comentár...","Plataforma que automatiza a análise de sentimentos sobre reviews de aplicativos da Play Store. A solução filtra as avaliações mais relevantes, extrai metadados e identifica os principais pontos positivos e negativos mencionados pelos usuários — entregando uma visão consolidada útil para times de produto e times de mercado.
+
+_Projeto da diretoria de Aplicação — período(s): 2023.1 — 6 integrantes._
+
+---
+
+Autores: Tales Nobre, Jonas Gabriel, Daniel Moreira, Ícaro Rodrigues, Maria Eduarda Donato, Taylor Klaus",Aplicação;2023.1,https://github.com/TailUFPB/AIpp,,,,TAIL,
+Chatbot Finanças,Chatbot para apoiar decisões de investimento e gestão financeira pessoal.,"Chatbot voltado a investimentos e gestão financeira pessoal. A proposta é guiar o usuário em decisões do dia a dia — onde alocar recursos, como organizar receitas e despesas, quais conceitos básicos entender antes de partir para alocações mais sofisticadas — em uma conversa direta, sem que ele precise navegar por relatórios ou planilhas.
+
+A interface conversacional reduz a barreira de entrada para quem está começando a tomar conta da própria vida financeira: a pessoa pergunta o que quiser e o chatbot responde com explicações acessíveis, comparações entre opções e orientações práticas, sem o ruído típico de portais de finanças cheios de banners e jargão.
+
+---
+
+Autores: Júlio César, Felipe Duarte",,,,,,TRIL,
+Classificação de Empenhos,Classificação automática de empenhos dos municípios da Paraíba.,"Classificação automática de empenhos (ordens de pagamento) emitidos pelos municípios da Paraíba, desenvolvido em parceria com o Tribunal de Contas do Estado (TCE-PB). A solução analisa as descrições e metadados de cada empenho e atribui automaticamente a categoria correta de gasto público.
+
+Para o TCE, a classificação automatizada reduz drasticamente o tempo necessário para análises agregadas dos gastos municipais — visualizações por categoria, comparações entre municípios e detecção de inconsistências passam a estar a poucos cliques de distância em vez de exigir tagging manual de milhares de registros.
+
+_Projeto concluído, em parceria com o TCE-PB._",Ciência de Dados;Classificação;Governo;IA,,,,,ARIA,
+Cobra,Aplicativo móvel que identifica a espécie de serpente a partir de uma foto e indica a unidade médica mais próxima com o soro antiofídico adequado.,"## Sobre o projeto
+
+Cobra é um aplicativo móvel pensado para situações de emergência envolvendo picadas de serpente. Com uma foto da cobra, o app responde com a espécie provavelmente identificada e indica a unidade médica mais próxima que dispõe do soro antiofídico apropriado para aquele tipo de picada.
+
+## Como funciona
+
+A identificação se apoia em visão computacional — um modelo treinado para classificar espécies de serpentes a partir de imagens. Uma vez identificada a espécie, o app cruza essa informação com uma base de unidades de saúde para apontar onde o soro adequado está disponível, agilizando uma decisão que costuma ser crítica nos primeiros minutos após o acidente.
+
+A combinação importa porque o atendimento ideal depende da espécie: cada tipo de soro funciona contra um conjunto específico de venenos, e nem toda unidade carrega todos os tipos. Identificar a cobra no campo e ir direto ao serviço correto pode reduzir significativamente o tempo até o tratamento adequado.
+
+## Limitações e contexto
+
+A acurácia do modelo depende da qualidade da foto e da representatividade da espécie no conjunto de treinamento — espécies raras ou em ângulos atípicos são mais difíceis de classificar com confiança. Por isso o app é pensado como um complemento ao atendimento profissional, nunca como um substituto: a recomendação é sempre buscar avaliação médica imediata, mesmo quando a identificação no app for incerta.
+
+---
+
+Autores: João Dantas, Juan Apolinario, Puca, José Augusto",Saúde;Mobile;Visão Computacional,,,,,TRIL,
+Debyte!,O Debyte!,"O Debyte! é uma série de análises construídas a partir de léxicos extraídos dos discursos políticos dos membros do congresso federal. A partir desses léxicos, a equipe explora padrões de linguagem, temas recorrentes e diferenças entre grupos — usando NLP como ferramenta para entender o discurso político brasileiro.
+
+_Projeto da diretoria de Aplicação — período(s): 2022.2 — 8 integrantes._
+
+---
+
+Autores: Victoria Grisi, Yhasmin Tigre, Anna Carolina, Carmem Neri, Gabriel de Jesus, Jonas Felipe, Maura Chaves, Samila Garrido",Aplicação;2022.2,,,https://voczie.notion.site/Debyte-2d1654954d6f484f8643280c436ae7aa?pvs=74,,TAIL,
+Desenvolvimento Inicial do Site,"Planejamento de como o novo site da TAIL seria desenvolvido, assim como a prototipação.","Planejamento e prototipação do novo site da TAIL. A iteração inicial mapeou requisitos, fluxos de navegação e identidade visual, deixando o terreno preparado para o desenvolvimento técnico subsequente.
+
+_Projeto da diretoria de Aplicação — período(s): 2022.2 — 6 integrantes._
+
+---
+
+Autores: Victor Brasil, Gabriel Araújo, Bianca Lira, Ciro Gomes, Fernanda Fernandes, Vitor Zimbrunes",Aplicação;2022.2,,,,,TAIL,
+Detecção de fraude fiscal,NLP e IA para detecção de fraude fiscal e monitoramento de cargas.,"Aplicação de NLP e IA na detecção de fraude fiscal e no monitoramento de cargas em circulação na Paraíba. O projeto, em parceria com a Secretaria de Estado da Fazenda da Paraíba (SEFAZ-PB), processa documentos fiscais em larga escala para identificar padrões suspeitos — desde notas fiscais com inconsistências até esquemas de circulação de mercadorias que apontam para sonegação.
+
+A combinação de processamento de linguagem natural com modelos preditivos permite triagem automatizada do volume de documentos que a Receita estadual recebe diariamente, redirecionando o tempo dos auditores humanos para os casos de maior potencial.
+
+_Projeto ativo, em parceria com a SEFAZ-PB._",Fraude Fiscal;Governo;IA;NLP,,,,,ARIA,
+Ecoverse,O projeto visa emular uma cadeia alimentar simples a partir de agentes de aprendizado por reforço.,"Simulação de uma cadeia alimentar simples emulada por agentes de Aprendizado por Reforço. Cada espécie é um agente com sua função-objetivo (sobreviver, reproduzir, evitar predadores) e o ambiente evolui conforme os agentes interagem entre si — permitindo observar dinâmicas emergentes próximas a modelos predador-presa.
+
+_Projeto da diretoria de Aplicação — período(s): 2024.1 — 6 integrantes._
+
+---
+
+Autores: Daniel Moreira, Nicholas Gabriel, Antonio Isaac Araújo Firmino de Sousa, Gabriel Ayres Bezerra do Nascimento, Rômulo Henrique Nascimento Duarte, Thiago Rodrigues",Aplicação;2024.1,,,,,TAIL,
+Enetrix — Data Diplomacy,Plataforma para registro e monitoramento de cooperação energética.,"Plataforma para o registro e monitoramento de iniciativas de cooperação energética, em ciência de dados aplicada à diplomacia entre nações no setor de energia. O sistema centraliza informações sobre acordos, projetos conjuntos e métricas de cooperação, permitindo análise comparativa entre países e ao longo do tempo.
+
+A camada de dados torna visível o que historicamente ficava disperso em relatórios isolados — viabilizando análises e dashboards para tomadores de decisão na área de relações internacionais e energia.
+
+_Projeto concluído._",Ciência de Dados;Energia;Monitoramento;Plataforma,,,,,ARIA,
+EstudoPlay,"Aplicativo móvel e plataforma de correção automática de redações por IA, hoje em mais de 2 mil escolas estaduais de Minas Gerais e detentora do recorde mundial Guinness de redações manuscritas corrigidas por IA em um único mês.","## Sobre o produto
+
+A EstudoPlay é um aplicativo móvel e uma plataforma de correção automática de redações por inteligência artificial. O sistema foi pensado para operar em escala: o aluno escreve a redação à mão, fotografa o texto pelo app e, em poucos minutos, recebe sua nota e um feedback alinhado aos critérios do Enem. O professor, por sua vez, recebe relatórios agregados da turma e individuais por aluno.
+
+A solução combina dois ingredientes pouco usuais juntos no mercado: aceitar a redação manuscrita — mantendo o ritual de produção textual em papel que ainda é dominante na sala de aula — e devolver uma avaliação consistente e padronizada em segundos.
+
+## Adoção em rede pública
+
+A EstudoPlay foi vendida primeiro à rede estadual de Minas Gerais e está hoje disponível em mais de 2 mil escolas estaduais do estado, alcançando milhares de alunos da rede pública. No primeiro simulado em larga escala, o sistema corrigiu 150 mil redações em apenas 5 dias — um volume e uma velocidade impossíveis de obter por correção manual.
+
+A integração do produto à rotina das escolas viabilizou algo antes impraticável: feedback rápido em volume. Cada estudante recebe sua nota e cada professor recebe um relatório personalizado da turma e por aluno, apontando os pontos a trabalhar individualmente.
+
+> ""O professor recebe um relatório de toda sua turma que realizou o simulado e especificamente personalizado também de cada estudante. A partir disso, pode até direcionar mais o trabalho do estudante às atividades que ele precisa estudar ao longo dos dias.""
+> — Kellen Silva Senra, subsecretária de educação básica de Minas Gerais (Jornal Nacional, julho de 2024).
+
+Reportagem completa: https://g1.globo.com/jornal-nacional/noticia/2024/07/20/escolas-publicas-usam-inteligencia-artificial-para-ajudar-alunos-com-redacoes-em-mg.ghtml
+
+## Recorde mundial Guinness
+
+Em abril de 2026, a EstudoPlay foi reconhecida pelo Guinness World Records como detentora do maior volume de redações manuscritas corrigidas por inteligência artificial em um único mês. O recorde foi conquistado no contexto do Projeto Enem MG, em parceria com a Secretaria de Estado de Educação de Minas Gerais, com cerca de 461.100 redações corrigidas entre setembro e outubro de 2025.
+
+No total, o sistema da EstudoPlay já processou perto de 5 milhões de redações manuscritas — número que, em volume, posiciona a empresa como referência mundial na aplicação de IA para avaliação textual em larga escala.
+
+Reportagem do G1 Paraíba sobre o recorde: https://g1.globo.com/pb/paraiba/noticia/2026/04/11/empresa-da-paraiba-e-reconhecida-pelo-guinness-com-recorde-mundial-de-correcao-de-redacoes-com-ia.ghtml
+
+---
+
+Autores: Felipe Duarte, Nicholas Rodrigues, José Augusto, Guilherme Huther, Tiago Trindade",Educação;EdTech;Redação,,,https://g1.globo.com/pb/paraiba/noticia/2026/04/11/empresa-da-paraiba-e-reconhecida-pelo-guinness-com-recorde-mundial-de-correcao-de-redacoes-com-ia.ghtml,,TRIL,
+Gestok,Gestão de estoque integrada ao WhatsApp — todo o CRUD por meio de um agente inteligente no app.,"Gestok é um sistema de gerenciamento de estoque inovador que oferece praticidade e eficiência ao integrar suas funcionalidades diretamente ao WhatsApp. Com o Gestok, você pode realizar todo o CRUD (criação, leitura, atualização e exclusão) de itens do estoque de forma simples e rápida, utilizando um agente inteligente.
+
+Esse agente automatiza as operações, permitindo gerenciar o estoque diretamente pelo WhatsApp, sem a necessidade de acessar sistemas complexos. Ideal para empresas que buscam agilidade e tecnologia acessível no controle de seus produtos.",Estoque;WhatsApp;Agentes,,,,,CortechX,
+IAbstract,"Dado um artigo científico, gerar o seu abstract, as palavras-chave e o título.","Ferramenta que recebe um artigo científico e gera automaticamente o seu abstract, um conjunto de palavras-chave e um título sugerido. O objetivo é apoiar pesquisadores no momento de redação e na organização de portfólios de publicações, oferecendo um primeiro rascunho razoável a partir do conteúdo.
+
+_Projeto da diretoria de Aplicação — período(s): 2022.2 — 8 integrantes._
+
+---
+
+Autores: Caio Chacon, Marília Brito, George Paulino, Lucas Bitu, Marcelo Cavalcante, Pedro Sotero, Ralf Dewrich, Vito Elias",Aplicação;2022.2,https://github.com/ralfferreira/iabstract,,,,TAIL,
+Introdução a matemática para ML,Foco em mostrar a matemática por trás da modelagem e da IA.,"Trilha educativa com foco em mostrar a matemática que sustenta modelos estatísticos e de Inteligência Artificial. O conteúdo cobre álgebra linear, cálculo, probabilidade e estatística no contexto em que aparecem na prática de modelagem — para que os integrantes desenvolvam intuição além de aplicar fórmulas.
+
+_Projeto da diretoria de Educativo — período(s): 2020.2 — 1 integrantes._
+
+---
+
+Autores: Manuel Ferreira",Educativo;2020.2,,,,,TAIL,
+Menu Digital,Menu digital completo para restaurantes e delivery — navegação intuitiva e pedidos pelo aplicativo.,"Sistema de menu digital completo para restaurantes e delivery, oferecendo uma experiência moderna e intuitiva para clientes. O sistema permite navegação fácil pelos pratos, visualização de preços, descrições detalhadas e pedidos diretos pelo aplicativo.
+
+Desenvolvido com foco na experiência do usuário, otimiza o processo de pedidos tanto para estabelecimentos físicos quanto para delivery online — reduzindo tempo de atendimento e centralizando o cardápio em um só canal.",Restaurantes;Delivery;Mobile,,,,,CortechX,
+OCR Enetrix,O projeto consiste na criancao de uma api para transcrição de acordos energéticos.,"O projeto consiste em uma API para transcrição de acordos energéticos a partir de imagens. A ferramenta combina reconhecimento óptico de caracteres com uma camada de validação capaz de apontar erros prováveis na transcrição e propor correções, reduzindo o esforço manual de revisão pós-OCR.
+
+_Projeto da diretoria de Aplicação — período(s): 2024.1 — 6 integrantes._
+
+---
+
+Autores: Jonas Felipe, João Paulo Borges, Isaac Sebastian, Victor Marques, Vivianny Khatly, Wendson Carlos Souza da Silva",Aplicação;2024.1,,,,,TAIL,
+OCR para receitas médicas,Modelos de OCR para leitura de receitas médicas digitadas e manuscritas.,"Modelos de OCR (reconhecimento óptico de caracteres) especializados em receitas médicas, abrangendo tanto receitas digitadas quanto manuscritas. O projeto, em parceria com a Unimed, busca automatizar a leitura desses documentos — uma tarefa notoriamente difícil pela variabilidade caligráfica, jargão médico e formatos pouco padronizados.
+
+A automação tem implicações concretas: reduz erros de digitação manual, agiliza a integração com sistemas de farmácia e prontuário eletrônico, e abre caminho para auditorias e análises agregadas que hoje são inviáveis pelo formato dos dados.
+
+_Projeto ativo, em parceria com a Unimed._",Classificação;OCR;Saúde;Visão Computacional,,,,,ARIA,
+Predição de Mercado de Opções (B3),"Modelo de IA que prevê movimentos no mercado de opções a partir da análise em larga escala de notícias financeiras, com uso de LLMs no pipeline.","Projeto de predição de valores no mercado de opções a partir da análise de notícias em larga escala. A solução combina treinamento de modelos de IA — incluindo LLMs — para extrair sinais de notícias financeiras e antecipar movimentos no mercado de derivativos.
+
+A ideia central é que muito do que se reflete em preços de opções acontece primeiro em texto: notícias de empresa, anúncios regulatórios, comentários de analistas, atas de comitês. Capturar e processar esse fluxo em volume — algo inviável manualmente — abre uma janela para sinais que ainda não foram totalmente incorporados ao preço.
+
+O pipeline cobre desde a coleta e normalização das notícias até o treinamento dos modelos preditivos, com avaliação contínua dos resultados frente ao mercado real.
+
+---
+
+Autores: Daniel Victor, João Fahning, Guilherme Huther, Tiago Trindade, Ralf, Victor",Finanças;Mercado de Opções;LLM,,,,,TRIL,
+Processamento e análise de dados da Lotep,Sistema de captura e análise de dados das empresas vinculadas à Lotep.,"Construção de um sistema de captura, integração e análise de dados das empresas vinculadas à Lotep (Loteria do Estado da Paraíba). A solução cobre desde a coleta automatizada das informações operacionais e financeiras até dashboards e modelos preditivos que apoiam o monitoramento da atividade do setor de apostas regulado no estado.
+
+Para a Lotep, o sistema viabiliza visão consolidada do mercado regulado, identificação de inconsistências e suporte à fiscalização — funções que historicamente dependiam de processos manuais ou planilhas dispersas.
+
+_Projeto ativo, em parceria com a Lotep._",Apostas;Ciência de Dados;Governo;IA,,,,,ARIA,
+Projeto de Leitura de Artigos,"Nesse semestre, a diretoria acadêmica fez leituras de artigos científicos focados em Inteligência Artificial e apresentou para o resto da liga acadêmica em uma rápida e resumida apresentação.","Iniciativa da Diretoria Acadêmica para que seus integrantes leiam artigos científicos relevantes em IA e os apresentem para o restante da liga. Cada apresentação é curta e objetiva, criando um fluxo regular de troca de conhecimento e expondo todos os membros a frentes de pesquisa que talvez não estivessem em seu radar.
+
+_Projeto da diretoria de Aplicação — período(s): 2023.1 — 5 integrantes._
+
+---
+
+Autores: Victoria Grisi, Laís Silva, Gabriela Monteiro, Luiz Gusttavo, Maura Chaves",Aplicação;2023.1,,,https://voczie.notion.site/Acad-mica-2023-2-4abff4d0f7794292966b59ac60a68ff2,,TAIL,
+Realidade Aumentada no Jardim Botânico,"Experiência de RA via navegador para a visitação do Jardim Botânico de João Pessoa — informações digitais sobre plantas, animais e trilhas sobrepostas ao ambiente real.","O Projeto de Realidade Aumentada tem como propósito integrar tecnologia e educação ambiental por meio de experiências interativas em Realidade Aumentada (RA). Desenvolvido como uma iniciativa de inovação tecnológica aplicada à sustentabilidade, o projeto busca enriquecer a visitação ao Jardim Botânico de João Pessoa, oferecendo uma forma dinâmica e acessível de aprendizado sobre a biodiversidade local.
+
+Por meio de um navegador, os visitantes utilizam a câmera do celular para explorar o espaço natural, visualizando informações digitais sobre espécies de plantas, animais, trilhas ecológicas e pontos de interesse. O conteúdo digital inclui textos explicativos, imagens ilustrativas, modelos 3D de animais e animações educativas, que se sobrepõem ao ambiente real, proporcionando uma imersão educativa e envolvente.",Realidade Aumentada;Educação Ambiental;Web,,,,,CortechX,
+Recomendação de filmes pelo IMDB,"O projeto serviu para aplicar alguns conceitos relacionados à atividades feitas, anteriormente, junto com os conhecimentos que foram adquiridos durante a execução do projeto como: colinearidade, di...","Sistema de recomendação de filmes construído sobre dados do IMDB, usado como projeto-laboratório para consolidar conceitos vistos ao longo do semestre: colinearidade entre features, distância euclidiana e clustering com KMeans, entre outras técnicas. O resultado é um pipeline que parte da exploração dos dados até a recomendação propriamente dita.
+
+_Projeto da diretoria de Aplicação — período(s): 2022.2 — 8 integrantes._
+
+---
+
+Autores: Epitacio Pessoa, Jonas Oliveira, Ana Carolina Aguiar, Ana Carolina Moura, Felipe Arcela, Leo Jaime, Nicholas Gabriel, Tiago Trindade",Aplicação;2022.2,,,https://colab.research.google.com/drive/19KzB2VQt_VdA4L6MOAPszJssB8iZIK7O?usp=sharing,,TAIL,
+Reconhecimento de anomalias no cérebro através de resultados de MRI utilizando Visão Computacional,Todos os membros foram treinados no uso de OpenCV para que desenvolvessem seus próprios modelos que os mesmos identificassem anomalias como tumores em resultados de exames de Ressonância Magnética.,"Projeto formativo em que todos os membros foram treinados em OpenCV para construir seus próprios modelos de visão computacional capazes de identificar anomalias — como tumores — em exames de Ressonância Magnética. O foco era duplo: produzir modelos funcionais e fortalecer a base técnica de cada integrante em processamento de imagens médicas.
+
+_Projeto da diretoria de Aplicação — período(s): 2023.1 — 7 integrantes._
+
+---
+
+Autores: Victor Brasil, Frankley Kaiky, Anna Carolina, Cameron Maloney, Fernanda Fernandes, Leo Jaime, Vitor Zimbrunes",Aplicação;2023.1,,,,,TAIL,
+RodoviARIA,"Utilizando dados da PRF disponibilizados pelo governo, criar um sistema para auxiliar com a diminuição dos problemas enfrentados no trânsito do Brasil.","Projeto que utiliza dados abertos da Polícia Rodoviária Federal para construir um sistema voltado a reduzir os problemas enfrentados no trânsito brasileiro. A análise busca padrões em ocorrências (locais, horários, condições) que podem orientar políticas públicas, fiscalização e ações educativas.
+
+_Projeto da diretoria de Aplicação — período(s): 2023.1 — 7 integrantes._
+
+---
+
+Autores: Caio Chacon, Davi Ribeiro, Arthur Ramón, Ciro Gomes, Guilherme Iram, Guilherme Pujoni, Rafael Guilherme",Aplicação;2023.1,,,,,TAIL,
+SenseApp,IA para análise de sentimentos em comentários da Play Store — feedback real sobre a percepção dos clientes.,"SenseApp é uma aplicação que usa inteligência artificial para analisar sentimentos e oferecer insights sobre a percepção dos clientes. Combinando modelos de machine learning e técnicas de web scraping, o SenseApp coleta comentários de aplicativos na Play Store, identifica os sentimentos expressos (positivos, negativos ou neutros) e fornece um feedback real sobre a recepção do produto.
+
+A solução permite que empresas compreendam melhor as emoções dos usuários, ajustem suas estratégias e melhorem a experiência do cliente de forma precisa, sem depender só de notas estreladas que escondem nuances importantes.",NLP;Análise de Sentimento;Play Store,,,,,CortechX,
+SummarAIzer,"Esse projeto teve como objetivo sumarizar textos, com o intuito de reduzir a quantidade de palavras para transformar em Glosa e de Glosa para Libras.","Projeto de sumarização de textos com aplicação direta na acessibilidade: reduzir um texto extenso para uma versão objetiva que possa ser convertida em Glosa e, dessa, para Libras. A redução do volume textual diminui o custo computacional da tradução automática para Libras e torna o processo mais ágil para o usuário surdo.
+
+_Projeto da diretoria de Aplicação — período(s): 2023.2 — 7 integrantes._
+
+---
+
+Autores: Tales Nobre, Maria Eduarda Donato, Beatriz Barreto, Daniel Moreira, Erlon Lacerda, Joyce Ribeiro, Maria Eduarda Bandeira",Aplicação;2023.2,https://github.com/TailUFPB/summaraizer,,,,TAIL,
+TAIL Website e Sistema de Cadastro de Dados,"Desenvolvimento do Website da TAIL conectado ao banco de dados atualizado, além do desenvolvimento de uma interface de cadastro completo de membros, projetos, rotações e outros dados de utilidade.","Desenvolvimento do site institucional da TAIL conectado ao banco de dados atualizado e construção de uma interface de cadastro completa: membros, projetos, rotações e demais dados úteis para a operação da liga. O resultado dá autonomia para a equipe gerir as informações sem precisar editar arquivos manualmente.
+
+_Projeto da diretoria de Aplicação — período(s): 2024.1 — 6 integrantes._
+
+---
+
+Autores: Joaquim Breno, Tiago Trindade, Ana Luísa Londres, Bruna Gabriela Soares de Lima, Maria Eduarda Donato, Raphael Nascimento",Aplicação;2024.1,,,,,TAIL,
+TailDb,Visualização e ETL de dados da liga acadêmica,"Pipeline de visualização e ETL dos dados da própria liga acadêmica. O TailDb organiza informações sobre membros, projetos e rotações em uma estrutura consultável, facilitando análises internas e a manutenção dos registros históricos da TAIL.
+
+_Projeto da diretoria de Aplicação — período(s): 2023.2 — 7 integrantes._
+
+---
+
+Autores: Joaquim Breno, Êmilly Eduarda, Adriel Ferreira Trajano, Deivison Rodrigues, Fernanda Azevedo, Gabriel Belo, Lucas Bitu",Aplicação;2023.2,https://github.com/TailUFPB/LigaAcademica_ETL,,,,TAIL,
+Turmalina,Sistema de avaliação automática de portais de transparência dos municípios da Paraíba.,"Sistema de avaliação automática dos portais de transparência dos municípios da Paraíba, em parceria com o TCE-PB. A solução combina web scraping com regras e modelos para verificar, periodicamente, se cada portal cumpre os critérios legais de transparência ativa: dados orçamentários, contratos, licitações, folha de pagamento, entre outros.
+
+Em vez de depender de auditorias manuais ad hoc, o TCE passa a contar com monitoramento contínuo da conformidade dos portais — e os municípios recebem feedback claro sobre exatamente quais itens precisam ser corrigidos.
+
+_Projeto concluído, em parceria com o TCE-PB._",Ciência de Dados;Governo;Transparência;Web Scraping,,,,,ARIA,
+Visão computacional para contagem de compressas em cirurgias,"Modelos para detecção, rastreamento e contagem de compressas em vídeos de cirurgias.","Pesquisa e desenvolvimento de modelos para detecção, rastreamento e contagem de compressas em vídeos de cirurgias, em parceria com a DHauz. A motivação é direta e crítica: garantir que nenhuma compressa cirúrgica seja deixada inadvertidamente dentro do paciente — um erro raro porém grave que ainda hoje depende, em muitos hospitais, da contagem manual da equipe.
+
+A automação por visão computacional adiciona uma camada de verificação independente ao protocolo cirúrgico, particularmente útil em procedimentos longos ou com múltiplas equipes. A combinação de detecção, tracking ao longo do tempo e contagem agregada exige modelos robustos a oclusão, mudanças de iluminação e movimento — desafios técnicos típicos de visão computacional aplicada à cirurgia.
+
+_Projeto ativo, em parceria com a DHauz._",Medicina;Saúde;Vídeo;Visão Computacional,,,,,ARIA,
+VLIBRAS,Suíte gratuita e open-source de tradução automática de conteúdo digital em português para Libras — desenvolvida pelo LAVID e adotada em praticamente todos os sites do governo federal brasileiro.,"## Sobre o projeto
+
+VLIBRAS é uma suíte de ferramentas gratuitas e de código aberto, desenvolvida pelo LAVID, que faz a tradução automática de conteúdo digital em português para a Língua Brasileira de Sinais (Libras). O sistema permite que pessoas surdas acessem textos, áudio e vídeo em português sem barreira linguística — a tradução é feita em tempo real, com um avatar 3D que sinaliza o conteúdo na tela.
+
+## Onde funciona
+
+A solução está disponível em três frentes:
+
+- **Plugin para sites** — qualquer página da web pode integrar o VLIBRAS e oferecer tradução automática de seu conteúdo aos visitantes surdos.
+- **Aplicativo móvel** (Android e iOS) — funciona como assistente de tradução em qualquer texto digitado ou capturado pelo telefone.
+- **Aplicativo desktop** — para tradução em ambiente de computador.
+
+A ferramenta hoje está presente em praticamente todos os sites do governo federal brasileiro e se tornou referência de acessibilidade digital institucional no país.
+
+## Avatares e tradução
+
+A tradução é executada por três personagens — **Guga**, **Ícaro** e **Hozana** — que sinalizam o conteúdo. A escolha por avatares 3D, em vez de vídeos pré-gravados de intérpretes humanos, foi central para viabilizar o serviço em larga escala: avatares conseguem traduzir conteúdo dinâmico em tempo real, sem custo marginal por nova frase.
+
+## Parceria institucional
+
+O projeto é fruto de uma parceria envolvendo:
+
+- Universidade Federal da Paraíba (UFPB), via LAVID
+- Ministério da Gestão e Inovação em Serviços Públicos (MGISP)
+- Secretaria de Governo Digital (SGD)
+- Ministério dos Direitos Humanos e da Cidadania (MDHC)
+- Câmara dos Deputados
+- Rede Nacional de Ensino e Pesquisa (RNP)
+
+A combinação de pesquisa acadêmica (no LAVID) com a operação institucional do governo digital é o que sustenta a ampla adoção do VLIBRAS hoje.
+
+## Impacto
+
+O VLIBRAS é hoje uma das maiores iniciativas de acessibilidade digital pública do Brasil. A combinação de gratuidade, código aberto e adoção institucional permitiu que serviços de governo, sites públicos e plataformas digitais oferecessem acesso direto em Libras sem precisar contratar intérpretes humanos para cada novo conteúdo.
+
+## Saiba mais
+
+Página oficial: https://www.gov.br/governodigital/pt-br/vlibras/",Acessibilidade;Libras;Open Source;Governo,,,https://www.gov.br/governodigital/pt-br/vlibras/,,LAVID,
+ZoomAI,Nosso projeto desenvolve um site para criar artes de zoom infinito usando StableDiffusion.,"Site para a criação de zoom arts — animações de zoom ""infinito"" construídas a partir de imagens geradas por StableDiffusion. O usuário escolhe um tema/prompt e o sistema gera o conjunto de quadros que, encadeados, produzem o efeito de zoom contínuo que se aprofunda em novos cenários.
+
+_Projeto da diretoria de Aplicação — período(s): 2024.1 — 6 integrantes._
+
+---
+
+Autores: Frankley Kaiky, Pedro Luca Vaz, Allejandro Sousa, Fernanda Azevedo, João Victor Dantas, Maria da Penha Santos",Aplicação;2024.1,,,,,TAIL,

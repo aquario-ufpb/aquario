@@ -103,3 +103,34 @@ export async function canManageVagaForEntidade(
   const membership = await membrosRepository.findActiveByUsuarioAndEntidade(usuario.id, entidadeId);
   return membership?.papel === "ADMIN";
 }
+
+/**
+ * Check if user can manage a projeto (edit/delete/publish/replace authors).
+ * Allowed:
+ *   - MASTER_ADMIN
+ *   - any user listed as a user-author of the projeto (principal or co-author)
+ *   - active ADMIN of the *principal* entidade-author of the projeto
+ *
+ * Note: admins of co-author entidades do NOT inherit edit rights — only the
+ * principal entidade's admins do. Mirrors the intent of "the entidade that
+ * owns this project gets to manage it; co-authorship is just attribution."
+ */
+export async function canManageProjeto(
+  usuario: UsuarioWithRelations,
+  autores: { usuarioId: string | null; entidadeId: string | null; autorPrincipal: boolean }[]
+): Promise<boolean> {
+  if (usuario.papelPlataforma === "MASTER_ADMIN") {
+    return true;
+  }
+
+  if (autores.some(a => a.usuarioId === usuario.id)) {
+    return true;
+  }
+
+  const principalEntidadeId = autores.find(a => a.autorPrincipal && a.entidadeId)?.entidadeId;
+  if (principalEntidadeId && (await canManageVagaForEntidade(usuario, principalEntidadeId))) {
+    return true;
+  }
+
+  return false;
+}
