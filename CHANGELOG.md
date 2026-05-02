@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-05-02
+
 ### Added
 - **Projetos**: New `/projetos` feature — create, edit, publish/unpublish, archive, and delete projects with cover image, markdown body (Tiptap editor with image + link upload), tags, period, and external links.
 - **Projetos**: Multi-author model — each `ProjetoAutor` references a `usuario`, an `entidade`, or both, with one `autorPrincipal`. Authorship grants edit access; entidade admins inherit it.
@@ -440,7 +442,8 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/aquario-ufpb/aquario/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/aquario-ufpb/aquario/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/aquario-ufpb/aquario/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/aquario-ufpb/aquario/compare/v1.4.0...v1.5.0
