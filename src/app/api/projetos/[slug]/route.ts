@@ -128,9 +128,20 @@ export function PATCH(request: NextRequest, context: RouteContext) {
       const newUrl = projeto.urlImagem;
       if (oldUrl && oldUrl !== newUrl) {
         const { blobStorage } = getContainer();
-        blobStorage.delete(oldUrl).catch(err => {
-          console.error("Failed to delete old cover blob", { url: oldUrl, err });
-        });
+        // Both rejections AND `false` resolutions need to be logged —
+        // blobStorage.delete reports most cleanup failures by resolving false.
+        void blobStorage
+          .delete(oldUrl)
+          .then(deleted => {
+            if (!deleted) {
+              console.error("Failed to delete old cover blob (returned false)", {
+                url: oldUrl,
+              });
+            }
+          })
+          .catch(err => {
+            console.error("Failed to delete old cover blob", { url: oldUrl, err });
+          });
       }
 
       return NextResponse.json(projeto);

@@ -245,7 +245,18 @@ export default function NovoProjetoPage() {
           ? [{ usuarioId: usuario.id, autorPrincipal: true }]
           : [{ entidadeId: postandoComo, autorPrincipal: true }];
 
+      // Skip co-autores that match the principal — picking the principal as
+      // someone already in the co-autor list would emit two rows for the same
+      // actor (one principal, one not) and trip the unique index on save.
+      const seenAutores = new Set<string>(
+        autoresList.map(a => (a.usuarioId ? `user:${a.usuarioId}` : `entidade:${a.entidadeId}`))
+      );
       for (const co of coAutores) {
+        const key = co.kind === "user" ? `user:${co.id}` : `entidade:${co.id}`;
+        if (seenAutores.has(key)) {
+          continue;
+        }
+        seenAutores.add(key);
         if (co.kind === "user") {
           autoresList.push({ usuarioId: co.id, autorPrincipal: false });
         } else {

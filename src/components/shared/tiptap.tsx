@@ -126,33 +126,32 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         return true; // Prevents default behavior
       },
       handleDrop: function (view, event, _slice, moved) {
-        if (
-          !moved &&
-          event.dataTransfer &&
-          event.dataTransfer.files &&
-          event.dataTransfer.files[0]
-        ) {
-          const files = event.dataTransfer.files;
-          const handleImages = async () => {
-            const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
-            let offset = 0;
-            for (let i = 0; i < files.length; i++) {
-              const file = files[i];
-              if (file.type.startsWith("image")) {
-                const url = await handleImageUpload(file);
-                if (url && coordinates) {
-                  const node = view.state.schema.nodes.image.create({ src: url });
-                  const transaction = view.state.tr.insert(coordinates.pos + offset, node);
-                  view.dispatch(transaction);
-                  offset += node.nodeSize;
-                }
-              }
-            }
-          };
-          handleImages();
-          return true; // Prevents default behavior
+        // Only intercept drops we'll actually handle — non-image file drops
+        // (PDF, text, etc.) should fall through to Tiptap's default behavior
+        // instead of being silently swallowed.
+        const files = event.dataTransfer?.files;
+        const imageFiles = files
+          ? Array.from(files).filter(file => file.type.startsWith("image/"))
+          : [];
+        if (moved || imageFiles.length === 0) {
+          return false;
         }
-        return false;
+
+        const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        const handleImages = async () => {
+          let offset = 0;
+          for (const file of imageFiles) {
+            const url = await handleImageUpload(file);
+            if (url && coordinates) {
+              const node = view.state.schema.nodes.image.create({ src: url });
+              const transaction = view.state.tr.insert(coordinates.pos + offset, node);
+              view.dispatch(transaction);
+              offset += node.nodeSize;
+            }
+          }
+        };
+        handleImages();
+        return true; // Prevents default behavior
       },
     },
   });
@@ -186,9 +185,15 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
 
   return (
     <div>
-      <div className="border rounded-t-md p-2 flex flex-wrap gap-2">
+      <div
+        className="border rounded-t-md p-2 flex flex-wrap gap-2"
+        role="toolbar"
+        aria-label="Formatação de texto"
+      >
         <button
           type="button"
+          aria-label="Negrito"
+          title="Negrito"
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={`p-1 rounded hover:bg-muted ${editor.isActive("bold") ? "bg-muted" : ""}`}
         >
@@ -196,6 +201,8 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         </button>
         <button
           type="button"
+          aria-label="Itálico"
+          title="Itálico"
           onClick={() => editor.chain().focus().toggleItalic().run()}
           className={`p-1 rounded hover:bg-muted ${editor.isActive("italic") ? "bg-muted" : ""}`}
         >
@@ -203,6 +210,8 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         </button>
         <button
           type="button"
+          aria-label="Sublinhado"
+          title="Sublinhado"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           className={`p-1 rounded hover:bg-muted ${editor.isActive("underline") ? "bg-muted" : ""}`}
         >
@@ -210,6 +219,8 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         </button>
         <button
           type="button"
+          aria-label="Tachado"
+          title="Tachado"
           onClick={() => editor.chain().focus().toggleStrike().run()}
           className={`p-1 rounded hover:bg-muted ${editor.isActive("strike") ? "bg-muted" : ""}`}
         >
@@ -217,6 +228,8 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         </button>
         <button
           type="button"
+          aria-label="Bloco de código"
+          title="Bloco de código"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           className={`p-1 rounded hover:bg-muted ${editor.isActive("codeBlock") ? "bg-muted" : ""}`}
         >
@@ -224,6 +237,8 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         </button>
         <button
           type="button"
+          aria-label="Inserir link"
+          title="Inserir link"
           onClick={setLink}
           className={`p-1 rounded hover:bg-muted ${editor.isActive("link") ? "bg-muted" : ""}`}
         >
@@ -231,6 +246,8 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         </button>
         <button
           type="button"
+          aria-label="Lista com marcadores"
+          title="Lista com marcadores"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           className={`p-1 rounded hover:bg-muted ${editor.isActive("bulletList") ? "bg-muted" : ""}`}
         >
@@ -238,6 +255,8 @@ const Tiptap = ({ value, onChange, onImageUpload }: TiptapProps) => {
         </button>
         <button
           type="button"
+          aria-label="Lista numerada"
+          title="Lista numerada"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           className={`p-1 rounded hover:bg-muted ${editor.isActive("orderedList") ? "bg-muted" : ""}`}
         >

@@ -697,8 +697,20 @@ function buildAutores({
       ? { usuarioId, autorPrincipal: true }
       : { entidadeId: postandoComo, autorPrincipal: true };
 
+  // Skip co-autores that match the principal — without dedup, picking the
+  // principal as someone already in the co-autor list would emit two rows
+  // for the same actor (one principal, one not), which the unique index
+  // rejects on save.
   const autores: AutorPayload[] = [principal];
+  const seen = new Set<string>([
+    principal.usuarioId ? `user:${principal.usuarioId}` : `entidade:${principal.entidadeId}`,
+  ]);
   for (const co of coAutores) {
+    const key = co.kind === "user" ? `user:${co.id}` : `entidade:${co.id}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
     if (co.kind === "user") {
       autores.push({ usuarioId: co.id, autorPrincipal: false });
     } else {
