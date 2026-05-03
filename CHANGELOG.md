@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-05-03
+
 ### Added
 - **Navigation**: Add `Projetos` link to the desktop navbar and mobile hamburger menu.
 - **Landing Page**: Add a "Projetos destaque" section inside the underwater area, above Recursos — an infinite-loop carousel showing 3 cards at a time, drawn from a random sample of the top projects by author count.
