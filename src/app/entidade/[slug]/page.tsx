@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getContainer } from "@/lib/server/container";
+import { jsonLdScriptContent } from "@/lib/server/utils/seo";
 import EntidadeDetailClient from "./entidade-detail-client";
 
 type PageProps = {
@@ -77,7 +78,7 @@ export default async function EntidadePage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScriptContent(jsonLd) }}
       />
       <EntidadeDetailClient slug={slug} />
     </>

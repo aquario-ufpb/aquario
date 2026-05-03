@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getContainer } from "@/lib/server/container";
+import { jsonLdScriptContent } from "@/lib/server/utils/seo";
 import UsuarioProfileClient from "./usuario-profile-client";
 
 type PageProps = {
@@ -77,7 +78,7 @@ export default async function UsuarioPage({ params }: PageProps) {
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdScriptContent(jsonLd) }}
         />
       )}
       <UsuarioProfileClient slug={slug} />

@@ -22,6 +22,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
+  // The route is a catch-all. Anything deeper than guia/secao/subsecao is
+  // structurally invalid — don't let crawlers index those URLs by accident.
+  if (parts.length > 3) {
+    return { title: SITE_TITLE, robots: { index: false, follow: false } };
+  }
+
   const [guiaSlug, secaoSlug, subSlug] = parts;
   const container = getContainer();
   const guia = guiaSlug ? await container.guiasRepository.findBySlug(guiaSlug) : null;

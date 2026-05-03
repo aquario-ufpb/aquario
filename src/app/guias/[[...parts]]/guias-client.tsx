@@ -85,6 +85,26 @@ export default function GuiasPage() {
       return "# Guia não especificado";
     }
 
+    // Guide-only URL: render the guide's own table of contents linking each
+    // section. Without this, /guias/{guia} fell through to "Seção não
+    // encontrada" because secaoSlug is undefined.
+    if (!secaoSlug) {
+      const guia = guiaTree?.find(g => g.slug === guiaSlug);
+      if (!guia) {
+        return "# Guia não encontrado";
+      }
+      let body = `# ${guia.titulo}\n\n`;
+      const secoes = secoesData?.[guiaSlug] ?? guia.secoes ?? [];
+      if (secoes.length === 0) {
+        body += "_Este guia ainda não tem seções._";
+        return body;
+      }
+      secoes.forEach(secao => {
+        body += `- [${secao.titulo}](/guias/${guiaSlug}/${secao.slug})\n`;
+      });
+      return body;
+    }
+
     // Find the section within the specific guia
     let targetSecao = null;
     if (secoesData && secoesData[guiaSlug]) {
@@ -128,7 +148,7 @@ export default function GuiasPage() {
     if (guiaSlug && guiaTree) {
       const guia = guiaTree.find(g => g.slug === guiaSlug);
       if (guia) {
-        crumbs.push({ label: guia.titulo, href: `/guias` });
+        crumbs.push({ label: guia.titulo, href: `/guias/${guiaSlug}` });
 
         if (secaoSlug) {
           const secao = guia.secoes?.find(s => s.slug === secaoSlug);
@@ -184,6 +204,7 @@ export default function GuiasPage() {
             <SheetTrigger asChild>
               <Button
                 variant="outline"
+                aria-label="Abrir índice de guias"
                 style={{
                   backgroundColor: isDark ? "#1a3a5c" : "#ffffff",
                   color: isDark ? "#C8E6FA" : "#0e3a6c",

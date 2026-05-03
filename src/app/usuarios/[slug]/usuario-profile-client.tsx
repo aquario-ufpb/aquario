@@ -77,7 +77,8 @@ export default function UsuarioProfileClient({ slug }: { slug: string }) {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
     if (!file) {
       return;
     }
@@ -85,6 +86,8 @@ export default function UsuarioProfileClient({ slug }: { slug: string }) {
     // Validate file type
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
     if (!allowedTypes.includes(file.type)) {
+      // Reset so picking the same file again retriggers onChange.
+      input.value = "";
       toast.error("Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF.");
       return;
     }
@@ -92,6 +95,7 @@ export default function UsuarioProfileClient({ slug }: { slug: string }) {
     // Validate file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
+      input.value = "";
       toast.error("Arquivo muito grande. Tamanho máximo: 5MB.");
       return;
     }
@@ -206,7 +210,7 @@ export default function UsuarioProfileClient({ slug }: { slug: string }) {
               <button
                 type="button"
                 aria-label="Alterar foto de perfil"
-                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/50 rounded-full cursor-pointer"
+                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aquario-primary bg-black/50 rounded-full cursor-pointer"
                 style={{
                   transition: "opacity 0.2s",
                   transform: "translateZ(0)",

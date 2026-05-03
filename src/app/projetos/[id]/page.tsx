@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getContainer } from "@/lib/server/container";
+import { jsonLdScriptContent } from "@/lib/server/utils/seo";
 import ProjetoDetailClient from "./projeto-detail-client";
 
 type PageProps = {
@@ -91,9 +92,9 @@ export default async function ProjetoPage({ params }: PageProps) {
       {jsonLd && (
         <script
           type="application/ld+json"
-          // schema.org JSON-LD must be raw JSON in a script tag — there is no
-          // declarative React equivalent; this is the canonical pattern.
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          // jsonLdScriptContent escapes `<` so user-controlled fields (titulo,
+          // subtitulo, tags) cannot break out of the script context.
+          dangerouslySetInnerHTML={{ __html: jsonLdScriptContent(jsonLd) }}
         />
       )}
       <ProjetoDetailClient slug={slug} initialData={initialData} />
