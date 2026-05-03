@@ -9,6 +9,7 @@ import {
   type ProjetoOrderBy,
   type ProjetoStatus,
 } from "@/lib/client/api/projetos";
+import type { ProjetoWithRelations } from "@/lib/shared/types/projeto";
 
 export type { ProjetoOrder, ProjetoOrderBy, ProjetoStatus };
 
@@ -271,12 +272,13 @@ export function useEntidadeProjetoCounts(entidadeId: string | undefined, canSeeA
 }
 
 // Um projeto específico pelo slug
-export function useProjetoBySlug(slug?: string) {
+export function useProjetoBySlug(slug?: string, options?: { initialData?: ProjetoWithRelations }) {
   return useQuery({
     queryKey: queryKeys.projetos.bySlug(slug ?? ""),
     queryFn: () => getProjetoBySlug(slug as string),
     enabled: !!slug,
     staleTime: 5 * 60 * 1000,
+    initialData: options?.initialData,
   });
 }
 

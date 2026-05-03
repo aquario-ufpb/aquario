@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, AlertCircle, Mail, Users, Search, Zap, Github } from "lucide-react";
 import Image from "next/image";
@@ -5,6 +6,20 @@ import { ContributeOnGitHub } from "@/components/shared/contribute-on-github";
 import { HeroSection } from "@/components/pages/sobre/hero-section";
 import { ContactButton } from "@/components/pages/sobre/contact-button";
 import { WaterTransitionSection } from "@/components/pages/landing/water-transition-section";
+
+export const metadata: Metadata = {
+  title: "Sobre · Aquário",
+  description:
+    "Conheça o Aquário: a plataforma do Centro de Informática da UFPB que centraliza guias, entidades, projetos, vagas e calendário acadêmico em um só lugar.",
+  alternates: { canonical: "/sobre" },
+  openGraph: {
+    title: "Sobre · Aquário",
+    description:
+      "Conheça o Aquário: a plataforma do Centro de Informática da UFPB que centraliza guias, entidades, projetos, vagas e calendário acadêmico em um só lugar.",
+    url: "/sobre",
+    type: "website",
+  },
+};
 
 const problemsBefore = [
   { icon: AlertCircle, text: "Falta de informação centralizada" },
