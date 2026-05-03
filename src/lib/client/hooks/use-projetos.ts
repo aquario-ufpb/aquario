@@ -56,7 +56,7 @@ export function useProjetosInfinite(params: UseProjetosInfiniteParams = {}) {
         search: search ?? "",
         tipoEntidade: tipoEntidade ?? "",
         status: status ?? "PUBLICADO",
-        orderBy: orderBy ?? "criadoEm",
+        orderBy: orderBy ?? "dataInicio",
         order: order ?? "desc",
         scopedToMe: !!scopedToMe,
         pageSize,

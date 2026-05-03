@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Projetos**: Default ordering on `/projetos` now uses `dataInicio` (start date) instead of `criadoEm`, falling back to `criadoEm` for projects without a start date.
+
 ## [1.7.0] - 2026-05-02
 
 ### Added

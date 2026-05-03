@@ -8,7 +8,7 @@ import type {
 } from "@/lib/shared/validations/projetos";
 
 export type ProjetoStatus = "PUBLICADO" | "RASCUNHO" | "ARQUIVADO";
-export type ProjetoOrderBy = "criadoEm" | "publicadoEm" | "titulo" | "autoresCount";
+export type ProjetoOrderBy = "dataInicio" | "criadoEm" | "publicadoEm" | "titulo" | "autoresCount";
 export type ProjetoOrder = "asc" | "desc";
 
 /**

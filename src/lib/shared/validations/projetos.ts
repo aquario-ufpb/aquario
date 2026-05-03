@@ -137,7 +137,9 @@ export const listProjetosSchema = z.object({
       "OUTRO",
     ])
     .optional(),
-  orderBy: z.enum(["criadoEm", "publicadoEm", "titulo", "autoresCount"]).default("criadoEm"),
+  orderBy: z
+    .enum(["dataInicio", "criadoEm", "publicadoEm", "titulo", "autoresCount"])
+    .default("dataInicio"),
   order: z.enum(["asc", "desc"]).default("desc"),
   /**
    * When true, restrict results to projects the caller authors or admins —

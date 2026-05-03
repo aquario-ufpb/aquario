@@ -156,10 +156,18 @@ export class PrismaProjetosRepository implements IProjetosRepository {
       where.AND = [...((where.AND as Prisma.ProjetoWhereInput[]) ?? []), visibilityFilter];
     }
 
-    const orderByClause: Prisma.ProjetoOrderByWithRelationInput =
+    const sortOrder = order as Prisma.SortOrder;
+    // dataInicio is a tiered sort: projects with a start date sort by it first,
+    // then projects without fall back to criadoEm. Prisma can't do COALESCE in
+    // orderBy, so we approximate with `nulls: 'last'` followed by criadoEm.
+    const orderByClause:
+      | Prisma.ProjetoOrderByWithRelationInput
+      | Prisma.ProjetoOrderByWithRelationInput[] =
       orderBy === "autoresCount"
-        ? { autores: { _count: order as Prisma.SortOrder } }
-        : { [orderBy]: order as Prisma.SortOrder };
+        ? { autores: { _count: sortOrder } }
+        : orderBy === "dataInicio"
+          ? [{ dataInicio: { sort: sortOrder, nulls: "last" } }, { criadoEm: sortOrder }]
+          : { [orderBy]: sortOrder };
 
     const [projetos, total] = await Promise.all([
       prisma.projeto.findMany({
