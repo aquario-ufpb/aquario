@@ -51,8 +51,8 @@ const SORT_OPTIONS: {
   orderBy: ProjetoOrderBy;
   order: ProjetoOrder;
 }[] = [
-  { value: "recent", label: "Mais recentes", orderBy: "criadoEm", order: "desc" },
-  { value: "oldest", label: "Mais antigos", orderBy: "criadoEm", order: "asc" },
+  { value: "recent", label: "Mais recentes", orderBy: "dataInicio", order: "desc" },
+  { value: "oldest", label: "Mais antigos", orderBy: "dataInicio", order: "asc" },
   { value: "title-asc", label: "Título (A–Z)", orderBy: "titulo", order: "asc" },
   { value: "title-desc", label: "Título (Z–A)", orderBy: "titulo", order: "desc" },
   { value: "authors-desc", label: "Mais autores", orderBy: "autoresCount", order: "desc" },
