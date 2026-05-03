@@ -90,16 +90,19 @@ export default function SobrePage() {
                 professores e laboratórios possam se conectar e colaborar.
               </p>
               <p className="text-base leading-relaxed text-slate-600 dark:text-sky-100 md:text-lg">
-                A versão atual, lançada no semestre <strong>2025.2</strong>, já conta com as
-                funcionalidades de <strong>Guias</strong> e <strong>Entidades</strong> totalmente
-                disponíveis. Estes módulos permitem que os alunos encontrem orientações sobre cursos
-                e disciplinas, além de explorarem o diretório completo de laboratórios, grupos de
-                pesquisa, ligas acadêmicas e outras entidades do CI.
+                Já no ar no semestre <strong>2026.1</strong>: <strong>Guias</strong> com orientações
+                sobre cursos e disciplinas, <strong>Entidades</strong> com o diretório completo de
+                laboratórios, grupos de pesquisa e ligas acadêmicas, <strong>Projetos</strong> com
+                portfólio publicado pela própria comunidade, <strong>Vagas</strong> de estágio e
+                pesquisa, <strong>Minhas Disciplinas</strong> para montar seu calendário pessoal a
+                partir das turmas do semestre, <strong>Grades Curriculares</strong> interativas,{" "}
+                <strong>Calendário Acadêmico</strong> da UFPB, <strong>Mapas</strong> dos prédios do
+                CI e <strong>busca global</strong> (Ctrl+K) que cobre toda a plataforma.
               </p>
               <p className="text-base leading-relaxed text-slate-600 dark:text-sky-100 md:text-lg">
-                Estamos trabalhando continuamente para expandir as funcionalidades da plataforma,
-                incluindo sistema de vagas, blog e publicações, achados e perdidos, e muito mais. O
-                Aquário é um projeto open source e novas contribuições são sempre bem-vindas!
+                Continuamos trabalhando para expandir o Aquário, com novidades como blog e
+                publicações, achados e perdidos, e muito mais a caminho. O Aquário é um projeto open
+                source e novas contribuições são sempre bem-vindas!
               </p>
             </CardContent>
           </Card>

@@ -247,6 +247,7 @@ const NAV_LINKS = [
   { href: "/mapas", label: "MAPAS" },
   { href: "/guias", label: "GUIAS" },
   { href: "/entidades", label: "ENTIDADES" },
+  { href: "/projetos", label: "PROJETOS" },
 ] as const;
 
 // ============================================================================

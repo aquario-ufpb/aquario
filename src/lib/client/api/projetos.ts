@@ -95,6 +95,16 @@ export async function getProjetoBySlug(slug: string): Promise<ProjetoWithRelatio
   return res.json();
 }
 
+/** GET /api/projetos/[slug]/similar — server-ranked recommendations. */
+export async function getSimilarProjetos(slug: string, limit = 4): Promise<ProjetoWithRelations[]> {
+  const res = await apiClient(`/projetos/${slug}/similar?limit=${limit}`);
+  if (!res.ok) {
+    await throwApiError(res);
+  }
+  const data = (await res.json()) as { projetos: ProjetoWithRelations[] };
+  return data.projetos;
+}
+
 /** POST /api/projetos. */
 export async function createProjeto(data: CreateProjetoInput): Promise<ProjetoWithRelations> {
   const res = await apiClient("/projetos", {

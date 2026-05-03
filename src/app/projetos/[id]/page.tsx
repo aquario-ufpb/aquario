@@ -29,6 +29,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale/pt-BR";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
+import { SimilarProjetosSection } from "@/components/pages/projetos/similar-projetos-section";
 
 /** "jan/2025" — empty string if no date. */
 function formatMonthYear(d: Date | string | null | undefined): string {
@@ -123,11 +124,23 @@ export default function ProjetoPage() {
   return (
     <div className="container mx-auto p-4 md:p-8 mt-8 max-w-7xl pb-32">
       <div className="flex items-center justify-between mb-8">
-        <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-primary" asChild>
-          <Link href="/projetos">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Link>
+        <Button
+          variant="ghost"
+          className="pl-0 hover:bg-transparent hover:text-primary"
+          onClick={() => {
+            const sameOriginReferrer =
+              typeof document !== "undefined" &&
+              document.referrer &&
+              new URL(document.referrer).origin === window.location.origin;
+            if (sameOriginReferrer && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/projetos");
+            }
+          }}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
         </Button>
         {canEdit && (
           <div className="flex items-center gap-2">
@@ -398,6 +411,8 @@ export default function ProjetoPage() {
           )}
         </aside>
       </div>
+
+      {raw?.status === "PUBLICADO" && <SimilarProjetosSection slug={id} />}
 
       <ConfirmDeleteDialog
         open={archiveOpen}

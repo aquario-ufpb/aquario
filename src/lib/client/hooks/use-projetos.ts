@@ -3,6 +3,7 @@ import { queryKeys } from "@/lib/client/query-keys";
 import {
   fetchProjetos,
   getProjetoBySlug,
+  getSimilarProjetos,
   listProjetos,
   type ProjetoOrder,
   type ProjetoOrderBy,
@@ -274,6 +275,16 @@ export function useProjetoBySlug(slug?: string) {
   return useQuery({
     queryKey: queryKeys.projetos.bySlug(slug ?? ""),
     queryFn: () => getProjetoBySlug(slug as string),
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Server-ranked similar projetos for the given source slug.
+export function useSimilarProjetos(slug?: string, limit = 4) {
+  return useQuery({
+    queryKey: [...queryKeys.projetos.bySlug(slug ?? ""), "similar", limit],
+    queryFn: () => getSimilarProjetos(slug as string, limit),
     enabled: !!slug,
     staleTime: 5 * 60 * 1000,
   });
