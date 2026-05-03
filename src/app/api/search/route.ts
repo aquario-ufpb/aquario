@@ -25,6 +25,7 @@ export async function GET(req: Request) {
           guias: [],
           entidades: [],
           vagas: [],
+          projetos: [],
           disciplinas: [],
           cursos: [],
           usuarios: [],
@@ -36,19 +37,21 @@ export async function GET(req: Request) {
     const container = getContainer();
     const repo = container.searchRepository;
 
-    const [paginas, guias, entidades, vagas, disciplinas, cursos, usuarios] = await Promise.all([
-      searchStaticPages(query, limit),
-      repo.searchGuias(query, limit),
-      repo.searchEntidades(query, limit),
-      repo.searchVagas(query, limit),
-      repo.searchDisciplinas(query, limit),
-      repo.searchCursos(query, limit),
-      repo.searchUsuarios(query, limit),
-    ]);
+    const [paginas, guias, entidades, vagas, projetos, disciplinas, cursos, usuarios] =
+      await Promise.all([
+        searchStaticPages(query, limit),
+        repo.searchGuias(query, limit),
+        repo.searchEntidades(query, limit),
+        repo.searchVagas(query, limit),
+        repo.searchProjetos(query, limit),
+        repo.searchDisciplinas(query, limit),
+        repo.searchCursos(query, limit),
+        repo.searchUsuarios(query, limit),
+      ]);
 
     const response: SearchResponse = {
       query,
-      results: { paginas, guias, entidades, vagas, disciplinas, cursos, usuarios },
+      results: { paginas, guias, entidades, vagas, projetos, disciplinas, cursos, usuarios },
     };
 
     return NextResponse.json(response);

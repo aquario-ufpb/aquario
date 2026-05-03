@@ -62,6 +62,12 @@ const STATIC_PAGES: StaticPage[] = [
     descricao: "Estagios, pesquisa e oportunidades para estudantes",
     url: "/vagas",
   },
+  {
+    id: "projetos",
+    titulo: "Projetos",
+    descricao: "Projetos de pesquisa, extensao e iniciativas estudantis da UFPB",
+    url: "/projetos",
+  },
 ];
 
 function normalize(text: string): string {
