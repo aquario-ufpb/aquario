@@ -24,6 +24,7 @@ import { ImageIcon } from "lucide-react";
 import { createProjeto, deleteProjetoImage, uploadProjetoImage } from "@/lib/client/api/projetos";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import Image from "next/image";
+import { trackEvent } from "@/analytics/posthog-client";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -280,6 +281,11 @@ export default function NovoProjetoPage() {
       };
 
       await createProjeto(body as Parameters<typeof createProjeto>[0]);
+
+      trackEvent("projeto_created", {
+        projeto_slug: slug,
+        posted_as: postandoComo === POSTAR_COMO_USUARIO ? "user" : "entidade",
+      });
 
       toast.success("Projeto criado com sucesso!", { id: toastId });
       setUploadedBlobs([]);

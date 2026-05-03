@@ -27,6 +27,7 @@ import { ImageIcon } from "lucide-react";
 import { deleteProjetoImage, uploadProjetoImage } from "@/lib/client/api/projetos";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import Image from "next/image";
+import { trackEvent } from "@/analytics/posthog-client";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -334,6 +335,8 @@ export default function EditarProjetoPage() {
       if (newKey !== originalAutoresKey) {
         await updateAutores.mutateAsync({ autores: newAutoresList });
       }
+
+      trackEvent("projeto_edited", { projeto_slug: slug, status });
 
       toast.success("Projeto atualizado com sucesso!", { id: toastId });
       setUploadedBlobs([]);

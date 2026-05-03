@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ import { ptBR } from "date-fns/locale/pt-BR";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 import { SimilarProjetosSection } from "@/components/pages/projetos/similar-projetos-section";
+import { trackEvent } from "@/analytics/posthog-client";
+import type { ProjetoStatus } from "@/analytics/posthog-events";
 
 /** "jan/2025" — empty string if no date. */
 function formatMonthYear(d: Date | string | null | undefined): string {
@@ -85,6 +87,21 @@ export default function ProjetoPage() {
 
   const isArchived = raw?.status === "ARQUIVADO";
 
+  // Fire once per loaded projeto. Depending on `raw.id` (not `raw`) avoids
+  // duplicate fires from React Query refetches/mutations: structural sharing
+  // can't help when the mutation changes a field (e.g. archive/unarchive flips
+  // status), so the object reference would change but the id stays put.
+  useEffect(() => {
+    if (!raw) {
+      return;
+    }
+    trackEvent("projeto_viewed", {
+      projeto_slug: id,
+      status: raw.status as ProjetoStatus,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, raw?.id]);
+
   const handleArchiveToggle = async () => {
     if (!raw) {
       return;
@@ -95,6 +112,9 @@ export default function ProjetoPage() {
     const toastId = toast.loading(`${verb} projeto...`);
     try {
       await updateProjeto.mutateAsync({ status: nextStatus });
+      trackEvent(isArchived ? "projeto_unarchived" : "projeto_archived", {
+        projeto_slug: id,
+      });
       toast.success(`Projeto ${verbDone}.`, { id: toastId });
       setArchiveOpen(false);
       if (!isArchived) {
@@ -378,6 +398,12 @@ export default function ProjetoPage() {
                     href={projeto.linkRepositorio}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() =>
+                      trackEvent("projeto_link_clicked", {
+                        projeto_slug: id,
+                        link_type: "repositorio",
+                      })
+                    }
                     className="flex items-center gap-3 -ml-2 rounded-lg p-2 text-sm font-medium transition-colors hover:bg-muted/50 hover:text-aquario-primary"
                   >
                     <Github className="h-4 w-4 text-muted-foreground" />
@@ -389,6 +415,12 @@ export default function ProjetoPage() {
                     href={projeto.linkPrototipo}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() =>
+                      trackEvent("projeto_link_clicked", {
+                        projeto_slug: id,
+                        link_type: "prototipo",
+                      })
+                    }
                     className="flex items-center gap-3 -ml-2 rounded-lg p-2 text-sm font-medium transition-colors hover:bg-muted/50 hover:text-aquario-primary"
                   >
                     <ExternalLink className="h-4 w-4 text-muted-foreground" />
@@ -400,6 +432,12 @@ export default function ProjetoPage() {
                     href={projeto.linkOutro}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() =>
+                      trackEvent("projeto_link_clicked", {
+                        projeto_slug: id,
+                        link_type: "outro",
+                      })
+                    }
                     className="flex items-center gap-3 -ml-2 rounded-lg p-2 text-sm font-medium transition-colors hover:bg-muted/50 hover:text-aquario-primary"
                   >
                     <ExternalLink className="h-4 w-4 text-muted-foreground" />

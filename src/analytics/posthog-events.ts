@@ -94,6 +94,29 @@ export type OnboardingEvent =
   | { name: "onboarding_step_completed"; step_id: OnboardingStepId }
   | { name: "onboarding_step_skipped"; step_id: OnboardingStepId };
 
+export type ProjetoStatus = "PUBLICADO" | "RASCUNHO" | "ARQUIVADO";
+
+export type ProjetosEvent =
+  | {
+      name: "projetos_list_viewed";
+      tab: "PUBLICADO" | "MEUS_PUBLICADOS" | "RASCUNHO" | "ARQUIVADO";
+    }
+  | {
+      name: "projeto_viewed";
+      projeto_slug: string;
+      status: ProjetoStatus;
+    }
+  | {
+      name: "projeto_link_clicked";
+      projeto_slug: string;
+      link_type: "repositorio" | "prototipo" | "outro";
+    }
+  | { name: "projeto_create_clicked"; logged_in: boolean }
+  | { name: "projeto_created"; projeto_slug: string; posted_as: "user" | "entidade" }
+  | { name: "projeto_edited"; projeto_slug: string; status: ProjetoStatus }
+  | { name: "projeto_archived"; projeto_slug: string }
+  | { name: "projeto_unarchived"; projeto_slug: string };
+
 // Union of all PostHog events
 export type PostHogEvent =
   | UIInteractionEvent
@@ -106,4 +129,5 @@ export type PostHogEvent =
   | MapasEvent
   | GuiasEvent
   | UsuariosEvent
-  | OnboardingEvent;
+  | OnboardingEvent
+  | ProjetosEvent;

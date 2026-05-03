@@ -28,6 +28,7 @@ import { Plus, FolderKanban } from "lucide-react";
 import { LoginPromptDialog } from "@/components/shared/login-prompt-dialog";
 import { PageHeader } from "@/components/ui/page-header";
 import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
+import { trackEvent } from "@/analytics/posthog-client";
 
 const FILTER_TO_TIPO: Record<string, string | undefined> = {
   pessoais: "PESSOAL",
@@ -155,7 +156,14 @@ export default function Projetos() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // Fires once on mount (initial tab) and on every tab change. Filter/sort/search
+  // changes are intentionally not tracked here — they'd be too noisy.
+  useEffect(() => {
+    trackEvent("projetos_list_viewed", { tab });
+  }, [tab]);
+
   const handleNovoProjetoClick = () => {
+    trackEvent("projeto_create_clicked", { logged_in: !!user });
     if (user) {
       router.push("/projetos/novo");
     } else {
