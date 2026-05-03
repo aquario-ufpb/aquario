@@ -2,6 +2,7 @@
 import { trackEvent } from "@/analytics/posthog-client";
 import { FeatureCard } from "@/components/pages/landing/features/feature-card";
 import { landingFeatures } from "@/components/pages/landing/features/feature-data";
+import { TopProjetosCarousel } from "@/components/pages/landing/top-projetos-carousel";
 import { WaterTransitionSection } from "@/components/pages/landing/water-transition-section";
 import { Button } from "@/components/ui/button";
 import { useEntidades } from "@/lib/client/hooks";
@@ -141,6 +142,7 @@ export default function Home() {
       </div>
 
       <WaterTransitionSection>
+        <TopProjetosCarousel />
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 grid gap-6 md:grid-cols-[1fr_0.75fr] md:items-end">
             <div>
@@ -162,7 +164,7 @@ export default function Home() {
             ))}
           </div>
 
-          <section className="pt-20 md:pt-28">
+          <section className="pt-28 md:pt-40">
             <div className="grid gap-8 rounded-[2rem] border border-white/10 bg-white/[0.05] p-6 shadow-sm backdrop-blur-sm md:grid-cols-[0.85fr_1.15fr] md:items-center md:p-10">
               <div>
                 <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-sky-200">

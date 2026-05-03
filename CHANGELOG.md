@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Navigation**: Add `Projetos` link to the desktop navbar and mobile hamburger menu.
+- **Landing Page**: Add a "Projetos destaque" section beneath the underwater hero — an infinite-loop carousel showing 3 cards at a time, drawn from a random sample of the top projects by author count.
+
 ### Changed
 - **Projetos**: Default ordering on `/projetos` now uses `dataInicio` (start date) instead of `criadoEm`, falling back to `criadoEm` for projects without a start date.
 

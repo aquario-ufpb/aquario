@@ -14,6 +14,6 @@ export async function GET() {
 
   return NextResponse.json({
     totalUsuarios: total,
-    githubStars: 75,
+    githubStars: 80,
   });
 }
