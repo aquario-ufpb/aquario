@@ -87,7 +87,10 @@ export default function ProjetoPage() {
 
   const isArchived = raw?.status === "ARQUIVADO";
 
-  // Fire once per loaded projeto (keyed on slug, not the raw reference).
+  // Fire once per loaded projeto. Depending on `raw.id` (not `raw`) avoids
+  // duplicate fires from React Query refetches/mutations: structural sharing
+  // can't help when the mutation changes a field (e.g. archive/unarchive flips
+  // status), so the object reference would change but the id stays put.
   useEffect(() => {
     if (!raw) {
       return;
@@ -96,7 +99,8 @@ export default function ProjetoPage() {
       projeto_slug: id,
       status: raw.status as ProjetoStatus,
     });
-  }, [id, raw]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, raw?.id]);
 
   const handleArchiveToggle = async () => {
     if (!raw) {
