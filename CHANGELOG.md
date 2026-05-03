@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Navigation**: Add `Projetos` link to the desktop navbar and mobile hamburger menu.
 - **Landing Page**: Add a "Projetos destaque" section inside the underwater area, above Recursos — an infinite-loop carousel showing 3 cards at a time, drawn from a random sample of the top projects by author count.
 - **Projeto Page**: New "Projetos similares" section on `/projetos/[slug]` — shows up to 4 related projetos. Powered by a new `GET /api/projetos/[slug]/similar` endpoint that ranks PUBLICADO projetos server-side by shared autores (entidade > usuário) and tag overlap.
+- **Projetos**: PostHog analytics across the projetos feature — `projetos_list_viewed` (initial mount + tab change), `projeto_viewed`, `projeto_link_clicked` (repositorio/prototipo/outro), `projeto_create_clicked`, `projeto_created`, `projeto_edited`, `projeto_archived`, and `projeto_unarchived`.
 
 ### Changed
 - **Projetos**: Default ordering on `/projetos` now uses `dataInicio` (start date) instead of `criadoEm`, falling back to `criadoEm` for projects without a start date.
