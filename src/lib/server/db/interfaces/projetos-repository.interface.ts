@@ -133,4 +133,11 @@ export type IProjetosRepository = {
   ): Promise<ProjetoWithRelations | null>;
 
   findBySlugWithAutores(slug: string): Promise<(Projeto & { autores: ProjetoAutor[] }) | null>;
+
+  /**
+   * Returns up to `limit` PUBLICADO projetos most similar to the source,
+   * scored by overlap of tags and shared autores (usuario/entidade).
+   * Excludes the source itself. Empty array when no overlap exists.
+   */
+  findSimilar(projetoId: string, limit: number): Promise<ProjetoWithRelations[]>;
 };

@@ -15,7 +15,6 @@ import { Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import type { Membro, Cargo } from "@/lib/shared/types/membro.types";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUpdateEntidadeMember, useDeleteEntidadeMember } from "@/lib/client/hooks/use-entidades";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -123,17 +122,19 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
 
   return (
     <div className="border rounded-lg overflow-hidden">
-      <ScrollArea className="h-[400px]">
-        <div className="min-w-full">
+      <div className="max-h-[400px] overflow-auto">
+        <div className="min-w-max">
           <table className="w-full">
-            <thead className="bg-muted/50 sticky top-0">
+            <thead className="bg-muted/50 sticky top-0 z-10">
               <tr>
-                <th className="text-left p-3 text-sm font-medium">Usuário</th>
-                <th className="text-left p-3 text-sm font-medium">Cargo</th>
-                <th className="text-left p-3 text-sm font-medium">Papel</th>
-                <th className="text-left p-3 text-sm font-medium">Início</th>
-                <th className="text-left p-3 text-sm font-medium">Término</th>
-                <th className="text-right p-3 text-sm font-medium">Ações</th>
+                <th className="text-left p-3 text-sm font-medium">
+                  <div className="min-w-[220px]">Usuário</div>
+                </th>
+                <th className="text-left p-3 text-sm font-medium whitespace-nowrap">Cargo</th>
+                <th className="text-left p-3 text-sm font-medium whitespace-nowrap">Papel</th>
+                <th className="text-left p-3 text-sm font-medium whitespace-nowrap">Início</th>
+                <th className="text-left p-3 text-sm font-medium whitespace-nowrap">Término</th>
+                <th className="text-right p-3 text-sm font-medium whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -312,7 +313,7 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
             </tbody>
           </table>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }

@@ -10,10 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Navigation**: Add `Projetos` link to the desktop navbar and mobile hamburger menu.
 - **Landing Page**: Add a "Projetos destaque" section inside the underwater area, above Recursos — an infinite-loop carousel showing 3 cards at a time, drawn from a random sample of the top projects by author count.
+- **Projeto Page**: New "Projetos similares" section on `/projetos/[slug]` — shows up to 4 related projetos. Powered by a new `GET /api/projetos/[slug]/similar` endpoint that ranks PUBLICADO projetos server-side by shared autores (entidade > usuário) and tag overlap.
 
 ### Changed
 - **Projetos**: Default ordering on `/projetos` now uses `dataInicio` (start date) instead of `criadoEm`, falling back to `criadoEm` for projects without a start date.
 - **Landing Page**: Bump the GitHub stars stat to 80.
+- **Sobre**: Refresh the Funcionalidades copy for semestre 2026.1 — list every live module (Guias, Entidades, Projetos, Vagas, Minhas Disciplinas, Grades Curriculares, Calendário Acadêmico, Mapas, busca global) and drop Vagas from the "em breve" list now that it's live.
+
+### Fixed
+- **Entidade**: Members table now scrolls horizontally instead of squeezing the Usuário column when a row enters edit mode. The user column has a guaranteed min-width and the table grows to fit the inline edit controls.
+- **DatePicker**: Date picker popovers no longer fail to open when used inside dialogs (e.g. add-member form on entidade page, add-vínculo dialog on profile). Popover now runs in modal mode so the parent Dialog's focus trap doesn't immediately close it.
+- **Projeto Page**: "Voltar" button on `/projetos/[id]` now returns to the previous page (e.g. the entidade page the user came from) instead of always going to `/projetos`. Falls back to `/projetos` when there's no in-app history.
 
 ## [1.7.0] - 2026-05-02
 

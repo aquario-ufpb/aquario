@@ -306,4 +306,102 @@ export class PrismaProjetosRepository implements IProjetosRepository {
 
     return this.findBySlug(slug);
   }
+
+  async findSimilar(projetoId: string, limit: number): Promise<ProjetoWithRelations[]> {
+    const source = await prisma.projeto.findUnique({
+      where: { id: projetoId },
+      select: {
+        id: true,
+        tags: true,
+        autores: { select: { usuarioId: true, entidadeId: true } },
+      },
+    });
+    if (!source) {
+      return [];
+    }
+
+    const sourceUsuarioIds = source.autores.map(a => a.usuarioId).filter((x): x is string => !!x);
+    const sourceEntidadeIds = source.autores.map(a => a.entidadeId).filter((x): x is string => !!x);
+    const sourceTags = source.tags;
+    const sourceTagsLower = new Set(sourceTags.map(t => t.toLowerCase()));
+
+    // No signal to score against → no recommendations.
+    if (
+      sourceTags.length === 0 &&
+      sourceUsuarioIds.length === 0 &&
+      sourceEntidadeIds.length === 0
+    ) {
+      return [];
+    }
+
+    const overlapClauses: Prisma.ProjetoWhereInput[] = [];
+    if (sourceTags.length > 0) {
+      overlapClauses.push({ tags: { hasSome: sourceTags } });
+    }
+    if (sourceUsuarioIds.length > 0) {
+      overlapClauses.push({ autores: { some: { usuarioId: { in: sourceUsuarioIds } } } });
+    }
+    if (sourceEntidadeIds.length > 0) {
+      overlapClauses.push({ autores: { some: { entidadeId: { in: sourceEntidadeIds } } } });
+    }
+
+    const candidates = await prisma.projeto.findMany({
+      where: {
+        status: "PUBLICADO",
+        id: { not: projetoId },
+        OR: overlapClauses,
+      },
+      ...projetoWithAutoresArgs,
+    });
+
+    // Per-overlap weights — entidade overlap is a stronger signal than a single
+    // shared tag (a lab's projects are highly related); shared usuario sits in
+    // between. Tweak as the corpus grows and we get a feel for ordering.
+    const ENTIDADE_WEIGHT = 5;
+    const USUARIO_WEIGHT = 3;
+    const TAG_WEIGHT = 2;
+
+    const sourceUsuarioSet = new Set(sourceUsuarioIds);
+    const sourceEntidadeSet = new Set(sourceEntidadeIds);
+
+    const scored = candidates.map(p => {
+      let score = 0;
+      const seenUsuario = new Set<string>();
+      const seenEntidade = new Set<string>();
+      for (const a of p.autores) {
+        if (a.usuarioId && sourceUsuarioSet.has(a.usuarioId) && !seenUsuario.has(a.usuarioId)) {
+          score += USUARIO_WEIGHT;
+          seenUsuario.add(a.usuarioId);
+        }
+        if (
+          a.entidadeId &&
+          sourceEntidadeSet.has(a.entidadeId) &&
+          !seenEntidade.has(a.entidadeId)
+        ) {
+          score += ENTIDADE_WEIGHT;
+          seenEntidade.add(a.entidadeId);
+        }
+      }
+      for (const t of p.tags) {
+        if (sourceTagsLower.has(t.toLowerCase())) {
+          score += TAG_WEIGHT;
+        }
+      }
+      return { p, score };
+    });
+
+    return scored
+      .filter(s => s.score > 0)
+      .sort((a, b) => {
+        if (b.score !== a.score) {
+          return b.score - a.score;
+        }
+        // Tie-break: most recently published first.
+        const at = a.p.publicadoEm?.getTime() ?? a.p.criadoEm.getTime();
+        const bt = b.p.publicadoEm?.getTime() ?? b.p.criadoEm.getTime();
+        return bt - at;
+      })
+      .slice(0, limit)
+      .map(s => asProjetoWithRelations(s.p));
+  }
 }
