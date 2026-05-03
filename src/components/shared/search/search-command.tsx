@@ -8,6 +8,7 @@ import {
   BookOpen,
   Building2,
   Briefcase,
+  FolderKanban,
   GraduationCap,
   BookMarked,
   User,
@@ -27,6 +28,7 @@ const CATEGORY_CONFIG: Record<SearchResultKind, { label: string; icon: React.Ele
   guia: { label: "GUIAS", icon: BookOpen },
   entidade: { label: "ENTIDADES", icon: Building2 },
   vaga: { label: "VAGAS", icon: Briefcase },
+  projeto: { label: "PROJETOS", icon: FolderKanban },
   disciplina: { label: "DISCIPLINAS", icon: BookMarked },
   curso: { label: "CURSOS", icon: GraduationCap },
   usuario: { label: "USUARIOS", icon: User },
@@ -37,6 +39,7 @@ const RESULTS_KEY_MAP: Record<SearchResultKind, string> = {
   guia: "guias",
   entidade: "entidades",
   vaga: "vagas",
+  projeto: "projetos",
   disciplina: "disciplinas",
   curso: "cursos",
   usuario: "usuarios",
@@ -47,6 +50,7 @@ const CATEGORY_ORDER: SearchResultKind[] = [
   "guia",
   "entidade",
   "vaga",
+  "projeto",
   "disciplina",
   "curso",
   "usuario",
@@ -84,6 +88,8 @@ function getItemLabel(item: SearchResultItem): string {
       return item.nome;
     case "vaga":
       return item.titulo;
+    case "projeto":
+      return item.titulo;
     case "disciplina":
       return `${item.codigo} - ${item.nome}`;
     case "curso":
@@ -103,6 +109,8 @@ function getItemSnippet(item: SearchResultItem): string | null {
       return item.tipo.replace(/_/g, " ").toLowerCase();
     case "vaga":
       return item.tipoVaga.replace(/_/g, " ").toLowerCase();
+    case "projeto":
+      return item.subtitulo;
     case "disciplina":
       return null;
     case "curso":
@@ -122,6 +130,8 @@ function getItemRoute(item: SearchResultItem): string {
       return item.slug ? `/entidade/${item.slug}` : "/entidades";
     case "vaga":
       return `/vagas/${item.id}`;
+    case "projeto":
+      return `/projetos/${item.slug}`;
     case "disciplina":
       return `/grades-curriculares`;
     case "curso":
