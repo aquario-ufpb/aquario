@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getContainer } from "@/lib/server/container";
-import { requireSiteUrl } from "@/lib/server/utils/seo";
+import { getSiteUrl } from "@/lib/server/utils/seo";
 import type { ProjetoWithRelations } from "@/lib/shared/types/projeto";
 
 // Regenerate at most once an hour. Without this the sitemap is frozen at build
@@ -64,7 +64,13 @@ async function fetchAllPublicadoProjetos(): Promise<ProjetoWithRelations[]> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = requireSiteUrl();
+  const siteUrl = getSiteUrl();
+  // Fail closed: with no configured origin (typically a CI build with
+  // NEXT_PUBLIC_APP_URL unset) we emit an empty sitemap rather than localhost
+  // URLs. The hourly revalidate will repopulate once env is available.
+  if (!siteUrl) {
+    return [];
+  }
   const container = getContainer();
 
   const [projetos, entidades, guias] = await Promise.all([
