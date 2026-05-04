@@ -1,218 +1,86 @@
-"use client";
+import type { Metadata } from "next";
+import { getContainer } from "@/lib/server/container";
+import GuiasClient from "./guias-client";
 
-import React, { useEffect, useState, useMemo } from "react";
-import { useParams } from "next/navigation";
-import { useTheme } from "next-themes";
-import { GuideIndex } from "@/components/shared/guide-index";
-import MarkdownRenderer from "@/components/shared/markdown-renderer";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { AlignJustify } from "lucide-react";
-import { useGuiasPage } from "@/lib/client/hooks";
-import { trackEvent } from "@/analytics/posthog-client";
+type PageProps = {
+  params: Promise<{ parts?: string[] }>;
+};
+
+const SITE_TITLE = "Guias · Aquário";
+const ROOT_DESCRIPTION =
+  "Guias do Centro de Informática da UFPB: ementas, dicas, tutoriais e referências sobre disciplinas, períodos, e a vida acadêmica.";
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { parts } = await params;
+
+  if (!parts || parts.length === 0) {
+    return {
+      title: SITE_TITLE,
+      description: ROOT_DESCRIPTION,
+      alternates: { canonical: "/guias" },
+      openGraph: { title: SITE_TITLE, description: ROOT_DESCRIPTION, url: "/guias" },
+    };
+  }
+
+  // The route is a catch-all. Anything deeper than guia/secao/subsecao is
+  // structurally invalid — don't let crawlers index those URLs by accident.
+  if (parts.length > 3) {
+    return { title: SITE_TITLE, robots: { index: false, follow: false } };
+  }
+
+  const [guiaSlug, secaoSlug, subSlug] = parts;
+  const container = getContainer();
+  const guia = guiaSlug ? await container.guiasRepository.findBySlug(guiaSlug) : null;
+
+  if (!guia) {
+    return { title: SITE_TITLE, robots: { index: false, follow: false } };
+  }
+
+  const canonical = `/guias/${parts.join("/")}`;
+
+  if (!secaoSlug) {
+    const title = `${guia.titulo} · Guias · Aquário`;
+    return {
+      title,
+      description: `Guia "${guia.titulo}" no Aquário, comunidade do Centro de Informática da UFPB.`,
+      alternates: { canonical },
+      openGraph: { title, url: canonical },
+    };
+  }
+
+  const secao = guia.secoes?.find(s => s.slug === secaoSlug);
+  if (!secao) {
+    return { title: `${guia.titulo} · Aquário`, robots: { index: false, follow: false } };
+  }
+
+  if (!subSlug) {
+    const title = `${secao.titulo} · ${guia.titulo} · Aquário`;
+    return {
+      title,
+      description: `${secao.titulo} — guia "${guia.titulo}" no Aquário (CI/UFPB).`,
+      alternates: { canonical },
+      openGraph: { title, url: canonical },
+    };
+  }
+
+  const subSecoes = await container.subSecoesGuiaRepository.findBySecaoId(secao.id);
+  const subSecao = subSecoes.find(s => s.slug === subSlug);
+  if (!subSecao) {
+    return {
+      title: `${secao.titulo} · ${guia.titulo} · Aquário`,
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const title = `${subSecao.titulo} · ${secao.titulo} · ${guia.titulo} · Aquário`;
+  return {
+    title,
+    description: `${subSecao.titulo} — ${secao.titulo}, guia "${guia.titulo}" no Aquário (CI/UFPB).`,
+    alternates: { canonical },
+    openGraph: { title, url: canonical },
+  };
+}
 
 export default function GuiasPage() {
-  const params = useParams<{ parts?: string[] }>();
-  const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const parts = params?.parts as string[] | undefined;
-  const partsPath = parts?.join("/") ?? "";
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!parts || parts.length < 2) {
-      return;
-    }
-    const [guiaSlug, secaoSlug, subSlug] = parts;
-    if (guiaSlug && secaoSlug) {
-      trackEvent("guia_section_viewed", {
-        guia_slug: guiaSlug,
-        section_slug: secaoSlug,
-        ...(subSlug ? { subsection_slug: subSlug } : {}),
-      });
-    }
-    // partsPath is used as the stable dep to avoid re-tracking when array ref changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [partsPath]);
-
-  const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
-
-  const { guiaTree, isLoading, error, secoesData, subSecoesData } = useGuiasPage();
-
-  const currentContent = useMemo(() => {
-    if (!parts || parts.length === 0) {
-      let summary = `# Bem-vindo aos Guias do Centro de Informática\n\nAqui estão todos os tópicos disponíveis para explorar:\n\n`;
-
-      if (guiaTree && guiaTree.length > 0) {
-        guiaTree.forEach((guia, guiaIndex) => {
-          summary += `## ${guia.titulo}\n\n`;
-
-          if (guia.secoes && guia.secoes.length > 0) {
-            guia.secoes.forEach(secao => {
-              const secaoUrl = `/guias/${guia.slug}/${secao.slug}`;
-              summary += `- [${secao.titulo}](${secaoUrl})`;
-
-              if (secao.subsecoes && secao.subsecoes.length > 0) {
-                summary += "\n";
-                secao.subsecoes.forEach(subsecao => {
-                  const subsecaoUrl = `${secaoUrl}/${subsecao.slug}`;
-                  summary += `  - [${subsecao.titulo}](${subsecaoUrl})\n`;
-                });
-              } else {
-                summary += "\n";
-              }
-            });
-          }
-
-          if (guiaIndex < guiaTree.length - 1) {
-            summary += "\n";
-          }
-        });
-      } else {
-        summary += "Nenhum tópico disponível no momento.";
-      }
-
-      return summary;
-    }
-
-    // URL structure: /guias/{guia}/{secao}/{subsecao?}
-    const [guiaSlug, secaoSlug, subSlug] = parts;
-
-    if (!guiaSlug) {
-      return "# Guia não especificado";
-    }
-
-    // Find the section within the specific guia
-    let targetSecao = null;
-    if (secoesData && secoesData[guiaSlug]) {
-      const secoes = secoesData[guiaSlug];
-      const secao = secoes.find(s => s.slug === secaoSlug);
-      if (secao) {
-        targetSecao = secao;
-      }
-    }
-
-    if (!targetSecao) {
-      return "# Seção não encontrada";
-    }
-
-    if (!subSlug) {
-      return targetSecao.conteudo || "# Conteúdo não disponível";
-    }
-
-    // Find the subsection by slug
-    if (subSecoesData && subSecoesData[targetSecao.slug]) {
-      const subSecoes = subSecoesData[targetSecao.slug];
-      const subSecao = subSecoes.find(s => s.slug === subSlug);
-      if (subSecao) {
-        return subSecao.conteudo || "# Conteúdo não disponível";
-      }
-    }
-
-    return "# Sub-seção não encontrada";
-  }, [parts, secoesData, subSecoesData, guiaTree]);
-
-  const breadcrumbs = useMemo(() => {
-    const crumbs: Array<{ label: string; href?: string }> = [{ label: "Guias", href: "/guias" }];
-
-    if (!parts || parts.length === 0) {
-      crumbs.push({ label: "Índice" });
-      return crumbs;
-    }
-
-    const [guiaSlug, secaoSlug, subSlug] = parts;
-
-    if (guiaSlug && guiaTree) {
-      const guia = guiaTree.find(g => g.slug === guiaSlug);
-      if (guia) {
-        crumbs.push({ label: guia.titulo, href: `/guias` });
-
-        if (secaoSlug) {
-          const secao = guia.secoes?.find(s => s.slug === secaoSlug);
-          if (secao) {
-            crumbs.push({
-              label: secao.titulo,
-              href: `/guias/${guiaSlug}/${secaoSlug}`,
-            });
-
-            if (subSlug) {
-              const subSecao = secao.subsecoes?.find(sub => sub.slug === subSlug);
-              if (subSecao) {
-                crumbs.push({ label: subSecao.titulo });
-              } else {
-                crumbs.push({ label: subSlug });
-              }
-            }
-          } else {
-            crumbs.push({ label: secaoSlug });
-          }
-        }
-      } else {
-        crumbs.push({ label: guiaSlug });
-      }
-    }
-
-    return crumbs;
-  }, [parts, guiaTree]);
-
-  if (isLoading) {
-    return (
-      <div className="p-8" style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>
-        Carregando…
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div className="p-8" style={{ color: isDark ? "#FFB3B5" : "#d32f2f" }}>
-        {error?.message || "Erro ao carregar guias"}
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed inset-x-0 top-[90px] bottom-0 flex flex-col overflow-hidden">
-      <div className="flex md:flex-row w-full flex-col flex-1 min-h-0 overflow-hidden">
-        <div className="w-[300px] hidden md:flex flex-col h-full overflow-hidden">
-          <GuideIndex guias={guiaTree} />
-        </div>
-        <div className="md:hidden pl-4 pt-4 pb-4">
-          <Sheet key={"left"}>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                style={{
-                  backgroundColor: isDark ? "#1a3a5c" : "#ffffff",
-                  color: isDark ? "#C8E6FA" : "#0e3a6c",
-                  borderColor: isDark ? "rgba(208, 239, 255, 0.3)" : "rgba(14, 58, 108, 0.2)",
-                }}
-              >
-                <AlignJustify size={12} />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side={"left"} className="p-0 flex flex-col overflow-hidden">
-              <SheetHeader className="px-6 pt-6 flex-shrink-0">
-                <SheetTitle className="pb-4" style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}>
-                  O que procura?
-                </SheetTitle>
-              </SheetHeader>
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <GuideIndex guias={guiaTree} />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-        <div className="flex-1 flex flex-col h-full overflow-hidden lg:px-36 px-8">
-          <MarkdownRenderer
-            content={currentContent}
-            breadcrumbs={breadcrumbs}
-            basePath={parts && parts.length > 0 ? `/guias/${parts.join("/")}` : `/guias`}
-          />
-        </div>
-      </div>
-    </div>
-  );
+  return <GuiasClient />;
 }

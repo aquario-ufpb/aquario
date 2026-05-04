@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { FeatureIllustration } from "@/components/pages/landing/features/feature-illustration";
 import type { FeatureIllustrationVariant } from "@/components/pages/landing/features/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,20 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
 import { Activity, BookOpen, Calendar, CalendarDays, GitBranch, MapIcon } from "lucide-react";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Recursos · Aquário",
+  description:
+    "Explore os recursos do Aquário para alunos do Centro de Informática da UFPB: minhas disciplinas, calendário acadêmico, mapas, grades curriculares, guias e mais.",
+  alternates: { canonical: "/recursos" },
+  openGraph: {
+    title: "Recursos · Aquário",
+    description:
+      "Explore os recursos do Aquário para alunos do Centro de Informática da UFPB: minhas disciplinas, calendário acadêmico, mapas, grades curriculares, guias e mais.",
+    url: "/recursos",
+    type: "website",
+  },
+};
 
 const recursos: Array<{
   id: string;
