@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Search**: Global search bar now indexes Projetos. Matches PUBLICADO projetos by `titulo`, `subtitulo`, and `tags`, opening the projeto detail page (`/projetos/[slug]`). The `/projetos` landing page is also returned as a static-page result.
+
 ## [1.7.1] - 2026-05-03
 
 ### Added

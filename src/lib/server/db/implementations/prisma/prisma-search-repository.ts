@@ -5,6 +5,7 @@ import type {
   SearchResultGuia,
   SearchResultEntidade,
   SearchResultVaga,
+  SearchResultProjeto,
   SearchResultDisciplina,
   SearchResultCurso,
   SearchResultUsuario,
@@ -81,6 +82,35 @@ export class PrismaSearchRepository implements ISearchRepository {
     `);
 
     return results.map(r => ({ kind: "vaga" as const, ...r }));
+  }
+
+  async searchProjetos(query: string, limit: number): Promise<SearchResultProjeto[]> {
+    const results = await prisma.$queryRaw<
+      Array<{ id: string; titulo: string; slug: string; subtitulo: string | null }>
+    >(Prisma.sql`
+      SELECT id, titulo, slug, subtitulo
+      FROM "Projeto"
+      WHERE status = 'PUBLICADO'
+        AND to_tsvector(
+              'portuguese',
+              immutable_unaccent(
+                titulo || ' ' || coalesce(subtitulo, '') || ' ' || array_to_string(tags, ' ')
+              )
+            )
+            @@ plainto_tsquery('portuguese', immutable_unaccent(${query}))
+      ORDER BY ts_rank(
+        to_tsvector(
+          'portuguese',
+          immutable_unaccent(
+            titulo || ' ' || coalesce(subtitulo, '') || ' ' || array_to_string(tags, ' ')
+          )
+        ),
+        plainto_tsquery('portuguese', immutable_unaccent(${query}))
+      ) DESC
+      LIMIT ${limit}
+    `);
+
+    return results.map(r => ({ kind: "projeto" as const, ...r }));
   }
 
   async searchDisciplinas(query: string, limit: number): Promise<SearchResultDisciplina[]> {
