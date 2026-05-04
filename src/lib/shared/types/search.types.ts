@@ -3,6 +3,7 @@ export type SearchResultKind =
   | "guia"
   | "entidade"
   | "vaga"
+  | "projeto"
   | "disciplina"
   | "curso"
   | "usuario";
@@ -39,6 +40,14 @@ export type SearchResultVaga = {
   tipoVaga: string;
 };
 
+export type SearchResultProjeto = {
+  kind: "projeto";
+  id: string;
+  titulo: string;
+  slug: string;
+  subtitulo: string | null;
+};
+
 export type SearchResultDisciplina = {
   kind: "disciplina";
   id: string;
@@ -65,6 +74,7 @@ export type SearchResultItem =
   | SearchResultGuia
   | SearchResultEntidade
   | SearchResultVaga
+  | SearchResultProjeto
   | SearchResultDisciplina
   | SearchResultCurso
   | SearchResultUsuario;
@@ -76,6 +86,7 @@ export type SearchResponse = {
     guias: SearchResultGuia[];
     entidades: SearchResultEntidade[];
     vagas: SearchResultVaga[];
+    projetos: SearchResultProjeto[];
     disciplinas: SearchResultDisciplina[];
     cursos: SearchResultCurso[];
     usuarios: SearchResultUsuario[];

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Landing Page (SEO)**: `/` now exports per-page `metadata` (title, description, OG/Twitter); previously inherited only the root layout's generic metadata. The interactive landing body moved to `src/app/landing-client.tsx`.
 - **About / Recursos (SEO)**: `/sobre` and `/recursos` export per-page `metadata` with title, description, canonical, and OG.
 - **Listing Pages (SEO)**: `/projetos`, `/entidades`, `/calendario`, `/calendario-academico`, `/mapas`, `/grades-curriculares` each get a sibling `layout.tsx` exporting per-route metadata. The client `page.tsx` files are unchanged — the layout supplies the `<title>` / OG that crawlers and social cards read from the static HTML shell.
+- **Search**: Global search bar now indexes Projetos. Matches PUBLICADO projetos by `titulo`, `subtitulo`, and `tags`, opening the projeto detail page (`/projetos/[slug]`). The `/projetos` landing page is also returned as a static-page result.
 
 ## [1.7.1] - 2026-05-03
 

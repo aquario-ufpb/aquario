@@ -91,6 +91,28 @@ const searchResultVagaSchema = z
   })
   .openapi("SearchResultVaga");
 
+const searchResultProjetoSchema = z
+  .object({
+    kind: z.literal("projeto"),
+    id: z.string().openapi({
+      description: "Identificador do projeto.",
+      example: "f1e2d3c4-b5a6-7890-1234-56789abcdef0",
+    }),
+    titulo: z.string().openapi({
+      description: "Título do projeto.",
+      example: "Aquario",
+    }),
+    slug: z.string().openapi({
+      description: "Slug usado na rota do projeto.",
+      example: "aquario",
+    }),
+    subtitulo: z.string().nullable().openapi({
+      description: "Subtítulo curto do projeto.",
+      example: "Portal universitário da UFPB",
+    }),
+  })
+  .openapi("SearchResultProjeto");
+
 const searchResultDisciplinaSchema = z
   .object({
     kind: z.literal("disciplina"),
@@ -161,6 +183,7 @@ const searchResponseSchema = z
         guias: z.array(searchResultGuiaSchema),
         entidades: z.array(searchResultEntidadeSchema),
         vagas: z.array(searchResultVagaSchema),
+        projetos: z.array(searchResultProjetoSchema),
         disciplinas: z.array(searchResultDisciplinaSchema),
         cursos: z.array(searchResultCursoSchema),
         usuarios: z.array(searchResultUsuarioSchema),
@@ -180,7 +203,7 @@ export function registerSearchPaths(registry: OpenAPIRegistry, _schemas: CommonS
     tags: ["Busca"],
     summary: "Busca unificada em todas as categorias",
     description:
-      "Full-text search em páginas, guias, entidades, vagas, disciplinas, cursos e usuários. Acento-insensível (português). Queries com menos de 3 caracteres retornam resultados vazios.",
+      "Full-text search em páginas, guias, entidades, vagas, projetos, disciplinas, cursos e usuários. Acento-insensível (português). Queries com menos de 3 caracteres retornam resultados vazios.",
     request: {
       query: z.object({
         q: z.string().optional().openapi({
@@ -233,6 +256,15 @@ export function registerSearchPaths(registry: OpenAPIRegistry, _schemas: CommonS
                   },
                 ],
                 vagas: [],
+                projetos: [
+                  {
+                    kind: "projeto",
+                    id: "f1e2d3c4-b5a6-7890-1234-56789abcdef0",
+                    titulo: "Aquario",
+                    slug: "aquario",
+                    subtitulo: "Portal universitário da UFPB",
+                  },
+                ],
                 disciplinas: [
                   {
                     kind: "disciplina",
