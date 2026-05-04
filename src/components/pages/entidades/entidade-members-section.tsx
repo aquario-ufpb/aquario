@@ -197,7 +197,7 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
                 className="flex items-center gap-2"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                Adicionar
+                Gerenciar Membros
               </Button>
             )}
           </div>
