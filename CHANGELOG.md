@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-05-04
+
 ### Added
 - **SEO**: `src/app/sitemap.ts` — generates `sitemap.xml` listing every public page plus all `PUBLICADO` projetos, entidades, and guia sections. Revalidates hourly so new content reaches search engines without a redeploy.
 - **SEO**: `src/app/robots.ts` — emits `robots.txt` allowing public routes and disallowing API, admin, auth, edit/create flows, and internal pages (`/api-docs`, `/metrics`).
