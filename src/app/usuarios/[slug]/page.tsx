@@ -59,17 +59,26 @@ export default async function UsuarioPage({ params }: PageProps) {
     notFound();
   }
 
+  // Google's Profile Page rich result requires `ProfilePage` as the root type
+  // with the Person nested under `mainEntity`; bare `Person` markup does not
+  // qualify. `alumniOf` expects an EducationalOrganization, not a plain string,
+  // so we wrap the curso name when present.
   const jsonLd = !usuario.eFacade
     ? {
         "@context": "https://schema.org",
-        "@type": "Person",
-        name: usuario.nome,
-        image: usuario.urlFotoPerfil ?? undefined,
-        affiliation: {
-          "@type": "Organization",
-          name: `${usuario.centro?.sigla ?? "CI"} — ${usuario.centro?.nome ?? "Centro de Informática"} · UFPB`,
+        "@type": "ProfilePage",
+        mainEntity: {
+          "@type": "Person",
+          name: usuario.nome,
+          image: usuario.urlFotoPerfil ?? undefined,
+          affiliation: {
+            "@type": "Organization",
+            name: `${usuario.centro?.sigla ?? "CI"} — ${usuario.centro?.nome ?? "Centro de Informática"} · UFPB`,
+          },
+          alumniOf: usuario.curso?.nome
+            ? { "@type": "EducationalOrganization", name: usuario.curso.nome }
+            : undefined,
         },
-        alumniOf: usuario.curso?.nome ?? undefined,
       }
     : null;
 
