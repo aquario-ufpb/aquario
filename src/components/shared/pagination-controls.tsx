@@ -69,7 +69,10 @@ export function PaginationControls({
       <div className="flex items-center gap-2">
         <span className="flex items-center gap-1 text-sm tabular-nums text-muted-foreground">
           <span>Página</span>
-          <span className="relative inline-block min-w-[1.25rem] text-center">
+          <span
+            className="relative inline-block text-center"
+            style={{ minWidth: `${String(totalPages).length}ch` }}
+          >
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.span
                 key={currentPage}

@@ -3,7 +3,6 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 
 import NavWrapper from "@/components/shared/nav-wrapper";
-import { PageTransition } from "@/components/shared/page-transition";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { ReactQueryProvider } from "@/providers/react-query-provider";
@@ -60,9 +59,7 @@ export default function RootLayout({
                 <OnboardingProvider>
                   <div className="flex flex-1 flex-col bg-slate-50 dark:bg-slate-950">
                     <NavWrapper />
-                    <div className="pt-0">
-                      <PageTransition>{children}</PageTransition>
-                    </div>
+                    <div className="pt-0">{children}</div>
                   </div>
                 </OnboardingProvider>
                 <Toaster />

@@ -195,7 +195,15 @@ function ResourcesDropdownContent() {
         <p className="text-xs text-muted-foreground">Atalhos úteis para o dia a dia no CI.</p>
       </div>
       <LayoutGroup id="resources-dropdown">
-        <ul className="grid grid-cols-2 gap-1" onMouseLeave={() => setHoveredIndex(null)}>
+        <ul
+          className="grid grid-cols-2 gap-1"
+          onMouseLeave={() => setHoveredIndex(null)}
+          onBlur={event => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+              setHoveredIndex(null);
+            }
+          }}
+        >
           {resources.map((resource, index) => {
             const isHovered = hoveredIndex === index;
             const handleEnter = () => setHoveredIndex(index);
