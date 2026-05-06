@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **NavBar**: Sliding pill indicator behind the active route (`Sobre`, `Recursos`, `Entidades`, `Projetos`). Animates between items as the route changes using a Framer Motion `layoutId` shared element.
+- **NavBar / Recursos dropdown**: Hover/focus highlight that slides between dropdown items as the cursor moves, instead of an instant background swap.
+- **FilterBar**: Active filter pill now slides between options with a spring transition.
+- **Page transitions**: Routes fade and slide up on navigation via a new `PageTransition` wrapper in the root layout. Respects `prefers-reduced-motion`.
+- **Pagination**: Current page number crossfades vertically when changing pages; counter uses tabular numbers to avoid layout shift.
+
 ## [1.8.0] - 2026-05-04
 
 ### Added
