@@ -191,7 +191,14 @@ export const useOnboarding = () => {
       completedCount,
       totalCount: allSteps.length,
     };
-  }, [metadata, isMetadataFetched, semestreAtivo, user?.periodoAtual, paasAvailable]);
+  }, [
+    metadata,
+    isMetadataFetched,
+    semestreAtivo,
+    user?.periodoAtual,
+    paasAvailable,
+    isInsideSemester,
+  ]);
 
   const completeStep = useCallback(
     async (stepId: OnboardingStepId) => {
