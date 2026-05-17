@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **Dead code cleanup**: Removed 38 orphan files with zero importers — 8 unused UI components (`background-gradient-animation`, `hover-border-gradient`, `hover-card`, `lamp`, `scroll-area`, `text-generate-effect`, `text-hover-effect`, `water-ripple-effect`), 13 unused `shared/` components (`banner`, `entidade-card`, `gradient-header`, `link-hover`, `overlapping-images`, `text-area`, `search-card-result`, `search-filters`, `user-card`, `vaga-profile-card`, `project-card-title`, `user-card-project`, `badges`), the entire `components/pages/vagas/nova-vaga/` stepper directory (7 files) superseded by the inline form at `src/app/vagas/novo/page.tsx`, the unused `analytics/posthog-server.ts`, 4 unconsumed barrel `index.ts` files (`lib/client/mapas`, `lib/server/db/interfaces`, `lib/server/services/auth`, `lib/server/services/email`), `components/pages/landing/entidades-carousel.tsx`, and `__tests__/utils/guias-mock-data.ts`.
+- **Dependencies**: Dropped 7 unused dependencies — `@radix-ui/react-hover-card`, `@radix-ui/react-scroll-area`, `@radix-ui/react-toast` (project uses `sonner`), `three`, `@types/three`, `posthog-node`, `textarea-caret`.
+- **Assets**: Removed `public/plus.png` and `public/plus_Dark.png` (only referenced by the deleted `banner.tsx`).
+
 ## [1.8.0] - 2026-05-04
 
 ### Added
