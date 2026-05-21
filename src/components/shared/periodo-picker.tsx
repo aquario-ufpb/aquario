@@ -94,7 +94,7 @@ export function PeriodoPicker({
   const [open, setOpen] = React.useState(false);
 
   const selectedDate = parseDate(value);
-  const today = new Date();
+  const today = React.useMemo(() => new Date(), []);
   const currentYear = today.getFullYear();
   const fromYear = currentYear - 30;
   const toYear = currentYear + 5;
