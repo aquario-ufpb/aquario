@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100] as const;
 
@@ -66,10 +67,29 @@ export function PaginationControls({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">
-          Página {currentPage} de {totalPages} ({totalItems}{" "}
-          {totalItems === 1 ? itemLabel : itemLabelPlural}
-          {showTotalFromUnfiltered && totalItemsLabel && ` de ${totalItemsLabel} total`})
+        <span className="flex items-center gap-1 text-sm tabular-nums text-muted-foreground">
+          <span>Página</span>
+          <span
+            className="relative inline-block text-center"
+            style={{ minWidth: `${String(totalPages).length}ch` }}
+          >
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={currentPage}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+                className="inline-block"
+              >
+                {currentPage}
+              </motion.span>
+            </AnimatePresence>
+          </span>
+          <span>
+            de {totalPages} ({totalItems} {totalItems === 1 ? itemLabel : itemLabelPlural}
+            {showTotalFromUnfiltered && totalItemsLabel && ` de ${totalItemsLabel} total`})
+          </span>
         </span>
         <Button
           variant="outline"
