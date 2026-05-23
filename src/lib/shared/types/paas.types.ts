@@ -1,4 +1,4 @@
-export type PaasPreference = {
+type PaasPreference = {
   name: string;
   value: number;
 };
@@ -31,7 +31,7 @@ export type PaasRoom = {
   classes: PaasClass[];
 };
 
-export type PaasSolution = {
+type PaasSolution = {
   id: number;
   status: string;
   error: string;
@@ -40,7 +40,7 @@ export type PaasSolution = {
   solution: PaasRoom[];
 };
 
-export type PaasPublicSolution = {
+type PaasPublicSolution = {
   id: number;
   paasPublicId: number;
   paasSolutionId: number;

@@ -1,10 +1,6 @@
-import type {
-  ProjetoWithRelations,
-  ProjetoAutorPublic,
-} from "@/lib/server/db/interfaces/projetos-repository.interface";
+import type { ProjetoWithRelations } from "@/lib/server/db/interfaces/projetos-repository.interface";
 
-// Re-export repository types for convenience
-export type { ProjetoWithRelations, ProjetoAutorPublic };
+export type { ProjetoWithRelations };
 
 /**
  * Response para listagem paginada de projetos

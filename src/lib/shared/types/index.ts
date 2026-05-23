@@ -14,20 +14,4 @@ export * from "./search.types";
 
 // Re-export database types for server-side code that needs both
 // These are Prisma-generated types - use with caution on client-side
-export type {
-  Campus,
-  Centro as CentroDB,
-  Curso as CursoDB,
-  Usuario,
-  TokenVerificacao,
-  Entidade as EntidadeDB,
-  MembroEntidade,
-  Guia as GuiaDB,
-  SecaoGuia,
-  SubSecaoGuia,
-  PapelPlataforma,
-  TipoToken,
-  TipoEntidade as TipoEntidadeDB,
-  PapelMembro as PapelMembroDB,
-  StatusGuia,
-} from "@prisma/client";
+export type { Campus } from "@prisma/client";

@@ -6,4 +6,4 @@
  */
 
 export { getStorage, setStorage, removeStorage } from "./storage-client";
-export type { StorageKey, StorageValue, StorageData } from "./storage-types";
+export type { StorageKey, StorageValue } from "./storage-types";
