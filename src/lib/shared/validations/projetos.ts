@@ -29,7 +29,7 @@ const httpUrlSchema = z
  * Um autor de projeto referencia um usuario, uma entidade, ou ambos.
  * Pelo menos um dos dois ids precisa estar presente.
  */
-export const projetoAutorSchema = z
+const projetoAutorSchema = z
   .object({
     usuarioId: z.string().uuid("ID de usuário inválido").optional().nullable(),
     entidadeId: z.string().uuid("ID de entidade inválido").optional().nullable(),
@@ -155,8 +155,6 @@ export const listProjetosSchema = z.object({
     .transform(v => v === "true"),
 });
 
-export type ProjetoAutorInput = z.infer<typeof projetoAutorSchema>;
 export type CreateProjetoInput = z.infer<typeof createProjetoSchema>;
 export type UpdateProjetoInput = z.infer<typeof updateProjetoSchema>;
 export type UpdateProjetoAutoresInput = z.infer<typeof updateProjetoAutoresSchema>;
-export type ListProjetosInput = z.infer<typeof listProjetosSchema>;
