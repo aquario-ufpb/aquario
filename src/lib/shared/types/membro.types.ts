@@ -39,10 +39,7 @@ export type Membro = {
   endedAt?: string | null; // ISO date string or null for active members
 };
 
-/**
- * Helper function to check if a papel is ADMIN
- */
-export function isAdminPapel(papel: PapelMembro): boolean {
+function isAdminPapel(papel: PapelMembro): boolean {
   return papel === "ADMIN";
 }
 

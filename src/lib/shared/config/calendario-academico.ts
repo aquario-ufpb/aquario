@@ -45,7 +45,7 @@ export const CATEGORIA_LABELS: Record<CategoriaEvento, string> = {
   OUTRA: "Outra",
 };
 
-export function detectCategoria(eventText: string): CategoriaEvento {
+function detectCategoria(eventText: string): CategoriaEvento {
   const text = eventText.toUpperCase();
 
   if (text.includes("INÍCIO DO PERÍODO LETIVO") || text.includes("INICIO DO PERIODO LETIVO")) {
@@ -92,7 +92,7 @@ export type CsvEventRow = {
   categoria: CategoriaEvento;
 };
 
-export function parseCsvDate(dateStr: string): Date {
+function parseCsvDate(dateStr: string): Date {
   const cleaned = dateStr.trim().replace(/\s+/g, "");
   const parts = cleaned.split("/");
   if (parts.length !== 3) {

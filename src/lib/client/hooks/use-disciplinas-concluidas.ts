@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { usuariosService } from "@/lib/client/api/usuarios";
 import { queryKeys } from "@/lib/client/query-keys";
 import { useAuth } from "@/contexts/auth-context";
@@ -19,25 +19,5 @@ export const useDisciplinasConcluidas = () => {
     },
     enabled: !!token,
     staleTime: 5 * 60 * 1000,
-  });
-};
-
-/**
- * Hook to update the current user's completed disciplines
- */
-export const useUpdateDisciplinasConcluidas = () => {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (disciplinaIds: string[]) => {
-      if (!token) {
-        throw new Error("No token available");
-      }
-      return usuariosService.updateMyDisciplinasConcluidas(token, disciplinaIds);
-    },
-    onSuccess: data => {
-      queryClient.setQueryData(queryKeys.disciplinasConcluidas.me, data);
-    },
   });
 };

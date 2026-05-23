@@ -55,10 +55,3 @@ export function findGuiaBySlug(guias: Guia[], slug: string): Guia | undefined {
 export function findSecaoBySlug(secoes: Secao[], slug: string): Secao | undefined {
   return secoes.find(secao => secao.slug === slug);
 }
-
-/**
- * Find a SubSecao by slug
- */
-export function findSubSecaoBySlug(subsecoes: SubSecao[], slug: string): SubSecao | undefined {
-  return subsecoes.find(subsecao => subsecao.slug === slug);
-}

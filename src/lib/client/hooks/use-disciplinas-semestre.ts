@@ -6,7 +6,6 @@ import type {
   MarcarDisciplinasRequest,
   PatchDisciplinaSemestreRequest,
   DisciplinaSemestreResponse,
-  SaveDisciplinasSemestreRequest,
 } from "@/lib/shared/types";
 
 /**
@@ -25,26 +24,6 @@ export const useDisciplinasSemestreAtivo = () => {
     },
     enabled: !!token,
     staleTime: 5 * 60 * 1000,
-  });
-};
-
-/**
- * Save (replace) the current user's enrolled disciplines for the active semester.
- */
-export const useSaveDisciplinasSemestre = () => {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: SaveDisciplinasSemestreRequest) => {
-      if (!token) {
-        throw new Error("No token available");
-      }
-      return disciplinaSemestreService.saveForActiveSemestre(data, token);
-    },
-    onSuccess: data => {
-      queryClient.setQueryData(queryKeys.disciplinasSemestre.ativo, data);
-    },
   });
 };
 

@@ -5,10 +5,7 @@ import { ErrorCode, type ApiErrorBody, type FieldError } from "@/lib/shared/erro
 // Re-export shared types for convenience
 export type { ApiErrorBody, FieldError };
 
-/**
- * Create a standardized error response
- */
-export function errorResponse(
+function errorResponse(
   message: string,
   code: ErrorCode,
   status: number,
