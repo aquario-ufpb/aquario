@@ -27,7 +27,7 @@ export type ListProjetosParams = {
   usuarioId?: string;
 };
 
-export function buildProjetosQuery(params: ListProjetosParams): string {
+function buildProjetosQuery(params: ListProjetosParams): string {
   const qs = new URLSearchParams();
   qs.set("page", String(params.page ?? 1));
   qs.set("limit", String(params.limit ?? 12));

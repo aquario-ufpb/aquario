@@ -23,13 +23,6 @@ export function getContainer(): Container {
 }
 
 /**
- * Reset the container (useful for testing)
- */
-export function resetContainer(): void {
-  containerInstance = null;
-}
-
-/**
  * Create a new container instance
  */
 function createContainer(): Container {

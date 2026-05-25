@@ -35,13 +35,13 @@ export type GuiaTree = {
   secoes: SecaoTree[];
 };
 
-export type SecaoTree = {
+type SecaoTree = {
   titulo: string;
   slug: string;
   subsecoes: SubSecaoTree[];
 };
 
-export type SubSecaoTree = {
+type SubSecaoTree = {
   titulo: string;
   slug: string;
 };

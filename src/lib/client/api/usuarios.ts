@@ -25,10 +25,6 @@ export type User = {
   permissoes: string[];
 };
 
-export type UpdateUserRoleRequest = {
-  papelPlataforma: "USER" | "MASTER_ADMIN";
-};
-
 export type CreateFacadeUserRequest = {
   nome: string;
   centroId: string;

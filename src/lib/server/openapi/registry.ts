@@ -74,6 +74,3 @@ export const OPENAPI_TAGS = [
     description: "Imagens estáticas servidas dos submódulos de conteúdo",
   },
 ] as const;
-
-/** Tipo derivado: nomes das tags OpenAPI registradas. */
-export type OpenApiTagName = (typeof OPENAPI_TAGS)[number]["name"];

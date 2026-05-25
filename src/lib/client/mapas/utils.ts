@@ -40,27 +40,6 @@ export function formatProfessorsForDisplay(professorIds: ProfessorSlug[]): strin
 }
 
 /**
- * Format professors list for details (full names)
- * Returns formatted string like "Ruy, Mardson e Henrique"
- */
-export function formatProfessorsForDetails(professorIds: ProfessorSlug[]): string {
-  const names = resolveProfessorNames(professorIds);
-  if (names.length === 0) {
-    return "";
-  }
-  if (names.length === 1) {
-    return names[0];
-  }
-  if (names.length === 2) {
-    return `${names[0]} e ${names[1]}`;
-  }
-  // 3 or more: "Name1, Name2 e Name3"
-  const allButLast = names.slice(0, -1);
-  const last = names[names.length - 1];
-  return `${allButLast.join(", ")} e ${last}`;
-}
-
-/**
  * Format labs list for display
  * Returns formatted string like "LASID" or "COMPOSE, LIA e DAT"
  * @param labs - Array of lab slugs

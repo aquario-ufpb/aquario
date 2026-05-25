@@ -18,12 +18,6 @@
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 // =============================================================================
-// Database
-// =============================================================================
-
-export const DATABASE_URL = process.env.DATABASE_URL;
-
-// =============================================================================
 // Authentication (JWT)
 // =============================================================================
 
@@ -51,9 +45,8 @@ export const MASTER_ADMIN_EMAILS = (process.env.MASTER_ADMIN_EMAILS || "")
 // Environment
 // =============================================================================
 
-export const NODE_ENV = process.env.NODE_ENV || "development";
-export const IS_DEV = NODE_ENV === "development";
-export const IS_PROD = NODE_ENV === "production";
+const NODE_ENV = process.env.NODE_ENV || "development";
+const IS_PROD = NODE_ENV === "production";
 
 // =============================================================================
 // Email (Resend)
@@ -101,30 +94,3 @@ export const BLOB_PATH_PREFIX =
     : process.env.VERCEL_ENV === "preview"
       ? "preview/"
       : "";
-
-// =============================================================================
-// Validation
-// =============================================================================
-
-/**
- * Validate required environment variables at startup
- * Call this in server initialization if you want early failure
- */
-export function validateServerEnv(): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  if (!JWT_SECRET) {
-    errors.push("JWT_SECRET is required");
-  } else if (JWT_SECRET.length < 32) {
-    errors.push("JWT_SECRET must be at least 32 characters");
-  }
-
-  if (!DATABASE_URL) {
-    errors.push("DATABASE_URL is required");
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-  };
-}

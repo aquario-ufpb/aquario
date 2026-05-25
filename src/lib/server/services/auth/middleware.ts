@@ -3,10 +3,6 @@ import { getContainer } from "@/lib/server/container";
 import { ApiError } from "@/lib/server/errors";
 import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
 
-export type AuthenticatedRequest = Request & {
-  usuario: UsuarioWithRelations;
-};
-
 /**
  * Extract bearer token from Authorization header
  */

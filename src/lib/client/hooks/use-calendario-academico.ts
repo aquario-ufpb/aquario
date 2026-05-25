@@ -35,15 +35,6 @@ export const useSemestre = (id: string) => {
   });
 };
 
-export const useEventos = (semestreId: string) => {
-  return useQuery({
-    queryKey: queryKeys.calendarioAcademico.eventos(semestreId),
-    queryFn: () => calendarioAcademicoService.getEventos(semestreId),
-    enabled: !!semestreId,
-    staleTime: FIVE_MINUTES,
-  });
-};
-
 // =========================================================================
 // Mutation Hooks
 // =========================================================================

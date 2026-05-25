@@ -34,7 +34,7 @@ for (const professor of allProfessors) {
   professorsMap.set(professor.id, professor);
 }
 
-export function getProfessorById(id: ProfessorSlug): Professor | undefined {
+function getProfessorById(id: ProfessorSlug): Professor | undefined {
   return professorsMap.get(id);
 }
 

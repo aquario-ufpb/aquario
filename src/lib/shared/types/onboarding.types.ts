@@ -7,7 +7,7 @@ export type OnboardingStepId =
   | "entidades"
   | "done";
 
-export type SemesterStepState = {
+type SemesterStepState = {
   completedAt?: string;
   skippedAt?: string;
 };
