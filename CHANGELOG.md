@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dependencies**: Dropped 7 unused dependencies — `@radix-ui/react-hover-card`, `@radix-ui/react-scroll-area`, `@radix-ui/react-toast` (project uses `sonner`), `three`, `@types/three`, `posthog-node`, `textarea-caret`.
 - **Assets**: Removed `public/plus.png` and `public/plus_Dark.png` (only referenced by the deleted `banner.tsx`).
 
+### Fixed
+- **Projetos**: Project edit screen no longer misrepresents the principal author when the editor is a collaborator who does not administer the principal entidade. The "Postando como" field previously fell back to showing the editor's own name and avatar; it now displays the principal entidade read-only, with a note clarifying the user is editing as a collaborator (#201).
+
 ## [1.8.0] - 2026-05-04
 
 ### Added

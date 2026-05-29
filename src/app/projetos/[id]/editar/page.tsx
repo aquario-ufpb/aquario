@@ -368,6 +368,19 @@ export default function EditarProjetoPage() {
   const userAvatarUrl = usuario.urlFotoPerfil || getDefaultAvatarUrl(usuario.id, usuario.nome);
   const selectedEntidade = adminEntidades.find(e => e.id === postandoComo);
 
+  // When the project's principal author is an entidade the current user does
+  // NOT administer, the "Postando como" picker can't represent it — its options
+  // only list entidades the user admins, so it would silently fall back to the
+  // user's own avatar (issue #201). In that case the user edits purely as a
+  // collaborator, so we show the principal entidade read-only instead.
+  const principalAutor = projeto.autores.find(a => a.autorPrincipal) ?? projeto.autores[0];
+  const principalEntidade = principalAutor?.entidade ?? null;
+  const editingAsCollaborator =
+    !!principalEntidade && !myAdminEntidadeIds.has(principalEntidade.id);
+  const principalEntidadeImagePath = principalEntidade
+    ? mapImagePath(principalEntidade.urlFoto)
+    : null;
+
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8 mt-24 max-w-6xl space-y-6">
       <div className="space-y-1">
@@ -458,7 +471,21 @@ export default function EditarProjetoPage() {
               {/* Postando como */}
               <div className="space-y-2">
                 <Label>Postando como</Label>
-                {hasAdminEntidades ? (
+                {editingAsCollaborator ? (
+                  <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                    <div className="relative w-5 h-5 rounded-full overflow-hidden border bg-muted">
+                      {principalEntidadeImagePath && (
+                        <Image
+                          src={principalEntidadeImagePath}
+                          alt={principalEntidade?.nome ?? ""}
+                          fill
+                          className="object-cover"
+                        />
+                      )}
+                    </div>
+                    <span className="truncate">{principalEntidade?.nome}</span>
+                  </div>
+                ) : hasAdminEntidades ? (
                   <Select value={postandoComo} onValueChange={setPostandoComo}>
                     <SelectTrigger>
                       <SelectValue />
@@ -504,11 +531,15 @@ export default function EditarProjetoPage() {
                     <span className="truncate">{usuario.nome}</span>
                   </div>
                 )}
-                {selectedEntidade && (
+                {editingAsCollaborator ? (
+                  <p className="text-xs text-muted-foreground">
+                    Publicado por {principalEntidade?.nome}. Você está editando como colaborador.
+                  </p>
+                ) : selectedEntidade ? (
                   <p className="text-xs text-muted-foreground">
                     Você é admin de {selectedEntidade.nome}.
                   </p>
-                )}
+                ) : null}
               </div>
 
               {/* Status */}
