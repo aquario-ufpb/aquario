@@ -1,3 +1,15 @@
+6/7/26, 8:09 PM                                                       Sistema Integrado de Gestão de Atividades Acadêmicas
+
+                                                             Universidade Federal da Paraíba
+                                                   Sistema Integrado de Gestão de Atividades Acadêmicas
+
+                                                                   Emitido em 07/06/2026 20:09
+
+               Portal do Discente
+
+
+                                                                    Atestado de Matrícula
+           Nível:                         GRADUAÇÃO
            Matrícula:                     20230000000                                                   Vínculo:         REGULAR
            Nome:                          FULANO DE TAL SILVA
                                           CIÊNCIA DA COMPUTAÇÃO
@@ -41,3 +53,4 @@
 
 
           Tabela de Horários:
+            Horários            Dom                  Seg              Ter               Qua               Qui                 Sex           Sab

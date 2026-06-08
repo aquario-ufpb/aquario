@@ -11,23 +11,21 @@ const ATESTADO_HEADER = "atestado de matricula";
 const SIGAA_MARKERS = ["sistema integrado de gestao", "sigaa", "portal do discente"];
 
 /**
- * Structural fingerprint of a SIGAA Atestado de Matrícula. The sanitized fixture
- * (and any PDF whose institutional header was cropped) may lack the explicit
- * "Atestado de Matrícula" title, so detection also accepts the unmistakable
- * combination of the enrollment table headings + status + schedule table.
+ * Marks the end of the component list; everything after is the schedule grid.
+ * Anchored at line start (after optional indentation) so a docente/nome that
+ * happens to contain the substring "Tabela de Horários:" cannot truncate parsing
+ * early — only the standalone section label is treated as the cutoff.
  */
-const STRUCTURAL_MARKERS = ["componentes curriculares", "matriculado", "tabela de horarios:"];
-
-/** Marks the end of the component list; everything after is the schedule grid. */
-const SCHEDULE_TABLE_MARKER = /tabela de hor[aá]rios:/i;
+const SCHEDULE_TABLE_MARKER = /^[ \t]*tabela de hor[aá]rios:/im;
 
 /**
- * Código-período anchor. Códigos may be alphanumeric (GDSCO0043, DINF00053) or
- * purely numeric (1404138). Período is YYYY.N. The hyphen separator may be
- * followed by the período on the same line or wrapped to the next line, so the
- * período is captured separately when not inline.
+ * Código-período anchor. Códigos in a SIGAA Atestado are either purely numeric
+ * (e.g. 1404138) or letters-then-digits (e.g. GDSCO0043, DINF00053). Constraining
+ * to that shape avoids over-matching arbitrary alphanumeric runs. Período is
+ * YYYY.N. The hyphen separator may be followed by the período on the same line or
+ * wrapped to the next line, so the período is captured separately when not inline.
  */
-const CODIGO = "[A-Z0-9]{4,9}";
+const CODIGO = "(?:[A-Z]{2,8}\\d{3,5}|\\d{6,8})";
 const PERIODO = "\\d{4}\\.\\d";
 // Anchored at the start of a row (leading whitespace only) so that hyphenated
 // words mid-line (e.g. "CIENTÍFICA-TECNOLÓGICA") are not mistaken for códigos.
@@ -125,14 +123,54 @@ function indentOf(line: string): number {
  */
 const DOCENTE_COLUMN_INDENT_DELTA = 12;
 
-function parseBlock(block: string, anchor: AnchorMatch): NormalizedDisciplina | null {
+/**
+ * Document-level período used as a fallback for any block whose own período can't
+ * be resolved. Returns the most frequent período across blocks that did resolve
+ * (which is the document's enrollment período), or "" when none resolved.
+ */
+function inferDocumentPeriodo(body: string, anchors: AnchorMatch[]): string {
+  const counts = new Map<string, number>();
+  for (let i = 0; i < anchors.length; i++) {
+    const blockStart = anchors[i].index;
+    const blockEnd = i + 1 < anchors.length ? anchors[i + 1].index : body.length;
+    const block = body.slice(blockStart, blockEnd);
+    const periodo = resolveBlockPeriodo(block, anchors[i]);
+    if (periodo) {
+      counts.set(periodo, (counts.get(periodo) ?? 0) + 1);
+    }
+  }
+
+  let best = "";
+  let bestCount = 0;
+  for (const [periodo, count] of counts) {
+    if (count > bestCount) {
+      best = periodo;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+function resolveBlockPeriodo(block: string, anchor: AnchorMatch): string | undefined {
+  // Período precedence: prefer the inline anchor período (numeric-código layout
+  // where "1404138 - 2026.1" sits on one line); fall back to a período that
+  // wrapped onto its own line within the block. This ordering is intentional —
+  // the inline value is the most reliable when both are present.
+  return anchor.inlinePeriodo ?? PERIODO_LINE_REGEX.exec(block)?.[1];
+}
+
+function parseBlock(
+  block: string,
+  anchor: AnchorMatch,
+  fallbackPeriodo: string
+): NormalizedDisciplina {
   const lines = block.split("\n");
   const firstLine = lines[0] ?? "";
 
-  const periodo = anchor.inlinePeriodo ?? PERIODO_LINE_REGEX.exec(block)?.[1] ?? "";
-  if (!periodo) {
-    return null;
-  }
+  // Never drop a component just because its período could not be parsed from the
+  // block: fall back to the document-level período (the most common período across
+  // parsed blocks). If even that is unresolvable, keep "" rather than losing the row.
+  const periodo = resolveBlockPeriodo(block, anchor) ?? fallbackPeriodo;
 
   const tipoMatch = TIPO_REGEX.exec(block);
   const tipo: DisciplinaTipo =
@@ -212,14 +250,15 @@ export const atestadoMatriculaAdapter: AcademicDocumentAdapter = {
   matches(text: string): boolean {
     const normalized = normalizeForMatch(text);
 
-    const hasExplicitHeader =
+    // Require the real document title AND a SIGAA marker. Both are present in a
+    // genuine Atestado de Matrícula. Relying on the title (rather than a structural
+    // fingerprint of the enrollment/schedule tables) keeps detectAdapter routing
+    // unambiguous — a Histórico Escolar shares those structural cues and must not
+    // be claimed by this adapter.
+    return (
       normalized.includes(ATESTADO_HEADER) &&
-      SIGAA_MARKERS.some(marker => normalized.includes(marker));
-    if (hasExplicitHeader) {
-      return true;
-    }
-
-    return STRUCTURAL_MARKERS.every(marker => normalized.includes(marker));
+      SIGAA_MARKERS.some(marker => normalized.includes(marker))
+    );
   },
 
   parse(text: string): NormalizedDisciplina[] {
@@ -227,6 +266,11 @@ export const atestadoMatriculaAdapter: AcademicDocumentAdapter = {
     const body = scheduleMatch ? text.slice(0, scheduleMatch.index) : text;
 
     const anchors = findAnchors(body);
+
+    // Document-level período fallback: the most common período across blocks whose
+    // período resolved cleanly. Used to keep a block that lacks its own período.
+    const documentPeriodo = inferDocumentPeriodo(body, anchors);
+
     const results: NormalizedDisciplina[] = [];
 
     for (let i = 0; i < anchors.length; i++) {
@@ -235,10 +279,10 @@ export const atestadoMatriculaAdapter: AcademicDocumentAdapter = {
       const blockEnd = i + 1 < anchors.length ? anchors[i + 1].index : body.length;
       const block = body.slice(blockStart, blockEnd);
 
-      const parsed = parseBlock(block, anchor);
-      if (parsed && STATUS_MATRICULADO.test(block)) {
-        results.push(parsed);
+      if (!STATUS_MATRICULADO.test(block)) {
+        continue;
       }
+      results.push(parseBlock(block, anchor, documentPeriodo));
     }
 
     return results;

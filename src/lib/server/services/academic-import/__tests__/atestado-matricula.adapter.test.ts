@@ -88,6 +88,24 @@ describe("atestadoMatriculaAdapter.parse", () => {
   });
 });
 
+describe("atestadoMatriculaAdapter.matches", () => {
+  it("matches the header-inclusive Atestado fixture", () => {
+    expect(atestadoMatriculaAdapter.matches(FIXTURE)).toBe(true);
+  });
+
+  it("does not match a Histórico Escolar even with shared structural cues", () => {
+    const historico = [
+      "Sistema Integrado de Gestão de Atividades Acadêmicas",
+      "Portal do Discente",
+      "Histórico Escolar",
+      "Componentes Curriculares",
+      "Conceito",
+      "GDSCO0043 CONSTRUÇÃO DE COMPILADORES I MATRICULADO",
+    ].join("\n");
+    expect(atestadoMatriculaAdapter.matches(historico)).toBe(false);
+  });
+});
+
 describe("detectAdapter", () => {
   it("selects the atestado adapter for the fixture", () => {
     const adapter = detectAdapter(FIXTURE, [atestadoMatriculaAdapter]);
