@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Academic Import**: SIGAA "Atestado de Matrícula" text parser (`src/lib/server/services/academic-import/`) that detects the document and normalizes its enrolled components (código, período, nome, docente, turma, horário, tipo, status). Detection requires the real "Atestado de Matrícula" title plus a SIGAA marker so it cannot mis-claim a Histórico Escolar; the código anchor is constrained to real SIGAA shapes and the schedule-table cutoff is line-anchored; components with no resolvable período fall back to the document-level período rather than being dropped.
+- **Academic Import**: PDF import endpoint `POST /api/usuarios/me/disciplinas/import` (authenticated) that accepts an "Atestado de Matrícula" PDF upload and returns a non-persisted preview of enrolled components matched against the Disciplina catalog (`{ documento, matched, unknownCodigos }`). Includes a row-reconstructing pdf-parse extractor (`pdf-text-extractor.ts`) that groups text items by baseline y and reorders them left→right so docentes/horários stay attached to their códigos, the file parsed in-memory and never stored. New error codes: `EMPTY_PDF`, `FILE_TOO_LARGE`, `INVALID_FILE_TYPE`, `UNSUPPORTED_DOCUMENT`.
 
 ### Removed
 - **Dead code cleanup (medium confidence)**: Pruned module-level exports flagged by `knip`/`ts-prune` as having no external consumers. Pure dead symbols were deleted; functions still used internally lost only the `export` keyword.

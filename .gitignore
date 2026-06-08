@@ -130,3 +130,5 @@ data/
 # Local-only scripts — same backfill flow. Hidden subdirectory makes the intent
 # obvious vs. listing tracked-shaped paths inside a tracked directory.
 scripts/.local/
+# local PII sample, never commit
+atestado de matricula.pdf
