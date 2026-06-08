@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Academic Import**: SIGAA "Atestado de Matrícula" text parser (`src/lib/server/services/academic-import/`) that detects the document and normalizes its enrolled components (código, período, nome, docente, turma, horário, tipo, status). Detection requires the real "Atestado de Matrícula" title plus a SIGAA marker so it cannot mis-claim a Histórico Escolar; the código anchor is constrained to real SIGAA shapes and the schedule-table cutoff is line-anchored; components with no resolvable período fall back to the document-level período rather than being dropped.
+
 ### Removed
 - **Dead code cleanup (medium confidence)**: Pruned module-level exports flagged by `knip`/`ts-prune` as having no external consumers. Pure dead symbols were deleted; functions still used internally lost only the `export` keyword.
   - Hooks/functions with zero callers: `useEventos`, `useUpdateDisciplinasConcluidas`, `useSaveDisciplinasSemestre`, `useEntidadesByTipo`, `useUploadProjetoImage`, `useCreateProjeto`, `useCentros` re-export from `use-admin-centros`, `resetContainer`, `validateFloorData`, `formatProfessorsForDetails`, `decodeToken`, `formatProjetoTipo`, `parseSemester`, `waitForCondition`, `findSubSecaoBySlug`, plus the duplicate default export of `GuideIndex`.
