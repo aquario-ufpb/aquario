@@ -1,0 +1,43 @@
+           Matrícula:                     20230000000                                                   Vínculo:         REGULAR
+           Nome:                          FULANO DE TAL SILVA
+                                          CIÊNCIA DA COMPUTAÇÃO
+           Curso:                                                                                       Cidade:          João Pessoa
+                                          (BACHARELADO)/CI - João Pessoa - MT
+           Formação:                      BACHARELADO
+
+          Turmas Matriculadas: 6
+          Atividades Matriculadas: 1
+          Carga Horária Matriculada: 435
+                Código -
+                                                            Componentes Curriculares                             Turma         Status      Horário
+                Período
+              GDSCO0043 -          CONSTRUÇÃO DE COMPILADORES I                                                     01       MATRICULADO     24T23
+                2026.1             ANDREI DE ARAUJO FORMIGA
+                                   Tipo: DISCIPLINA  Local: À DEFINIR (CI)
+               DINF00053 -         GERENCIAMENTO DE PROJETO DE SOFTWARE                                             01       MATRICULADO     24M45
+                 2026.1            DANIELLE ROUSY DIAS RICARTE
+                                   Tipo: DISCIPLINA  Local: À DEFINIR (CI)
+
+              DSCO00023 -          INOVAÇÃO DE BASE CIENTÍFICA-TECNOLÓGICA E                                        01       MATRICULADO    6M2345
+                2026.1             EMPREENDEDORISMO
+                                   ALISSON VASCONCELOS DE BRITO
+                                   Tipo: DISCIPLINA Local: À DEFINIR (CI)
+
+            1404138 - 2026.1 LINGUA INGLESA I                                                                       01       MATRICULADO      7M1
+                                   RAFAELA CARLA SANTOS DE SOUSA                                                                             35N34
+                                   Tipo: DISCIPLINA  Local: CAE 110 (PRG)
+               GDLPL0063 -         PORTUGUÊS INSTRUMENTAL                                                           01       MATRICULADO    3T1234
+                 2026.1            JORGEVALDO DE SOUZA SILVA
+                                   Tipo: DISCIPLINA Local: CAG 102 (PRG)
+              DSCO00022 -          SISTEMAS DISTRIBUÍDOS                                                            01       MATRICULADO     35M45
+                2026.1             FERNANDO MENEZES MATOS
+                                   Tipo: DISCIPLINA Local: À DEFINIR (CI)
+
+               DINF00070 -         UCE - CIÊNCIA DA COMPUTAÇÃO / PROJETO                                            01       MATRICULADO          --
+                 2026.1            INTEGRADO I
+                                   GIORGIA DE OLIVEIRA MATTOS, DANIELLE ROUSY DIAS RICARTE e YUSKA
+                                   PAOLA COSTA AGUIAR
+                                   Tipo: ATIVIDADE
+
+
+          Tabela de Horários:
