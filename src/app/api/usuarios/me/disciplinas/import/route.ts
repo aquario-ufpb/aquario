@@ -59,7 +59,8 @@ export function POST(request: Request) {
       const buffer = Buffer.from(await file.arrayBuffer());
       text = await extractPdfText(buffer);
     } catch (error) {
-      log.warn("Failed to extract text from PDF", { error: String(error) });
+      const errorName = error instanceof Error ? error.name : "UnknownExtractionError";
+      log.warn("Failed to extract text from PDF", { errorName });
       return ApiError.badRequest("Não foi possível ler o PDF enviado.", ErrorCode.EMPTY_PDF);
     }
 

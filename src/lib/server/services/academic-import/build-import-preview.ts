@@ -28,22 +28,22 @@ export async function buildImportPreview(
   }
 
   const componentes = adapter.parse(text);
-  const codigos = componentes.map(componente => componente.codigo);
+  const codigos = [...new Set(componentes.map(componente => componente.codigo))];
 
   const found = await findByCodigos(codigos);
   const idByCodigo = new Map(found.map(row => [row.codigo, row.id]));
 
   const matched: AcademicImportPreview["matched"] = [];
-  const unknownCodigos: string[] = [];
+  const unknownCodigos = new Set<string>();
 
   for (const componente of componentes) {
     const disciplinaId = idByCodigo.get(componente.codigo);
     if (disciplinaId) {
       matched.push({ ...componente, disciplinaId });
     } else {
-      unknownCodigos.push(componente.codigo);
+      unknownCodigos.add(componente.codigo);
     }
   }
 
-  return { documento: adapter.id, matched, unknownCodigos };
+  return { documento: adapter.id, matched, unknownCodigos: [...unknownCodigos] };
 }
