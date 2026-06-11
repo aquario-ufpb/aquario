@@ -117,6 +117,10 @@ type ProjetosEvent =
   | { name: "projeto_archived"; projeto_slug: string }
   | { name: "projeto_unarchived"; projeto_slug: string };
 
+type CopaEvent =
+  | { name: "copa_add_google_calendar_click"; matchId: number }
+  | { name: "copa_stage_filter_changed"; stage: string };
+
 // Union of all PostHog events
 export type PostHogEvent =
   | UIInteractionEvent
@@ -124,6 +128,7 @@ export type PostHogEvent =
   | SobreEvent
   | EntidadesEvent
   | CalendarEvent
+  | CopaEvent
   | CalendarioAcademicoEvent
   | GradesCurricularesEvent
   | MapasEvent

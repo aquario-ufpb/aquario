@@ -9,7 +9,8 @@ export type FeatureIllustrationVariant =
   | "curriculum"
   | "guides"
   | "groups"
-  | "labs";
+  | "labs"
+  | "worldcup";
 
 export type FeatureIllustrationAppearance = "underwater" | "surface";
 

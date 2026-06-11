@@ -4,7 +4,15 @@ import type { FeatureIllustrationVariant } from "@/components/pages/landing/feat
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
-import { Activity, BookOpen, Calendar, CalendarDays, GitBranch, MapIcon } from "lucide-react";
+import {
+  Activity,
+  BookOpen,
+  Calendar,
+  CalendarDays,
+  GitBranch,
+  MapIcon,
+  Trophy,
+} from "lucide-react";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -30,6 +38,15 @@ const recursos: Array<{
   illustration: FeatureIllustrationVariant;
   external?: boolean;
 }> = [
+  {
+    id: "copa-do-mundo",
+    title: "Copa do Mundo 2026",
+    description:
+      "Tabela completa da Copa do Mundo FIFA 2026 com todos os jogos, horários de Brasília, bandeiras e a opção de adicionar cada partida ao Google Agenda.",
+    href: "/copa-do-mundo",
+    icon: Trophy,
+    illustration: "worldcup",
+  },
   {
     id: "calendario",
     title: "Minhas Disciplinas",
