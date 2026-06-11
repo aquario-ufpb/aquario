@@ -5,7 +5,6 @@ import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { useSemestreAtivo } from "@/lib/client/hooks/use-calendario-academico";
 import { MinhasDisciplinas } from "@/components/pages/calendario/minhas-disciplinas";
 import { PaasExplorer } from "@/components/pages/calendario/paas-explorer";
-import { CopaCalendarSection } from "@/components/pages/copa/copa-calendar-section";
 
 function MinhasDisciplinasView() {
   const { data: user } = useCurrentUser();
@@ -28,7 +27,6 @@ function MinhasDisciplinasView() {
         </p>
       </div>
       <MinhasDisciplinas centroSigla={centroSigla} semestreNome={semestreAtivo?.nome} />
-      <CopaCalendarSection />
     </div>
   );
 }
@@ -41,12 +39,5 @@ export default function CalendarioPage() {
     return <MinhasDisciplinasView />;
   }
 
-  return (
-    <>
-      <PaasExplorer />
-      <div className="container mx-auto max-w-7xl p-4 md:p-8">
-        <CopaCalendarSection />
-      </div>
-    </>
-  );
+  return <PaasExplorer />;
 }

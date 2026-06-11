@@ -79,7 +79,7 @@ export function CopaClient() {
   }, [now]);
 
   return (
-    <div className="container mx-auto max-w-5xl p-4 md:p-8 mt-20">
+    <div className="container mx-auto mt-20 max-w-5xl overflow-x-hidden p-4 md:p-8">
       {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-aquario-primary via-[#0e3a6c] to-sky-900 p-6 text-white shadow-lg md:p-10">
         <Bunting />
@@ -148,7 +148,7 @@ export function CopaClient() {
           <select
             value={teamId}
             onChange={event => setTeamId(event.target.value)}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-aquario-header shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/15 dark:bg-white/5 dark:text-aquario-header-dark"
+            className="w-full min-w-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-aquario-header shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/15 dark:bg-white/5 dark:text-aquario-header-dark sm:w-auto"
             aria-label="Filtrar por seleção"
           >
             <option value="">Todas as seleções</option>
