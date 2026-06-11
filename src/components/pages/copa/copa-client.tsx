@@ -15,7 +15,7 @@ import {
 import { GroupCard } from "./group-card";
 import { MatchCard } from "./match-card";
 
-type StageFilter = "todos" | CopaStage | "mata-mata";
+type StageFilter = "todos" | CopaStage;
 
 const STAGE_FILTERS: Array<{ value: StageFilter; label: string }> = [
   { value: "todos", label: "Todos os jogos" },
@@ -27,16 +27,12 @@ const STAGE_FILTERS: Array<{ value: StageFilter; label: string }> = [
   { value: "final", label: "Final" },
 ];
 
-const KNOCKOUT_STAGES: CopaStage[] = ["32avos", "oitavas", "quartas", "semis", "terceiro", "final"];
-
 function matchesStage(match: CopaMatch, filter: StageFilter): boolean {
   if (filter === "todos") {
     return true;
   }
-  if (filter === "mata-mata") {
-    return KNOCKOUT_STAGES.includes(match.stage);
-  }
   if (filter === "final") {
+    // O filtro "Final" também inclui a disputa de 3º lugar.
     return match.stage === "final" || match.stage === "terceiro";
   }
   return match.stage === filter;

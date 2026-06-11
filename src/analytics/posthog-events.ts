@@ -120,7 +120,7 @@ type ProjetosEvent =
 
 type CopaEvent =
   | { name: "copa_add_google_calendar_click"; matchId: number }
-  | { name: "copa_stage_filter_changed"; stage: CopaStage | "todos" | "mata-mata" };
+  | { name: "copa_stage_filter_changed"; stage: CopaStage | "todos" };
 
 // Union of all PostHog events
 export type PostHogEvent =
