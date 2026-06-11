@@ -91,7 +91,7 @@ export function MatchCard({ match }: { match: CopaMatch }) {
       </div>
 
       <div className="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-white/5 sm:flex-row sm:items-center sm:justify-between">
-        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-muted-foreground">
           <MapPin className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">
             {match.venue} · {match.city}
