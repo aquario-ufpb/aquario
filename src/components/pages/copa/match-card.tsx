@@ -1,7 +1,6 @@
 "use client";
 
 import { CalendarPlus, MapPin } from "lucide-react";
-import { trackEvent } from "@/analytics/posthog-client";
 import { cn } from "@/lib/client/utils";
 import { getCopaTeam } from "@/lib/shared/copa/teams";
 import type { CopaMatch } from "@/lib/shared/copa/types";
@@ -101,7 +100,6 @@ export function MatchCard({ match }: { match: CopaMatch }) {
           href={gcalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackEvent("copa_add_google_calendar_click", { matchId: match.id })}
           className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-aquario-primary transition-colors hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/15 dark:text-sky-200 dark:hover:bg-white/10"
         >
           <CalendarPlus className="h-3.5 w-3.5" />

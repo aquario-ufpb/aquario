@@ -2,7 +2,6 @@
 
 import { Trophy, CalendarDays, MapPin, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { trackEvent } from "@/analytics/posthog-client";
 import { cn } from "@/lib/client/utils";
 import { COPA_MATCHES, COPA_MATCHES_CHRONO } from "@/lib/shared/copa/matches";
 import { COPA_GROUP_LETTERS, COPA_TEAMS } from "@/lib/shared/copa/teams";
@@ -125,10 +124,7 @@ export function CopaClient() {
               <button
                 key={filter.value}
                 type="button"
-                onClick={() => {
-                  setStage(filter.value);
-                  trackEvent("copa_stage_filter_changed", { stage: filter.value });
-                }}
+                onClick={() => setStage(filter.value)}
                 className={cn(
                   "rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   stage === filter.value

@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Copa do Mundo 2026**: New `/copa-do-mundo` page with the complete FIFA World Cup 2026 schedule — all 104 matches (group stage + knockouts), the 12 groups with country flags (via flagcdn), kickoff times in Brasília time, stage/team filters, an "upcoming matches" highlight, and a one-click "add to Google Agenda" button per match. Shared dataset lives in `src/lib/shared/copa/` (teams, matches, utils). The page is surfaced on the home tools menu (navbar "Recursos" dropdown), the landing features grid (new `worldcup` illustration), and the `/recursos` hub.
 - **Academic Import**: SIGAA "Atestado de Matrícula" text parser (`src/lib/server/services/academic-import/`) that detects the document and normalizes its enrolled components (código, período, nome, docente, turma, horário, tipo, status). Detection requires the real "Atestado de Matrícula" title plus a SIGAA marker so it cannot mis-claim a Histórico Escolar; the código anchor is constrained to real SIGAA shapes and the schedule-table cutoff is line-anchored; components with no resolvable período fall back to the document-level período rather than being dropped.
 - **Academic Import**: PDF import endpoint `POST /api/usuarios/me/disciplinas/import` (authenticated) that accepts an "Atestado de Matrícula" PDF upload and returns a non-persisted preview of enrolled components matched against the Disciplina catalog (`{ documento, matched, unknownCodigos }`). Includes a row-reconstructing pdf-parse extractor (`pdf-text-extractor.ts`) that groups text items by baseline y and reorders them left→right so docentes/horários stay attached to their códigos, the file parsed in-memory and never stored. New error codes: `EMPTY_PDF`, `FILE_TOO_LARGE`, `INVALID_FILE_TYPE`, `UNSUPPORTED_DOCUMENT`.
 
@@ -24,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Projetos**: Project edit screen no longer misrepresents the principal author when the editor is a collaborator who does not administer the principal entidade. The "Postando como" field previously fell back to showing the editor's own name and avatar; it now displays the principal entidade read-only, with a note clarifying the user is editing as a collaborator (#201).
+
+## [1.9.0] - 2026-06-11
+
+### Added
+- **Copa do Mundo 2026**: New `/copa-do-mundo` page with the complete FIFA World Cup 2026 schedule — all 104 matches (group stage + knockouts), the 12 groups with country flags (via flagcdn), kickoff times in Brasília time, stage/team filters, an "upcoming matches" highlight, and a one-click "add to Google Agenda" button per match. Shared dataset lives in `src/lib/shared/copa/` (teams, matches, utils). The page is surfaced on the home tools menu (navbar "Recursos" dropdown), the landing features grid (new `worldcup` illustration), and the `/recursos` hub.
 
 ## [1.8.0] - 2026-05-04
 
