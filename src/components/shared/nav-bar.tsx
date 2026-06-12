@@ -12,6 +12,7 @@ import {
   Moon,
   Settings,
   Sun,
+  Trophy,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -90,6 +91,12 @@ function ResourcesDropdownContent() {
     icon: LucideIcon;
     external?: boolean;
   }> = [
+    {
+      href: "/copa-do-mundo",
+      title: "Copa do Mundo 2026",
+      description: "Jogos, horários e tabela da Copa.",
+      icon: Trophy,
+    },
     {
       href: "/calendario",
       title: "Minhas Disciplinas",

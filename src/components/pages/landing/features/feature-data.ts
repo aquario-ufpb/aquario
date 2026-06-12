@@ -1,7 +1,23 @@
-import { BookOpen, CalendarDays, FlaskConical, GitBranch, MapIcon, UsersRound } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  FlaskConical,
+  GitBranch,
+  MapIcon,
+  Trophy,
+  UsersRound,
+} from "lucide-react";
 import type { LandingFeature } from "./types";
 
 export const landingFeatures: LandingFeature[] = [
+  {
+    title: "Copa do Mundo 2026",
+    description:
+      "Acompanhe todos os jogos da Copa, com horários de Brasília e opção de adicionar ao Google Agenda.",
+    href: "/copa-do-mundo",
+    icon: Trophy,
+    illustration: "worldcup",
+  },
   {
     title: "Mapas",
     description: "Encontre salas, laboratórios e espaços importantes do Centro de Informática.",

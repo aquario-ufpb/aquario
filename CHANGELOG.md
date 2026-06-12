@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Projetos**: Project edit screen no longer misrepresents the principal author when the editor is a collaborator who does not administer the principal entidade. The "Postando como" field previously fell back to showing the editor's own name and avatar; it now displays the principal entidade read-only, with a note clarifying the user is editing as a collaborator (#201).
 
+## [1.9.0] - 2026-06-11
+
+### Added
+- **Copa do Mundo 2026**: New `/copa-do-mundo` page with the complete FIFA World Cup 2026 schedule — all 104 matches (group stage + knockouts), the 12 groups with country flags (via flagcdn), kickoff times in Brasília time, stage/team filters, an "upcoming matches" highlight, and a one-click "add to Google Agenda" button per match. Shared dataset lives in `src/lib/shared/copa/` (teams, matches, utils). The page is surfaced on the home tools menu (navbar "Recursos" dropdown), the landing features grid (new `worldcup` illustration), and the `/recursos` hub.
+
 ## [1.8.0] - 2026-05-04
 
 ### Added
