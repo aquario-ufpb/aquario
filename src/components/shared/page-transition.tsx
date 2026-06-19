@@ -19,7 +19,6 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={TRANSITION}
-      style={{ willChange: "opacity, transform" }}
     >
       {children}
     </motion.div>

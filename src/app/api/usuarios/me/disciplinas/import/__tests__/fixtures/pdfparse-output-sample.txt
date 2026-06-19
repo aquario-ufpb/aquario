@@ -1,0 +1,106 @@
+
+
+6/7/26, 8:09 PM                                        Sistema Integrado de Gestão de Atividades Acadêmicas
+                                        UNIVERSIDADE FEDERAL DA PARAÍBA
+                                        SISTEMA INTEGRADO DE GESTÃO DE ATIVIDADES ACADÊMICAS
+                                        EMITIDO EM 07/06/2026 20:09
+            Portal do Discente
+                                        ATESTADO DE MATRÍCULA
+         Nível:                  GRADUAÇÃO
+         Matrícula:             20230000000                                     Vínculo:    REGULAR
+         Nome:                 FULANO DE TAL SILVA
+                                 CIÊNCIA DA COMPUTAÇÃO
+         Curso:                                        Cidade:    João Pessoa
+                                 (BACHARELADO)/CI - João Pessoa - MT
+         Formação:             BACHARELADO
+        TURMAS MATRICULADAS: 6
+        ATIVIDADES MATRICULADAS: 1
+        CARGA HORÁRIA MATRICULADA: 435
+             Código -
+                                        Componentes Curriculares                  Turma     Status      Horário
+             Período
+           GDSCO0043 -   CONSTRUÇÃO DE COMPILADORES I                           01    MATRICULADO   24T23
+              2026.1      ANDREI DE ARAUJO FORMIGA
+                           Tipo: DISCIPLINA    Local: À DEFINIR (CI)
+            DINF00053 -    GERENCIAMENTO DE PROJETO DE SOFTWARE               01    MATRICULADO   24M45
+              2026.1      DANIELLE ROUSY DIAS RICARTE
+                           Tipo: DISCIPLINA    Local: À DEFINIR (CI)
+           DSCO00023 -   INOVAÇÃO DE BASE CIENTÍFICA-TECNOLÓGICA E          01    MATRICULADO  6M2345
+              2026.1      EMPREENDEDORISMO
+                           ALISSON VASCONCELOS DE BRITO
+                           Tipo: DISCIPLINA    Local: À DEFINIR (CI)
+         1404138 - 2026.1 LINGUA INGLESA I                                        01    MATRICULADO    7M1
+                           RAFAELA CARLA SANTOS DE SOUSA                                        35N34
+                           Tipo: DISCIPLINA    Local: CAE 110 (PRG)
+            GDLPL0063 -    PORTUGUÊS INSTRUMENTAL                                  01    MATRICULADO   3T1234
+              2026.1      JORGEVALDO DE SOUZA SILVA
+                           Tipo: DISCIPLINA    Local: CAG 102 (PRG)
+           DSCO00022 -   SISTEMAS DISTRIBUÍDOS                                      01    MATRICULADO   35M45
+              2026.1      FERNANDO MENEZES MATOS
+                           Tipo: DISCIPLINA    Local: À DEFINIR (CI)
+            DINF00070 -    UCE - CIÊNCIA DA COMPUTAÇÃO / PROJETO                01    MATRICULADO     --
+              2026.1      INTEGRADO I
+                           GIORGIA DE OLIVEIRA MATTOS, DANIELLE ROUSY DIAS RICARTE e YUSKA
+                           PAOLA COSTA AGUIAR
+                           Tipo: ATIVIDADE
+        TABELA DE HORÁRIOS:
+          Horários       Dom            Seg            Ter            Qua            Qui            Sex            Sab
+           07:00 -                                        1404138
+                          ---             ---             ---             ---             ---             ---
+           08:00                                        (CAE 110 )
+           08:00 -                                        DSCO00023      DINF00070
+                          ---             ---             ---             ---             ---
+           09:00                                        (À DEFINIR )     (À DEFINIR )
+           09:00 -                                        DSCO00023      DINF00070
+                          ---             ---             ---             ---             ---
+           10:00                                        (À DEFINIR )     (À DEFINIR )
+           10:00 -                     DINF00053      DSCO00022      DINF00053      DSCO00022     DSCO00023      DINF00070
+                          ---
+           11:00                     (À DEFINIR )     (À DEFINIR )     (À DEFINIR )     (À DEFINIR )     (À DEFINIR )     (À DEFINIR )
+           11:00 -                     DINF00053      DSCO00022      DINF00053      DSCO00022     DSCO00023      DINF00070
+                          ---
+           12:00                     (À DEFINIR )     (À DEFINIR )     (À DEFINIR )     (À DEFINIR )     (À DEFINIR )     (À DEFINIR )
+           12:00 -
+                          ---             ---             ---             ---             ---             ---             ---
+           13:00
+          
+           13:00 -                                    GDLPL0063
+                          ---             ---                             ---             ---             ---             ---
+           14:00                                     (CAG 102 )
+           14:00 -                    GDSCO0043     GDLPL0063     GDSCO0043
+                          ---                                        ---             ---             ---
+           15:00                     (À DEFINIR )     (CAG 102 )     (À DEFINIR )
+           15:00 -                    GDSCO0043     GDLPL0063     GDSCO0043
+                          ---                                        ---             ---             ---
+           16:00                     (À DEFINIR )     (CAG 102 )     (À DEFINIR )
+           16:00 -                                    GDLPL0063
+                          ---             ---                             ---             ---             ---             ---
+           17:00                                     (CAG 102 )
+           17:00 -
+                          ---             ---             ---             ---             ---             ---             ---
+           18:00
+           18:00 -
+                          ---             ---             ---             ---             ---             ---             ---
+           19:00
+          
+           19:00 -
+                          ---             ---             ---             ---             ---             ---             ---
+           19:50
+https://sigaa.ufpb.br/sigaa/portais/discente/beta/discente.jsf                                        1/2
+
+6/7/26, 8:09 PM                                        Sistema Integrado de Gestão de Atividades Acadêmicas
+           19:50 -
+                          ---             ---             ---             ---             ---             ---             ---
+           20:40
+           20:40 -                                     1404138                        1404138
+                          ---             ---                             ---                             ---             ---
+           21:30                                     (CAE 110 )                      (CAE 110 )
+           21:30 -                                     1404138                        1404138
+                          ---             ---                             ---                             ---             ---
+           22:20                                     (CAE 110 )                      (CAE 110 )
+                                        ATENÇÃO
+              Para verificar a autenticidade deste documento acesse https://sigaa.ufpb.br/sigaa/documentos/
+                         informando a matrícula, a data de emissão e o código de verificação ed2ecdf858
+          SIGAA | STI - Superintendência de Tecnologia da Informação da UFPB / Cooperação UFRN - Copyright © 2006-2026 |
+                                       sigaa-65dc884947-8vbdr.sigaa-65dc884947-8vbdr | 26.6.0
+https://sigaa.ufpb.br/sigaa/portais/discente/beta/discente.jsf                                        2/2

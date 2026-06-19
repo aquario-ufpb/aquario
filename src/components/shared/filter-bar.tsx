@@ -31,14 +31,14 @@ export function FilterBar({
               aria-pressed={isActive}
               className={`relative inline-flex h-9 items-center justify-center whitespace-nowrap rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
                 isActive
-                  ? "text-white"
+                  ? "border border-transparent text-white"
                   : "border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
             >
               {isActive && (
                 <motion.span
                   layoutId="filter-bar-active-pill"
-                  className="absolute inset-0 -z-0 rounded-full bg-aquario-primary"
+                  className="pointer-events-none absolute inset-0 z-0 rounded-full bg-aquario-primary"
                   transition={PILL_TRANSITION}
                   aria-hidden
                 />

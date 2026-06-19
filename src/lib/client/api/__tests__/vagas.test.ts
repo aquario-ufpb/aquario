@@ -68,7 +68,10 @@ describe("vagasService", () => {
         expect.objectContaining({ method: "GET" })
       );
       expect(result).not.toBeNull();
-      expect(result!.id).toBe("vaga-1");
+      if (result === null) {
+        throw new Error("unreachable");
+      }
+      expect(result.id).toBe("vaga-1");
     });
 
     it("should return null when not found", async () => {

@@ -46,16 +46,16 @@ function makeDeps(overrides: Partial<RegisterDependencies> = {}): RegisterDepend
     usuariosRepository: {
       findByEmail: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockResolvedValue(mockCreatedUser),
-    } as any,
+    } as unknown as RegisterDependencies["usuariosRepository"],
     centrosRepository: {
       findById: jest.fn().mockResolvedValue(mockCentro),
-    } as any,
+    } as unknown as RegisterDependencies["centrosRepository"],
     cursosRepository: {
       findById: jest.fn().mockResolvedValue(mockCurso),
-    } as any,
+    } as unknown as RegisterDependencies["cursosRepository"],
     tokenVerificacaoRepository: {
       create: jest.fn().mockResolvedValue({ id: "token-1" }),
-    } as any,
+    } as unknown as RegisterDependencies["tokenVerificacaoRepository"],
     emailService: {
       sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
       sendPasswordResetEmail: jest.fn(),
@@ -125,7 +125,7 @@ describe("register", () => {
       usuariosRepository: {
         findByEmail: jest.fn().mockResolvedValue(mockCreatedUser),
         create: jest.fn(),
-      } as any,
+      } as unknown as RegisterDependencies["usuariosRepository"],
     });
 
     await expect(register(validInput, deps)).rejects.toThrow("já está em uso");
@@ -133,7 +133,9 @@ describe("register", () => {
 
   it("throws when centro is not found", async () => {
     const deps = makeDeps({
-      centrosRepository: { findById: jest.fn().mockResolvedValue(null) } as any,
+      centrosRepository: {
+        findById: jest.fn().mockResolvedValue(null),
+      } as unknown as RegisterDependencies["centrosRepository"],
     });
 
     await expect(register(validInput, deps)).rejects.toThrow("Centro não encontrado");
@@ -141,7 +143,9 @@ describe("register", () => {
 
   it("throws when curso is not found", async () => {
     const deps = makeDeps({
-      cursosRepository: { findById: jest.fn().mockResolvedValue(null) } as any,
+      cursosRepository: {
+        findById: jest.fn().mockResolvedValue(null),
+      } as unknown as RegisterDependencies["cursosRepository"],
     });
 
     await expect(register(validInput, deps)).rejects.toThrow("Curso não encontrado");
@@ -150,7 +154,9 @@ describe("register", () => {
   it("throws when curso does not belong to selected centro", async () => {
     const wrongCentoCurso = { ...mockCurso, centroId: "different-centro" } as Curso;
     const deps = makeDeps({
-      cursosRepository: { findById: jest.fn().mockResolvedValue(wrongCentoCurso) } as any,
+      cursosRepository: {
+        findById: jest.fn().mockResolvedValue(wrongCentoCurso),
+      } as unknown as RegisterDependencies["cursosRepository"],
     });
 
     await expect(register(validInput, deps)).rejects.toThrow("não pertence ao centro");

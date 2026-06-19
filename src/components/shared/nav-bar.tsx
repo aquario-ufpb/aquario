@@ -12,6 +12,7 @@ import {
   Moon,
   Settings,
   Sun,
+  Trophy,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -51,6 +52,7 @@ const navLinkClass =
 
 const RESOURCES_PATHS = [
   "/recursos",
+  "/copa-do-mundo",
   "/calendario",
   "/guias",
   "/mapas",
@@ -69,7 +71,7 @@ function NavPill() {
   return (
     <motion.span
       layoutId="nav-active-pill"
-      className="absolute inset-0 -z-0 rounded-full bg-slate-100 dark:bg-white/10"
+      className="pointer-events-none absolute inset-0 z-0 rounded-full bg-slate-100 dark:bg-white/10"
       transition={NAV_PILL_TRANSITION}
       aria-hidden
     />
@@ -146,6 +148,12 @@ function ResourceItemContent({ resource }: { resource: Resource }) {
 function ResourcesDropdownContent() {
   const resources: Resource[] = [
     {
+      href: "/copa-do-mundo",
+      title: "Copa do Mundo 2026",
+      description: "Jogos, horários e tabela da Copa.",
+      icon: Trophy,
+    },
+    {
       href: "/calendario",
       title: "Minhas Disciplinas",
       description: "Organize disciplinas, turmas e horários.",
@@ -199,7 +207,11 @@ function ResourcesDropdownContent() {
           className="grid grid-cols-2 gap-1"
           onMouseLeave={() => setHoveredIndex(null)}
           onBlur={event => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            const nextFocusedElement = event.relatedTarget;
+            if (
+              !(nextFocusedElement instanceof Node) ||
+              !event.currentTarget.contains(nextFocusedElement)
+            ) {
               setHoveredIndex(null);
             }
           }}
@@ -211,7 +223,7 @@ function ResourcesDropdownContent() {
             const highlight = isHovered ? (
               <motion.span
                 layoutId="resources-dropdown-highlight"
-                className="absolute inset-0 rounded-xl bg-slate-100 dark:bg-white/10"
+                className="pointer-events-none absolute inset-0 rounded-xl bg-slate-100 dark:bg-white/10"
                 transition={DROPDOWN_HIGHLIGHT_TRANSITION}
                 aria-hidden
               />

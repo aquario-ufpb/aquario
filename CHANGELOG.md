@@ -11,8 +11,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **NavBar**: Sliding pill indicator behind the active route (`Sobre`, `Recursos`, `Entidades`, `Projetos`). Animates between items as the route changes using a Framer Motion `layoutId` shared element.
 - **NavBar / Recursos dropdown**: Hover/focus highlight that slides between dropdown items as the cursor moves, instead of an instant background swap.
 - **FilterBar**: Active filter pill now slides between options with a spring transition.
-- **Page transitions**: Routes fade and slide up on navigation via a new `PageTransition` wrapper in the root layout. Respects `prefers-reduced-motion`.
+- **Page transitions**: Routes fade and slide up on navigation via a new `PageTransition` wrapper in the app template. Respects `prefers-reduced-motion`.
 - **Pagination**: Current page number crossfades vertically when changing pages; counter uses tabular numbers to avoid layout shift.
+
+### Fixed
+- **Lint**: Replaced `as any` casts in `register.test.ts` with `as unknown as RegisterDependencies[…]` indexed-access types.
+- **Lint**: Added missing `isInsideSemester` dependency to `useMemo` in `use-onboarding.ts`.
+- **Lint**: Stabilized `today` Date construction in `periodo-picker.tsx` with its own `useMemo(() => new Date(), [])`.
+- **Lint**: Replaced non-null assertion in `vagas.test.ts` with an explicit `if (result === null)` guard.
+- **Lint**: Suppressed `@next/next/no-img-element` in `novo-vaga-page.integration.test.tsx` test fixture via inline ESLint comment.
+
+## [1.9.0] - 2026-06-11
+
+### Added
+- **Copa do Mundo 2026**: New `/copa-do-mundo` page with the complete FIFA World Cup 2026 schedule — all 104 matches (group stage + knockouts), the 12 groups with country flags (via flagcdn), kickoff times in Brasília time, stage/team filters, an "upcoming matches" highlight, and a one-click "add to Google Agenda" button per match. Shared dataset lives in `src/lib/shared/copa/` (teams, matches, utils). The page is surfaced on the home tools menu (navbar "Recursos" dropdown), the landing features grid (new `worldcup` illustration), and the `/recursos` hub.
+- **Academic Import**: SIGAA "Atestado de Matrícula" text parser (`src/lib/server/services/academic-import/`) that detects the document and normalizes its enrolled components (código, período, nome, docente, turma, horário, tipo, status). Detection requires the real "Atestado de Matrícula" title plus a SIGAA marker so it cannot mis-claim a Histórico Escolar; the código anchor is constrained to real SIGAA shapes and the schedule-table cutoff is line-anchored; components with no resolvable período fall back to the document-level período rather than being dropped.
+- **Academic Import**: PDF import endpoint `POST /api/usuarios/me/disciplinas/import` (authenticated) that accepts an "Atestado de Matrícula" PDF upload and returns a non-persisted preview of enrolled components matched against the Disciplina catalog (`{ documento, matched, unknownCodigos }`). Includes a row-reconstructing pdf-parse extractor (`pdf-text-extractor.ts`) that groups text items by baseline y and reorders them left→right so docentes/horários stay attached to their códigos, the file parsed in-memory and never stored. New error codes: `EMPTY_PDF`, `FILE_TOO_LARGE`, `INVALID_FILE_TYPE`, `UNSUPPORTED_DOCUMENT`.
+
+### Removed
+- **Dead code cleanup (medium confidence)**: Pruned module-level exports flagged by `knip`/`ts-prune` as having no external consumers. Pure dead symbols were deleted; functions still used internally lost only the `export` keyword.
+  - Hooks/functions with zero callers: `useEventos`, `useUpdateDisciplinasConcluidas`, `useSaveDisciplinasSemestre`, `useEntidadesByTipo`, `useUploadProjetoImage`, `useCreateProjeto`, `useCentros` re-export from `use-admin-centros`, `resetContainer`, `validateFloorData`, `formatProfessorsForDetails`, `decodeToken`, `formatProjetoTipo`, `parseSemester`, `waitForCondition`, `findSubSecaoBySlug`, plus the duplicate default export of `GuideIndex`.
+  - Constants/types with zero callers: `ENTIDADE_VAGA_SHORT_LABELS`, `isValidEntidadeVagaType`, `APP_URL` (client duplicate), `POSTHOG_HOST`, `ANALYTICS_ENABLED`, `DATABASE_URL` constant, server-local `IS_DEV`, `validateServerEnv`, `ProjetoAutorInput`, `ListProjetosInput`, `OpenApiTagName`, `ErrorCodeType`, `AuthenticatedRequest`.
+  - Type/request shapes with zero callers: `VerifyEmailRequest`, `ForgotPasswordRequest`, `ResetPasswordRequest`, `UpdateUserRoleRequest`.
+  - Barrel re-exports trimmed: `lib/shared/types/index.ts` Prisma re-exports (kept `Campus`), `db/interfaces/types.ts` unused Prisma re-exports, `Vaga`/`TipoVaga`/`CategoriaEvento` repository re-exports, `lib/server/errors/index.ts` `errorResponse`, `lib/client/storage/index.ts` `StorageData`, `lib/shared/types/projeto.ts` `ProjetoAutorPublic`.
+- **Dead code cleanup**: Removed 35 orphan source/test files with zero importers — 8 unused UI components (`background-gradient-animation`, `hover-border-gradient`, `hover-card`, `lamp`, `scroll-area`, `text-generate-effect`, `text-hover-effect`, `water-ripple-effect`), 13 unused `shared/` components (`banner`, `entidade-card`, `gradient-header`, `link-hover`, `overlapping-images`, `text-area`, `search-card-result`, `search-filters`, `user-card`, `vaga-profile-card`, `project-card-title`, `user-card-project`, `badges`), the entire `components/pages/vagas/nova-vaga/` stepper directory (7 files) superseded by the inline form at `src/app/vagas/novo/page.tsx`, the unused `analytics/posthog-server.ts`, 4 unconsumed barrel `index.ts` files (`lib/client/mapas`, `lib/server/db/interfaces`, `lib/server/services/auth`, `lib/server/services/email`), `components/pages/landing/entidades-carousel.tsx`, and `__tests__/utils/guias-mock-data.ts`.
+- **Dependencies**: Dropped 7 unused dependencies — `@radix-ui/react-hover-card`, `@radix-ui/react-scroll-area`, `@radix-ui/react-toast` (project uses `sonner`), `three`, `@types/three`, `posthog-node`, `textarea-caret`.
+- **Assets**: Removed `public/plus.png` and `public/plus_Dark.png` (only referenced by the deleted `banner.tsx`).
+
+### Fixed
+- **Projetos**: Project edit screen no longer misrepresents the principal author when the editor is a collaborator who does not administer the principal entidade. The "Postando como" field previously fell back to showing the editor's own name and avatar; it now displays the principal entidade read-only, with a note clarifying the user is editing as a collaborator (#201).
 
 ## [1.8.0] - 2026-05-04
 
@@ -483,7 +510,8 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/aquario-ufpb/aquario/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/aquario-ufpb/aquario/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/aquario-ufpb/aquario/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/aquario-ufpb/aquario/compare/v1.5.1...v1.6.0
@@ -499,4 +527,3 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 [1.0.2]: https://github.com/aquario-ufpb/aquario/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/aquario-ufpb/aquario/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/aquario-ufpb/aquario/releases/tag/v1.0.0
-

@@ -94,7 +94,7 @@ export function PeriodoPicker({
   const [open, setOpen] = React.useState(false);
 
   const selectedDate = parseDate(value);
-  const today = new Date();
+  const today = React.useMemo(() => new Date(), []);
   const currentYear = today.getFullYear();
   const fromYear = currentYear - 30;
   const toYear = currentYear + 5;
@@ -240,13 +240,4 @@ export function PeriodoPicker({
       </PopoverContent>
     </Popover>
   );
-}
-
-// Helper: derive a date string for ingest scripts that want to parse "2024.1" etc.
-export function parseSemester(input: string, kind: Kind): string | null {
-  const m = input.trim().match(/^(\d{4})\.([12])$/);
-  if (!m) {
-    return null;
-  }
-  return semesterToDate(parseInt(m[1]), parseInt(m[2]) as 1 | 2, kind);
 }

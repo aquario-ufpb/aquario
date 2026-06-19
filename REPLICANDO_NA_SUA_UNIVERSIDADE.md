@@ -214,7 +214,6 @@ O PostHog oferece analytics com 1 milhao de eventos por mes no free tier.
 | Variavel | Valor |
 |----------|-------|
 | `NEXT_PUBLIC_POSTHOG_KEY` | Sua Project API Key |
-| `NEXT_PUBLIC_POSTHOG_HOST` | `https://us.i.posthog.com` |
 
 > Analytics so sao coletados em producao (`NODE_ENV=production`). Em dev, ficam desabilitados automaticamente.
 

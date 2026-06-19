@@ -43,21 +43,6 @@ type ProjectCardProps = {
   projeto: Projeto;
 };
 
-export const formatProjetoTipo = (tipo: TipoProjeto) => {
-  switch (tipo) {
-    case "PESSOAL":
-      return "Pessoal";
-    case "LABORATORIO":
-      return "Laboratório";
-    case "GRUPO":
-      return "Grupo";
-    case "LIGA":
-      return "Liga";
-    default:
-      return tipo;
-  }
-};
-
 /**
  * Renders an avatar (round for usuario, rounded-md tile for entidade) sized
  * for the inline author row.

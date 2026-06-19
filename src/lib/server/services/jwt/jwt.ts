@@ -36,15 +36,3 @@ export function verifyToken(token: string): JwtPayload | null {
     return null;
   }
 }
-
-/**
- * Decode a JWT token without verifying (for debugging)
- */
-export function decodeToken(token: string): JwtPayload | null {
-  try {
-    const payload = jwt.decode(token) as JwtPayload;
-    return payload;
-  } catch {
-    return null;
-  }
-}

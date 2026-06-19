@@ -6,6 +6,7 @@ import { LabsIllustration } from "./illustrations/labs-illustration";
 import { MapIllustration } from "./illustrations/map-illustration";
 import { ScheduleIllustration } from "./illustrations/schedule-illustration";
 import { StatusIllustration } from "./illustrations/status-illustration";
+import { WorldCupIllustration } from "./illustrations/worldcup-illustration";
 import type { FeatureIllustrationProps, FeatureIllustrationVariant } from "./types";
 
 type FeatureIllustrationDispatcherProps = FeatureIllustrationProps & {
@@ -28,6 +29,7 @@ export function FeatureIllustration({
       {variant === "guides" && <GuidesIllustration appearance={appearance} />}
       {variant === "groups" && <GroupsIllustration groups={groups} appearance={appearance} />}
       {variant === "labs" && <LabsIllustration labs={labs} appearance={appearance} />}
+      {variant === "worldcup" && <WorldCupIllustration appearance={appearance} />}
     </div>
   );
 }
