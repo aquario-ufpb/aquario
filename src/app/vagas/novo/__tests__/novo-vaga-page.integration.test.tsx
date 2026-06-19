@@ -38,6 +38,7 @@ vi.mock("@/components/ui/avatar", () => ({
       {children}
     </span>
   ),
+  // eslint-disable-next-line @next/next/no-img-element -- integration test fixture, not rendered for users
   AvatarImage: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
   AvatarFallback: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <span data-testid="avatar-fallback" className={className}>

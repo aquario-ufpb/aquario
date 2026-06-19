@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Lint**: Replaced `as any` casts in `register.test.ts` with `as unknown as RegisterDependencies[…]` indexed-access types.
+- **Lint**: Added missing `isInsideSemester` dependency to `useMemo` in `use-onboarding.ts`.
+- **Lint**: Stabilized `today` Date construction in `periodo-picker.tsx` with its own `useMemo(() => new Date(), [])`.
+- **Lint**: Replaced non-null assertion in `vagas.test.ts` with an explicit `if (result === null)` guard.
+- **Lint**: Suppressed `@next/next/no-img-element` in `novo-vaga-page.integration.test.tsx` test fixture via inline ESLint comment.
+
 ## [1.9.0] - 2026-06-11
 
 ### Added
@@ -511,4 +518,3 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 [1.0.2]: https://github.com/aquario-ufpb/aquario/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/aquario-ufpb/aquario/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/aquario-ufpb/aquario/releases/tag/v1.0.0
-
