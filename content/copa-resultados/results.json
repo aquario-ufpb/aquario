@@ -1,0 +1,145 @@
+{
+  "updatedAt": "2026-06-19T04:07:26.130Z",
+  "results": {
+    "1": {
+      "homeScore": 2,
+      "awayScore": 0,
+      "status": "finished"
+    },
+    "2": {
+      "homeScore": 2,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "3": {
+      "homeScore": 1,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "4": {
+      "homeScore": 4,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "5": {
+      "homeScore": 2,
+      "awayScore": 0,
+      "status": "finished"
+    },
+    "6": {
+      "homeScore": 1,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "7": {
+      "homeScore": 1,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "8": {
+      "homeScore": 0,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "9": {
+      "homeScore": 7,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "10": {
+      "homeScore": 2,
+      "awayScore": 2,
+      "status": "finished"
+    },
+    "11": {
+      "homeScore": 1,
+      "awayScore": 0,
+      "status": "finished"
+    },
+    "12": {
+      "homeScore": 5,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "13": {
+      "homeScore": 0,
+      "awayScore": 0,
+      "status": "finished"
+    },
+    "14": {
+      "homeScore": 1,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "15": {
+      "homeScore": 1,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "16": {
+      "homeScore": 2,
+      "awayScore": 2,
+      "status": "finished"
+    },
+    "17": {
+      "homeScore": 3,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "18": {
+      "homeScore": 1,
+      "awayScore": 4,
+      "status": "finished"
+    },
+    "19": {
+      "homeScore": 3,
+      "awayScore": 0,
+      "status": "finished"
+    },
+    "20": {
+      "homeScore": 3,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "21": {
+      "homeScore": 1,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "22": {
+      "homeScore": 4,
+      "awayScore": 2,
+      "status": "finished"
+    },
+    "23": {
+      "homeScore": 1,
+      "awayScore": 0,
+      "status": "finished"
+    },
+    "24": {
+      "homeScore": 1,
+      "awayScore": 3,
+      "status": "finished"
+    },
+    "25": {
+      "homeScore": 1,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "26": {
+      "homeScore": 4,
+      "awayScore": 1,
+      "status": "finished"
+    },
+    "27": {
+      "homeScore": 6,
+      "awayScore": 0,
+      "status": "finished"
+    },
+    "28": {
+      "homeScore": 1,
+      "awayScore": 0,
+      "status": "finished"
+    }
+  }
+}

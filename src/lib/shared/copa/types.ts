@@ -23,6 +23,14 @@ export type CopaTeam = {
   grupo: CopaGroupLetter;
 };
 
+export type MatchStatus = "scheduled" | "live" | "finished";
+
+export type CopaMatchWithResult = CopaMatch & {
+  homeScore: number | null;
+  awayScore: number | null;
+  matchStatus: MatchStatus;
+};
+
 export type CopaMatch = {
   /** Número da partida (1 a 104). */
   id: number;

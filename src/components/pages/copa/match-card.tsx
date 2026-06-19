@@ -3,7 +3,7 @@
 import { CalendarPlus, MapPin } from "lucide-react";
 import { cn } from "@/lib/client/utils";
 import { getCopaTeam } from "@/lib/shared/copa/teams";
-import type { CopaMatch } from "@/lib/shared/copa/types";
+import type { CopaMatchWithResult } from "@/lib/shared/copa/types";
 import {
   buildMatchGoogleCalendarUrl,
   formatKickoffTime,
@@ -56,9 +56,12 @@ function MatchSide({ id, label, align }: MatchSideProps) {
 const STAGE_BADGE_CLASS =
   "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide";
 
-export function MatchCard({ match }: { match: CopaMatch }) {
+export function MatchCard({ match }: { match: CopaMatchWithResult }) {
   const isGroupStage = match.stage === "grupos";
   const gcalUrl = buildMatchGoogleCalendarUrl(match);
+  const isFinished = match.matchStatus === "finished";
+  const isLive = match.matchStatus === "live";
+  const hasScore = match.homeScore !== null && match.awayScore !== null;
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-sky-300 dark:border-white/10 dark:bg-white/5 dark:hover:border-sky-300/40">
@@ -79,12 +82,37 @@ export function MatchCard({ match }: { match: CopaMatch }) {
       <div className="flex items-center gap-2 sm:gap-4">
         <MatchSide id={match.homeId} label={match.homeLabel} align="end" />
         <div className="flex shrink-0 flex-col items-center px-1">
-          <span className="font-display text-lg font-bold tabular-nums text-aquario-header dark:text-aquario-header-dark sm:text-xl">
-            {formatKickoffTime(match.kickoff)}
-          </span>
-          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            Brasília
-          </span>
+          {hasScore ? (
+            <>
+              <span
+                className={cn(
+                  "font-display text-lg font-bold tabular-nums sm:text-xl",
+                  isLive
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-aquario-header dark:text-aquario-header-dark"
+                )}
+              >
+                {match.homeScore} – {match.awayScore}
+              </span>
+              <span
+                className={cn(
+                  "text-[10px] uppercase tracking-wide",
+                  isLive ? "text-green-600 dark:text-green-400" : "text-muted-foreground"
+                )}
+              >
+                {isLive ? "ao vivo" : "encerrado"}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="font-display text-lg font-bold tabular-nums text-aquario-header dark:text-aquario-header-dark sm:text-xl">
+                {formatKickoffTime(match.kickoff)}
+              </span>
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                Brasília
+              </span>
+            </>
+          )}
         </div>
         <MatchSide id={match.awayId} label={match.awayLabel} align="start" />
       </div>
@@ -96,15 +124,17 @@ export function MatchCard({ match }: { match: CopaMatch }) {
             {match.venue} · {match.city}
           </span>
         </span>
-        <a
-          href={gcalUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-aquario-primary transition-colors hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/15 dark:text-sky-200 dark:hover:bg-white/10"
-        >
-          <CalendarPlus className="h-3.5 w-3.5" />
-          Google Agenda
-        </a>
+        {!isFinished && (
+          <a
+            href={gcalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-aquario-primary transition-colors hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/15 dark:text-sky-200 dark:hover:bg-white/10"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" />
+            Google Agenda
+          </a>
+        )}
       </div>
     </div>
   );

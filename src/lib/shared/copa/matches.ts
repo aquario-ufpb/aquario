@@ -50,10 +50,10 @@ export const COPA_MATCHES: CopaMatch[] = [
     venue: "SoFi Stadium",
     city: "Inglewood",
   },
-  // 13/06
+  // 14/06
   {
     id: 5,
-    kickoff: "2026-06-13T01:00:00-03:00",
+    kickoff: "2026-06-14T01:00:00-03:00",
     stage: "grupos",
     grupo: "D",
     homeId: "AUS",
