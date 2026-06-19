@@ -19,6 +19,9 @@ import {
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
+import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { motion, LayoutGroup } from "motion/react";
 
 import { SearchTrigger } from "@/components/shared/search/search-trigger";
 import { ModeToggle } from "@/components/shared/mode-toggle";
@@ -45,7 +48,35 @@ import { Button } from "@/components/ui/button";
 import type { User as UserType } from "@/lib/client/api/usuarios";
 
 const navLinkClass =
-  "rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-aquario-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white";
+  "relative rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:text-aquario-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:text-white";
+
+const RESOURCES_PATHS = [
+  "/recursos",
+  "/copa-do-mundo",
+  "/calendario",
+  "/guias",
+  "/mapas",
+  "/grades-curriculares",
+  "/calendario-academico",
+];
+
+const NAV_PILL_TRANSITION = {
+  type: "spring" as const,
+  stiffness: 380,
+  damping: 32,
+  mass: 0.6,
+};
+
+function NavPill() {
+  return (
+    <motion.span
+      layoutId="nav-active-pill"
+      className="pointer-events-none absolute inset-0 z-0 rounded-full bg-slate-100 dark:bg-white/10"
+      transition={NAV_PILL_TRANSITION}
+      aria-hidden
+    />
+  );
+}
 
 // Helper function
 function getInitials(name: string): string {
@@ -83,14 +114,39 @@ function NavLogo() {
 }
 
 // Resources Dropdown Content Component
+type Resource = {
+  href: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  external?: boolean;
+};
+
+const DROPDOWN_HIGHLIGHT_TRANSITION = {
+  type: "spring" as const,
+  stiffness: 400,
+  damping: 34,
+  mass: 0.5,
+};
+
+function ResourceItemContent({ resource }: { resource: Resource }) {
+  return (
+    <>
+      <div className="relative z-10 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
+        <resource.icon className="h-4 w-4" />
+      </div>
+      <div className="relative z-10">
+        <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
+          {resource.title}
+        </div>
+        <p className="mt-1 text-xs leading-snug text-muted-foreground">{resource.description}</p>
+      </div>
+    </>
+  );
+}
+
 function ResourcesDropdownContent() {
-  const resources: Array<{
-    href: string;
-    title: string;
-    description: string;
-    icon: LucideIcon;
-    external?: boolean;
-  }> = [
+  const resources: Resource[] = [
     {
       href: "/copa-do-mundo",
       title: "Copa do Mundo 2026",
@@ -136,57 +192,75 @@ function ResourcesDropdownContent() {
     },
   ];
 
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const itemBaseClass =
+    "relative flex gap-3 rounded-xl p-3 no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
   return (
     <div className="w-[520px] p-3">
       <div className="mb-2 px-2">
         <p className="text-sm font-semibold text-slate-900 dark:text-white">Recursos</p>
         <p className="text-xs text-muted-foreground">Atalhos úteis para o dia a dia no CI.</p>
       </div>
-      <ul className="grid grid-cols-2 gap-1">
-        {resources.map(resource => (
-          <li key={resource.href}>
-            <NavigationMenuLink asChild>
-              {resource.external ? (
-                <a
-                  href={resource.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex gap-3 rounded-xl p-3 no-underline outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-white/10 dark:focus:bg-white/10"
-                >
-                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
-                    <resource.icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
-                      {resource.title}
-                    </div>
-                    <p className="mt-1 text-xs leading-snug text-muted-foreground">
-                      {resource.description}
-                    </p>
-                  </div>
-                </a>
-              ) : (
-                <Link
-                  href={resource.href}
-                  className="flex gap-3 rounded-xl p-3 no-underline outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-white/10 dark:focus:bg-white/10"
-                >
-                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
-                    <resource.icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
-                      {resource.title}
-                    </div>
-                    <p className="mt-1 text-xs leading-snug text-muted-foreground">
-                      {resource.description}
-                    </p>
-                  </div>
-                </Link>
-              )}
-            </NavigationMenuLink>
-          </li>
-        ))}
-      </ul>
+      <LayoutGroup id="resources-dropdown">
+        <ul
+          className="grid grid-cols-2 gap-1"
+          onMouseLeave={() => setHoveredIndex(null)}
+          onBlur={event => {
+            const nextFocusedElement = event.relatedTarget;
+            if (
+              !(nextFocusedElement instanceof Node) ||
+              !event.currentTarget.contains(nextFocusedElement)
+            ) {
+              setHoveredIndex(null);
+            }
+          }}
+        >
+          {resources.map((resource, index) => {
+            const isHovered = hoveredIndex === index;
+            const handleEnter = () => setHoveredIndex(index);
+            const handleFocus = () => setHoveredIndex(index);
+            const highlight = isHovered ? (
+              <motion.span
+                layoutId="resources-dropdown-highlight"
+                className="pointer-events-none absolute inset-0 rounded-xl bg-slate-100 dark:bg-white/10"
+                transition={DROPDOWN_HIGHLIGHT_TRANSITION}
+                aria-hidden
+              />
+            ) : null;
+
+            return (
+              <li key={resource.href}>
+                <NavigationMenuLink asChild>
+                  {resource.external ? (
+                    <a
+                      href={resource.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={itemBaseClass}
+                      onMouseEnter={handleEnter}
+                      onFocus={handleFocus}
+                    >
+                      {highlight}
+                      <ResourceItemContent resource={resource} />
+                    </a>
+                  ) : (
+                    <Link
+                      href={resource.href}
+                      className={itemBaseClass}
+                      onMouseEnter={handleEnter}
+                      onFocus={handleFocus}
+                    >
+                      {highlight}
+                      <ResourceItemContent resource={resource} />
+                    </Link>
+                  )}
+                </NavigationMenuLink>
+              </li>
+            );
+          })}
+        </ul>
+      </LayoutGroup>
       <div className="mt-2 border-t pt-2 dark:border-white/10">
         <NavigationMenuLink asChild>
           <Link
@@ -202,15 +276,16 @@ function ResourcesDropdownContent() {
 }
 
 // Resources Navigation Component
-function ResourcesNavigation() {
+function ResourcesNavigation({ isActive }: { isActive: boolean }) {
   return (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
           <NavigationMenuTrigger
-            className={`${navLinkClass} h-auto bg-transparent data-[active]:bg-slate-100 data-[state=open]:bg-slate-100 dark:data-[active]:bg-white/10 dark:data-[state=open]:bg-white/10`}
+            className={`${navLinkClass} h-auto bg-transparent data-[state=open]:bg-transparent dark:data-[state=open]:bg-transparent`}
           >
-            Recursos
+            {isActive && <NavPill />}
+            <span className="relative z-10">Recursos</span>
           </NavigationMenuTrigger>
           <NavigationMenuContent>
             <ResourcesDropdownContent />
@@ -296,19 +371,30 @@ function UserDropdownMenu({ user, isDark }: { user: UserType; isDark: boolean })
 
 // Navigation Links Component
 function NavLinks() {
+  const pathname = usePathname();
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const isResourcesActive = RESOURCES_PATHS.some(
+    path => pathname === path || pathname.startsWith(`${path}/`)
+  );
+
   return (
-    <div className="flex items-center justify-end gap-1">
-      <Link href="/sobre" className={navLinkClass}>
-        Sobre
-      </Link>
-      <ResourcesNavigation />
-      <Link href="/entidades" className={navLinkClass}>
-        Entidades
-      </Link>
-      <Link href="/projetos" className={navLinkClass}>
-        Projetos
-      </Link>
-    </div>
+    <LayoutGroup id="nav-links">
+      <div className="flex items-center justify-end gap-1">
+        <Link href="/sobre" className={navLinkClass}>
+          {isActive("/sobre") && <NavPill />}
+          <span className="relative z-10">Sobre</span>
+        </Link>
+        <ResourcesNavigation isActive={isResourcesActive} />
+        <Link href="/entidades" className={navLinkClass}>
+          {isActive("/entidades") && <NavPill />}
+          <span className="relative z-10">Entidades</span>
+        </Link>
+        <Link href="/projetos" className={navLinkClass}>
+          {isActive("/projetos") && <NavPill />}
+          <span className="relative z-10">Projetos</span>
+        </Link>
+      </div>
+    </LayoutGroup>
   );
 }
 

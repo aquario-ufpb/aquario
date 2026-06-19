@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **NavBar**: Sliding pill indicator behind the active route (`Sobre`, `Recursos`, `Entidades`, `Projetos`). Animates between items as the route changes using a Framer Motion `layoutId` shared element.
+- **NavBar / Recursos dropdown**: Hover/focus highlight that slides between dropdown items as the cursor moves, instead of an instant background swap.
+- **FilterBar**: Active filter pill now slides between options with a spring transition.
+- **Page transitions**: Routes fade and slide up on navigation via a new `PageTransition` wrapper in the app template. Respects `prefers-reduced-motion`.
+- **Pagination**: Current page number crossfades vertically when changing pages; counter uses tabular numbers to avoid layout shift.
+
 ### Fixed
 - **Lint**: Replaced `as any` casts in `register.test.ts` with `as unknown as RegisterDependencies[…]` indexed-access types.
 - **Lint**: Added missing `isInsideSemester` dependency to `useMemo` in `use-onboarding.ts`.
@@ -503,7 +510,9 @@ npm run release:major:push   # Breaking changes (1.0.0 → 2.0.0)
 
 > **Note:** The `:push` commands require GitHub CLI (`gh auth login`)
 
-[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/aquario-ufpb/aquario/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/aquario-ufpb/aquario/compare/v1.8.0...v1.9.0
+[1.8.0]: https://github.com/aquario-ufpb/aquario/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/aquario-ufpb/aquario/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/aquario-ufpb/aquario/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/aquario-ufpb/aquario/compare/v1.5.0...v1.5.1
