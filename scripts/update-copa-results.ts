@@ -48,7 +48,18 @@ type ApiMatch = {
   score: { fullTime: { home: number | null; away: number | null } };
 };
 
+const TOURNAMENT_START = new Date("2026-06-11T00:00:00Z");
+const TOURNAMENT_END = new Date("2026-07-20T00:00:00Z"); // exclusive: day after the final
+
 async function main() {
+  const now = new Date();
+  if (now < TOURNAMENT_START || now >= TOURNAMENT_END) {
+    console.log(
+      " Fora do período da Copa do Mundo 2026 (11 jun – 19 jul). Nenhuma atualização necessária."
+    );
+    process.exit(0);
+  }
+
   console.log("Buscando resultados da Copa do Mundo 2026...");
 
   const res = await fetch("https://api.football-data.org/v4/competitions/WC/matches", {
@@ -113,7 +124,7 @@ async function main() {
   writeFileSync(join(outputDir, "results.json"), JSON.stringify(output, null, 2) + "\n");
 
   console.log(
-    `✅ ${Object.keys(results).length} resultados escritos em content/copa-resultados/results.json`
+    `${Object.keys(results).length} resultados escritos em content/copa-resultados/results.json`
   );
 }
 
