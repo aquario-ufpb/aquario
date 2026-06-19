@@ -1,0 +1,63 @@
+name: Update Copa Results
+
+on:
+  schedule:
+    # A cada 2 horas durante a Copa (11 jun – 19 jul 2026)
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-copa-results:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          token: ${{ secrets.TOKEN_PAT || secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch results
+        env:
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+        run: npx tsx scripts/update-copa-results.ts
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet HEAD content/copa-resultados/results.json 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Nenhuma mudança nos resultados"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "📝 Resultados atualizados"
+          fi
+
+      - name: Commit and push
+        if: steps.check_changes.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          git add content/copa-resultados/results.json
+          git commit -m "chore(copa): atualizar resultados da Copa do Mundo [skip ci]"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          git push
+          echo "✅ Resultados atualizados e publicados!"

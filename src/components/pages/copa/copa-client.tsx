@@ -4,8 +4,9 @@ import { Trophy, CalendarDays, MapPin, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/client/utils";
 import { COPA_MATCHES, COPA_MATCHES_CHRONO } from "@/lib/shared/copa/matches";
+import { withResult } from "@/lib/shared/copa/results";
 import { COPA_GROUP_LETTERS, COPA_TEAMS } from "@/lib/shared/copa/teams";
-import type { CopaMatch, CopaStage } from "@/lib/shared/copa/types";
+import type { CopaMatchWithResult, CopaStage } from "@/lib/shared/copa/types";
 import {
   formatKickoffDate,
   formatKickoffWeekday,
@@ -26,7 +27,10 @@ const STAGE_FILTERS: Array<{ value: StageFilter; label: string }> = [
   { value: "final", label: "Final" },
 ];
 
-function matchesStage(match: CopaMatch, filter: StageFilter): boolean {
+const MATCHES_WITH_RESULTS = COPA_MATCHES.map(withResult);
+const MATCHES_CHRONO_WITH_RESULTS = COPA_MATCHES_CHRONO.map(withResult);
+
+function matchesStage(match: CopaMatchWithResult, filter: StageFilter): boolean {
   if (filter === "todos") {
     return true;
   }
@@ -50,7 +54,7 @@ export function CopaClient() {
   }, []);
 
   const filteredMatches = useMemo(() => {
-    return COPA_MATCHES.filter(match => {
+    return MATCHES_WITH_RESULTS.filter(match => {
       if (!matchesStage(match, stage)) {
         return false;
       }
@@ -67,10 +71,9 @@ export function CopaClient() {
     if (now === null) {
       return [];
     }
-    return COPA_MATCHES_CHRONO.filter(match => new Date(match.kickoff).getTime() >= now).slice(
-      0,
-      3
-    );
+    return MATCHES_CHRONO_WITH_RESULTS.filter(
+      match => new Date(match.kickoff).getTime() >= now || match.matchStatus === "live"
+    ).slice(0, 3);
   }, [now]);
 
   return (

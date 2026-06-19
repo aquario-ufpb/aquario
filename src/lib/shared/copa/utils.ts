@@ -127,16 +127,18 @@ export function buildMatchGoogleCalendarUrl(match: CopaMatch): string {
 }
 
 /** Agrupa partidas por dia (Brasília), preservando a ordem cronológica. */
-export function groupMatchesByDay(matches: CopaMatch[]): Array<{
+export function groupMatchesByDay<T extends CopaMatch>(
+  matches: T[]
+): Array<{
   dayKey: string;
   iso: string;
-  matches: CopaMatch[];
+  matches: T[];
 }> {
   const ordered = [...matches].sort(
     (a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
   );
 
-  const groups = new Map<string, CopaMatch[]>();
+  const groups = new Map<string, T[]>();
   for (const match of ordered) {
     const key = getDayKey(match.kickoff);
     const bucket = groups.get(key);
