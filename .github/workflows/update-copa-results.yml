@@ -40,7 +40,7 @@ jobs:
         env:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
         run: |
-          npx tsx src/lib/shared/copa/update-results.ts && echo "fetched=true" >> $GITHUB_OUTPUT || echo "fetched=false" >> $GITHUB_OUTPUT
+          npx tsx scripts/update-copa-results.ts && echo "fetched=true" >> $GITHUB_OUTPUT || echo "fetched=false" >> $GITHUB_OUTPUT
 
       - name: Check for changes
         id: check_changes

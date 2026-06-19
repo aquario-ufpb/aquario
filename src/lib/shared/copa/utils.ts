@@ -138,7 +138,7 @@ export function groupMatchesByDay<T extends CopaMatch>(
     (a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
   );
 
-  const groups = new Map<string, CopaMatch[]>();
+  const groups = new Map<string, T[]>();
   for (const match of ordered) {
     const key = getDayKey(match.kickoff);
     const bucket = groups.get(key);

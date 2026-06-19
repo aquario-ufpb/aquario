@@ -2,12 +2,12 @@
  * Busca resultados da Copa do Mundo 2026 na football-data.org e escreve
  * content/copa-resultados/results.json com os placares das partidas encerradas.
  *
- * Uso: FOOTBALL_DATA_API_KEY=<key> tsx src/lib/shared/copa/update-results.ts
+ * Uso: FOOTBALL_DATA_API_KEY=<key> tsx scripts/update-copa-results.ts
  */
 
 import { mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
-import { COPA_MATCHES } from "./matches";
+import { COPA_MATCHES } from "../src/lib/shared/copa/matches";
 
 const API_KEY = process.env.FOOTBALL_DATA_API_KEY;
 
