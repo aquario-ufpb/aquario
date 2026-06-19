@@ -10,7 +10,7 @@ export type DisciplinaSemestreResponse = {
   criadoEm: string;
 };
 
-export type SaveDisciplinasSemestreItem = {
+type SaveDisciplinasSemestreItem = {
   codigoDisciplina: string;
   turma?: string | null;
   docente?: string | null;

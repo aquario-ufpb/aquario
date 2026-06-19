@@ -50,22 +50,3 @@ export function loadFloorData(floorLayout: FloorLayout, rooms: Room[]): Floor {
     rooms: mergedRooms,
   };
 }
-
-/**
- * Validates that all rooms in layout have corresponding room data
- * @param floorLayout - The floor layout
- * @param rooms - Array of room metadata
- * @returns Array of missing room IDs
- */
-export function validateFloorData(floorLayout: FloorLayout, rooms: Room[]): string[] {
-  const roomIds = new Set(rooms.map(r => r.id));
-  const missingIds: string[] = [];
-
-  floorLayout.rooms.forEach(roomLayout => {
-    if (!roomIds.has(roomLayout.id)) {
-      missingIds.push(roomLayout.id);
-    }
-  });
-
-  return missingIds;
-}

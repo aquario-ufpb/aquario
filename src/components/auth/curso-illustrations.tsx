@@ -3,7 +3,7 @@
  * Each is a simple, recognizable scene rendered at 64x64.
  */
 
-export function CcIllustration({ className }: { className?: string }) {
+function CcIllustration({ className }: { className?: string }) {
   // Terminal / code window
   return (
     <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -53,7 +53,7 @@ export function CcIllustration({ className }: { className?: string }) {
   );
 }
 
-export function EcIllustration({ className }: { className?: string }) {
+function EcIllustration({ className }: { className?: string }) {
   // Microchip / circuit board
   return (
     <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -189,7 +189,7 @@ export function EcIllustration({ className }: { className?: string }) {
   );
 }
 
-export function CdiaIllustration({ className }: { className?: string }) {
+function CdiaIllustration({ className }: { className?: string }) {
   // Brain with data nodes
   return (
     <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -261,7 +261,7 @@ export function CdiaIllustration({ className }: { className?: string }) {
   );
 }
 
-export function ErIllustration({ className }: { className?: string }) {
+function ErIllustration({ className }: { className?: string }) {
   // Robot figure
   return (
     <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">

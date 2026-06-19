@@ -4,7 +4,7 @@ import type { Projeto, ProjetoAutor, StatusProjeto } from "@prisma/client";
  * Dados públicos do usuario referenciado por um autor
  * (sem PII como email/matrícula)
  */
-export type ProjetoAutorUsuarioPublic = {
+type ProjetoAutorUsuarioPublic = {
   id: string;
   nome: string;
   urlFotoPerfil: string | null;
@@ -14,7 +14,7 @@ export type ProjetoAutorUsuarioPublic = {
 /**
  * Dados públicos da entidade referenciada por um autor
  */
-export type ProjetoAutorEntidadePublic = {
+type ProjetoAutorEntidadePublic = {
   id: string;
   nome: string;
   slug: string | null;

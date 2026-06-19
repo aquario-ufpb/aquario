@@ -201,5 +201,3 @@ export const GuideIndex: React.FC<GuideIndexProps> = ({ guias }) => {
     </div>
   );
 };
-
-export default GuideIndex;

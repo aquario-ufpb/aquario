@@ -15,43 +15,13 @@ import type {
   Guia,
   SecaoGuia,
   SubSecaoGuia,
-  SemestreLetivo,
-  EventoCalendario,
   PapelPlataforma,
   TipoToken,
   TipoEntidade,
-  PapelMembro,
-  StatusGuia,
-  CategoriaEvento,
-  Vaga,
-  TipoVaga,
   Prisma,
 } from "@prisma/client";
 
-// Re-export Prisma types
-export type {
-  Campus,
-  Centro,
-  Curso,
-  Usuario,
-  TokenVerificacao,
-  Entidade,
-  MembroEntidade,
-  Cargo,
-  Guia,
-  SecaoGuia,
-  SubSecaoGuia,
-  SemestreLetivo,
-  EventoCalendario,
-  PapelPlataforma,
-  TipoToken,
-  TipoEntidade,
-  PapelMembro,
-  StatusGuia,
-  CategoriaEvento,
-  Vaga,
-  TipoVaga,
-};
+export type { Campus, Centro, Curso, TokenVerificacao, SubSecaoGuia, PapelPlataforma, TipoToken };
 
 // Extended types with relations
 export type UsuarioWithRelations = Usuario & {

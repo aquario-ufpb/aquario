@@ -7,13 +7,7 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, RenderHookOptions } from "@testing-library/react";
 
-/**
- * Create a QueryClient configured for testing
- * - No retries (faster tests)
- * - No cache time (fresh data each test)
- * - Errors shown immediately
- */
-export function createTestQueryClient(): QueryClient {
+function createTestQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
@@ -59,23 +53,4 @@ export function renderHookWithProviders<TResult, TProps>(
       <TestQueryProvider client={queryClient}>{children}</TestQueryProvider>
     ),
   });
-}
-
-/**
- * Wait for a condition to be true with timeout
- * Useful for async assertions in tests
- */
-export async function waitForCondition(
-  condition: () => boolean,
-  timeout = 3000,
-  interval = 50
-): Promise<void> {
-  const startTime = Date.now();
-
-  while (!condition()) {
-    if (Date.now() - startTime > timeout) {
-      throw new Error(`Timeout waiting for condition after ${timeout}ms`);
-    }
-    await new Promise(resolve => setTimeout(resolve, interval));
-  }
 }

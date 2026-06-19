@@ -21,10 +21,6 @@ export type RegisterResponse = {
   verificado: boolean;
 };
 
-export type VerifyEmailRequest = {
-  token: string;
-};
-
 export type VerifyEmailResponse = {
   success: boolean;
   message: string;
@@ -35,18 +31,9 @@ export type ResendVerificationResponse = {
   message: string;
 };
 
-export type ForgotPasswordRequest = {
-  email: string;
-};
-
 export type ForgotPasswordResponse = {
   success: boolean;
   message: string;
-};
-
-export type ResetPasswordRequest = {
-  token: string;
-  novaSenha: string;
 };
 
 export type ResetPasswordResponse = {

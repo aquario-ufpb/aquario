@@ -1,6 +1,6 @@
 import type { SemestreLetivo, EventoCalendario, CategoriaEvento } from "@prisma/client";
 
-export type { SemestreLetivo, EventoCalendario, CategoriaEvento };
+export type { SemestreLetivo, EventoCalendario };
 
 export type SemestreLetivoWithEventos = SemestreLetivo & {
   eventos: EventoCalendario[];

@@ -2,4 +2,4 @@
 export { ErrorCode, isApiError, type ApiErrorBody, type FieldError } from "@/lib/shared/errors";
 
 // Export server-specific utilities
-export { ApiError, errorResponse, fromZodError, handleError } from "./api-error";
+export { ApiError, fromZodError, handleError } from "./api-error";

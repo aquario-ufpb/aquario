@@ -9,13 +9,13 @@
  */
 
 // Calendar storage
-export type CalendarioStorage = {
+type CalendarioStorage = {
   key: "calendario_selected_classes";
   value: number[]; // Array of class IDs
 };
 
 // Union of all storage data types
-export type StorageData = CalendarioStorage;
+type StorageData = CalendarioStorage;
 
 // Extract storage key type
 export type StorageKey = StorageData["key"];
