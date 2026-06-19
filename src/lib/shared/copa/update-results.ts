@@ -52,7 +52,7 @@ async function main() {
   console.log("Buscando resultados da Copa do Mundo 2026...");
 
   const res = await fetch("https://api.football-data.org/v4/competitions/WC/matches", {
-    headers: { "X-Auth-Token": API_KEY! },
+    headers: { "X-Auth-Token": API_KEY },
   });
 
   if (!res.ok) {
@@ -77,7 +77,9 @@ async function main() {
 
   for (const match of COPA_MATCHES) {
     // Partidas de mata-mata sem equipes definidas ainda são ignoradas.
-    if (!match.homeId || !match.awayId) continue;
+    if (!match.homeId || !match.awayId) {
+      continue;
+    }
 
     const dateUTC = new Date(match.kickoff).toISOString().slice(0, 10);
     const key = `${match.homeId}_${match.awayId}_${dateUTC}`;

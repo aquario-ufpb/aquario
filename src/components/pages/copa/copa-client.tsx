@@ -6,7 +6,7 @@ import { cn } from "@/lib/client/utils";
 import { COPA_MATCHES, COPA_MATCHES_CHRONO } from "@/lib/shared/copa/matches";
 import { withResult } from "@/lib/shared/copa/results";
 import { COPA_GROUP_LETTERS, COPA_TEAMS } from "@/lib/shared/copa/teams";
-import type { CopaMatch, CopaMatchWithResult, CopaStage } from "@/lib/shared/copa/types";
+import type { CopaMatchWithResult, CopaStage } from "@/lib/shared/copa/types";
 import {
   formatKickoffDate,
   formatKickoffWeekday,
