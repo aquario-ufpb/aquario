@@ -72,7 +72,7 @@ export function CopaClient() {
       return [];
     }
     return MATCHES_CHRONO_WITH_RESULTS.filter(
-      match => new Date(match.kickoff).getTime() >= now
+      match => new Date(match.kickoff).getTime() >= now || match.matchStatus === "live"
     ).slice(0, 3);
   }, [now]);
 

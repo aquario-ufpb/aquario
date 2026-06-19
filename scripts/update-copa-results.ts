@@ -62,11 +62,30 @@ async function main() {
 
   console.log("Buscando resultados da Copa do Mundo 2026...");
 
-  const res = await fetch("https://api.football-data.org/v4/competitions/WC/matches", {
-    headers: { "X-Auth-Token": API_KEY as string },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+
+  let res: Response;
+  try {
+    res = await fetch("https://api.football-data.org/v4/competitions/WC/matches", {
+      headers: { "X-Auth-Token": API_KEY as string },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    console.warn(`⚠️ Falha de rede ao contatar a API: ${err}. Nenhuma atualização feita.`);
+    process.exit(0);
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!res.ok) {
+    // Rate limit or server errors are transient — don't fail the workflow.
+    if (res.status === 429 || res.status >= 500) {
+      console.warn(
+        `⚠️ API indisponível (${res.status} ${res.statusText}). Nenhuma atualização feita.`
+      );
+      process.exit(0);
+    }
     console.error(`❌ Erro na API: ${res.status} ${res.statusText}`);
     console.error(await res.text());
     process.exit(1);

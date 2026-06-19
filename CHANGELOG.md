@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Copa do Mundo 2026 – resultados ao vivo**: Match cards agora exibem placar e status ("ao vivo" / "encerrado"); o botão "Google Agenda" é ocultado em jogos encerrados. Novo módulo `results.ts` carrega os placares de `content/copa-resultados/results.json` em build-time via `withResult`. Script `src/lib/shared/copa/update-results.ts` busca resultados na football-data.org e atualiza o JSON; GitHub Action `.github/workflows/update-copa-results.yml` executa automaticamente a cada 2 horas durante o torneio.
+- **Copa do Mundo 2026 – resultados ao vivo**: Match cards agora exibem placar e status ("ao vivo" / "encerrado"); o botão "Google Agenda" é ocultado em jogos encerrados. Novo módulo `results.ts` carrega os placares de `content/copa-resultados/results.json` em build-time via `withResult`. Script `scripts/update-copa-results.ts` busca resultados na football-data.org e atualiza o JSON; GitHub Action `.github/workflows/update-copa-results.yml` executa automaticamente a cada 2 horas durante o torneio.
 - **NavBar**: Sliding pill indicator behind the active route (`Sobre`, `Recursos`, `Entidades`, `Projetos`). Animates between items as the route changes using a Framer Motion `layoutId` shared element.
 - **NavBar / Recursos dropdown**: Hover/focus highlight that slides between dropdown items as the cursor moves, instead of an instant background swap.
 - **FilterBar**: Active filter pill now slides between options with a spring transition.

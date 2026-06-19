@@ -50,17 +50,7 @@ export const COPA_MATCHES: CopaMatch[] = [
     venue: "SoFi Stadium",
     city: "Inglewood",
   },
-  // 14/06
-  {
-    id: 5,
-    kickoff: "2026-06-14T01:00:00-03:00",
-    stage: "grupos",
-    grupo: "D",
-    homeId: "AUS",
-    awayId: "TUR",
-    venue: "BC Place",
-    city: "Vancouver",
-  },
+  // 13/06
   {
     id: 6,
     kickoff: "2026-06-13T16:00:00-03:00",
@@ -92,6 +82,16 @@ export const COPA_MATCHES: CopaMatch[] = [
     city: "Foxborough",
   },
   // 14/06
+  {
+    id: 5,
+    kickoff: "2026-06-14T01:00:00-03:00",
+    stage: "grupos",
+    grupo: "D",
+    homeId: "AUS",
+    awayId: "TUR",
+    venue: "BC Place",
+    city: "Vancouver",
+  },
   {
     id: 9,
     kickoff: "2026-06-14T14:00:00-03:00",

@@ -15,9 +15,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           token: ${{ secrets.TOKEN_PAT || secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Configure Git
         run: |
@@ -25,7 +26,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "18"
           cache: "npm"
@@ -35,16 +36,12 @@ jobs:
         run: npm ci
 
       - name: Fetch results
-        id: fetch
-        continue-on-error: true
         env:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
-        run: |
-          npx tsx scripts/update-copa-results.ts && echo "fetched=true" >> $GITHUB_OUTPUT || echo "fetched=false" >> $GITHUB_OUTPUT
+        run: npx tsx scripts/update-copa-results.ts
 
       - name: Check for changes
         id: check_changes
-        if: steps.fetch.outputs.fetched == 'true'
         run: |
           if git diff --quiet HEAD content/copa-resultados/results.json 2>/dev/null; then
             echo "changed=false" >> $GITHUB_OUTPUT
@@ -55,7 +52,7 @@ jobs:
           fi
 
       - name: Commit and push
-        if: steps.fetch.outputs.fetched == 'true' && steps.check_changes.outputs.changed == 'true'
+        if: steps.check_changes.outputs.changed == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_PAT || secrets.GITHUB_TOKEN }}
         run: |
@@ -64,7 +61,3 @@ jobs:
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git push
           echo "✅ Resultados atualizados e publicados!"
-
-      - name: API unavailable
-        if: steps.fetch.outputs.fetched == 'false'
-        run: echo "⚠️ API indisponível, nenhuma atualização feita"
