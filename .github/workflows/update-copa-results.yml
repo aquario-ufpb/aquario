@@ -13,6 +13,13 @@ jobs:
   update-copa-results:
     runs-on: ubuntu-latest
 
+    # O repo usa um pre-push do husky que roda `check-all` (inclui type-check
+    # do projeto inteiro). Este job só altera um JSON e faz checkout sem os
+    # submódulos de `content/`, então o type-check falharia em `@/content/...`.
+    # HUSKY=0 pula os hooks para que o push do bot não seja bloqueado.
+    env:
+      HUSKY: "0"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
