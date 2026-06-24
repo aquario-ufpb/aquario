@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-24T19:45:57.677Z",
+  "updatedAt": "2026-06-24T21:22:57.090Z",
   "results": {
     "1": {
       "homeScore": 2,
@@ -242,14 +242,14 @@
       "status": "finished"
     },
     "49": {
-      "homeScore": 0,
-      "awayScore": 0,
-      "status": "live"
+      "homeScore": 2,
+      "awayScore": 1,
+      "status": "finished"
     },
     "50": {
-      "homeScore": 2,
-      "awayScore": 0,
-      "status": "live"
+      "homeScore": 3,
+      "awayScore": 1,
+      "status": "finished"
     }
   }
 }
