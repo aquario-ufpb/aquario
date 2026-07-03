@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Pagination**: Current page number crossfades vertically when changing pages; counter uses tabular numbers to avoid layout shift.
 
 ### Fixed
+- **Copa do Mundo 2026 – chaveamento de mata-mata**: Times dos jogos da Rodada de 32 agora são resolvidos dinamicamente a partir da classificação final dos grupos. Novo módulo `standings.ts` calcula pontos, saldo de gols e gols marcados para cada grupo e identifica os 8 melhores terceiros colocados; `resolveMatchParticipants()` traduz labels como "1º Grupo A" e "3º A/B/C/D/F" para os IDs reais dos times, eliminando o "?" nos match cards do mata-mata.
 - **Lint**: Replaced `as any` casts in `register.test.ts` with `as unknown as RegisterDependencies[…]` indexed-access types.
 - **Lint**: Added missing `isInsideSemester` dependency to `useMemo` in `use-onboarding.ts`.
 - **Lint**: Stabilized `today` Date construction in `periodo-picker.tsx` with its own `useMemo(() => new Date(), [])`.

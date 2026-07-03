@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/client/utils";
 import { COPA_MATCHES, COPA_MATCHES_CHRONO } from "@/lib/shared/copa/matches";
 import { withResult } from "@/lib/shared/copa/results";
+import { resolveMatchParticipants } from "@/lib/shared/copa/standings";
 import { COPA_GROUP_LETTERS, COPA_TEAMS } from "@/lib/shared/copa/teams";
 import type { CopaMatchWithResult, CopaStage } from "@/lib/shared/copa/types";
 import {
@@ -27,8 +28,9 @@ const STAGE_FILTERS: Array<{ value: StageFilter; label: string }> = [
   { value: "final", label: "Final" },
 ];
 
-const MATCHES_WITH_RESULTS = COPA_MATCHES.map(withResult);
-const MATCHES_CHRONO_WITH_RESULTS = COPA_MATCHES_CHRONO.map(withResult);
+const MATCHES_WITH_RESULTS = COPA_MATCHES.map(resolveMatchParticipants).map(withResult);
+const MATCHES_CHRONO_WITH_RESULTS =
+  COPA_MATCHES_CHRONO.map(resolveMatchParticipants).map(withResult);
 
 function matchesStage(match: CopaMatchWithResult, filter: StageFilter): boolean {
   if (filter === "todos") {
