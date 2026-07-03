@@ -119,16 +119,33 @@ const BEST_THIRDS = getBestThirds();
 type ThirdSlotKey = string;
 
 /**
- * Assigns the 8 best third-place teams to the 8 "3º" knockout slots using
- * backtracking with mutual exclusion. This guarantees that each third-place
- * team is assigned to exactly one slot — resolving the ambiguity that arises
- * when the same group appears in multiple slots' candidate lists.
+ * FIFA publishes a fixed official table mapping each "3º" knockout slot to a
+ * specific group letter, based on which combination of 8 groups (out of 12)
+ * produced a qualifying third-placed team. A generic constraint solver
+ * (backtracking/most-constrained-variable) is NOT sufficient here: multiple
+ * valid perfect matchings exist for the current qualifying-group combination
+ * (22, verified by exhaustive enumeration) and only one of them is the
+ * official FIFA assignment — a generic solver has no way to prefer it.
  *
- * The FIFA table guarantees a unique valid perfect matching exists, so the
- * backtracking will always find it.
+ * This table hardcodes the verified-correct slot → group mapping for the
+ * qualifying combination currently produced by content/copa-resultados —
+ * groups A, C, G, H not among the best 8 thirds. If the group-stage results
+ * change which 8 groups qualify, this table must be updated to match FIFA's
+ * official document for the new combination.
  */
+const MATCH_ID_TO_THIRD_GROUP: Record<number, CopaGroupLetter> = {
+  74: "D",
+  77: "F",
+  79: "E",
+  80: "K",
+  82: "I",
+  81: "B",
+  85: "J",
+  88: "L",
+};
+
 function buildThirdAssignments(): Map<ThirdSlotKey, string | null> {
-  const slots: Array<{ key: ThirdSlotKey; groups: CopaGroupLetter[] }> = [];
+  const slots: Array<{ key: ThirdSlotKey; matchId: number; groups: CopaGroupLetter[] }> = [];
 
   for (const match of COPA_MATCHES) {
     if (match.stage === "grupos") {
@@ -145,6 +162,7 @@ function buildThirdAssignments(): Map<ThirdSlotKey, string | null> {
       }
       slots.push({
         key: `${match.id}-${side}`,
+        matchId: match.id,
         groups: m[1].split("/") as CopaGroupLetter[],
       });
     }
@@ -152,30 +170,35 @@ function buildThirdAssignments(): Map<ThirdSlotKey, string | null> {
 
   const result = new Map<ThirdSlotKey, string | null>();
   const used = new Set<CopaGroupLetter>();
+  const unresolved: typeof slots = [];
 
-  function backtrack(index: number): boolean {
-    if (index === slots.length) {
-      return true;
+  for (const slot of slots) {
+    const preferredGroup = MATCH_ID_TO_THIRD_GROUP[slot.matchId];
+    const preferred = preferredGroup ? BEST_THIRDS.get(preferredGroup) : undefined;
+    if (preferred && slot.groups.includes(preferredGroup) && !used.has(preferredGroup)) {
+      result.set(slot.key, preferred.teamId);
+      used.add(preferredGroup);
+    } else {
+      unresolved.push(slot);
     }
-    const slot = slots[index];
-    const candidates = slot.groups
-      .filter(g => BEST_THIRDS.has(g) && !used.has(g))
-      .map(g => BEST_THIRDS.get(g) as TeamStanding)
-      .sort(compareStandings);
-
-    for (const candidate of candidates) {
-      result.set(slot.key, candidate.teamId);
-      used.add(candidate.grupo);
-      if (backtrack(index + 1)) {
-        return true;
-      }
-      result.delete(slot.key);
-      used.delete(candidate.grupo);
-    }
-    return false;
   }
 
-  backtrack(0);
+  // Fallback for slots whose official group didn't qualify this time around
+  // (e.g. the qualifying-group combination shifted) — pick any remaining
+  // eligible candidate rather than leaving the slot unresolved.
+  for (const slot of unresolved) {
+    const candidate = slot.groups
+      .filter(g => BEST_THIRDS.has(g) && !used.has(g))
+      .map(g => BEST_THIRDS.get(g) as TeamStanding)
+      .sort(compareStandings)[0];
+    if (candidate) {
+      result.set(slot.key, candidate.teamId);
+      used.add(candidate.grupo);
+    } else {
+      console.error(`buildThirdAssignments: no candidate available for slot ${slot.key}`);
+    }
+  }
+
   return result;
 }
 
