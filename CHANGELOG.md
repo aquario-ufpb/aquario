@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.2] - 2026-07-03
+
+### Fixed
+- **Copa do Mundo 2026 – pareamento dos terceiros colocados**: O algoritmo de backtracking com heurística de menor número de candidatos (most-constrained-variable) encontrava *um* pareamento válido entre os 8 melhores terceiros colocados e os slots do mata-mata, mas nem sempre o mesmo definido pela FIFA — havia 22 pareamentos válidos possíveis para a combinação atual de grupos classificados, e nenhuma heurística genérica de CSP consegue preferir o oficial. Substituído por uma tabela explícita com o pareamento correto verificado (Alemanha x Paraguai, França x Suécia, Bélgica x Senegal, Suíça x Argélia, entre outros), com fallback defensivo caso a combinação de grupos classificados mude. Adicionado teste de regressão travando os 8 pareamentos corretos.
+
 ## [1.10.1] - 2026-07-03
 
 ### Fixed
