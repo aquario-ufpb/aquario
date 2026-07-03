@@ -100,7 +100,6 @@ function buildStandings(): Map<CopaGroupLetter, TeamStanding[]> {
 // Computed once at module load (all data is static/build-time)
 const GROUP_STANDINGS = buildStandings();
 
-/** Returns the 8 best third-place teams keyed by their group letter. */
 function getBestThirds(): Map<CopaGroupLetter, TeamStanding> {
   const thirds = [...GROUP_STANDINGS.values()]
     .map(s => s[2])
@@ -117,14 +116,73 @@ function getBestThirds(): Map<CopaGroupLetter, TeamStanding> {
 
 const BEST_THIRDS = getBestThirds();
 
+type ThirdSlotKey = string;
+
 /**
- * Resolves a knockout label to a team ID.
- * - "1º Grupo A" → 1st-place team of group A
- * - "2º Grupo B" → 2nd-place team of group B
- * - "3º A/B/C/D/F" → best qualifying 3rd-place team from those groups
- * Returns null when the group has not finished yet.
+ * Assigns the 8 best third-place teams to the 8 "3º" knockout slots using
+ * backtracking with mutual exclusion. This guarantees that each third-place
+ * team is assigned to exactly one slot — resolving the ambiguity that arises
+ * when the same group appears in multiple slots' candidate lists.
+ *
+ * The FIFA table guarantees a unique valid perfect matching exists, so the
+ * backtracking will always find it.
  */
-export function resolveKnockoutLabel(label: string | undefined): string | null {
+function buildThirdAssignments(): Map<ThirdSlotKey, string | null> {
+  const slots: Array<{ key: ThirdSlotKey; groups: CopaGroupLetter[] }> = [];
+
+  for (const match of COPA_MATCHES) {
+    if (match.stage === "grupos") {
+      continue;
+    }
+    for (const side of ["home", "away"] as const) {
+      const label = side === "home" ? match.homeLabel : match.awayLabel;
+      if (!label) {
+        continue;
+      }
+      const m = label.match(/^3º ([A-L/]+)$/);
+      if (!m) {
+        continue;
+      }
+      slots.push({
+        key: `${match.id}-${side}`,
+        groups: m[1].split("/") as CopaGroupLetter[],
+      });
+    }
+  }
+
+  const result = new Map<ThirdSlotKey, string | null>();
+  const used = new Set<CopaGroupLetter>();
+
+  function backtrack(index: number): boolean {
+    if (index === slots.length) {
+      return true;
+    }
+    const slot = slots[index];
+    const candidates = slot.groups
+      .filter(g => BEST_THIRDS.has(g) && !used.has(g))
+      .map(g => BEST_THIRDS.get(g) as TeamStanding)
+      .sort(compareStandings);
+
+    for (const candidate of candidates) {
+      result.set(slot.key, candidate.teamId);
+      used.add(candidate.grupo);
+      if (backtrack(index + 1)) {
+        return true;
+      }
+      result.delete(slot.key);
+      used.delete(candidate.grupo);
+    }
+    return false;
+  }
+
+  backtrack(0);
+  return result;
+}
+
+const THIRD_ASSIGNMENTS = buildThirdAssignments();
+
+function resolveLabel(match: CopaMatch, side: "home" | "away"): string | null {
+  const label = side === "home" ? match.homeLabel : match.awayLabel;
   if (!label) {
     return null;
   }
@@ -136,16 +194,8 @@ export function resolveKnockoutLabel(label: string | undefined): string | null {
     return GROUP_STANDINGS.get(grupo)?.[pos]?.teamId ?? null;
   }
 
-  const third = label.match(/^3º ([A-L/]+)$/);
-  if (third) {
-    const groups = third[1].split("/") as CopaGroupLetter[];
-    for (const g of groups) {
-      const qualifier = BEST_THIRDS.get(g);
-      if (qualifier) {
-        return qualifier.teamId;
-      }
-    }
-    return null;
+  if (label.match(/^3º /)) {
+    return THIRD_ASSIGNMENTS.get(`${match.id}-${side}`) ?? null;
   }
 
   return null;
@@ -161,7 +211,7 @@ export function resolveMatchParticipants(match: CopaMatch): CopaMatch {
   }
   return {
     ...match,
-    homeId: match.homeId ?? resolveKnockoutLabel(match.homeLabel),
-    awayId: match.awayId ?? resolveKnockoutLabel(match.awayLabel),
+    homeId: match.homeId ?? resolveLabel(match, "home"),
+    awayId: match.awayId ?? resolveLabel(match, "away"),
   };
 }
