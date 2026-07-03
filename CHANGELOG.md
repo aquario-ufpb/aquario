@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-07-03
+
+### Fixed
+- **Copa do Mundo 2026 – terceiros colocados no mata-mata**: Corrigida a atribuição dos 8 melhores terceiros colocados aos slots do chaveamento. O algoritmo anterior resolvia cada slot independentemente, causando a mesma seleção (ex: Equador) ser atribuída a vários jogos. O novo algoritmo usa backtracking com exclusão mútua, garantindo que cada terceiro colocado vá para exatamente um jogo — em conformidade com a tabela da FIFA.
+
 ## [1.10.0] - 2026-07-02
 
 ### Added
