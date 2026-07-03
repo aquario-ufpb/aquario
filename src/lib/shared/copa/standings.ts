@@ -152,30 +152,53 @@ function buildThirdAssignments(): Map<ThirdSlotKey, string | null> {
 
   const result = new Map<ThirdSlotKey, string | null>();
   const used = new Set<CopaGroupLetter>();
+  const pending = new Set(slots.map((_, i) => i));
 
-  function backtrack(index: number): boolean {
-    if (index === slots.length) {
-      return true;
-    }
-    const slot = slots[index];
-    const candidates = slot.groups
+  function candidatesFor(slot: { groups: CopaGroupLetter[] }): TeamStanding[] {
+    return slot.groups
       .filter(g => BEST_THIRDS.has(g) && !used.has(g))
       .map(g => BEST_THIRDS.get(g) as TeamStanding)
       .sort(compareStandings);
+  }
 
-    for (const candidate of candidates) {
+  // Most-constrained-variable heuristic: always resolve the slot with the
+  // fewest remaining candidates first (ties broken by match id). This
+  // mirrors FIFA's fixed knockout-draw table, where slots sharing a group
+  // in their candidate list must be resolved in constraint order to reach
+  // the single correct assignment instead of an arbitrary valid one.
+  function backtrack(): boolean {
+    if (pending.size === 0) {
+      return true;
+    }
+
+    let bestIndex = -1;
+    let bestCandidates: TeamStanding[] = [];
+    for (const index of pending) {
+      const candidates = candidatesFor(slots[index]);
+      if (bestIndex === -1 || candidates.length < bestCandidates.length) {
+        bestIndex = index;
+        bestCandidates = candidates;
+      }
+    }
+
+    const slot = slots[bestIndex];
+    pending.delete(bestIndex);
+
+    for (const candidate of bestCandidates) {
       result.set(slot.key, candidate.teamId);
       used.add(candidate.grupo);
-      if (backtrack(index + 1)) {
+      if (backtrack()) {
         return true;
       }
       result.delete(slot.key);
       used.delete(candidate.grupo);
     }
+
+    pending.add(bestIndex);
     return false;
   }
 
-  backtrack(0);
+  backtrack();
   return result;
 }
 
