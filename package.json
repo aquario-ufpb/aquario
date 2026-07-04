@@ -1,6 +1,6 @@
 {
   "name": "aquario",
-  "version": "1.10.5",
+  "version": "1.11.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
