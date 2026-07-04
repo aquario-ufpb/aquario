@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.4] - 2026-07-04
+
+### Fixed
+- **Copa do Mundo 2026 – placar de pênaltis exibido incorretamente**: Partidas de mata-mata decididas nos pênaltis mostravam um placar inflado e sem sentido (ex.: "4 – 5") porque a API da football-data.org soma tempo normal + prorrogação + pênaltis em `fullTime` quando a partida vai a pênaltis. Corrigido para subtrair os gols dos pênaltis e recuperar o placar real da partida; o resultado dos pênaltis agora é armazenado separadamente e exibido como "pên. X – Y" abaixo do placar.
+- **Copa do Mundo 2026 – chaveamento das oitavas trocado**: Jogo 95 e Jogo 96 referenciavam os vencedores errados da Rodada de 32, trocados entre si (Jogo 95 mostrava Argentina x Colômbia em vez de Argentina x Egito; Jogo 96 mostrava Suíça x Egito em vez de Suíça x Colômbia). Erro de transcrição nos dados estáticos do chaveamento, não na lógica de resolução. Adicionado teste que garante que cada uma das 16 partidas da Rodada de 32 é referenciada exatamente uma vez nas oitavas.
+
 ## [1.10.3] - 2026-07-04
 
 ### Fixed
