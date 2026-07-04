@@ -1,5 +1,5 @@
 import { COPA_MATCHES } from "./matches";
-import { getMatchResult } from "./results";
+import { getMatchResult, type GetMatchResult } from "./results";
 import { COPA_TEAMS } from "./teams";
 import type { CopaGroupLetter, CopaMatch } from "./types";
 
@@ -27,7 +27,7 @@ function compareStandings(a: TeamStanding, b: TeamStanding): number {
   return b.gf - a.gf;
 }
 
-function buildStandings(): Map<CopaGroupLetter, TeamStanding[]> {
+function buildStandings(getResult: GetMatchResult): Map<CopaGroupLetter, TeamStanding[]> {
   const map = new Map<CopaGroupLetter, Map<string, TeamStanding>>();
 
   for (const team of COPA_TEAMS) {
@@ -51,7 +51,7 @@ function buildStandings(): Map<CopaGroupLetter, TeamStanding[]> {
     if (match.stage !== "grupos" || !match.homeId || !match.awayId) {
       continue;
     }
-    const result = getMatchResult(match.id);
+    const result = getResult(match.id);
     if (!result || result.status !== "finished") {
       continue;
     }
@@ -97,11 +97,10 @@ function buildStandings(): Map<CopaGroupLetter, TeamStanding[]> {
   return result;
 }
 
-// Computed once at module load (all data is static/build-time)
-const GROUP_STANDINGS = buildStandings();
-
-function getBestThirds(): Map<CopaGroupLetter, TeamStanding> {
-  const thirds = [...GROUP_STANDINGS.values()]
+function getBestThirds(
+  groupStandings: Map<CopaGroupLetter, TeamStanding[]>
+): Map<CopaGroupLetter, TeamStanding> {
+  const thirds = [...groupStandings.values()]
     .map(s => s[2])
     .filter((t): t is TeamStanding => t !== undefined)
     .sort(compareStandings)
@@ -113,8 +112,6 @@ function getBestThirds(): Map<CopaGroupLetter, TeamStanding> {
   }
   return result;
 }
-
-const BEST_THIRDS = getBestThirds();
 
 type ThirdSlotKey = string;
 
@@ -144,7 +141,9 @@ const MATCH_ID_TO_THIRD_GROUP: Record<number, CopaGroupLetter> = {
   88: "L",
 };
 
-function buildThirdAssignments(): Map<ThirdSlotKey, string | null> {
+function buildThirdAssignments(
+  bestThirds: Map<CopaGroupLetter, TeamStanding>
+): Map<ThirdSlotKey, string | null> {
   const slots: Array<{ key: ThirdSlotKey; matchId: number; groups: CopaGroupLetter[] }> = [];
 
   for (const match of COPA_MATCHES) {
@@ -174,7 +173,7 @@ function buildThirdAssignments(): Map<ThirdSlotKey, string | null> {
 
   for (const slot of slots) {
     const preferredGroup = MATCH_ID_TO_THIRD_GROUP[slot.matchId];
-    const preferred = preferredGroup ? BEST_THIRDS.get(preferredGroup) : undefined;
+    const preferred = preferredGroup ? bestThirds.get(preferredGroup) : undefined;
     if (preferred && slot.groups.includes(preferredGroup) && !used.has(preferredGroup)) {
       result.set(slot.key, preferred.teamId);
       used.add(preferredGroup);
@@ -188,8 +187,8 @@ function buildThirdAssignments(): Map<ThirdSlotKey, string | null> {
   // eligible candidate rather than leaving the slot unresolved.
   for (const slot of unresolved) {
     const candidate = slot.groups
-      .filter(g => BEST_THIRDS.has(g) && !used.has(g))
-      .map(g => BEST_THIRDS.get(g) as TeamStanding)
+      .filter(g => bestThirds.has(g) && !used.has(g))
+      .map(g => bestThirds.get(g) as TeamStanding)
       .sort(compareStandings)[0];
     if (candidate) {
       result.set(slot.key, candidate.teamId);
@@ -202,8 +201,6 @@ function buildThirdAssignments(): Map<ThirdSlotKey, string | null> {
   return result;
 }
 
-const THIRD_ASSIGNMENTS = buildThirdAssignments();
-
 /**
  * Resolves every knockout match's participants in a single pass, processing
  * COPA_MATCHES in its declared order (group stage, then 32avos, oitavas,
@@ -212,7 +209,11 @@ const THIRD_ASSIGNMENTS = buildThirdAssignments();
  * later match is resolved, every match it depends on already has resolved
  * participants and — once played — a stored result to read the winner from.
  */
-function buildResolvedMatches(): Map<number, CopaMatch> {
+function buildResolvedMatches(
+  groupStandings: Map<CopaGroupLetter, TeamStanding[]>,
+  thirdAssignments: Map<ThirdSlotKey, string | null>,
+  getResult: GetMatchResult
+): Map<number, CopaMatch> {
   const resolved = new Map<number, CopaMatch>();
 
   function resolveLabel(match: CopaMatch, side: "home" | "away"): string | null {
@@ -225,11 +226,11 @@ function buildResolvedMatches(): Map<number, CopaMatch> {
     if (posGroup) {
       const pos = parseInt(posGroup[1]) - 1;
       const grupo = posGroup[2] as CopaGroupLetter;
-      return GROUP_STANDINGS.get(grupo)?.[pos]?.teamId ?? null;
+      return groupStandings.get(grupo)?.[pos]?.teamId ?? null;
     }
 
     if (label.match(/^3º /)) {
-      return THIRD_ASSIGNMENTS.get(`${match.id}-${side}`) ?? null;
+      return thirdAssignments.get(`${match.id}-${side}`) ?? null;
     }
 
     const outcome = label.match(/^(Vencedor|Perdedor) Jogo (\d+)$/);
@@ -239,7 +240,7 @@ function buildResolvedMatches(): Map<number, CopaMatch> {
       if (!refMatch || !refMatch.homeId || !refMatch.awayId) {
         return null;
       }
-      const result = getMatchResult(refMatch.id);
+      const result = getResult(refMatch.id);
       if (!result || result.status !== "finished" || !result.winner) {
         return null;
       }
@@ -266,12 +267,30 @@ function buildResolvedMatches(): Map<number, CopaMatch> {
   return resolved;
 }
 
-const RESOLVED_MATCHES = buildResolvedMatches();
+/**
+ * Builds a resolveMatchParticipants function bound to a specific results
+ * snapshot. Use this (with a freshly-fetched snapshot) for request-time
+ * resolution so the bracket reflects results without a new deploy.
+ */
+export function createCopaResolver(getResult: GetMatchResult): (match: CopaMatch) => CopaMatch {
+  const groupStandings = buildStandings(getResult);
+  const bestThirds = getBestThirds(groupStandings);
+  const thirdAssignments = buildThirdAssignments(bestThirds);
+  const resolvedMatches = buildResolvedMatches(groupStandings, thirdAssignments, getResult);
+
+  return function resolveMatchParticipants(match: CopaMatch): CopaMatch {
+    return resolvedMatches.get(match.id) ?? match;
+  };
+}
 
 /**
- * Returns the match with resolved homeId/awayId for knockout stages.
- * Group-stage matches are returned unchanged.
+ * Returns the match with resolved homeId/awayId for knockout stages, using
+ * the results snapshot bundled at build time.
+ *
+ * @deprecated for page rendering — prefer createCopaResolver() with a
+ * freshly-fetched results snapshot so the site reflects results without a
+ * new deploy. Still fine for the CI script and tests, which always run
+ * against fresh data.
  */
-export function resolveMatchParticipants(match: CopaMatch): CopaMatch {
-  return RESOLVED_MATCHES.get(match.id) ?? match;
-}
+export const resolveMatchParticipants: (match: CopaMatch) => CopaMatch =
+  createCopaResolver(getMatchResult);

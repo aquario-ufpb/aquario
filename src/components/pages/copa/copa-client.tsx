@@ -3,9 +3,6 @@
 import { Trophy, CalendarDays, MapPin, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/client/utils";
-import { COPA_MATCHES, COPA_MATCHES_CHRONO } from "@/lib/shared/copa/matches";
-import { withResult } from "@/lib/shared/copa/results";
-import { resolveMatchParticipants } from "@/lib/shared/copa/standings";
 import { COPA_GROUP_LETTERS, COPA_TEAMS } from "@/lib/shared/copa/teams";
 import type { CopaMatchWithResult, CopaStage } from "@/lib/shared/copa/types";
 import {
@@ -28,10 +25,6 @@ const STAGE_FILTERS: Array<{ value: StageFilter; label: string }> = [
   { value: "final", label: "Final" },
 ];
 
-const MATCHES_WITH_RESULTS = COPA_MATCHES.map(resolveMatchParticipants).map(withResult);
-const MATCHES_CHRONO_WITH_RESULTS =
-  COPA_MATCHES_CHRONO.map(resolveMatchParticipants).map(withResult);
-
 function matchesStage(match: CopaMatchWithResult, filter: StageFilter): boolean {
   if (filter === "todos") {
     return true;
@@ -45,7 +38,12 @@ function matchesStage(match: CopaMatchWithResult, filter: StageFilter): boolean 
 
 const SORTED_TEAMS = [...COPA_TEAMS].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
-export function CopaClient() {
+type CopaClientProps = {
+  matches: CopaMatchWithResult[];
+  matchesChrono: CopaMatchWithResult[];
+};
+
+export function CopaClient({ matches, matchesChrono }: CopaClientProps) {
   const [stage, setStage] = useState<StageFilter>("todos");
   const [teamId, setTeamId] = useState<string>("");
   const [now, setNow] = useState<number | null>(null);
@@ -56,7 +54,7 @@ export function CopaClient() {
   }, []);
 
   const filteredMatches = useMemo(() => {
-    return MATCHES_WITH_RESULTS.filter(match => {
+    return matches.filter(match => {
       if (!matchesStage(match, stage)) {
         return false;
       }
@@ -65,7 +63,7 @@ export function CopaClient() {
       }
       return true;
     });
-  }, [stage, teamId]);
+  }, [matches, stage, teamId]);
 
   const matchesByDay = useMemo(() => groupMatchesByDay(filteredMatches), [filteredMatches]);
 
@@ -73,10 +71,10 @@ export function CopaClient() {
     if (now === null) {
       return [];
     }
-    return MATCHES_CHRONO_WITH_RESULTS.filter(
-      match => new Date(match.kickoff).getTime() >= now || match.matchStatus === "live"
-    ).slice(0, 3);
-  }, [now]);
+    return matchesChrono
+      .filter(match => new Date(match.kickoff).getTime() >= now || match.matchStatus === "live")
+      .slice(0, 3);
+  }, [matchesChrono, now]);
 
   return (
     <div className="container mx-auto mt-20 max-w-5xl overflow-x-hidden p-4 md:p-8">
