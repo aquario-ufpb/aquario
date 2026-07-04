@@ -8,6 +8,9 @@ type StoredResult = {
   status: MatchStatus;
   /** Knockout-stage winner (accounts for extra time/penalties). Undefined for group-stage matches. */
   winner?: "home" | "away";
+  /** Penalty shootout score. Present only when the match was decided on penalties. */
+  penaltyHomeScore?: number;
+  penaltyAwayScore?: number;
 };
 
 const StoredResultSchema = z.object({
@@ -15,6 +18,8 @@ const StoredResultSchema = z.object({
   awayScore: z.number(),
   status: z.enum(["scheduled", "live", "finished"]),
   winner: z.enum(["home", "away"]).optional(),
+  penaltyHomeScore: z.number().optional(),
+  penaltyAwayScore: z.number().optional(),
 });
 
 const ResultsFileSchema = z.object({
@@ -37,6 +42,8 @@ export function withResult(match: CopaMatch): CopaMatchWithResult {
     homeScore: result?.homeScore ?? null,
     awayScore: result?.awayScore ?? null,
     matchStatus: result?.status ?? "scheduled",
+    penaltyHomeScore: result?.penaltyHomeScore ?? null,
+    penaltyAwayScore: result?.penaltyAwayScore ?? null,
   };
 }
 

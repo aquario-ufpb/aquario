@@ -48,7 +48,12 @@ type ApiMatch = {
   awayTeam: { tla: string };
   score: {
     winner: "HOME_TEAM" | "AWAY_TEAM" | "DRAW" | null;
+    duration: "REGULAR" | "EXTRA_TIME" | "PENALTY_SHOOTOUT";
+    // When duration is PENALTY_SHOOTOUT, fullTime is regularTime + extraTime +
+    // penalties SUMMED — not the actual match score. See:
+    // https://docs.football-data.org/general/v4/overtime.html
     fullTime: { home: number | null; away: number | null };
+    penalties?: { home: number | null; away: number | null };
   };
 };
 
@@ -113,7 +118,14 @@ async function main() {
 
   const results: Record<
     string,
-    { homeScore: number; awayScore: number; status: MatchStatus; winner?: "home" | "away" }
+    {
+      homeScore: number;
+      awayScore: number;
+      status: MatchStatus;
+      winner?: "home" | "away";
+      penaltyHomeScore?: number;
+      penaltyAwayScore?: number;
+    }
   > = {};
   const unmatched: string[] = [];
 
@@ -140,17 +152,39 @@ async function main() {
     }
 
     const status = STATUS_MAP[apiMatch.status] ?? "scheduled";
-    const homeScore = apiMatch.score.fullTime.home;
-    const awayScore = apiMatch.score.fullTime.away;
+    const wentToPenalties = apiMatch.score.duration === "PENALTY_SHOOTOUT";
+    const penaltyHome = apiMatch.score.penalties?.home;
+    const penaltyAway = apiMatch.score.penalties?.away;
+    const hasPenaltyScore =
+      wentToPenalties && typeof penaltyHome === "number" && typeof penaltyAway === "number";
+
+    // When the match went to penalties, fullTime is regularTime + extraTime +
+    // penalties summed — subtract the shootout goals to get the actual match
+    // score (excluding the shootout), which is what should be displayed.
+    const homeScore = hasPenaltyScore
+      ? (apiMatch.score.fullTime.home ?? 0) - penaltyHome
+      : apiMatch.score.fullTime.home;
+    const awayScore = hasPenaltyScore
+      ? (apiMatch.score.fullTime.away ?? 0) - penaltyAway
+      : apiMatch.score.fullTime.away;
 
     if (homeScore !== null && awayScore !== null) {
       // For knockout matches, the API's top-level winner already accounts
-      // for extra time/penalties — a tied fullTime score doesn't mean a draw.
+      // for extra time/penalties — a tied score doesn't mean a draw.
       const winner =
         match.stage !== "grupos" && apiMatch.score.winner
           ? API_WINNER_TO_INTERNAL[apiMatch.score.winner]
           : undefined;
-      results[String(match.id)] = { homeScore, awayScore, status, ...(winner && { winner }) };
+      results[String(match.id)] = {
+        homeScore,
+        awayScore,
+        status,
+        ...(winner && { winner }),
+        ...(hasPenaltyScore && {
+          penaltyHomeScore: penaltyHome,
+          penaltyAwayScore: penaltyAway,
+        }),
+      };
     }
   }
 

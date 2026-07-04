@@ -62,6 +62,7 @@ export function MatchCard({ match }: { match: CopaMatchWithResult }) {
   const isFinished = match.matchStatus === "finished";
   const isLive = match.matchStatus === "live";
   const hasScore = match.homeScore !== null && match.awayScore !== null;
+  const hasPenalties = match.penaltyHomeScore !== null && match.penaltyAwayScore !== null;
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-sky-300 dark:border-white/10 dark:bg-white/5 dark:hover:border-sky-300/40">
@@ -94,6 +95,11 @@ export function MatchCard({ match }: { match: CopaMatchWithResult }) {
               >
                 {match.homeScore} – {match.awayScore}
               </span>
+              {hasPenalties && (
+                <span className="text-[10px] tabular-nums text-muted-foreground">
+                  pên. {match.penaltyHomeScore} – {match.penaltyAwayScore}
+                </span>
+              )}
               <span
                 className={cn(
                   "text-[10px] uppercase tracking-wide",
