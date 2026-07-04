@@ -29,6 +29,9 @@ export type CopaMatchWithResult = CopaMatch & {
   homeScore: number | null;
   awayScore: number | null;
   matchStatus: MatchStatus;
+  /** Penalty shootout score, present only when the match was decided on penalties. */
+  penaltyHomeScore: number | null;
+  penaltyAwayScore: number | null;
 };
 
 export type CopaMatch = {
