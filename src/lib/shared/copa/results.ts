@@ -6,12 +6,15 @@ type StoredResult = {
   homeScore: number;
   awayScore: number;
   status: MatchStatus;
+  /** Knockout-stage winner (accounts for extra time/penalties). Undefined for group-stage matches. */
+  winner?: "home" | "away";
 };
 
 const StoredResultSchema = z.object({
   homeScore: z.number(),
   awayScore: z.number(),
   status: z.enum(["scheduled", "live", "finished"]),
+  winner: z.enum(["home", "away"]).optional(),
 });
 
 const ResultsFileSchema = z.object({

@@ -8,6 +8,7 @@
 import { mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import { COPA_MATCHES } from "../src/lib/shared/copa/matches";
+import { resolveMatchParticipants } from "../src/lib/shared/copa/standings";
 
 const API_KEY = process.env.FOOTBALL_DATA_API_KEY;
 
@@ -45,7 +46,15 @@ type ApiMatch = {
   status: string;
   homeTeam: { tla: string };
   awayTeam: { tla: string };
-  score: { fullTime: { home: number | null; away: number | null } };
+  score: {
+    winner: "HOME_TEAM" | "AWAY_TEAM" | "DRAW" | null;
+    fullTime: { home: number | null; away: number | null };
+  };
+};
+
+const API_WINNER_TO_INTERNAL: Record<string, "home" | "away"> = {
+  HOME_TEAM: "home",
+  AWAY_TEAM: "away",
 };
 
 const TOURNAMENT_START = new Date("2026-06-11T00:00:00Z");
@@ -102,11 +111,21 @@ async function main() {
     apiLookup.set(`${homeId}_${awayId}_${dateUTC}`, m);
   }
 
-  const results: Record<string, { homeScore: number; awayScore: number; status: MatchStatus }> = {};
+  const results: Record<
+    string,
+    { homeScore: number; awayScore: number; status: MatchStatus; winner?: "home" | "away" }
+  > = {};
   const unmatched: string[] = [];
 
-  for (const match of COPA_MATCHES) {
-    // Partidas de mata-mata sem equipes definidas ainda são ignoradas.
+  // Resolve knockout-stage participants (e.g. "1º Grupo A", "3º A/B/C/D/F")
+  // from the current group standings before matching against the API —
+  // otherwise every knockout match's homeId/awayId stays null and gets
+  // skipped below, even after the teams are actually known.
+  const resolvedMatches = COPA_MATCHES.map(resolveMatchParticipants);
+
+  for (const match of resolvedMatches) {
+    // Matches whose participants aren't determined yet (e.g. "Vencedor Jogo
+    // 73" before the Round of 32 has been played) are skipped.
     if (!match.homeId || !match.awayId) {
       continue;
     }
@@ -125,7 +144,13 @@ async function main() {
     const awayScore = apiMatch.score.fullTime.away;
 
     if (homeScore !== null && awayScore !== null) {
-      results[String(match.id)] = { homeScore, awayScore, status };
+      // For knockout matches, the API's top-level winner already accounts
+      // for extra time/penalties — a tied fullTime score doesn't mean a draw.
+      const winner =
+        match.stage !== "grupos" && apiMatch.score.winner
+          ? API_WINNER_TO_INTERNAL[apiMatch.score.winner]
+          : undefined;
+      results[String(match.id)] = { homeScore, awayScore, status, ...(winner && { winner }) };
     }
   }
 

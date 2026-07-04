@@ -204,37 +204,74 @@ function buildThirdAssignments(): Map<ThirdSlotKey, string | null> {
 
 const THIRD_ASSIGNMENTS = buildThirdAssignments();
 
-function resolveLabel(match: CopaMatch, side: "home" | "away"): string | null {
-  const label = side === "home" ? match.homeLabel : match.awayLabel;
-  if (!label) {
+/**
+ * Resolves every knockout match's participants in a single pass, processing
+ * COPA_MATCHES in its declared order (group stage, then 32avos, oitavas,
+ * quartas, semis, terceiro, final). Later stages reference only earlier
+ * match ids ("Vencedor Jogo 73", "Perdedor Jogo 101"), so by the time a
+ * later match is resolved, every match it depends on already has resolved
+ * participants and — once played — a stored result to read the winner from.
+ */
+function buildResolvedMatches(): Map<number, CopaMatch> {
+  const resolved = new Map<number, CopaMatch>();
+
+  function resolveLabel(match: CopaMatch, side: "home" | "away"): string | null {
+    const label = side === "home" ? match.homeLabel : match.awayLabel;
+    if (!label) {
+      return null;
+    }
+
+    const posGroup = label.match(/^(\d+)º Grupo ([A-L])$/);
+    if (posGroup) {
+      const pos = parseInt(posGroup[1]) - 1;
+      const grupo = posGroup[2] as CopaGroupLetter;
+      return GROUP_STANDINGS.get(grupo)?.[pos]?.teamId ?? null;
+    }
+
+    if (label.match(/^3º /)) {
+      return THIRD_ASSIGNMENTS.get(`${match.id}-${side}`) ?? null;
+    }
+
+    const outcome = label.match(/^(Vencedor|Perdedor) Jogo (\d+)$/);
+    if (outcome) {
+      const [, kind, refIdStr] = outcome;
+      const refMatch = resolved.get(Number(refIdStr));
+      if (!refMatch || !refMatch.homeId || !refMatch.awayId) {
+        return null;
+      }
+      const result = getMatchResult(refMatch.id);
+      if (!result || result.status !== "finished" || !result.winner) {
+        return null;
+      }
+      const winnerId = result.winner === "home" ? refMatch.homeId : refMatch.awayId;
+      const loserId = result.winner === "home" ? refMatch.awayId : refMatch.homeId;
+      return kind === "Vencedor" ? winnerId : loserId;
+    }
+
     return null;
   }
 
-  const posGroup = label.match(/^(\d+)º Grupo ([A-L])$/);
-  if (posGroup) {
-    const pos = parseInt(posGroup[1]) - 1;
-    const grupo = posGroup[2] as CopaGroupLetter;
-    return GROUP_STANDINGS.get(grupo)?.[pos]?.teamId ?? null;
+  for (const match of COPA_MATCHES) {
+    if (match.stage === "grupos") {
+      resolved.set(match.id, match);
+      continue;
+    }
+    resolved.set(match.id, {
+      ...match,
+      homeId: match.homeId ?? resolveLabel(match, "home"),
+      awayId: match.awayId ?? resolveLabel(match, "away"),
+    });
   }
 
-  if (label.match(/^3º /)) {
-    return THIRD_ASSIGNMENTS.get(`${match.id}-${side}`) ?? null;
-  }
-
-  return null;
+  return resolved;
 }
+
+const RESOLVED_MATCHES = buildResolvedMatches();
 
 /**
  * Returns the match with resolved homeId/awayId for knockout stages.
  * Group-stage matches are returned unchanged.
  */
 export function resolveMatchParticipants(match: CopaMatch): CopaMatch {
-  if (match.stage === "grupos") {
-    return match;
-  }
-  return {
-    ...match,
-    homeId: match.homeId ?? resolveLabel(match, "home"),
-    awayId: match.awayId ?? resolveLabel(match, "away"),
-  };
+  return RESOLVED_MATCHES.get(match.id) ?? match;
 }
