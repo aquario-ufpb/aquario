@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.5] - 2026-07-04
+
+### Fixed
+- **Copa do Mundo 2026 – release para publicar o placar correto dos pênaltis**: Publicada para que a produção reflita os resultados já reprocessados (Alemanha x Paraguai, Países Baixos x Marrocos, Austrália x Egito) após a correção do #222 — os dados antigos, gravados antes da correção, permaneciam com o placar somado até serem buscados novamente pela action `Update Copa Results`.
+
 ## [1.10.4] - 2026-07-04
 
 ### Fixed
