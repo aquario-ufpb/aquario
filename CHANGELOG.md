@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.3] - 2026-07-04
+
+### Fixed
+- **Copa do Mundo 2026 – atualização automática de resultados no mata-mata**: A action `Update Copa Results` (a cada 2h) buscava resultados a partir dos dados brutos de `COPA_MATCHES`, onde `homeId`/`awayId` do mata-mata são sempre `null` por design — toda partida de mata-mata era ignorada silenciosamente, e nenhum placar da fase eliminatória era buscado automaticamente. Corrigido para resolver os participantes via `resolveMatchParticipants` antes da busca. Também passamos a armazenar o vencedor de cada partida (`winner: "home" | "away"`) capturado direto da API — necessário porque o placar sozinho não indica quem avança quando a partida vai para os pênaltis. `resolveMatchParticipants` agora resolve o chaveamento inteiro em uma única passada (grupos → 32-avos → oitavas → quartas → semis → terceiro → final), interpretando labels "Vencedor Jogo N" / "Perdedor Jogo N" a partir do resultado já registrado da partida referenciada.
+- **Copa do Mundo 2026 – release para publicar os placares da Rodada de 32**: Publicada para que a produção (que lê `content/copa-resultados/results.json` em build-time) reflita os placares da Rodada de 32 já registrados desde a última release.
+
 ## [1.10.2] - 2026-07-03
 
 ### Fixed
