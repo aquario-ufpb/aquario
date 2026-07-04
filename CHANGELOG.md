@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-07-04
+
+### Changed
+- **Copa do Mundo 2026 – resultados em tempo real sem precisar de release**: `/copa-do-mundo` passou a buscar `content/copa-resultados/results.json` diretamente do branch `main` em tempo de requisição, via ISR do Next.js (revalidação a cada 5 minutos), em vez de depender do snapshot embutido no build. A partir de agora, um placar registrado pela action `Update Copa Results` (a cada 2h) chega ao site ao vivo sozinho, em poucos minutos — sem precisar publicar uma release manual, como vínhamos fazendo repetidamente ao longo da Rodada de 32.
+
 ## [1.10.5] - 2026-07-04
 
 ### Fixed
