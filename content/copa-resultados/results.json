@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-04T19:12:44.090Z",
+  "updatedAt": "2026-07-04T19:51:08.883Z",
   "results": {
     "1": {
       "homeScore": 2,
@@ -368,16 +368,20 @@
       "winner": "away"
     },
     "74": {
-      "homeScore": 4,
-      "awayScore": 5,
+      "homeScore": 1,
+      "awayScore": 1,
       "status": "finished",
-      "winner": "away"
+      "winner": "away",
+      "penaltyHomeScore": 3,
+      "penaltyAwayScore": 4
     },
     "75": {
-      "homeScore": 3,
-      "awayScore": 4,
+      "homeScore": 1,
+      "awayScore": 1,
       "status": "finished",
-      "winner": "away"
+      "winner": "away",
+      "penaltyHomeScore": 2,
+      "penaltyAwayScore": 3
     },
     "76": {
       "homeScore": 2,
@@ -446,10 +450,12 @@
       "winner": "home"
     },
     "87": {
-      "homeScore": 3,
-      "awayScore": 5,
+      "homeScore": 1,
+      "awayScore": 1,
       "status": "finished",
-      "winner": "away"
+      "winner": "away",
+      "penaltyHomeScore": 2,
+      "penaltyAwayScore": 4
     },
     "88": {
       "homeScore": 1,
