@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-04T10:09:55.881Z",
+  "updatedAt": "2026-07-04T13:25:06.889Z",
   "results": {
     "1": {
       "homeScore": 2,
@@ -360,6 +360,102 @@
       "homeScore": 3,
       "awayScore": 3,
       "status": "finished"
+    },
+    "73": {
+      "homeScore": 0,
+      "awayScore": 1,
+      "status": "finished",
+      "winner": "away"
+    },
+    "74": {
+      "homeScore": 4,
+      "awayScore": 5,
+      "status": "finished",
+      "winner": "away"
+    },
+    "75": {
+      "homeScore": 3,
+      "awayScore": 4,
+      "status": "finished",
+      "winner": "away"
+    },
+    "76": {
+      "homeScore": 2,
+      "awayScore": 1,
+      "status": "finished",
+      "winner": "home"
+    },
+    "77": {
+      "homeScore": 3,
+      "awayScore": 0,
+      "status": "finished",
+      "winner": "home"
+    },
+    "78": {
+      "homeScore": 1,
+      "awayScore": 2,
+      "status": "finished",
+      "winner": "away"
+    },
+    "79": {
+      "homeScore": 2,
+      "awayScore": 0,
+      "status": "finished",
+      "winner": "home"
+    },
+    "80": {
+      "homeScore": 2,
+      "awayScore": 1,
+      "status": "finished",
+      "winner": "home"
+    },
+    "81": {
+      "homeScore": 2,
+      "awayScore": 0,
+      "status": "finished",
+      "winner": "home"
+    },
+    "82": {
+      "homeScore": 3,
+      "awayScore": 2,
+      "status": "finished",
+      "winner": "home"
+    },
+    "83": {
+      "homeScore": 2,
+      "awayScore": 1,
+      "status": "finished",
+      "winner": "home"
+    },
+    "84": {
+      "homeScore": 3,
+      "awayScore": 0,
+      "status": "finished",
+      "winner": "home"
+    },
+    "85": {
+      "homeScore": 2,
+      "awayScore": 0,
+      "status": "finished",
+      "winner": "home"
+    },
+    "86": {
+      "homeScore": 3,
+      "awayScore": 2,
+      "status": "finished",
+      "winner": "home"
+    },
+    "87": {
+      "homeScore": 3,
+      "awayScore": 5,
+      "status": "finished",
+      "winner": "away"
+    },
+    "88": {
+      "homeScore": 1,
+      "awayScore": 0,
+      "status": "finished",
+      "winner": "home"
     }
   }
 }
