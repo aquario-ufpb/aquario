@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-07-06
+
+### Fixed
+- **Copa do Mundo 2026 – horário do Jogo 94 (EUA x Bélgica)**: Estava cadastrado às 18h no horário de Brasília; o horário oficial da FIFA é 20h ET / 17h PT em 06/07, equivalente a 21h em Brasília. Sede (Lumen Field, Seattle) já estava correta.
+
 ## [1.11.0] - 2026-07-04
 
 ### Changed
