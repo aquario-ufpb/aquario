@@ -982,7 +982,7 @@ export const COPA_MATCHES: CopaMatch[] = [
   },
   {
     id: 94,
-    kickoff: "2026-07-06T18:00:00-03:00",
+    kickoff: "2026-07-06T21:00:00-03:00",
     stage: "oitavas",
     homeId: null,
     awayId: null,
