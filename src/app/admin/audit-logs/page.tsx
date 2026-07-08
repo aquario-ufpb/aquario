@@ -193,7 +193,10 @@ export default function AdminAuditLogsPage() {
             totalItems={totalLogs}
             itemsPerPage={itemsPerPage}
             onPageChange={setPage}
-            onItemsPerPageChange={setItemsPerPage}
+            onItemsPerPageChange={newLimit => {
+              setItemsPerPage(newLimit);
+              setPage(1);
+            }}
             itemLabel="evento"
             itemLabelPlural="eventos"
           />
