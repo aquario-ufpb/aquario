@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError } from "@/lib/server/errors";
+import { recordAuditLog } from "@/lib/server/services/audit-log";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -26,6 +27,17 @@ export function DELETE(request: Request, context: RouteContext) {
       }
 
       await usuariosRepository.delete(id);
+
+      await recordAuditLog(_req, currentUser, {
+        action: "usuario.deleted",
+        resourceType: "usuario",
+        resourceId: id,
+        metadata: {
+          targetUserName: usuario.nome,
+          targetUserEmail: usuario.email,
+          targetUserWasFacade: usuario.eFacade,
+        },
+      });
 
       return NextResponse.json({ message: "Usuário deletado com sucesso." });
     } catch {

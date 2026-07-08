@@ -5,11 +5,12 @@ import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { createFacadeUserSchema } from "@/lib/server/api-schemas/usuarios";
+import { recordAuditLog } from "@/lib/server/services/audit-log";
 
 export async function POST(request: Request) {
-  return await withAdmin(request, async () => {
+  return await withAdmin(request, async (req, currentUser) => {
     try {
-      const body = await request.json();
+      const body = await req.json();
       const data = createFacadeUserSchema.parse(body);
 
       const { usuariosRepository, centrosRepository, cursosRepository } = getContainer();
@@ -44,6 +45,17 @@ export async function POST(request: Request) {
         eFacade: true,
         urlFotoPerfil: null,
         matricula: null,
+      });
+
+      await recordAuditLog(req, currentUser, {
+        action: "usuario.facade.created",
+        resourceType: "usuario",
+        resourceId: usuario.id,
+        metadata: {
+          targetUserName: usuario.nome,
+          centroId: usuario.centro.id,
+          cursoId: usuario.curso.id,
+        },
       });
 
       return NextResponse.json({

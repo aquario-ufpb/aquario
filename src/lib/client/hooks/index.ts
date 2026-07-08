@@ -15,3 +15,4 @@ export * from "./use-calendario-academico";
 export * from "./use-disciplinas-semestre";
 export { useAllCursos } from "./use-admin-cursos";
 export * from "./use-onboarding";
+export * from "./use-audit-logs";

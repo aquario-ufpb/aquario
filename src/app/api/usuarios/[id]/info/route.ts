@@ -5,13 +5,14 @@ import { getContainer } from "@/lib/server/container";
 import { z } from "zod";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { updateUserInfoSchema } from "@/lib/server/api-schemas/usuarios";
+import { recordAuditLog } from "@/lib/server/services/audit-log";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
 export function PATCH(request: Request, context: RouteContext) {
-  return withAdmin(request, async req => {
+  return withAdmin(request, async (req, currentUser) => {
     try {
       const { id } = await context.params;
 
@@ -51,6 +52,19 @@ export function PATCH(request: Request, context: RouteContext) {
 
       // Fetch updated user
       const updatedUser = await usuariosRepository.findById(id);
+      await recordAuditLog(req, currentUser, {
+        action: "usuario.info.updated",
+        resourceType: "usuario",
+        resourceId: id,
+        metadata: {
+          targetUserName: usuario.nome,
+          previousCentroId: usuario.centro.id,
+          newCentroId: updatedUser?.centro.id ?? centroId ?? usuario.centro.id,
+          previousCursoId: usuario.curso.id,
+          newCursoId: updatedUser?.curso.id ?? cursoId ?? usuario.curso.id,
+        },
+      });
+
       return NextResponse.json(updatedUser);
     } catch (error) {
       if (error instanceof z.ZodError) {

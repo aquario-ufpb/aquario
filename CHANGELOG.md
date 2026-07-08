@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Admin Audit Logs**: Nova tabela `AuditLog`, API interna `GET /api/admin/audit-logs` e tela `/admin/audit-logs` para `MASTER_ADMIN` acompanhar ações administrativas sensíveis. Mutações administrativas de usuários agora registram criação/mescla de facade, alteração de role, edição de centro/curso/slug e deleção.
+
 ## [1.11.1] - 2026-07-06
 
 ### Fixed

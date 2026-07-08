@@ -42,6 +42,7 @@ export const ENDPOINTS = {
   CENTRO_BY_ID: (id: string) => `/centros/${id}`,
   CURSOS_ALL: "/cursos",
   CURSO_BY_ID: (id: string) => `/cursos/${id}`,
+  AUDIT_LOGS: "/admin/audit-logs",
 
   // Entidades
   ENTIDADES: "/entidades",

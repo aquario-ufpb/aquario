@@ -6,6 +6,7 @@ import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
 const mockFindById = jest.fn();
 const mockDelete = jest.fn();
 const mockVerifyToken = jest.fn();
+const mockCreateAuditLog = jest.fn();
 
 jest.mock("@/lib/server/services/jwt/jwt", () => ({
   verifyToken: (...args: unknown[]) => mockVerifyToken(...args),
@@ -16,6 +17,9 @@ jest.mock("@/lib/server/container", () => ({
     usuariosRepository: {
       findById: mockFindById,
       delete: mockDelete,
+    },
+    auditLogsRepository: {
+      create: mockCreateAuditLog,
     },
   }),
 }));
@@ -51,6 +55,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockVerifyToken.mockReturnValue({ sub: "admin-1" });
   mockDelete.mockResolvedValue(undefined);
+  mockCreateAuditLog.mockResolvedValue({});
 });
 
 describe("DELETE /api/usuarios/[id]", () => {
@@ -74,6 +79,18 @@ describe("DELETE /api/usuarios/[id]", () => {
     expect(response.status).toBe(200);
     expect(body.message).toContain("deletado");
     expect(mockDelete).toHaveBeenCalledWith("target-user");
+    expect(mockCreateAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorUsuarioId: "admin-1",
+        action: "usuario.deleted",
+        resourceType: "usuario",
+        resourceId: "target-user",
+        metadata: expect.objectContaining({
+          targetUserName: "Test User",
+          targetUserEmail: "test@academico.ufpb.br",
+        }),
+      })
+    );
   });
 
   it("prevents self-deletion", async () => {

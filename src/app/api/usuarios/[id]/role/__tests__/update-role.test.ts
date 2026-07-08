@@ -6,6 +6,7 @@ import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
 const mockFindById = jest.fn();
 const mockUpdatePapelPlataforma = jest.fn();
 const mockVerifyToken = jest.fn();
+const mockCreateAuditLog = jest.fn();
 
 jest.mock("@/lib/server/services/jwt/jwt", () => ({
   verifyToken: (...args: unknown[]) => mockVerifyToken(...args),
@@ -16,6 +17,9 @@ jest.mock("@/lib/server/container", () => ({
     usuariosRepository: {
       findById: mockFindById,
       updatePapelPlataforma: mockUpdatePapelPlataforma,
+    },
+    auditLogsRepository: {
+      create: mockCreateAuditLog,
     },
   }),
 }));
@@ -57,6 +61,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockVerifyToken.mockReturnValue({ sub: "admin-1" });
   mockUpdatePapelPlataforma.mockResolvedValue(undefined);
+  mockCreateAuditLog.mockResolvedValue({});
 });
 
 describe("PATCH /api/usuarios/[id]/role", () => {
@@ -79,6 +84,18 @@ describe("PATCH /api/usuarios/[id]/role", () => {
     expect(response.status).toBe(200);
     expect(body.papelPlataforma).toBe("MASTER_ADMIN");
     expect(mockUpdatePapelPlataforma).toHaveBeenCalledWith("target-user", "MASTER_ADMIN");
+    expect(mockCreateAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorUsuarioId: "admin-1",
+        action: "usuario.role.updated",
+        resourceType: "usuario",
+        resourceId: "target-user",
+        metadata: expect.objectContaining({
+          previousRole: "USER",
+          newRole: "MASTER_ADMIN",
+        }),
+      })
+    );
   });
 
   it("demotes user from MASTER_ADMIN to USER", async () => {

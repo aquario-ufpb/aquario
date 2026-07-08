@@ -5,6 +5,7 @@ import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { updateRoleSchema } from "@/lib/server/api-schemas/usuarios";
+import { recordAuditLog } from "@/lib/server/services/audit-log";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -37,6 +38,17 @@ export function PATCH(request: Request, context: RouteContext) {
       if (!updatedUser) {
         return ApiError.internal("Erro ao buscar usuário atualizado.");
       }
+
+      await recordAuditLog(req, currentUser, {
+        action: "usuario.role.updated",
+        resourceType: "usuario",
+        resourceId: updatedUser.id,
+        metadata: {
+          targetUserName: usuario.nome,
+          previousRole: usuario.papelPlataforma,
+          newRole: updatedUser.papelPlataforma,
+        },
+      });
 
       return NextResponse.json({
         id: updatedUser.id,

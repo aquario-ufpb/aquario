@@ -13,6 +13,7 @@ import type {
   MembroEntidade,
   Cargo,
   Guia,
+  AuditLog,
   SecaoGuia,
   SubSecaoGuia,
   PapelPlataforma,
@@ -43,6 +44,10 @@ export type EntidadeWithRelations = Entidade & {
 export type GuiaWithRelations = Guia & {
   curso?: Curso | null;
   secoes?: SecaoGuia[];
+};
+
+export type AuditLogWithActor = AuditLog & {
+  actorUsuario: Pick<Usuario, "id" | "nome" | "email"> | null;
 };
 
 export type SecaoGuiaWithRelations = SecaoGuia & {
