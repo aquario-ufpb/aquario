@@ -121,9 +121,9 @@ describe("POST /api/entidades/[id]/membros", () => {
   it("adds member as entity ADMIN (not platform admin)", async () => {
     const entityAdmin = makeUsuario({ id: "caller-1", papelPlataforma: "USER" });
     mockUserFindById.mockResolvedValue(entityAdmin);
-    mockEntidadeFindById.mockResolvedValue(
-      makeEntidade([{ usuario: { id: "caller-1" }, papel: "ADMIN" }])
-    );
+    mockFindActiveByUsuarioAndEntidade
+      .mockResolvedValueOnce({ id: "caller-membership", papel: "ADMIN" })
+      .mockResolvedValueOnce(null);
 
     const response = await POST(makeRequest(validBody), makeContext("ent-1"));
 
@@ -133,9 +133,6 @@ describe("POST /api/entidades/[id]/membros", () => {
   it("returns 403 when user is neither platform admin nor entity admin", async () => {
     const regularUser = makeUsuario({ id: "caller-1", papelPlataforma: "USER" });
     mockUserFindById.mockResolvedValue(regularUser);
-    mockEntidadeFindById.mockResolvedValue(
-      makeEntidade([{ usuario: { id: "caller-1" }, papel: "MEMBRO" }])
-    );
 
     const response = await POST(makeRequest(validBody), makeContext("ent-1"));
 

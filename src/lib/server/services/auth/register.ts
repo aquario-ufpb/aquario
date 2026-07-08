@@ -5,7 +5,7 @@ import type { ICentrosRepository } from "@/lib/server/db/interfaces/centros-repo
 import type { ICursosRepository } from "@/lib/server/db/interfaces/cursos-repository.interface";
 import type { ITokenVerificacaoRepository } from "@/lib/server/db/interfaces/token-verificacao-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
-import { MASTER_ADMIN_EMAILS, EMAIL_ENABLED } from "@/lib/server/config/env";
+import { MASTER_ADMIN_EMAILS, EMAIL_ENABLED, IS_PROD } from "@/lib/server/config/env";
 import { createLogger } from "@/lib/server/utils/logger";
 
 const log = createLogger("Auth");
@@ -59,11 +59,11 @@ function generateToken(): string {
 }
 
 /**
- * Auto-verify users when email service is not configured (no RESEND_API_KEY)
- * This allows local development without setting up email
+ * Auto-verify users only outside production when email service is not configured.
+ * This allows local development without setting up email while production fails closed.
  */
 function shouldAutoVerify(): boolean {
-  return !EMAIL_ENABLED;
+  return !IS_PROD && !EMAIL_ENABLED;
 }
 
 /**
@@ -78,6 +78,13 @@ export async function register(
   // Validate email domain (allow MASTER_ADMIN emails regardless of domain)
   if (!isAllowedEmailDomain(normalizedEmail) && !isMasterAdminEmail(normalizedEmail)) {
     throw new Error("Apenas e-mails institucionais da UFPB são permitidos.");
+  }
+
+  if (IS_PROD && !EMAIL_ENABLED) {
+    log.error("Registration blocked because email is not configured in production", undefined, {
+      email: normalizedEmail,
+    });
+    throw new Error("Cadastro indisponivel: servico de email nao configurado.");
   }
 
   // Check if email is already registered

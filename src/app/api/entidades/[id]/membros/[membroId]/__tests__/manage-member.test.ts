@@ -6,6 +6,7 @@ import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
 const mockVerifyToken = jest.fn();
 const mockUserFindById = jest.fn();
 const mockEntidadeFindById = jest.fn();
+const mockFindActiveByUsuarioAndEntidade = jest.fn();
 const mockFindByEntidadeAndMembro = jest.fn();
 const mockCargoExistsInEntidade = jest.fn();
 const mockMembroUpdate = jest.fn();
@@ -20,6 +21,7 @@ jest.mock("@/lib/server/container", () => ({
     usuariosRepository: { findById: mockUserFindById },
     entidadesRepository: { findById: mockEntidadeFindById },
     membrosRepository: {
+      findActiveByUsuarioAndEntidade: mockFindActiveByUsuarioAndEntidade,
       findByEntidadeAndMembro: mockFindByEntidadeAndMembro,
       cargoExistsInEntidade: mockCargoExistsInEntidade,
       update: mockMembroUpdate,
@@ -91,6 +93,7 @@ beforeEach(() => {
   mockVerifyToken.mockReturnValue({ sub: "caller-1" });
   mockUserFindById.mockResolvedValue(makeUsuario());
   mockEntidadeFindById.mockResolvedValue(makeEntidade());
+  mockFindActiveByUsuarioAndEntidade.mockResolvedValue(null);
   mockFindByEntidadeAndMembro.mockResolvedValue(makeMembro());
   mockCargoExistsInEntidade.mockResolvedValue(true);
   mockMembroUpdate.mockResolvedValue(makeMembro());
@@ -119,9 +122,10 @@ describe("PUT /api/entidades/[id]/membros/[membroId]", () => {
   it("allows entity ADMIN to update members", async () => {
     const entityAdmin = makeUsuario({ id: "caller-1", papelPlataforma: "USER" });
     mockUserFindById.mockResolvedValue(entityAdmin);
-    mockEntidadeFindById.mockResolvedValue(
-      makeEntidade([{ usuario: { id: "caller-1" }, papel: "ADMIN" }])
-    );
+    mockFindActiveByUsuarioAndEntidade.mockResolvedValue({
+      id: "caller-membership",
+      papel: "ADMIN",
+    });
 
     const response = await PUT(
       makePutRequest({ papel: "ADMIN" }),
@@ -134,9 +138,6 @@ describe("PUT /api/entidades/[id]/membros/[membroId]", () => {
   it("returns 403 for non-admin users", async () => {
     const regularUser = makeUsuario({ id: "caller-1", papelPlataforma: "USER" });
     mockUserFindById.mockResolvedValue(regularUser);
-    mockEntidadeFindById.mockResolvedValue(
-      makeEntidade([{ usuario: { id: "caller-1" }, papel: "MEMBRO" }])
-    );
 
     const response = await PUT(
       makePutRequest({ papel: "ADMIN" }),
@@ -212,9 +213,10 @@ describe("DELETE /api/entidades/[id]/membros/[membroId]", () => {
   it("deletes membership as entity admin", async () => {
     const entityAdmin = makeUsuario({ id: "caller-1", papelPlataforma: "USER" });
     mockUserFindById.mockResolvedValue(entityAdmin);
-    mockEntidadeFindById.mockResolvedValue(
-      makeEntidade([{ usuario: { id: "caller-1" }, papel: "ADMIN" }])
-    );
+    mockFindActiveByUsuarioAndEntidade.mockResolvedValue({
+      id: "caller-membership",
+      papel: "ADMIN",
+    });
 
     const response = await DELETE(makeDeleteRequest(), makeContext("ent-1", "membro-1"));
 

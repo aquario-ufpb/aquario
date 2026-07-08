@@ -174,14 +174,19 @@ describe("usuariosService", () => {
   describe("searchUsers", () => {
     it("should search users with query", async () => {
       const mockUsers = [mockUser];
+      const mockResponse = {
+        users: mockUsers,
+        pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      };
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
-        json: async () => mockUsers,
+        json: async () => mockResponse,
       } as Response);
 
       const result = await usuariosService.searchUsers("token-123", "test");
 
-      expect(result).toEqual(mockUsers);
+      expect(result).toEqual(mockResponse);
+      expect(result.users).toEqual(mockUsers);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("search=test"),
         expect.any(Object)
@@ -191,7 +196,10 @@ describe("usuariosService", () => {
     it("should include limit when provided", async () => {
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
         ok: true,
-        json: async () => [],
+        json: async () => ({
+          users: [],
+          pagination: { page: 1, limit: 5, total: 0, totalPages: 1 },
+        }),
       } as Response);
 
       await usuariosService.searchUsers("token-123", "test", 5);

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   usuariosService,
+  type PublicUser,
   type UpdateUserInfoRequest,
   type CreateOwnMembershipRequest,
   type UpdateOwnMembershipRequest,
@@ -31,11 +32,12 @@ export const useCurrentUser = () => {
 /**
  * Hook to get a user by slug
  */
-export const useUsuarioBySlug = (slug: string) => {
+export const useUsuarioBySlug = (slug: string, options?: { initialData?: PublicUser }) => {
   return useQuery({
     queryKey: queryKeys.usuarios.bySlug(slug),
     queryFn: () => usuariosService.getBySlug(slug),
     enabled: !!slug,
+    initialData: options?.initialData,
     staleTime: 5 * 60 * 1000, // 5 minutes - user profile data doesn't change often
   });
 };

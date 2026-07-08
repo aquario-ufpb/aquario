@@ -22,15 +22,27 @@ import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { Layers } from "lucide-react";
 import Link from "next/link";
 import { trackEvent } from "@/analytics/posthog-client";
+import type { Entidade } from "@/lib/shared/types";
 
-export default function EntidadeDetailClient({ slug }: { slug: string }) {
+type EntidadeDetailClientProps = {
+  slug: string;
+  initialData?: Entidade;
+};
+
+export default function EntidadeDetailClient({ slug, initialData }: EntidadeDetailClientProps) {
   const { data: user } = useCurrentUser();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Use React Query hooks
-  const { data: entidade, isLoading, error: queryError } = useEntidadeBySlug(slug);
+  const {
+    data: entidade,
+    isLoading,
+    error: queryError,
+  } = useEntidadeBySlug(slug, {
+    initialData,
+  });
   const { data: allEntidades = [] } = useEntidades();
 
   // Compute other entidades of the same type

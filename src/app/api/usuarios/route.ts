@@ -2,39 +2,10 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { withAdmin, withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
-
-const mapUserToResponse = (u: {
-  id: string;
-  nome: string;
-  email: string | null;
-  slug: string | null;
-  papelPlataforma: string;
-  eVerificado: boolean;
-  eFacade: boolean;
-  urlFotoPerfil: string | null;
-  centro: { id: string; nome: string; sigla: string };
-  curso: { id: string; nome: string };
-  permissoes: string[];
-}) => ({
-  id: u.id,
-  nome: u.nome,
-  email: u.email,
-  slug: u.slug,
-  papelPlataforma: u.papelPlataforma,
-  eVerificado: u.eVerificado,
-  eFacade: u.eFacade,
-  urlFotoPerfil: u.urlFotoPerfil,
-  centro: {
-    id: u.centro.id,
-    nome: u.centro.nome,
-    sigla: u.centro.sigla,
-  },
-  curso: {
-    id: u.curso.id,
-    nome: u.curso.nome,
-  },
-  permissoes: u.permissoes,
-});
+import {
+  formatPublicUserResponse,
+  formatUserResponse,
+} from "@/lib/server/utils/format-user-response";
 
 export function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -52,7 +23,7 @@ export function GET(request: Request) {
         limit: searchLimit,
       });
 
-      const mappedUsers = usuarios.map(mapUserToResponse);
+      const mappedUsers = usuarios.map(formatPublicUserResponse);
       return NextResponse.json({
         users: mappedUsers,
         pagination: {
@@ -83,7 +54,7 @@ export function GET(request: Request) {
       });
 
       return NextResponse.json({
-        users: users.map(mapUserToResponse),
+        users: users.map(formatUserResponse),
         pagination: {
           page: pageNum,
           limit: limitNum,
@@ -95,6 +66,6 @@ export function GET(request: Request) {
 
     // Default: return all users (for backward compatibility)
     const usuarios = await usuariosRepository.findMany();
-    return NextResponse.json(usuarios.map(mapUserToResponse));
+    return NextResponse.json(usuarios.map(formatUserResponse));
   });
 }

@@ -110,7 +110,9 @@ export function CoAutoresPicker({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{u.nome}</p>
-                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {u.centro?.sigla} · {u.curso?.nome}
+                  </p>
                 </div>
                 <Badge variant="outline" className="text-[10px] shrink-0">
                   Usuário

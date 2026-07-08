@@ -169,7 +169,7 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="user-search"
-              placeholder="Digite o nome, email, centro ou curso..."
+              placeholder="Digite o nome, centro ou curso..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -210,9 +210,6 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
                               </Badge>
                             )}
                           </div>
-                          {user.email && (
-                            <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-                          )}
                           <p className="text-xs text-muted-foreground">
                             {user.centro?.sigla} • {user.curso?.nome}
                           </p>

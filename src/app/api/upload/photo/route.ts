@@ -52,15 +52,6 @@ export async function POST(request: Request) {
       const timestamp = Date.now();
       const filename = `photos/${usuario.id}-${timestamp}.${extension}`;
 
-      // Delete old photo from storage if it exists
-      if (oldPhotoUrl) {
-        try {
-          await blobStorage.delete(oldPhotoUrl);
-        } catch (error) {
-          log.warn("Could not delete old photo", { url: oldPhotoUrl, error: String(error) });
-        }
-      }
-
       // Upload new file
       uploadedUrl = await blobStorage.upload(file, filename, file.type);
 
@@ -70,15 +61,15 @@ export async function POST(request: Request) {
       // Fetch updated user to return
       const updatedUser = await usuariosRepository.findById(usuario.id);
       if (!updatedUser) {
-        // If we can't fetch the user, try to clean up the uploaded file
-        if (uploadedUrl) {
-          try {
-            await blobStorage.delete(uploadedUrl);
-          } catch (cleanupError) {
-            log.error("Failed to cleanup uploaded file after user fetch error", cleanupError);
-          }
-        }
         return ApiError.internal("Erro ao buscar usuário atualizado.");
+      }
+
+      if (oldPhotoUrl) {
+        try {
+          await blobStorage.delete(oldPhotoUrl);
+        } catch (error) {
+          log.warn("Could not delete old photo", { url: oldPhotoUrl, error: String(error) });
+        }
       }
 
       return NextResponse.json(formatUserResponse(updatedUser));

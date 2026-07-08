@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { entidadesService } from "@/lib/client/api/entidades";
 import { queryKeys } from "@/lib/client/query-keys";
 import { useAuth } from "@/contexts/auth-context";
+import type { Entidade } from "@/lib/shared/types";
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 
@@ -13,11 +14,12 @@ export const useEntidades = () => {
   });
 };
 
-export const useEntidadeBySlug = (slug: string) => {
+export const useEntidadeBySlug = (slug: string, options?: { initialData?: Entidade | null }) => {
   return useQuery({
     queryKey: queryKeys.entidades.bySlug(slug),
     queryFn: () => entidadesService.getBySlug(slug),
     enabled: !!slug,
+    initialData: options?.initialData,
     staleTime: FIVE_MINUTES,
   });
 };

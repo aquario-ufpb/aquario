@@ -62,6 +62,31 @@ const userProfileSchema = z
   })
   .openapi("UserProfile");
 
+const publicUserProfileSchema = z
+  .object({
+    id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
+    nome: z.string().openapi({ example: "João Silva" }),
+    slug: z.string().nullable().openapi({ example: "joao-silva" }),
+    eFacade: z.boolean().openapi({
+      description: "Indica se este é um usuário facade (placeholder criado por admin, sem login).",
+      example: false,
+    }),
+    urlFotoPerfil: z
+      .string()
+      .nullable()
+      .openapi({ example: "https://blob.vercel-storage.com/photos/550e8400-1712668800.webp" }),
+    centro: z.object({
+      id: z.string().uuid(),
+      nome: z.string().openapi({ example: "Centro de Informática" }),
+      sigla: z.string().openapi({ example: "CI" }),
+    }),
+    curso: z.object({
+      id: z.string().uuid(),
+      nome: z.string().openapi({ example: "Ciência da Computação" }),
+    }),
+  })
+  .openapi("PublicUserProfile");
+
 /**
  * Shape estendido de usuário que inclui o flag `eFacade`. Retornado pelos
  * endpoints exclusivos de admin (GET /usuarios, POST /facade) para que admins
@@ -179,6 +204,13 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
       pagination: PaginationMetaSchema,
     })
     .openapi("PaginatedUsersResponse");
+
+  const paginatedPublicUsersResponseSchema = z
+    .object({
+      users: z.array(publicUserProfileSchema),
+      pagination: PaginationMetaSchema,
+    })
+    .openapi("PaginatedPublicUsersResponse");
   // ============================================================================
   // GET /usuarios — listagem em três modos (ver documentação de edge cases)
   // ============================================================================
@@ -211,7 +243,11 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           "Usuários (envelope nos modos search/paginado, array no modo de listagem completa).",
         content: {
           "application/json": {
-            schema: z.union([paginatedUsersResponseSchema, z.array(adminUserResponseSchema)]),
+            schema: z.union([
+              paginatedPublicUsersResponseSchema,
+              paginatedUsersResponseSchema,
+              z.array(adminUserResponseSchema),
+            ]),
           },
         },
       },
@@ -422,7 +458,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
     responses: {
       200: {
         description: "Perfil do usuário.",
-        content: { "application/json": { schema: userProfileSchema } },
+        content: { "application/json": { schema: publicUserProfileSchema } },
       },
       ...errorResponses([404], {
         404: { message: "Usuário não encontrado", code: "USER_NOT_FOUND" },
