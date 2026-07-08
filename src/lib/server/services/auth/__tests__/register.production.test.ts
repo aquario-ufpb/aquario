@@ -64,6 +64,8 @@ describe("register production email configuration", () => {
   });
 
   it("does not auto-verify or create users in production when email is unavailable", async () => {
+    const mockLogError = jest.fn();
+
     jest.doMock("bcryptjs", () => ({
       hash: jest.fn().mockResolvedValue("hashed-password"),
     }));
@@ -74,7 +76,7 @@ describe("register production email configuration", () => {
     }));
     jest.doMock("@/lib/server/utils/logger", () => ({
       createLogger: () => ({
-        error: jest.fn(),
+        error: mockLogError,
         info: jest.fn(),
         warn: jest.fn(),
         debug: jest.fn(),
@@ -87,5 +89,11 @@ describe("register production email configuration", () => {
     await expect(register(validInput, deps)).rejects.toThrow("servico de email");
     expect(deps.usuariosRepository.create).not.toHaveBeenCalled();
     expect(deps.tokenVerificacaoRepository.create).not.toHaveBeenCalled();
+    expect(mockLogError).toHaveBeenCalledWith(
+      "Registration blocked because email is not configured in production",
+      undefined,
+      { emailDomain: "academico.ufpb.br" }
+    );
+    expect(JSON.stringify(mockLogError.mock.calls)).not.toContain(validInput.email);
   });
 });

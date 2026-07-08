@@ -82,7 +82,7 @@ export async function register(
 
   if (IS_PROD && !EMAIL_ENABLED) {
     log.error("Registration blocked because email is not configured in production", undefined, {
-      email: normalizedEmail,
+      emailDomain: normalizedEmail.split("@")[1] ?? "unknown",
     });
     throw new Error("Cadastro indisponivel: servico de email nao configurado.");
   }
