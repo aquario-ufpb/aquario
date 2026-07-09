@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-09T21:23:28.985Z",
+  "updatedAt": "2026-07-09T23:11:35.270Z",
   "results": {
     "1": {
       "homeScore": 2,
@@ -514,9 +514,10 @@
       "penaltyAwayScore": 3
     },
     "97": {
-      "homeScore": 0,
+      "homeScore": 2,
       "awayScore": 0,
-      "status": "live"
+      "status": "finished",
+      "winner": "home"
     }
   }
 }
