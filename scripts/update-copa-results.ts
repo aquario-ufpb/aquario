@@ -29,11 +29,20 @@ function toInternalId(tla: string): string {
 
 type MatchStatus = "scheduled" | "live" | "finished";
 
+// Every value football-data.org documents for the match-level `status`
+// field: https://docs.football-data.org/general/v4/lookup_tables.html
+// EXTRA_TIME/PENALTY_SHOOTOUT were previously missing here, so a knockout
+// match still playing extra time or a shootout fell through to the
+// "scheduled" default below — hiding an in-progress match's live score and,
+// worse, blocking downstream bracket resolution for matches that depend on
+// its winner even well after it had actually finished.
 const STATUS_MAP: Record<string, MatchStatus> = {
   SCHEDULED: "scheduled",
   TIMED: "scheduled",
   IN_PLAY: "live",
   PAUSED: "live",
+  EXTRA_TIME: "live",
+  PENALTY_SHOOTOUT: "live",
   FINISHED: "finished",
   AWARDED: "finished",
   SUSPENDED: "scheduled",
@@ -151,6 +160,11 @@ async function main() {
       continue;
     }
 
+    if (!Object.hasOwn(STATUS_MAP, apiMatch.status)) {
+      console.warn(
+        `⚠️ Jogo ${match.id}: status "${apiMatch.status}" não mapeado em STATUS_MAP — usando "scheduled".`
+      );
+    }
     const status = STATUS_MAP[apiMatch.status] ?? "scheduled";
     const wentToPenalties = apiMatch.score.duration === "PENALTY_SHOOTOUT";
     const penaltyHome = apiMatch.score.penalties?.home;
