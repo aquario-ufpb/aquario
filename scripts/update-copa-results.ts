@@ -160,7 +160,7 @@ async function main() {
       continue;
     }
 
-    if (!(apiMatch.status in STATUS_MAP)) {
+    if (!Object.hasOwn(STATUS_MAP, apiMatch.status)) {
       console.warn(
         `⚠️ Jogo ${match.id}: status "${apiMatch.status}" não mapeado em STATUS_MAP — usando "scheduled".`
       );
