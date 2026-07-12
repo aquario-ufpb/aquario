@@ -160,12 +160,24 @@ async function main() {
       continue;
     }
 
-    if (!Object.hasOwn(STATUS_MAP, apiMatch.status)) {
+    let status: MatchStatus;
+    if (Object.hasOwn(STATUS_MAP, apiMatch.status)) {
+      status = STATUS_MAP[apiMatch.status];
+    } else if (apiMatch.score.winner) {
+      // The API has occasionally returned a malformed/unrecognized status
+      // string (observed once as a raw timestamp) for an otherwise-finished
+      // match. score.winner is only ever populated once a match has
+      // concluded, so trust it over a status value we can't even parse.
+      console.warn(
+        `⚠️ Jogo ${match.id}: status "${apiMatch.status}" não reconhecido, mas score.winner presente — tratando como "finished".`
+      );
+      status = "finished";
+    } else {
       console.warn(
         `⚠️ Jogo ${match.id}: status "${apiMatch.status}" não mapeado em STATUS_MAP — usando "scheduled".`
       );
+      status = "scheduled";
     }
-    const status = STATUS_MAP[apiMatch.status] ?? "scheduled";
     const wentToPenalties = apiMatch.score.duration === "PENALTY_SHOOTOUT";
     const penaltyHome = apiMatch.score.penalties?.home;
     const penaltyAway = apiMatch.score.penalties?.away;
