@@ -45,8 +45,8 @@ export const MASTER_ADMIN_EMAILS = (process.env.MASTER_ADMIN_EMAILS || "")
 // Environment
 // =============================================================================
 
-const NODE_ENV = process.env.NODE_ENV || "development";
-const IS_PROD = NODE_ENV === "production";
+export const NODE_ENV = process.env.NODE_ENV || "development";
+export const IS_PROD = NODE_ENV === "production";
 
 // =============================================================================
 // Email (Resend)

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getContainer } from "@/lib/server/container";
 import { jsonLdScriptContent } from "@/lib/server/utils/seo";
 import ProjetoDetailClient from "./projeto-detail-client";
@@ -8,6 +9,10 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+const getProjetoBySlug = cache(async (slug: string) => {
+  return await getContainer().projetosRepository.findBySlug(slug);
+});
+
 /**
  * The `[id]` route param is a slug. Public PUBLICADO projects have full
  * server-rendered metadata + initialData; drafts/archived fall through to the
@@ -15,7 +20,7 @@ type PageProps = {
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id: slug } = await params;
-  const projeto = await getContainer().projetosRepository.findBySlug(slug);
+  const projeto = await getProjetoBySlug(slug);
 
   if (!projeto || projeto.status !== "PUBLICADO") {
     // Drafts/archived/missing: don't leak details to crawlers.
@@ -57,7 +62,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProjetoPage({ params }: PageProps) {
   const { id: slug } = await params;
-  const projeto = await getContainer().projetosRepository.findBySlug(slug);
+  const projeto = await getProjetoBySlug(slug);
 
   if (!projeto) {
     notFound();

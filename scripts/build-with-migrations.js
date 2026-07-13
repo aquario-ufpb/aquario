@@ -32,9 +32,8 @@ if (hasDatabase) {
     console.log("✅ Migrations applied successfully\n");
   } catch (_error) {
     console.error("❌ Migration failed!");
-    console.error("   This might be OK if migrations were already applied.");
-    console.error("   Continuing with build...\n");
-    // Don't fail the build if migrations fail - let the app start and show the error
+    console.error("   Aborting build because the deployed schema may be incompatible.\n");
+    process.exit(1);
   }
 } else {
   console.log("⏭️  No DATABASE_URL set, skipping migrations (frontend-only mode)\n");

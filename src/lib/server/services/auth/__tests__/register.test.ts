@@ -10,6 +10,7 @@ jest.mock("bcryptjs", () => ({
 jest.mock("@/lib/server/config/env", () => ({
   MASTER_ADMIN_EMAILS: ["admin@gmail.com"],
   EMAIL_ENABLED: false,
+  IS_PROD: false,
 }));
 
 // Mock logger

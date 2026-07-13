@@ -50,5 +50,5 @@ export function isUserAdminOfEntidade(userId: string, membros: Membro[] | undefi
   if (!membros) {
     return false;
   }
-  return membros.some(m => m.usuario.id === userId && isAdminPapel(m.papel));
+  return membros.some(m => m.usuario.id === userId && isAdminPapel(m.papel) && !m.endedAt);
 }

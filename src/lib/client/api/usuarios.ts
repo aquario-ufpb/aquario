@@ -3,16 +3,12 @@ import { apiClient } from "./api-client";
 import { throwApiError } from "@/lib/client/errors";
 import type { OnboardingMetadata } from "@/lib/shared/types";
 
-export type User = {
+type BaseUserProfile = {
   id: string;
   nome: string;
-  email: string | null;
   slug?: string | null;
-  papelPlataforma: "USER" | "MASTER_ADMIN";
-  eVerificado: boolean;
   eFacade?: boolean;
   urlFotoPerfil?: string | null;
-  periodoAtual?: string | null;
   centro: {
     id: string;
     nome: string;
@@ -22,6 +18,15 @@ export type User = {
     id: string;
     nome: string;
   };
+};
+
+export type PublicUser = BaseUserProfile;
+
+export type User = BaseUserProfile & {
+  email: string | null;
+  papelPlataforma: "USER" | "MASTER_ADMIN";
+  eVerificado: boolean;
+  periodoAtual?: string | null;
   permissoes: string[];
 };
 
@@ -90,7 +95,7 @@ export const usuariosService = {
     return response.json();
   },
 
-  getBySlug: async (slug: string): Promise<User> => {
+  getBySlug: async (slug: string): Promise<PublicUser> => {
     const response = await apiClient(`${ENDPOINTS.USUARIO_BY_SLUG(slug)}`, {
       method: "GET",
     });
@@ -140,7 +145,7 @@ export const usuariosService = {
     query: string,
     limit?: number
   ): Promise<{
-    users: User[];
+    users: PublicUser[];
     pagination: { page: number; limit: number; total: number; totalPages: number };
   }> => {
     const params = new URLSearchParams();
