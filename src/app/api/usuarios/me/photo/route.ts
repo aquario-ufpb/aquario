@@ -22,20 +22,6 @@ export async function PATCH(request: Request) {
 
       const { usuariosRepository, blobStorage } = getContainer();
 
-      // If updating to a new photo, delete the old one if it exists
-      if (usuario.urlFotoPerfil && usuario.urlFotoPerfil !== urlFotoPerfil) {
-        // Only delete if it's from our blob storage (not external URLs)
-        try {
-          await blobStorage.delete(usuario.urlFotoPerfil);
-        } catch (error) {
-          // Ignore errors when deleting old photo (might be external URL)
-          log.warn("Could not delete old photo", {
-            url: usuario.urlFotoPerfil,
-            error: String(error),
-          });
-        }
-      }
-
       // Update user's photo URL
       await usuariosRepository.updateFotoPerfil(usuario.id, urlFotoPerfil ?? null);
 
@@ -43,6 +29,18 @@ export async function PATCH(request: Request) {
       const updatedUser = await usuariosRepository.findById(usuario.id);
       if (!updatedUser) {
         return ApiError.internal("Erro ao buscar usuário atualizado.");
+      }
+
+      // Delete the old photo only after the database no longer points to it.
+      if (usuario.urlFotoPerfil && usuario.urlFotoPerfil !== urlFotoPerfil) {
+        try {
+          await blobStorage.delete(usuario.urlFotoPerfil);
+        } catch (error) {
+          log.warn("Could not delete old photo", {
+            url: usuario.urlFotoPerfil,
+            error: String(error),
+          });
+        }
       }
 
       return NextResponse.json(formatUserResponse(updatedUser));
@@ -66,16 +64,6 @@ export async function DELETE(request: Request) {
     try {
       const { usuariosRepository, blobStorage } = getContainer();
 
-      // Delete the photo from storage if it exists
-      if (usuario.urlFotoPerfil) {
-        try {
-          await blobStorage.delete(usuario.urlFotoPerfil);
-        } catch (error) {
-          // Ignore errors when deleting (might be external URL or already deleted)
-          log.warn("Could not delete photo", { url: usuario.urlFotoPerfil, error: String(error) });
-        }
-      }
-
       // Update user's photo URL to null
       await usuariosRepository.updateFotoPerfil(usuario.id, null);
 
@@ -83,6 +71,15 @@ export async function DELETE(request: Request) {
       const updatedUser = await usuariosRepository.findById(usuario.id);
       if (!updatedUser) {
         return ApiError.internal("Erro ao buscar usuário atualizado.");
+      }
+
+      // Delete the photo from storage after the database no longer references it.
+      if (usuario.urlFotoPerfil) {
+        try {
+          await blobStorage.delete(usuario.urlFotoPerfil);
+        } catch (error) {
+          log.warn("Could not delete photo", { url: usuario.urlFotoPerfil, error: String(error) });
+        }
       }
 
       return NextResponse.json(formatUserResponse(updatedUser));

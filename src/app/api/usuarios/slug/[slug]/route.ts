@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
-import { formatUserResponse } from "@/lib/server/utils/format-user-response";
+import { formatPublicUserResponse } from "@/lib/server/utils/format-user-response";
 import { ApiError } from "@/lib/server/errors";
 
 type RouteContext = {
@@ -19,7 +19,7 @@ export async function GET(_request: Request, context: RouteContext) {
       return ApiError.userNotFound();
     }
 
-    return NextResponse.json(formatUserResponse(usuario));
+    return NextResponse.json(formatPublicUserResponse(usuario));
   } catch {
     return ApiError.internal("Erro ao buscar usuário");
   }

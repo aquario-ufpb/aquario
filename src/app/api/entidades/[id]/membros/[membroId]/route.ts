@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { z } from "zod";
-import { withAuth } from "@/lib/server/services/auth/middleware";
+import { canManageEntidade, withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { updateMemberSchema } from "@/lib/server/api-schemas/entidades";
@@ -26,14 +26,9 @@ export async function PUT(request: Request, context: RouteContext) {
         return ApiError.entidadeNotFound();
       }
 
-      // Check if user has permission (MASTER_ADMIN or entidade ADMIN)
-      const isMasterAdmin = usuario.papelPlataforma === "MASTER_ADMIN";
-      const isEntidadeAdmin = entidade.membros?.some(
-        (m: { usuario: { id: string }; papel: string }) =>
-          m.usuario.id === usuario.id && m.papel === "ADMIN"
-      );
+      const canManage = await canManageEntidade(usuario, entidadeId);
 
-      if (!isMasterAdmin && !isEntidadeAdmin) {
+      if (!canManage) {
         return ApiError.forbidden("Você não tem permissão para editar membros desta entidade.");
       }
 
@@ -114,14 +109,9 @@ export async function DELETE(request: Request, context: RouteContext) {
         return ApiError.entidadeNotFound();
       }
 
-      // Check if user has permission (MASTER_ADMIN or entidade ADMIN)
-      const isMasterAdmin = usuario.papelPlataforma === "MASTER_ADMIN";
-      const isEntidadeAdmin = entidade.membros?.some(
-        (m: { usuario: { id: string }; papel: string }) =>
-          m.usuario.id === usuario.id && m.papel === "ADMIN"
-      );
+      const canManage = await canManageEntidade(usuario, entidadeId);
 
-      if (!isMasterAdmin && !isEntidadeAdmin) {
+      if (!canManage) {
         return ApiError.forbidden("Você não tem permissão para deletar membros desta entidade.");
       }
 

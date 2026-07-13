@@ -24,9 +24,15 @@ import { useProjetosByUsuario, useUsuarioProjetoCounts } from "@/lib/client/hook
 import ProjectCard from "@/components/shared/project-card";
 import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { trackEvent } from "@/analytics/posthog-client";
+import type { PublicUser } from "@/lib/client/api/usuarios";
 
-export default function UsuarioProfileClient({ slug }: { slug: string }) {
-  const { data: user, isLoading, error: queryError } = useUsuarioBySlug(slug);
+type UsuarioProfileClientProps = {
+  slug: string;
+  initialData?: PublicUser;
+};
+
+export default function UsuarioProfileClient({ slug, initialData }: UsuarioProfileClientProps) {
+  const { data: user, isLoading, error: queryError } = useUsuarioBySlug(slug, { initialData });
   const { data: currentUser, isLoading: isCurrentUserLoading } = useCurrentUser();
   const { data: memberships, isLoading: membershipsLoading } = useUserMemberships(user?.id || "");
   const uploadPhotoMutation = useUploadPhoto();
@@ -285,11 +291,11 @@ export default function UsuarioProfileClient({ slug }: { slug: string }) {
             {user.centro.sigla} — {user.centro.nome}
           </p>
           <p className="text-base text-muted-foreground">{user.curso.nome}</p>
-          {isOwnProfile && user.email && (
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+          {isOwnProfile && currentUser?.email && (
+            <p className="text-sm text-muted-foreground">{currentUser.email}</p>
           )}
 
-          {isOwnProfile && user.papelPlataforma === "MASTER_ADMIN" && (
+          {isOwnProfile && currentUser?.papelPlataforma === "MASTER_ADMIN" && (
             <div className="flex justify-center md:justify-start mt-2">
               <Link href="/admin">
                 <Button className="rounded-full">Painel de Administração</Button>

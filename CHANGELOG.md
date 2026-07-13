@@ -10,6 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Admin Audit Logs**: Nova tabela `AuditLog`, API interna `GET /api/admin/audit-logs` e tela `/admin/audit-logs` para `MASTER_ADMIN` acompanhar ações administrativas sensíveis. Mutações administrativas de usuários agora registram criação/mescla de facade, alteração de role, edição de centro/curso/slug e deleção.
 
+### Changed
+- **Perfis públicos**: `/usuarios/[slug]`, `/entidade/[slug]` e `/projetos/[id]` agora deduplicam leituras server-side entre metadata e página; perfis de usuário e entidade também hidratam o React Query com `initialData`.
+
+### Fixed
+- **Permissões de entidade**: Rotas de edição de entidades, cargos e membros agora validam apenas membresias ADMIN ativas, impedindo que admins históricos mantenham permissões.
+- **Privacidade de usuários**: Endpoints públicos/de busca de usuários retornam um DTO sanitizado sem email, papel de plataforma, status de verificação ou permissões.
+- **Cadastro em produção**: Produção sem serviço de email configurado passa a bloquear cadastro em vez de auto-verificar usuários.
+- **Cadastro em produção**: Log de bloqueio por email indisponível não registra mais o email completo do usuário.
+- **Fotos de perfil**: Upload, atualização e remoção de foto só apagam o blob antigo depois que o banco deixa de referenciá-lo.
+- **Build com migrações**: `scripts/build-with-migrations.js` agora falha o build quando `prisma migrate deploy` falha.
+- **Dependências**: Atualizadas versões de Scalar API Reference, PostHog e Vitest para remover vulnerabilidades críticas/altas reportadas pelo `npm audit`.
+
 ## [1.11.1] - 2026-07-06
 
 ### Fixed

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getContainer } from "@/lib/server/container";
+import { formatPublicUserResponse } from "@/lib/server/utils/format-user-response";
 import { jsonLdScriptContent } from "@/lib/server/utils/seo";
 import UsuarioProfileClient from "./usuario-profile-client";
 
@@ -8,9 +10,13 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
+const getUsuarioBySlug = cache(async (slug: string) => {
+  return await getContainer().usuariosRepository.findBySlug(slug);
+});
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const usuario = await getContainer().usuariosRepository.findBySlug(slug);
+  const usuario = await getUsuarioBySlug(slug);
 
   if (!usuario) {
     return { title: "Usuário · Aquário", robots: { index: false, follow: false } };
@@ -53,7 +59,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function UsuarioPage({ params }: PageProps) {
   const { slug } = await params;
-  const usuario = await getContainer().usuariosRepository.findBySlug(slug);
+  const usuario = await getUsuarioBySlug(slug);
 
   if (!usuario) {
     notFound();
@@ -90,7 +96,7 @@ export default async function UsuarioPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: jsonLdScriptContent(jsonLd) }}
         />
       )}
-      <UsuarioProfileClient slug={slug} />
+      <UsuarioProfileClient slug={slug} initialData={formatPublicUserResponse(usuario)} />
     </>
   );
 }

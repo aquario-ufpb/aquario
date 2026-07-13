@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-08T14:04:56.055Z",
+  "updatedAt": "2026-07-13T17:55:03.270Z",
   "results": {
     "1": {
       "homeScore": 2,
@@ -512,6 +512,30 @@
       "winner": "home",
       "penaltyHomeScore": 4,
       "penaltyAwayScore": 3
+    },
+    "97": {
+      "homeScore": 2,
+      "awayScore": 0,
+      "status": "finished",
+      "winner": "home"
+    },
+    "98": {
+      "homeScore": 2,
+      "awayScore": 1,
+      "status": "finished",
+      "winner": "home"
+    },
+    "99": {
+      "homeScore": 1,
+      "awayScore": 2,
+      "status": "finished",
+      "winner": "away"
+    },
+    "100": {
+      "homeScore": 3,
+      "awayScore": 1,
+      "status": "finished",
+      "winner": "home"
     }
   }
 }

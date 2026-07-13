@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
-import { withAuth } from "@/lib/server/services/auth/middleware";
+import { canManageEntidade, withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { updateEntidadeSchema } from "@/lib/server/api-schemas/entidades";
 
@@ -25,13 +25,9 @@ export function PUT(request: Request, context: RouteContext) {
         return ApiError.entidadeNotFound();
       }
 
-      // Check if user has permission to edit (admin or member of entidade)
-      const isAdmin = usuario.papelPlataforma === "MASTER_ADMIN";
-      const isMember = entidade.membros?.some(
-        m => m.usuario.id === usuario.id && m.papel === "ADMIN"
-      );
+      const canManage = await canManageEntidade(usuario, id);
 
-      if (!isAdmin && !isMember) {
+      if (!canManage) {
         return ApiError.forbidden("Você não tem permissão para editar esta entidade.");
       }
 

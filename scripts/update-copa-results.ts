@@ -29,11 +29,20 @@ function toInternalId(tla: string): string {
 
 type MatchStatus = "scheduled" | "live" | "finished";
 
+// Every value football-data.org documents for the match-level `status`
+// field: https://docs.football-data.org/general/v4/lookup_tables.html
+// EXTRA_TIME/PENALTY_SHOOTOUT were previously missing here, so a knockout
+// match still playing extra time or a shootout fell through to the
+// "scheduled" default below — hiding an in-progress match's live score and,
+// worse, blocking downstream bracket resolution for matches that depend on
+// its winner even well after it had actually finished.
 const STATUS_MAP: Record<string, MatchStatus> = {
   SCHEDULED: "scheduled",
   TIMED: "scheduled",
   IN_PLAY: "live",
   PAUSED: "live",
+  EXTRA_TIME: "live",
+  PENALTY_SHOOTOUT: "live",
   FINISHED: "finished",
   AWARDED: "finished",
   SUSPENDED: "scheduled",
@@ -151,7 +160,24 @@ async function main() {
       continue;
     }
 
-    const status = STATUS_MAP[apiMatch.status] ?? "scheduled";
+    let status: MatchStatus;
+    if (Object.hasOwn(STATUS_MAP, apiMatch.status)) {
+      status = STATUS_MAP[apiMatch.status];
+    } else if (apiMatch.score.winner) {
+      // The API has occasionally returned a malformed/unrecognized status
+      // string (observed once as a raw timestamp) for an otherwise-finished
+      // match. score.winner is only ever populated once a match has
+      // concluded, so trust it over a status value we can't even parse.
+      console.warn(
+        `⚠️ Jogo ${match.id}: status "${apiMatch.status}" não reconhecido, mas score.winner presente — tratando como "finished".`
+      );
+      status = "finished";
+    } else {
+      console.warn(
+        `⚠️ Jogo ${match.id}: status "${apiMatch.status}" não mapeado em STATUS_MAP — usando "scheduled".`
+      );
+      status = "scheduled";
+    }
     const wentToPenalties = apiMatch.score.duration === "PENALTY_SHOOTOUT";
     const penaltyHome = apiMatch.score.penalties?.home;
     const penaltyAway = apiMatch.score.penalties?.away;
