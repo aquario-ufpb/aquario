@@ -73,6 +73,25 @@ export const queryKeys = {
     byId: (id: string) => ["calendarioAcademico", id] as const,
     eventos: (semestreId: string) => ["calendarioAcademico", semestreId, "eventos"] as const,
   },
+  auditLogs: {
+    all: ["auditLogs"] as const,
+    paginated: (options: {
+      page?: number;
+      limit?: number;
+      action?: string;
+      resourceType?: string;
+      actorUsuarioId?: string;
+    }) =>
+      [
+        "auditLogs",
+        "paginated",
+        options.page,
+        options.limit,
+        options.action,
+        options.resourceType,
+        options.actorUsuarioId,
+      ] as const,
+  },
   search: {
     query: (q: string) => ["search", q] as const,
   },

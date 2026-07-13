@@ -147,11 +147,32 @@ model Usuario {
   disciplinasSemestre    DisciplinaSemestre[]
   vagasCriadas           Vaga[]
   projetosAutor          ProjetoAutor[]
+  auditLogs              AuditLog[] @relation("AuditLogActor")
 
   @@index([email])
   @@index([matricula])
   @@index([eFacade])
   @@index([slug])
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  actorUsuarioId String?
+  action         String
+  resourceType   String
+  resourceId     String?
+  metadata       Json     @default("{}")
+  ipAddress      String?
+  userAgent      String?
+  criadoEm       DateTime @default(now())
+
+  actorUsuario Usuario? @relation("AuditLogActor", fields: [actorUsuarioId], references: [id], onDelete: SetNull)
+
+  @@index([actorUsuarioId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([resourceType, resourceId])
+  @@index([criadoEm])
 }
 
 model TokenVerificacao {

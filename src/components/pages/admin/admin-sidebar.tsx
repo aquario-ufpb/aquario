@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/client/utils";
-import { LayoutDashboard, Users, Building2, GraduationCap, CalendarDays } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  GraduationCap,
+  CalendarDays,
+  History,
+} from "lucide-react";
 
 type AdminSidebarProps = {
   currentPath: string;
@@ -34,6 +41,11 @@ const adminNavItems = [
     title: "Calendário",
     href: "/admin/calendario-academico",
     icon: CalendarDays,
+  },
+  {
+    title: "Audit Logs",
+    href: "/admin/audit-logs",
+    icon: History,
   },
 ];
 

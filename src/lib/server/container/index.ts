@@ -121,6 +121,9 @@ function createPrismaContainer(): Container {
   const {
     PrismaProjetosRepository,
   } = require("@/lib/server/db/implementations/prisma/prisma-projetos-repository");
+  const {
+    PrismaAuditLogsRepository,
+  } = require("@/lib/server/db/implementations/prisma/prisma-audit-logs-repository");
 
   return {
     usuariosRepository: new PrismaUsuariosRepository(),
@@ -142,6 +145,7 @@ function createPrismaContainer(): Container {
     disciplinaConcluidaRepository: new PrismaDisciplinaConcluidaRepository(),
     searchRepository: new PrismaSearchRepository(),
     projetosRepository: new PrismaProjetosRepository(),
+    auditLogsRepository: new PrismaAuditLogsRepository(),
     emailService: getEmailService(),
     blobStorage: getBlobStorage(),
   };
