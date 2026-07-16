@@ -109,7 +109,7 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
         </span>
         {/* "Ver mais" prompt on click/hover */}
         {(isClicked || isHovered) && !selectionMode && (
-          <div className="absolute bottom-0.5 inset-x-0 z-[1] flex items-center justify-center gap-0.5 text-[8px] font-semibold text-muted-foreground animate-in fade-in duration-200">
+          <div className="absolute bottom-0.5 inset-x-0 z-[1] flex items-center justify-center gap-0.5 text-[8px] font-semibold text-muted-foreground animate-in fade-in duration-200 motion-reduce:animate-none">
             <Eye aria-hidden className="w-2 h-2" />
             <span>Ver mais</span>
           </div>
