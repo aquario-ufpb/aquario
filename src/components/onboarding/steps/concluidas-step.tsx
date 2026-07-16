@@ -49,7 +49,7 @@ export function ConcluidasStep({ onComplete, isMutating }: ConcluidasStepProps) 
     return (
       <div className="space-y-4">
         <div className="space-y-2">
-          <h2 className="text-xl font-bold">Disciplinas Concluídas</h2>
+          <h2 className="text-pretty text-xl font-bold">Disciplinas Concluídas</h2>
           <p className="text-sm text-muted-foreground">
             Selecione as disciplinas que você já concluiu na sua grade curricular.
           </p>
@@ -72,13 +72,13 @@ export function ConcluidasStep({ onComplete, isMutating }: ConcluidasStepProps) 
     return (
       <div className="space-y-4">
         <div className="space-y-2">
-          <h2 className="text-xl font-bold">Disciplinas Concluídas</h2>
+          <h2 className="text-pretty text-xl font-bold">Disciplinas Concluídas</h2>
           <p className="text-sm text-muted-foreground">
             Não foi possível carregar a grade curricular do seu curso.
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={onComplete} variant="outline" disabled={isMutating}>
+          <Button onClick={onComplete} variant="outline" className="min-h-11" disabled={isMutating}>
             Continuar
           </Button>
         </div>
@@ -89,14 +89,14 @@ export function ConcluidasStep({ onComplete, isMutating }: ConcluidasStepProps) 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <h2 className="text-xl font-bold">Disciplinas Concluídas</h2>
+        <h2 className="text-pretty text-xl font-bold">Disciplinas Concluídas</h2>
         <p className="text-sm text-muted-foreground">
           Selecione na grade abaixo todas as disciplinas que você <strong>já concluiu</strong> e
           clique em &quot;Salvar como Concluídas&quot;.
         </p>
       </div>
 
-      <div className="overflow-x-auto -mx-6 px-6">
+      <div className="min-w-0">
         <CurriculumGraph
           disciplinas={grade.disciplinas}
           cursoNome={grade.cursoNome}
@@ -107,6 +107,7 @@ export function ConcluidasStep({ onComplete, isMutating }: ConcluidasStepProps) 
           isSaving={marcarMutation.isPending}
           isLoggedIn={true}
           allowedSaveStatuses={["concluida"]}
+          mobileLayout="list"
         />
       </div>
     </div>

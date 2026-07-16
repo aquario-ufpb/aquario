@@ -31,6 +31,7 @@ import {
 import { exportGradeAsImage } from "@/lib/client/grades-curriculares/export";
 import { trackEvent } from "@/analytics/posthog-client";
 import { toast } from "sonner";
+import { cn } from "@/lib/client/utils";
 
 /** Export modes — union type prevents invalid state combinations */
 type ExportMode = "progress" | "blank" | null;
@@ -95,6 +96,8 @@ type CurriculumGraphProps = {
   activeSemestreNome?: string;
   /** Restrict which save statuses appear in the dropdown. If only one, renders a direct button. */
   allowedSaveStatuses?: ("concluida" | "cursando" | "none")[];
+  /** Use a period-by-period list on small screens while preserving the full graph on desktop. */
+  mobileLayout?: "graph" | "list";
 };
 
 export function CurriculumGraph({
@@ -111,6 +114,7 @@ export function CurriculumGraph({
   isLoggedIn,
   activeSemestreNome,
   allowedSaveStatuses,
+  mobileLayout = "graph",
 }: CurriculumGraphProps) {
   const [showOptativas, setShowOptativas] = useState(true);
   const [clickedCode, setClickedCode] = useState<string | null>(null);
@@ -431,17 +435,19 @@ export function CurriculumGraph({
         ? "Salvar como Cursando"
         : null;
 
+  const usesMobileList = mobileLayout === "list";
+
   const SaveActions = () => {
     if (singleStatus && singleStatusLabel) {
       return (
         <Button
           size="sm"
           disabled={isSaving || selectionSet.size === 0}
-          className="gap-1.5"
+          className="min-h-11 gap-1.5 md:min-h-9"
           onClick={() => void handleSaveAs(singleStatus)}
         >
-          <Save className="w-3.5 h-3.5" />
-          {isSaving ? "Salvando..." : singleStatusLabel}
+          <Save aria-hidden="true" className="w-3.5 h-3.5" />
+          {isSaving ? "Salvando…" : singleStatusLabel}
           {selectionSet.size > 0 && ` (${selectionSet.size})`}
         </Button>
       );
@@ -449,9 +455,13 @@ export function CurriculumGraph({
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="sm" disabled={isSaving || selectionSet.size === 0} className="gap-1.5">
-            <Save className="w-3.5 h-3.5" />
-            {isSaving ? "Salvando..." : "Salvar"}
+          <Button
+            size="sm"
+            disabled={isSaving || selectionSet.size === 0}
+            className="min-h-11 gap-1.5 md:min-h-9"
+          >
+            <Save aria-hidden="true" className="w-3.5 h-3.5" />
+            {isSaving ? "Salvando…" : "Salvar"}
             {selectionSet.size > 0 && ` (${selectionSet.size})`}
             <ChevronDown className="w-3 h-3 ml-1" />
           </Button>
@@ -484,7 +494,12 @@ export function CurriculumGraph({
   return (
     <div>
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
+      <div
+        className={cn(
+          "flex items-center justify-between mb-4 flex-wrap gap-4",
+          usesMobileList && "hidden md:flex"
+        )}
+      >
         <div>
           <h2 className="text-lg font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">{cursoNome}</h2>
           <p className="text-sm text-muted-foreground">Currículo: {curriculoCodigo}</p>
@@ -600,7 +615,7 @@ export function CurriculumGraph({
       {selectionMode && progressStats && (
         <div className="mb-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10">
           <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                 <strong>{progressStats.completedObrigatorias}</strong>/{progressStats.obrigatorias}{" "}
@@ -621,11 +636,107 @@ export function CurriculumGraph({
         </div>
       )}
 
+      {usesMobileList && (
+        <div className="space-y-5 md:hidden" data-testid="mobile-curriculum-list">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="break-words text-base font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">
+                {cursoNome}
+              </h3>
+              <p className="text-sm text-muted-foreground">Currículo: {curriculoCodigo}</p>
+            </div>
+            {hasOptativas && (
+              <button
+                type="button"
+                aria-pressed={showOptativas}
+                onClick={() => setShowOptativas(current => !current)}
+                className={cn(
+                  "min-h-11 rounded-md border px-3 py-2 text-sm font-medium",
+                  "touch-manipulation transition-colors hover:bg-accent",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  "motion-reduce:transition-none",
+                  showOptativas &&
+                    "border-aquario-primary bg-aquario-primary/10 text-aquario-primary"
+                )}
+              >
+                {showOptativas ? "Ocultar optativas" : "Mostrar optativas"}
+              </button>
+            )}
+          </div>
+
+          <p className="text-sm text-muted-foreground">
+            Selecione as disciplinas na lista, organizadas por período.
+          </p>
+
+          {periods.map(([periodo, discs]) => (
+            <section
+              key={periodo}
+              aria-labelledby={`mobile-periodo-${periodo}`}
+              className="space-y-2"
+            >
+              <h3
+                id={`mobile-periodo-${periodo}`}
+                className="text-sm font-semibold text-muted-foreground"
+              >
+                {periodo}º Período
+              </h3>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {discs.map(disc => {
+                  const isSelected = selectionSet.has(disc.disciplinaId);
+                  const isCompleted = !!completedDisciplinaIds?.has(disc.disciplinaId);
+                  const isCursando = !!cursandoDisciplinaIds?.has(disc.disciplinaId);
+
+                  return (
+                    <button
+                      key={disc.id}
+                      type="button"
+                      aria-pressed={selectionMode ? isSelected : undefined}
+                      onClick={() => {
+                        if (selectionMode) {
+                          handleToggleSelect(disc.disciplinaId);
+                          return;
+                        }
+                        setSelectedDisc(disc);
+                        setDialogOpen(true);
+                      }}
+                      className={cn(
+                        "min-h-11 w-full rounded-md border bg-card px-3 py-2 text-left",
+                        "touch-manipulation transition-[border-color,background-color,box-shadow]",
+                        "hover:border-aquario-primary/50 hover:bg-accent/50",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        "motion-reduce:transition-none",
+                        isSelected &&
+                          "border-aquario-primary bg-aquario-primary/10 ring-2 ring-aquario-primary/30"
+                      )}
+                    >
+                      <span className="flex min-w-0 items-start justify-between gap-3">
+                        <span className="min-w-0">
+                          <span className="block break-words text-sm font-medium">{disc.nome}</span>
+                          <span className="block text-xs text-muted-foreground">{disc.codigo}</span>
+                        </span>
+                        {(isCompleted || isCursando || isSelected) && (
+                          <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                            {isSelected ? "Selecionada" : isCompleted ? "Concluída" : "Cursando"}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
       {/* Graph container — fixed height, scrollable both axes */}
       <div
         ref={scrollWrapperRef}
-        className="relative overflow-auto rounded-lg border border-slate-200 dark:border-white/10"
-        style={{ maxHeight: "70vh" }}
+        className={cn(
+          "relative overflow-auto rounded-lg border border-slate-200 dark:border-white/10",
+          usesMobileList && "hidden md:block"
+        )}
+        style={{ maxHeight: "70dvh" }}
         onScroll={measureNodes}
       >
         {isExporting && <div className="absolute inset-0 z-50 cursor-wait" />}

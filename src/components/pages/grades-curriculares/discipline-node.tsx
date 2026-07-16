@@ -71,13 +71,17 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
     return (
       <button
         ref={ref}
+        type="button"
+        aria-pressed={selectionMode ? isSelected : undefined}
         onClick={handleClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         className={`
           relative h-[84px] rounded-md border border-border p-2 overflow-hidden
           flex items-center justify-center text-center
-          transition-all duration-200 cursor-pointer
+          transition-[opacity,box-shadow,transform] duration-200 cursor-pointer
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+          motion-reduce:transition-none
           text-card-foreground bg-card
           ${isLockedOnly ? "opacity-40" : ""}
           ${selectionMode && isSelected ? "ring-2 ring-blue-500 dark:ring-blue-400 shadow-sm" : ""}
@@ -105,7 +109,7 @@ export const DisciplineNode = forwardRef<HTMLButtonElement, DisciplineNodeProps>
         </span>
         {/* "Ver mais" prompt on click/hover */}
         {(isClicked || isHovered) && !selectionMode && (
-          <div className="absolute bottom-0.5 inset-x-0 z-[1] flex items-center justify-center gap-0.5 text-[8px] font-semibold text-muted-foreground animate-in fade-in duration-200">
+          <div className="absolute bottom-0.5 inset-x-0 z-[1] flex items-center justify-center gap-0.5 text-[8px] font-semibold text-muted-foreground animate-in fade-in duration-200 motion-reduce:animate-none">
             <Eye aria-hidden className="w-2 h-2" />
             <span>Ver mais</span>
           </div>

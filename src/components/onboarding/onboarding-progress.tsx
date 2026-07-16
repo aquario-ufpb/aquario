@@ -9,7 +9,15 @@ type OnboardingProgressProps = {
 
 export function OnboardingProgress({ currentStep, totalSteps }: OnboardingProgressProps) {
   return (
-    <div className="space-y-3">
+    <div
+      className="space-y-3"
+      role="progressbar"
+      aria-label="Progresso da configuração"
+      aria-valuemin={1}
+      aria-valuemax={totalSteps}
+      aria-valuenow={Math.min(currentStep, totalSteps)}
+      aria-valuetext={`Passo ${Math.min(currentStep, totalSteps)} de ${totalSteps}`}
+    >
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">
           Passo {currentStep} de {totalSteps}
@@ -20,7 +28,7 @@ export function OnboardingProgress({ currentStep, totalSteps }: OnboardingProgre
           <div
             key={i}
             className={cn(
-              "h-1.5 flex-1 rounded-full transition-colors",
+              "h-1.5 flex-1 rounded-full transition-colors motion-reduce:transition-none",
               i < currentStep - 1
                 ? "bg-aquario-primary"
                 : i === currentStep - 1

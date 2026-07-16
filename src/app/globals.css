@@ -77,6 +77,14 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  [data-onboarding-overlay],
+  [data-onboarding-dialog] {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

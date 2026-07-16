@@ -52,15 +52,15 @@ function FakeContributionGrid() {
   }, []);
 
   return (
-    <div className="inline-flex flex-col gap-[3px]">
+    <div aria-hidden="true" className="flex w-full max-w-[277px] flex-col gap-[3px]">
       {Array.from({ length: 7 }).map((_, row) => (
-        <div key={row} className="flex gap-[3px]">
+        <div key={row} className="grid grid-cols-[repeat(20,minmax(0,1fr))] gap-[3px]">
           {Array.from({ length: 20 }).map((_, col) => {
             const level = grid[row + col * 7];
             return (
               <div
                 key={col}
-                className={`w-[11px] h-[11px] rounded-[2px] ${
+                className={`aspect-square min-w-0 rounded-[2px] ${
                   level === 0 ? "bg-muted" : CONTRIBUTION_LEVELS[(level ?? 1) - 1]
                 }`}
               />
@@ -84,22 +84,22 @@ export function WelcomeStep({
 
   if (page === 2) {
     return (
-      <div className="text-center space-y-6 py-4 animate-in fade-in duration-300">
+      <div className="space-y-6 py-4 text-center animate-in fade-in duration-300 motion-reduce:animate-none motion-reduce:transition-none">
         <div className="flex justify-center">
           <div className="w-16 h-16 rounded-full bg-aquario-primary/10 flex items-center justify-center">
-            <Github className="w-8 h-8 text-aquario-primary" />
+            <Github aria-hidden="true" className="w-8 h-8 text-aquario-primary" />
           </div>
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold">Projeto Open Source</h2>
+          <h2 className="text-pretty text-2xl font-bold">Projeto Open Source</h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
             O Aquário é um projeto open source licenciado sob a Licença MIT. Qualquer pessoa pode
             contribuir para tornar a plataforma melhor — seja você calouro ou veterano.
           </p>
         </div>
 
-        <div className="flex justify-center pt-2">
+        <div className="flex w-full justify-center pt-2">
           <FakeContributionGrid />
         </div>
 
@@ -109,30 +109,40 @@ export function WelcomeStep({
             href="https://github.com/aquario-ufpb/aquario/graphs/contributors"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block transition-transform hover:scale-105"
+            aria-label="Ver contribuidores do Aquário no GitHub"
+            className="inline-flex min-h-11 max-w-full items-center rounded-xl transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:scale-100"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://contrib.rocks/image?repo=aquario-ufpb/aquario"
               alt="Contribuidores do Aquário"
-              className="max-w-md mx-auto rounded-xl"
+              width={500}
+              height={100}
+              className="mx-auto h-auto w-full max-w-md rounded-xl"
             />
           </a>
         </div>
 
-        <div className="flex items-center justify-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <ContributeOnGitHub
             url="https://github.com/aquario-ufpb/aquario"
             variant="outline"
             size="sm"
+            className="min-h-11 rounded-full"
           />
-          <Button onClick={onComplete} disabled={isMutating} size="lg" className="gap-2">
+          <Button onClick={onComplete} disabled={isMutating} size="lg" className="min-h-11 gap-2">
             {isMutating ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <>
+                <Loader2
+                  aria-hidden="true"
+                  className="w-4 h-4 animate-spin motion-reduce:animate-none"
+                />
+                <span className="sr-only">Salvando…</span>
+              </>
             ) : (
               <>
                 Começar
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight aria-hidden="true" className="w-4 h-4" />
               </>
             )}
           </Button>
@@ -150,7 +160,7 @@ export function WelcomeStep({
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-3xl font-bold">
+        <h2 className="text-pretty text-2xl font-bold sm:text-3xl">
           {firstName ? `Bem-vindo ao Aquário, ${firstName}!` : "Bem-vindo ao Aquário!"}
         </h2>
         {isOutro ? (
@@ -177,9 +187,9 @@ export function WelcomeStep({
         </p>
       )}
 
-      <Button onClick={() => onPageChange(2)} size="lg" className="gap-2">
+      <Button onClick={() => onPageChange(2)} size="lg" className="min-h-11 gap-2">
         Próximo
-        <ArrowRight className="w-4 h-4" />
+        <ArrowRight aria-hidden="true" className="w-4 h-4" />
       </Button>
     </div>
   );

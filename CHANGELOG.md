@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Perfis públicos**: `/usuarios/[slug]`, `/entidade/[slug]` e `/projetos/[id]` agora deduplicam leituras server-side entre metadata e página; perfis de usuário e entidade também hidratam o React Query com `initialData`.
+- **Onboarding**: O modal agora usa altura dinâmica com safe areas e rolagem contida; o fluxo móvel ganhou alvos de toque de 44 px, foco e estados acessíveis, animações reduzidas e uma lista curricular vertical sem rolagem horizontal aninhada.
 
 ### Fixed
 - **Permissões de entidade**: Rotas de edição de entidades, cargos e membros agora validam apenas membresias ADMIN ativas, impedindo que admins históricos mantenham permissões.

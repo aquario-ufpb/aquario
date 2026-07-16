@@ -57,12 +57,12 @@ export function PeriodoStep({ onComplete, isMutating }: PeriodoStepProps) {
     <div className="text-center space-y-6 py-4">
       <div className="flex justify-center">
         <div className="w-16 h-16 rounded-full bg-aquario-primary/10 flex items-center justify-center">
-          <GraduationCap className="w-8 h-8 text-aquario-primary" />
+          <GraduationCap aria-hidden="true" className="w-8 h-8 text-aquario-primary" />
         </div>
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold">Qual período você está cursando?</h2>
+        <h2 className="text-pretty text-2xl font-bold">Qual período você está cursando?</h2>
         <p className="text-muted-foreground max-w-md mx-auto">
           Selecione o período atual do seu curso.
         </p>
@@ -73,11 +73,13 @@ export function PeriodoStep({ onComplete, isMutating }: PeriodoStepProps) {
           <button
             key={option.value}
             type="button"
+            aria-pressed={selected === option.value}
             disabled={busy}
             onClick={() => setSelected(option.value)}
             className={cn(
-              "px-4 py-2 rounded-lg border text-sm font-medium transition-all",
+              "min-h-11 min-w-11 touch-manipulation px-4 py-2 rounded-lg border text-sm font-medium transition-[border-color,background-color,box-shadow] motion-reduce:transition-none",
               "hover:border-aquario-primary/50",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               selected === option.value
                 ? "border-aquario-primary bg-aquario-primary/10 text-aquario-primary ring-2 ring-aquario-primary/30"
@@ -89,13 +91,24 @@ export function PeriodoStep({ onComplete, isMutating }: PeriodoStepProps) {
         ))}
       </div>
 
-      <Button onClick={handleConfirm} disabled={!selected || busy} size="lg" className="gap-2">
+      <Button
+        onClick={handleConfirm}
+        disabled={!selected || busy}
+        size="lg"
+        className="min-h-11 gap-2"
+      >
         {busy ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <>
+            <Loader2
+              aria-hidden="true"
+              className="w-4 h-4 animate-spin motion-reduce:animate-none"
+            />
+            <span className="sr-only">Salvando…</span>
+          </>
         ) : (
           <>
             Continuar
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight aria-hidden="true" className="w-4 h-4" />
           </>
         )}
       </Button>
