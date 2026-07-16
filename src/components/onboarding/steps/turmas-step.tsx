@@ -109,7 +109,10 @@ export function TurmasStep({ onComplete, isMutating, paasAvailable }: TurmasStep
     return (
       <div className="space-y-4 py-4">
         <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
-          <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+          <AlertTriangle
+            aria-hidden="true"
+            className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0"
+          />
           <div className="space-y-1">
             <p className="text-sm font-medium">Dados de alocação indisponíveis</p>
             <p className="text-xs text-muted-foreground">
@@ -118,7 +121,7 @@ export function TurmasStep({ onComplete, isMutating, paasAvailable }: TurmasStep
             </p>
           </div>
         </div>
-        <Button onClick={onComplete} disabled={isMutating}>
+        <Button onClick={onComplete} className="min-h-11" disabled={isMutating}>
           Continuar
         </Button>
       </div>
@@ -128,7 +131,7 @@ export function TurmasStep({ onComplete, isMutating, paasAvailable }: TurmasStep
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <h2 className="text-xl font-bold">Selecionar Turmas</h2>
+        <h2 className="text-pretty text-xl font-bold">Selecionar Turmas</h2>
         <p className="text-sm text-muted-foreground">
           Para cada disciplina, selecione a turma em que está matriculado.
         </p>
@@ -136,7 +139,7 @@ export function TurmasStep({ onComplete, isMutating, paasAvailable }: TurmasStep
 
       {disciplinas.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <BookOpen aria-hidden="true" className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">
             Nenhuma disciplina cursando encontrada. Você pode adicionar turmas depois pela página de
             calendário.
@@ -147,9 +150,9 @@ export function TurmasStep({ onComplete, isMutating, paasAvailable }: TurmasStep
           {disciplinas.map(disc => {
             const paasOptions = paasClassesByCodigo.get(disc.disciplinaCodigo) ?? [];
             return (
-              <div key={disc.id} className="p-3 rounded-lg border bg-card space-y-2">
-                <div>
-                  <p className="text-sm font-medium">{disc.disciplinaNome}</p>
+              <div key={disc.id} className="min-w-0 space-y-2 rounded-lg border bg-card p-3">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-medium">{disc.disciplinaNome}</p>
                   <p className="text-xs text-muted-foreground font-mono">{disc.disciplinaCodigo}</p>
                 </div>
                 {paasOptions.length > 0 ? (
@@ -163,17 +166,27 @@ export function TurmasStep({ onComplete, isMutating, paasAvailable }: TurmasStep
                       }
                     }}
                   >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Selecionar turma..." />
+                    <SelectTrigger
+                      aria-label={`Turma de ${disc.disciplinaNome}`}
+                      className="min-h-11 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <SelectValue placeholder="Selecionar turma…" />
                     </SelectTrigger>
                     <SelectContent>
                       {disc.codigoPaas !== null && (
-                        <SelectItem value="__clear__" className="text-xs text-muted-foreground">
+                        <SelectItem
+                          value="__clear__"
+                          className="min-h-11 text-xs text-muted-foreground"
+                        >
                           Remover turma
                         </SelectItem>
                       )}
                       {paasOptions.map(opt => (
-                        <SelectItem key={opt.id} value={String(opt.id)} className="text-xs">
+                        <SelectItem
+                          key={opt.id}
+                          value={String(opt.id)}
+                          className="min-h-11 text-xs"
+                        >
                           T{opt.turma} — {opt.docente?.trim() || "Sem docente"} — {opt.horario}
                         </SelectItem>
                       ))}

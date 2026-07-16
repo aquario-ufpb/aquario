@@ -165,16 +165,21 @@ export function OnboardingModal({
   return (
     <DialogPrimitive.Root open={true} onOpenChange={handleOpenChange} modal={true}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Overlay
+          data-onboarding-overlay
+          className="fixed inset-0 z-50 touch-none overscroll-none bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none"
+        />
         <DialogPrimitive.Content
+          data-onboarding-dialog
           onPointerDownOutside={e => e.preventDefault()}
           onEscapeKeyDown={e => e.preventDefault()}
           onInteractOutside={e => e.preventDefault()}
           className={cn(
-            "fixed left-2 right-2 top-[50%] z-50 w-auto translate-y-[-50%] border bg-background shadow-lg duration-200 rounded-lg",
-            "sm:left-[50%] sm:right-auto sm:w-full sm:-translate-x-1/2",
-            "max-w-6xl h-[94vh] flex flex-col",
-            "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            "fixed bottom-[max(0.5rem,env(safe-area-inset-bottom))] left-[max(0.5rem,env(safe-area-inset-left))] right-[max(0.5rem,env(safe-area-inset-right))] top-[max(0.5rem,env(safe-area-inset-top))] z-50",
+            "flex min-h-0 w-auto max-w-6xl flex-col overflow-x-hidden overscroll-none rounded-lg border bg-background shadow-lg duration-200",
+            "sm:bottom-auto sm:left-[50%] sm:right-auto sm:top-[50%] sm:h-[min(94dvh,56rem)] sm:max-h-[calc(100dvh-2rem)] sm:w-full sm:-translate-x-1/2 sm:-translate-y-1/2",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "motion-reduce:animate-none motion-reduce:transition-none"
           )}
         >
           <DialogPrimitive.Title className="sr-only">Configuração do Aquário</DialogPrimitive.Title>
@@ -183,14 +188,14 @@ export function OnboardingModal({
           </DialogPrimitive.Description>
 
           {/* Header — progress bar */}
-          <div className="p-6 pb-0">
+          <div className="shrink-0 p-4 pb-0 sm:p-6 sm:pb-0">
             <OnboardingProgress currentStep={completedCount + 1} totalSteps={totalCount} />
           </div>
 
           {/* Scrollable step content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="min-h-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-y-contain p-4 [scrollbar-gutter:stable] sm:p-6">
             <div
-              className="animate-in fade-in duration-300 w-full min-h-full flex flex-col justify-center"
+              className="flex min-h-full min-w-0 w-full flex-col justify-start animate-in fade-in duration-300 motion-reduce:animate-none motion-reduce:transition-none sm:justify-center"
               key={activeStepId}
             >
               {renderStep(activeStepId)}
@@ -198,17 +203,17 @@ export function OnboardingModal({
           </div>
 
           {/* Sticky footer — always visible */}
-          <div className="border-t bg-background p-4 flex items-center justify-between gap-2 rounded-b-lg">
+          <div className="flex shrink-0 items-center justify-between gap-2 rounded-b-lg border-t bg-background p-3 sm:p-4">
             <div>
               {canGoBack && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="gap-1.5 text-muted-foreground"
+                  className="min-h-11 gap-1.5 text-muted-foreground"
                   onClick={handleBack}
                   disabled={isMutating}
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft aria-hidden="true" className="w-4 h-4" />
                   Voltar
                 </Button>
               )}
@@ -218,13 +223,20 @@ export function OnboardingModal({
                 <Button
                   variant={memberships.length > 0 ? "default" : "ghost"}
                   size="sm"
+                  className="min-h-11"
                   onClick={() =>
                     memberships.length > 0 ? handleComplete("entidades") : handleSkip("entidades")
                   }
                   disabled={isMutating}
                 >
                   {isMutating ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <>
+                      <Loader2
+                        aria-hidden="true"
+                        className="w-4 h-4 animate-spin motion-reduce:animate-none"
+                      />
+                      <span className="sr-only">Salvando…</span>
+                    </>
                   ) : memberships.length > 0 ? (
                     "Continuar"
                   ) : (
@@ -236,14 +248,30 @@ export function OnboardingModal({
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="min-h-11"
                   onClick={() => handleSkip(activeStepId)}
                   disabled={isMutating}
                 >
-                  {isMutating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Pular"}
+                  {isMutating ? (
+                    <>
+                      <Loader2
+                        aria-hidden="true"
+                        className="w-4 h-4 animate-spin motion-reduce:animate-none"
+                      />
+                      <span className="sr-only">Salvando…</span>
+                    </>
+                  ) : (
+                    "Pular"
+                  )}
                 </Button>
               )}
               {isRevisiting && (
-                <Button size="sm" onClick={() => setViewingPastStep(null)} disabled={isMutating}>
+                <Button
+                  size="sm"
+                  className="min-h-11"
+                  onClick={() => setViewingPastStep(null)}
+                  disabled={isMutating}
+                >
                   Continuar
                 </Button>
               )}
