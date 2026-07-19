@@ -1,3 +1,7 @@
+const EXPECTED_TURMA = "01";
+const EXPECTED_PERIODO = "2026.1";
+const EXPECTED_STATUS = "matriculado";
+const EXPECTED_COMPONENTS_COUNT = 7;
 import fs from "fs";
 import path from "path";
 
@@ -5,7 +9,10 @@ import { atestadoMatriculaAdapter } from "../atestado-matricula.adapter";
 import { detectAdapter } from "../detect-document";
 import type { NormalizedDisciplina } from "../document-adapter.interface";
 
-const FIXTURE = fs.readFileSync(path.join(__dirname, "fixtures", "atestado-sample.txt"), "utf-8");
+const FIXTURE = fs.readFileSync(
+  path.join(__dirname, "fixtures", "atestado-sample.txt"),
+  "utf-8",
+);
 
 const EXPECTED_CODIGOS_IN_ORDER = [
   "GDSCO0043",
@@ -22,7 +29,7 @@ function parse(): NormalizedDisciplina[] {
 }
 
 function byCodigo(codigo: string): NormalizedDisciplina {
-  const found = parse().find(d => d.codigo === codigo);
+  const found = parse().find((d) => d.codigo === codigo);
   if (!found) {
     throw new Error(`Component ${codigo} not parsed`);
   }
@@ -31,23 +38,24 @@ function byCodigo(codigo: string): NormalizedDisciplina {
 
 describe("atestadoMatriculaAdapter.parse", () => {
   it("parses exactly 7 components", () => {
-    expect(parse()).toHaveLength(7);
+    const EXPECTED_COMPONENTS_COUNT = 7;
+    expect(parse()).toHaveLength(EXPECTED_COMPONENTS_COUNT);
   });
 
   it("extracts códigos in document order (alpha and numeric)", () => {
-    expect(parse().map(d => d.codigo)).toEqual(EXPECTED_CODIGOS_IN_ORDER);
+    expect(parse().map((d) => d.codigo)).toEqual(EXPECTED_CODIGOS_IN_ORDER);
   });
 
   it("marks every component as matriculado", () => {
-    expect(parse().every(d => d.status === "matriculado")).toBe(true);
+    expect(parse().every((d) => d.status === "matriculado")).toBe(true);
   });
 
   it("uses período 2026.1 for every component", () => {
-    expect(parse().every(d => d.periodo === "2026.1")).toBe(true);
+    expect(parse().every((d) => d.periodo === "2026.1")).toBe(true);
   });
 
   it("captures turma 01 for every component", () => {
-    expect(parse().every(d => d.turma === "01")).toBe(true);
+    expect(parse().every((d) => d.turma === "01")).toBe(true);
   });
 
   it("captures the single-line horário token", () => {
@@ -61,8 +69,8 @@ describe("atestadoMatriculaAdapter.parse", () => {
   });
 
   it("classifies the remaining components as disciplinas", () => {
-    const disciplinas = parse().filter(d => d.codigo !== "DINF00070");
-    expect(disciplinas.every(d => d.tipo === "disciplina")).toBe(true);
+    const disciplinas = parse().filter((d) => d.codigo !== "DINF00070");
+    expect(disciplinas.every((d) => d.tipo === "disciplina")).toBe(true);
   });
 
   it("joins a horário split across two lines", () => {
@@ -77,7 +85,7 @@ describe("atestadoMatriculaAdapter.parse", () => {
 
   it("joins a multi-line discipline name", () => {
     expect(byCodigo("DSCO00023").nome).toContain(
-      "INOVAÇÃO DE BASE CIENTÍFICA-TECNOLÓGICA E EMPREENDEDORISMO"
+      "INOVAÇÃO DE BASE CIENTÍFICA-TECNOLÓGICA E EMPREENDEDORISMO",
     );
   });
 
@@ -113,7 +121,9 @@ describe("detectAdapter", () => {
   });
 
   it("returns null for unrelated text", () => {
-    const adapter = detectAdapter("random pdf text", [atestadoMatriculaAdapter]);
+    const adapter = detectAdapter("random pdf text", [
+      atestadoMatriculaAdapter,
+    ]);
     expect(adapter).toBeNull();
   });
 });
