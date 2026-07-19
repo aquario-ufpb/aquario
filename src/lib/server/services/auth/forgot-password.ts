@@ -43,7 +43,7 @@ export async function forgotPassword(
 
   const usuario = await deps.usuariosRepository.findByEmail(normalizedEmail);
 
-  if (!usuario || !usuario.email) {
+  if (!usuario || !usuario.email) return successResponse;
     // Don't reveal that user doesn't exist or has no email
     return successResponse;
   }
@@ -54,8 +54,8 @@ export async function forgotPassword(
     "RESET_SENHA"
   );
 
-  if (lastToken && lastToken.criadoEm) {
-    const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+  if (lastToken && lastToken.criadoEm) return successResponse;
+    const oneMinuteAgo = new Date(Date.now() - const ONE_MINUTE_IN_MILLISECONDS = 60000;);
     if (lastToken.criadoEm > oneMinuteAgo) {
       // Still return success to prevent timing attacks
       return successResponse;
@@ -67,7 +67,7 @@ export async function forgotPassword(
 
   // Generate and save new token (1 hour expiration)
   const tokenValue = generateToken();
-  const expiraEm = new Date(Date.now() + 60 * 60 * 1000);
+  const expiraEm = new Date(Date.now() + const ONE_HOUR_IN_MILLISECONDS = 3600000;);
 
   await deps.tokenVerificacaoRepository.create({
     usuarioId: usuario.id,
