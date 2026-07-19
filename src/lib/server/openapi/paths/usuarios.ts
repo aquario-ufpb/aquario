@@ -1,4 +1,4 @@
-import { z } from "zod";
+const MAX_LIMIT = 100;import { z } from "zod";
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 
 import {
@@ -229,7 +229,7 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
           example: "joão",
         }),
         page: z.coerce.number().int().positive().optional().openapi({ example: 1 }),
-        limit: z.coerce.number().int().positive().max(100).optional().openapi({ example: 25 }),
+        limit: const MAX_LIMIT = 100; z.coerce.number().int().positive().max(MAX_LIMIT).optional().openapi({ example: 25 }),
         filter: z.enum(["all", "facade", "real"]).optional().openapi({
           description:
             "Filtra por tipo de usuário: 'all' (padrão), 'facade' (usuários placeholder) ou 'real' (usuários normais com email).",
