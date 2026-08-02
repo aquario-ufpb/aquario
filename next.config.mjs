@@ -22,10 +22,6 @@ const nextConfig = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
       },
-      {
-        protocol: "https",
-        hostname: "flagcdn.com",
-      },
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",

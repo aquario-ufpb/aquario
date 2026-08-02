@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Perfis públicos**: `/usuarios/[slug]`, `/entidade/[slug]` e `/projetos/[id]` agora deduplicam leituras server-side entre metadata e página; perfis de usuário e entidade também hidratam o React Query com `initialData`.
 - **Onboarding**: O modal agora usa altura dinâmica com safe areas e rolagem contida; o fluxo móvel ganhou alvos de toque de 44 px, foco e estados acessíveis, animações reduzidas e uma lista curricular vertical sem rolagem horizontal aninhada.
 
+### Removed
+- **Copa do Mundo 2026**: Removida a página `/copa-do-mundo` e todo o código relacionado — dataset compartilhado (`src/lib/shared/copa/`), componentes (`src/components/pages/copa/`), ilustração `worldcup` da landing, entradas no dropdown "Recursos" da navbar e no hub `/recursos`, snapshot `content/copa-resultados/`, script `scripts/update-copa-results.ts`, a action `Update Copa Results`, a variável `FOOTBALL_DATA_API_KEY` e o host de imagens `flagcdn.com`.
+
 ### Fixed
 - **Permissões de entidade**: Rotas de edição de entidades, cargos e membros agora validam apenas membresias ADMIN ativas, impedindo que admins históricos mantenham permissões.
 - **Privacidade de usuários**: Endpoints públicos/de busca de usuários retornam um DTO sanitizado sem email, papel de plataforma, status de verificação ou permissões.

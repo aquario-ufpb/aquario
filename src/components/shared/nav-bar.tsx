@@ -12,7 +12,6 @@ import {
   Moon,
   Settings,
   Sun,
-  Trophy,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -52,7 +51,6 @@ const navLinkClass =
 
 const RESOURCES_PATHS = [
   "/recursos",
-  "/copa-do-mundo",
   "/calendario",
   "/guias",
   "/mapas",
@@ -147,12 +145,6 @@ function ResourceItemContent({ resource }: { resource: Resource }) {
 
 function ResourcesDropdownContent() {
   const resources: Resource[] = [
-    {
-      href: "/copa-do-mundo",
-      title: "Copa do Mundo 2026",
-      description: "Jogos, horários e tabela da Copa.",
-      icon: Trophy,
-    },
     {
       href: "/calendario",
       title: "Minhas Disciplinas",
