@@ -1,0 +1,127 @@
+% ---------------------------------------------------------------------
+% Quatro variações de linha do tempo das releases.
+% Compilar:  tectonic -X compile timelines.tex --outdir build
+% Cada página é uma variação; recorte a que quiser para o slides.tex.
+% Dados conferidos no repositório, até a data-base (09/06/2026).
+% ---------------------------------------------------------------------
+\documentclass[border=12pt,multi=tikzpicture]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,backgrounds}
+
+\definecolor{azul}{HTML}{1F5FBF}
+\definecolor{azulclaro}{HTML}{7AA8E0}
+\definecolor{cinza}{HTML}{4A5A6A}
+\definecolor{cinzaclaro}{HTML}{C3CCD7}
+
+\begin{document}
+
+% =====================================================================
+% 1 - Linha horizontal, marcos agrupados por mes
+% =====================================================================
+\begin{tikzpicture}[x=1.75cm,y=1cm]
+  \draw[cinzaclaro,line width=2.2pt] (0,0) -- (7.1,0);
+  \foreach \x/\m in {0.4/Dez,1.4/Jan,2.4/Fev,3.4/Mar,4.4/Abr,5.4/Mai,6.4/Jun}
+    \node[font=\footnotesize\color{cinza}] at (\x,-0.28) {\m};
+
+  % acima
+  \foreach \x/\v/\t in {%
+    0.4/{v1.0.1}/{primeira release\\versionada},
+    2.4/{v1.1.0 \textperiodcentered{} v1.2.0 \textperiodcentered{} v1.3.0}/{grades curriculares,\\calendário e onboarding},
+    4.4/{v1.5.0 \textperiodcentered{} v1.6.0}/{documentação da API,\\nova identidade visual}}
+  {
+    \fill[azul] (\x,0) circle (3.6pt);
+    \draw[azul,line width=0.9pt] (\x,0.06) -- (\x,0.72);
+    \node[above,align=center,font=\scriptsize,text=cinza] at (\x,0.76)
+      {\textbf{\color{azul}\v}\\\t};
+  }
+  % abaixo
+  \foreach \x/\v/\t in {%
+    3.4/{v1.4.0}/{guia de replicação,\\hooks de qualidade},
+    5.4/{v1.7.0 \textperiodcentered{} v1.8.0}/{módulo de projetos,\\SEO e indexação}}
+  {
+    \fill[azul] (\x,0) circle (3.6pt);
+    \draw[azul,line width=0.9pt] (\x,-0.06) -- (\x,-0.72);
+    \node[below,align=center,font=\scriptsize,text=cinza] at (\x,-1.28)
+      {\textbf{\color{azul}\v}\\\t};
+  }
+  \node[right,font=\footnotesize\color{cinza}] at (7.15,0) {data-base};
+\end{tikzpicture}
+
+% =====================================================================
+% 2 — Barras: releases por mês (a explosão de fevereiro)
+% =====================================================================
+\begin{tikzpicture}[x=1.7cm,y=0.26cm]
+  \foreach \i/\m/\n in {0/Dez/2,1/Jan/0,2/Fev/18,3/Mar/1,4/Abr/3,5/Mai/3,6/Jun/1}
+  {
+    \ifnum\n>0
+      \fill[azul,rounded corners=2pt] (\i-0.32,0) rectangle (\i+0.32,\n);
+      \node[above,font=\small\bfseries\color{azul}] at (\i,\n) {\n};
+    \else
+      \node[above,font=\small\color{cinzaclaro}] at (\i,0) {0};
+    \fi
+    \node[below=4pt,font=\footnotesize\color{cinza}] at (\i,0) {\m};
+  }
+  \draw[cinzaclaro,line width=1pt] (-0.6,0) -- (6.6,0);
+  \node[align=left,font=\scriptsize\color{cinza},anchor=north west]
+    at (3.1,17) {\textbf{27 releases} no período\\
+                 fevereiro concentra dois terços\\
+                 --- estabilização e três \emph{minors}};
+\end{tikzpicture}
+
+% =====================================================================
+% 3 — Três fases, com faixa de fundo
+% =====================================================================
+\begin{tikzpicture}[x=1.55cm,y=1cm]
+  \begin{scope}[on background layer]
+    \fill[azulclaro!22,rounded corners=3pt] (-0.1,-0.45) rectangle (1.9,0.45);
+    \fill[azulclaro!45,rounded corners=3pt] (2.0,-0.45) rectangle (3.9,0.45);
+    \fill[azulclaro!22,rounded corners=3pt] (4.0,-0.45) rectangle (6.9,0.45);
+  \end{scope}
+
+  \foreach \x/\m in {0.4/Dez,1.4/Jan,2.4/Fev,3.4/Mar,4.4/Abr,5.4/Mai,6.4/Jun}
+    \node[font=\footnotesize\color{cinza}] at (\x,0) {\m};
+
+  \node[above,align=center,font=\scriptsize,text=cinza] at (0.9,0.55)
+    {\textbf{\color{azul}Estabilização}\\2 releases \textperiodcentered{} recesso};
+  \node[above,align=center,font=\scriptsize,text=cinza] at (2.95,0.55)
+    {\textbf{\color{azul}Expansão}\\19 releases \textperiodcentered{} início do semestre};
+  \node[above,align=center,font=\scriptsize,text=cinza] at (5.45,0.55)
+    {\textbf{\color{azul}Consolidação}\\6 releases \textperiodcentered{} ritmo regular};
+
+  \node[below,align=center,font=\scriptsize,text=cinza] at (0.9,-0.6)
+    {autenticação, guias,\\entidades, mapas};
+  \node[below,align=center,font=\scriptsize,text=cinza] at (2.95,-0.6)
+    {grades, calendário,\\onboarding, replicação};
+  \node[below,align=center,font=\scriptsize,text=cinza] at (5.45,-0.6)
+    {API, redesign,\\projetos, SEO};
+\end{tikzpicture}
+
+% =====================================================================
+% 4 — Combinada: barras por mês + marcos das minor
+% =====================================================================
+\begin{tikzpicture}[x=1.7cm,y=0.24cm]
+  % barras
+  \foreach \i/\m/\n in {0/Dez/2,1/Jan/0,2/Fev/18,3/Mar/1,4/Abr/3,5/Mai/3,6/Jun/1}
+  {
+    \ifnum\n>0
+      \fill[azulclaro!55,rounded corners=2pt] (\i-0.34,0) rectangle (\i+0.34,\n);
+      \node[above=1pt,font=\scriptsize\color{cinza}] at (\i,\n) {\n};
+    \fi
+    \node[below=4pt,font=\footnotesize\color{cinza}] at (\i,0) {\m};
+  }
+  \draw[cinzaclaro,line width=1pt] (-0.6,0) -- (6.7,0);
+
+  % marcos das minor, sobre as barras
+  \foreach \x/\y/\v in {0/3.4/v1.0.1, 1.75/19.4/v1.1.0, 2.0/19.4/v1.2.0,
+                        2.25/19.4/v1.3.0, 3/2.4/v1.4.0, 3.8/4.4/v1.5.0,
+                        4.2/4.4/v1.6.0, 4.85/4.4/v1.7.0, 5.15/4.4/v1.8.0}
+    \node[rotate=90,anchor=west,font=\tiny\bfseries\color{azul}] at (\x,\y) {\v};
+
+  \node[align=left,font=\scriptsize\color{cinza},anchor=north west]
+    at (3.3,16) {barras: releases no mês\\rótulos: versões \emph{minor}};
+\end{tikzpicture}
+
+\end{document}

@@ -1,0 +1,1028 @@
+<meta charset="utf-8">
+<title>Aquário — defesa de TCC</title>
+<style>
+  /* ---------------------------------------------------------------
+     Cores e tipografia extraídas do arquivo do Canva.
+     Editar aqui muda o deck inteiro.
+  ---------------------------------------------------------------- */
+  :root{
+    --azul:#3171B8;
+    --tinta:#141A20;
+    --cinza:#5A6B7B;
+    --linha:#DCE4EC;
+    --slide-w:1280px;
+    --slide-h:720px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  /* nada de seleção nem arrastar imagem — clique só navega */
+  html,body{-webkit-user-select:none;user-select:none}
+  img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
+  @media print{ html,body{-webkit-user-select:text;user-select:text} }
+  html,body{height:100%;background:#20262E;overflow:hidden}
+  body{
+    font-family:"Poppins","Century Gothic","Avenir Next",-apple-system,
+                BlinkMacSystemFont,"Segoe UI",sans-serif;
+    color:var(--tinta);display:grid;place-items:center}
+
+  #palco{width:var(--slide-w);height:var(--slide-h);position:relative;
+         transform-origin:center center}
+
+  .slide{position:absolute;inset:0;background:#fff;display:none;
+         padding:78px 88px 76px;flex-direction:column}
+  .slide.on{display:flex}
+
+  /* rodapé com a marca, em todo slide de conteúdo */
+  /* imagem de conteudo, e nao background: o background some na exportacao p/ PDF */
+  .slide:not(.capa):not(.divisor)::after{
+    content:url("assets/logo-aquario.png");
+    position:absolute;left:50%;bottom:26px;transform:translateX(-50%) scale(.2218);
+    transform-origin:bottom center;opacity:.9}
+
+  h1{color:var(--azul);font-size:40px;font-weight:700;letter-spacing:-.4px;
+     line-height:1.15;margin:0 0 30px}
+  h2{color:var(--azul);font-size:27px;font-weight:700;margin-bottom:12px}
+  p{font-size:21px;line-height:1.5;margin-bottom:16px;max-width:56ch}
+  .lead{font-size:23px}
+  ul,ol{margin:0 0 16px 26px;font-size:21px;line-height:1.62}
+  li{margin-bottom:7px}
+  .nota{color:var(--cinza);font-size:16px;line-height:1.45}
+  .azul{color:var(--azul)}
+  b,strong{font-weight:700}
+
+  .cols{display:grid;gap:44px;margin-top:6px}
+  .c2{grid-template-columns:1fr 1fr}
+  .c3{grid-template-columns:repeat(3,1fr)}
+  .cols p{font-size:18px;max-width:none}
+
+  /* números grandes */
+  .nums{display:flex;justify-content:space-around;align-items:flex-start;
+        margin:40px 0 8px;text-align:center}
+  .num{font-size:62px;font-weight:700;color:var(--azul);line-height:1}
+  .num + div{color:var(--cinza);font-size:17px;margin-top:8px}
+
+  table{border-collapse:collapse;font-size:18px;margin-top:6px}
+  th{text-align:left;font-weight:700;padding:9px 20px 9px 0;
+     border-bottom:2px solid var(--linha)}
+  td{padding:8px 20px 8px 0;border-bottom:1px solid var(--linha)}
+  td.n,th.n{text-align:right}
+  .marca{display:inline-flex;align-items:center;gap:12px;line-height:1}
+  .marca img{width:23px;height:23px;object-fit:contain;flex:0 0 auto}
+  .marca .par{display:inline-flex;gap:7px;flex:0 0 auto}
+  .marca .vazio{width:23px;flex:0 0 23px}
+  table.logos td:first-child{width:230px}
+
+  /* url em destaque */
+  .url{display:block;text-align:center;font-size:44px;font-weight:700;
+       color:var(--azul);letter-spacing:-.5px;margin:0}
+  .url-grande{font-size:62px}
+
+  /* numeros com icone */
+  .grade-num{display:grid;grid-template-columns:repeat(3,1fr);
+             gap:34px 24px;margin:26px 0 0;text-align:center}
+  .item-num svg,.item-num img{width:30px;height:30px;display:block;margin:0 auto 8px}
+  .item-num .num{font-size:52px}
+  .item-num .rot{color:var(--cinza);font-size:17px;margin-top:6px}
+
+  /* grade de verificação */
+  .checks{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+          margin:20px 0 2px}
+  .ck{display:flex;align-items:center;gap:11px;border:1px solid var(--linha);
+      border-radius:8px;padding:13px 14px;font-size:17px;line-height:1.25}
+  .ck svg{width:21px;height:21px;flex:0 0 21px}
+  .ck .rf{display:block;color:var(--cinza);font-size:13px;font-weight:700;
+          letter-spacing:.6px;margin-bottom:2px}
+  .ck.total{border:0;background:var(--azul);color:#fff;justify-content:center;
+            font-weight:700;font-size:19px}
+
+  /* tríptico de telas */
+  .trio{display:flex;gap:16px;flex:1 1 0;min-height:0;
+        align-items:center;margin:0 -18px}
+  .trio figure{flex:1 1 0;min-width:0;display:block}
+  .trio img{width:100%;display:block;border-radius:5px;
+            box-shadow:0 2px 12px rgba(20,26,32,.14)}
+  .trio figcaption{font-size:15px;line-height:1.4;color:var(--cinza);
+                   text-align:center;margin-top:11px}
+  .trio b{color:var(--azul);display:block;font-size:15.5px;margin-bottom:2px}
+
+  /* moldes para capturas a fazer */
+  .moldes{display:flex;gap:22px;flex:1 1 0;min-height:0;margin-top:6px}
+  .molde{flex:1;border:2px dashed #C3D0DD;border-radius:8px;display:flex;
+         flex-direction:column;align-items:center;justify-content:center;
+         padding:20px;text-align:center;background:#F7FAFC}
+  .molde b{color:var(--azul);font-size:17px;display:block;margin-bottom:7px}
+  .molde span{color:var(--cinza);font-size:15px;line-height:1.45}
+
+  /* referencias */
+  .refs{font-size:15.5px;line-height:1.5;color:var(--tinta);margin:0}
+  .refs li{margin-bottom:9px}
+
+  /* arvores de diretorio */
+  .arvore{display:grid;grid-template-columns:max-content 1fr;
+          column-gap:34px;row-gap:0;align-content:start;margin-top:4px}
+  .arvore code{font-family:"SF Mono","JetBrains Mono",ui-monospace,Menlo,
+               monospace;font-size:17.5px;line-height:1.18;white-space:pre;
+               color:var(--tinta)}
+  .arvore .g{color:#AAB6C2}
+  .arvore .d{color:var(--azul)}
+  .arvore .obs{font-size:16px;line-height:1.18;color:var(--cinza);
+               align-self:center}
+  .arvore .foco{font-weight:700}
+
+  /* grafico de barras em HTML — Evolucao do sistema */
+  .grafico{flex:1 1 0;min-height:0;display:flex;flex-direction:column;
+           justify-content:flex-end;padding:0 30px 0 10px;position:relative}
+  .barras{display:grid;grid-template-columns:repeat(7,1fr);gap:34px;
+          align-items:end;flex:1 1 auto;min-height:0;max-height:400px;
+          margin-top:66px}
+  .barra{display:flex;flex-direction:column;justify-content:flex-end;
+         align-items:center;height:100%}
+  .barra .v{font-size:26px;font-weight:700;color:var(--azul);margin-bottom:8px;
+            font-variant-numeric:tabular-nums}
+  .barra .haste{width:100%;background:var(--azul);border-radius:5px 5px 0 0;
+                min-height:3px}
+  .barra.zero .v{color:#B8C4D0}
+  .barra.zero .haste{background:none;height:0}
+  .eixo{border-top:2px solid var(--linha);display:grid;
+        grid-template-columns:repeat(7,1fr);gap:34px;padding-top:11px}
+  .eixo span{text-align:center;font-size:18px;color:var(--cinza)}
+  .destaque{position:absolute;right:34px;top:6px;text-align:right;
+            font-size:18px;line-height:1.5;color:var(--cinza)}
+  .destaque b{color:var(--azul)}
+
+  figure{margin:0;flex:1 1 0;min-height:0;display:flex;flex-direction:column;
+         align-items:center;justify-content:center;gap:10px;overflow:hidden}
+  figure img{max-width:100%;min-height:0;flex:0 1 auto;object-fit:contain}
+  figcaption{flex:0 0 auto}
+  figcaption{color:var(--cinza);font-size:15px}
+  .cheia{padding:78px 56px 62px}
+  .cheia h1{margin-bottom:18px}
+  /* rotulo da secao-mae: fora do fluxo, para nao deslocar o titulo */
+  .pai{position:absolute;top:50px;left:88px;margin:0;font-size:14.5px;
+       letter-spacing:1.3px;text-transform:uppercase;color:var(--cinza);
+       font-weight:700}
+  .cheia .pai{left:56px}
+  .tela .pai{left:54px}
+
+  .tela{padding:78px 54px 70px}
+  .tela h1{margin-bottom:12px}
+  .tela figcaption{font-size:15.5px;max-width:none;text-align:center;
+                   padding:0 40px}
+  .tela figure img{box-shadow:0 2px 14px rgba(20,26,32,.13);border-radius:6px}
+
+  /* capa */
+  .capa{padding:0;display:none;align-items:center;justify-content:center}
+  .divisor{padding-top:0;padding-bottom:0}
+  .capa.on{display:flex}
+  .capa .inner{text-align:center;width:100%;padding:0 100px}
+  .capa .topo{position:absolute;top:44px;left:0;right:0;text-align:center;
+              font-size:15px;letter-spacing:.5px;line-height:1.5}
+  .capa .brasao{position:absolute;top:38px;left:56px;height:106px}
+  .capa .peixe{position:absolute;top:46px;right:60px;height:80px}
+  .capa h1{font-size:44px;margin-bottom:34px}
+  .capa .autor{font-size:22px;font-weight:700;margin-bottom:10px}
+  .capa .orient{font-size:18px;color:var(--tinta);margin-bottom:4px}
+  .capa .rodape{position:absolute;bottom:38px;left:56px;right:56px;
+                display:flex;justify-content:space-between;font-size:16px}
+
+  /* divisórias de capítulo */
+  .divisor{align-items:flex-start;justify-content:center;padding-left:120px}
+  .divisor h1{font-size:52px;margin:0}
+  .divisor ol{margin-top:26px;font-size:22px;color:var(--cinza)}
+
+  /* navegação */
+  #hud{position:fixed;bottom:14px;right:20px;color:#8A98A8;font-size:13px;
+       font-variant-numeric:tabular-nums;user-select:none}
+  #ajuda{position:fixed;bottom:14px;left:20px;color:#5C6874;font-size:12px}
+
+  @page{size:1280px 720px;margin:0}
+  @media print{
+    html,body{background:#fff;overflow:visible;height:auto;display:block;
+              -webkit-print-color-adjust:exact;print-color-adjust:exact}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #palco{width:100%;height:auto;transform:none!important}
+    .slide{display:flex!important;position:relative;inset:auto;
+           width:1280px;height:720px;page-break-after:always;
+           break-after:page;border:0;overflow:hidden}
+    .slide:last-child{page-break-after:auto;break-after:auto}
+    #hud,#ajuda{display:none}
+  }
+</style>
+
+<div id="palco">
+
+<!-- 1 ----------------------------------------------------------------->
+<section class="slide capa on">
+  <img class="brasao" src="assets/brasao.png" alt="">
+  <img class="peixe" src="assets/peixe.png" alt="">
+  <div class="topo">UNIVERSIDADE FEDERAL DA PARAÍBA<br>AQUÁRIO</div>
+  <div class="inner">
+    <h1>Aquário: projeto e desenvolvimento de um hub<br>
+        acadêmico open-source para o CI/UFPB</h1>
+    <div class="autor">Tiago Trindade de Oliveira</div>
+    <div class="orient">Orientador: Prof. Dr. Moisés Dantas dos Santos</div>
+    <div class="orient">Banca: Prof. Dr. Alisson Brito, Prof. Dr. Tiago Maritan</div>
+  </div>
+  <div class="rodape">
+    <span>Centro de Informática</span>
+    <span>TRABALHO DE CONCLUSÃO DE CURSO</span>
+    <span>07 de agosto de 2026</span>
+  </div>
+</section>
+
+<!-- 2 ----------------------------------------------------------------->
+<section class="slide">
+  <h1>Sumário</h1>
+  <ol class="lead" style="font-size:24px;line-height:2">
+    <li>Introdução</li>
+    <li>Conceitos Gerais</li>
+    <li>Projeto e Especificação</li>
+    <li>Metodologia e Implementação</li>
+    <li>Resultados e Discussão</li>
+    <li>Conclusão</li>
+  </ol>
+</section>
+
+<!-- 3 ----------------------------------------------------------------->
+<section class="slide divisor"><h1>1 — Introdução</h1></section>
+
+<!-- 4 ----------------------------------------------------------------->
+<section class="slide">
+  <h1>O problema</h1>
+  <p>O CI tem um ecossistema rico — laboratórios, grupos, ligas, projetos,
+     oportunidades.</p>
+  <p>Mas o acesso a ele é <b class="azul">fragmentado e dependente do acaso</b>:</p>
+  <ul>
+    <li>apresentações na Semana da Computação</li>
+    <li>convites informais no corredor</li>
+    <li>perguntas em grupos de WhatsApp</li>
+  </ul>
+  <p>Ferramentas úteis existem — SACI, mapas, calendário — mas
+     <b class="azul">isoladas</b>, sem integração entre si.</p>
+  <p class="nota">O período inicial é crítico: o desconhecimento do ambiente
+     institucional está entre os fatores associados à evasão nos primeiros
+     semestres (VELOZO et al., 2025).</p>
+</section>
+
+<!-- 5 ----------------------------------------------------------------->
+<section class="slide">
+  <h1>Quem perde com isso</h1>
+  <div class="cols c3">
+    <div><h2>Ingressantes</h2>
+      <p>Chegam sem referências e descobrem tarde o que existe.</p></div>
+    <div><h2>Veteranos</h2>
+      <p>Desconhecem parte do que o próprio centro oferece e usam ferramentas
+         fragmentadas.</p></div>
+    <div><h2>O próprio Centro</h2>
+      <p>Sem base viva e pública, não consegue apresentar nem manter memória
+         do que produz.</p></div>
+  </div>
+</section>
+
+<!-- 6 ----------------------------------------------------------------->
+<section class="slide">
+  <h1>Objetivo</h1>
+  <p class="lead">Projetar, desenvolver, <b class="azul">disponibilizar em
+     produção</b> e <b class="azul">avaliar a adoção</b> de uma plataforma web
+     open-source de centralização e divulgação das informações do CI/UFPB.</p>
+  <h2 style="margin-top:24px">Objetivos específicos</h2>
+  <ul style="font-size:19px">
+    <li>Caracterizar o problema de visibilidade informacional no CI/UFPB;</li>
+    <li>Projetar a arquitetura considerando escalabilidade, manutenibilidade e
+        contribuição colaborativa;</li>
+    <li>Implementar as funcionalidades centrais da plataforma;</li>
+    <li>Estruturar o projeto como software open-source, com documentação,
+        processo de contribuição e governança;</li>
+    <li>Disponibilizar em produção e acompanhar a adoção pela comunidade.</li>
+  </ul>
+</section>
+
+<!-- 7 ----------------------------------------------------------------->
+<section class="slide" style="justify-content:center;align-items:center">
+  <p class="lead" style="font-size:40px;line-height:1.42;max-width:24ch;
+     font-weight:700;color:var(--tinta);text-align:center">Um site público que reúne
+     <span class="azul">as informações</span> e
+     <span class="azul">as ferramentas</span> do CI num só lugar —
+     e que a própria comunidade mantém.</p>
+</section>
+
+<!-- 8 ----------------------------------------------------------------->
+<section class="slide divisor"><h1>2 — Conceitos Gerais</h1></section>
+
+<!-- 9 ----------------------------------------------------------------->
+<section class="slide">
+  <h1>Portais e sistemas de informação acadêmica</h1>
+  <p class="lead">Sistemas de informação acadêmica são plataformas digitais que
+     centralizam, organizam e disponibilizam informações relevantes para a
+     comunidade universitária.</p>
+  <p class="nota">Um portal acadêmico vai além: é um ponto de acesso unificado
+     que agrega serviços, informações e recursos para os diferentes perfis da
+     comunidade (JAFARI; SHEEHAN, 2003).</p>
+</section>
+
+<!-- 10 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Trabalhos relacionados</h1>
+  <ul style="font-size:19px;line-height:1.5">
+    <li><b class="azul">Sistemas de gestão acadêmica</b> (SIGAA e afins) —
+        orientados a processos institucionais: matrícula, histórico, frequência.
+        Função operacional; não se propõem a dar visibilidade ao que o centro
+        produz.</li>
+    <li><b class="azul">Páginas institucionais</b> — sete cursos de computação
+        consultados, em quatro regiões. Cinco publicam listagens estáticas;
+        em duas não há listagem de laboratórios.</li>
+    <li><b class="azul">City Tech OpenLab</b> (CUNY) — o mais próximo
+        internacionalmente, mas focado em pedagogia aberta.</li>
+    <li><b class="azul">SIAC</b> (UNIFESSPA) — o mais próximo no Brasil: sem
+        dados de adoção, organizado por chatbot, e não é código aberto
+        comunitário.</li>
+  </ul>
+  <p class="nota">Inspeção por conveniência, não revisão sistemática — delimita
+     o panorama consultado.</p>
+</section>
+
+<!-- 11 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Onde o Aquário se posiciona</h1>
+  <table>
+    <tr><th></th><th class="n">Aquário</th><th class="n">Páginas instituc.</th>
+        <th class="n">City Tech</th><th class="n">SIGAA</th></tr>
+    <tr><td>Busca e filtragem do ecossistema</td><td class="n">Sim</td><td class="n">Não</td><td class="n">Parcial</td><td class="n">Não</td></tr>
+    <tr><td>Descrição detalhada de projetos</td><td class="n">Sim</td><td class="n">Não</td><td class="n">Sim</td><td class="n">Parcial</td></tr>
+    <tr><td>Ferramentas acadêmicas integradas</td><td class="n">Sim</td><td class="n">Não</td><td class="n">Não</td><td class="n">Sim</td></tr>
+    <tr><td>Acesso público sem autenticação</td><td class="n">Sim</td><td class="n">Sim</td><td class="n">Parcial</td><td class="n">Não</td></tr>
+    <tr><td>Código aberto e replicável</td><td class="n">Sim</td><td class="n">Não</td><td class="n">Parcial</td><td class="n">Não</td></tr>
+    <tr><td>Mantido pela comunidade discente</td><td class="n">Sim</td><td class="n">Não</td><td class="n">Não</td><td class="n">Não</td></tr>
+  </table>
+  <p class="nota" style="margin-top:14px">Fonte: elaboração própria (2026).</p>
+</section>
+
+<!-- 12 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Software open-source</h1>
+  <p>Software open-source é aquele cujo código-fonte é disponibilizado
+     publicamente, permitindo que qualquer pessoa o inspecione, modifique e
+     distribua (OSI, 2024). Estabelece uma cultura de colaboração em que o
+     projeto pertence à sua comunidade, e não a um único autor.</p>
+  <p>Projetos bem-sucedidos compartilham características comuns (FOGEL, 2017):</p>
+  <ol><li>documentação clara;</li><li>processos de contribuição definidos;</li>
+      <li>versionamento rigoroso;</li><li>uma comunidade engajada.</li></ol>
+</section>
+
+<!-- 13 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Desenvolvimento web moderno</h1>
+  <p style="font-size:19px">Em projetos open-source universitários, o custo de
+     entrada de um novo colaborador é fator crítico de sustentabilidade: a
+     rotatividade é alta e o tempo de cada participante é reduzido. E quem
+     escreveu cada parte raramente estará lá quando ela for alterada.</p>
+  <ol style="font-size:20px">
+    <li>Unificação de frontend e backend em um único repositório</li>
+    <li>Disponibilidade de bibliotecas de componentes prontas</li>
+    <li>Popularidade da tecnologia</li>
+    <li>Linguagem de tipagem estática</li>
+    <li>Implantação simples e sem custo</li>
+  </ol>
+  <p class="nota">Convergem no Next.js + Vercel.</p>
+</section>
+
+<!-- 14 ---------------------------------------------------------------->
+<section class="slide divisor"><h1>3 — Projeto e Especificação</h1></section>
+
+<!-- 15 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Concepção</h1>
+  <figure><img src="../figuras/ci-convivencia.jpg" alt="" style="max-width:1010px">
+    <figcaption>O ecossistema do CI existe e é vivo — mas se apresenta no
+      corredor, na conversa, no acaso. Quem não está ali não o
+      encontra</figcaption></figure>
+</section>
+
+<!-- 16 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Perfis de usuários</h1>
+  <div class="cols c3">
+    <div><h2>Ingressantes</h2>
+      <p>Ponto de partida para conhecer o CI — descobrir o centro antes mesmo
+         de circular pelos corredores.</p></div>
+    <div><h2>Veteranos</h2>
+      <p>Ferramentas acadêmicas que existiam de forma dispersa, ou não
+         existiam, reunidas em um único lugar.</p></div>
+    <div><h2>Público externo</h2>
+      <p>Potenciais alunos, empresas, pesquisadores — uma vitrine do que o CI
+         produz e oferece.</p></div>
+  </div>
+</section>
+
+<!-- 17 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Requisitos funcionais</h1>
+  <p class="lead"><b class="azul">11 requisitos.</b><br>Cada um representa um
+     módulo da plataforma.</p>
+  <div class="cols c2" style="margin-top:26px">
+    <ul><li>Entidades</li><li>Projetos</li><li>Guias</li>
+        <li>Grades curriculares</li><li>Minhas Disciplinas</li>
+        <li>Calendário acadêmico</li></ul>
+    <ul><li>Mapas</li><li>Busca global</li><li>Cadastro e onboarding</li>
+        <li>Perfil de usuário</li><li>Administração</li></ul>
+  </div>
+</section>
+
+<!-- 18 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Requisitos não funcionais</h1>
+  <p class="lead"><b class="azul">6 requisitos.</b><br>Cada um com uma meta
+     mensurável.</p>
+  <div class="cols c2" style="margin-top:26px">
+    <ul><li>Disponibilidade</li><li>Eficiência de desempenho</li>
+        <li>Segurança</li></ul>
+    <ul><li>Manutenibilidade</li><li>Acessibilidade</li>
+        <li>Responsividade</li></ul>
+  </div>
+  <p class="nota">Metas verificáveis, não apenas declaradas — é o que permite
+     reprovar o próprio sistema.</p>
+</section>
+
+<!-- 19 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Interface e identidade visual</h1>
+  <figure><img src="../figuras/identidade-visual.png" alt="">
+    <figcaption>Marca, paleta e telas desenhadas no Figma antes da
+      implementação</figcaption></figure>
+</section>
+
+<!-- 20 ---------------------------------------------------------------->
+<section class="slide divisor">
+  <h1>4 — Metodologia e Implementação</h1>
+  <ol>
+    <li>Processo de desenvolvimento</li><li>Stack tecnológica</li>
+    <li>Arquitetura</li><li>Modelo de dados</li><li>Infraestrutura</li>
+    <li>Instrumentação do analytics</li><li>Testes</li>
+  </ol>
+</section>
+
+<!-- 21 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Recorte temporal — a data-base</h1>
+  <p class="lead"><b class="azul">3 de novembro de 2025 a 9 de junho de 2026</b>
+     — 219 dias de observação.</p>
+  <p>Maio de 2026 traz a v1.8.0, a última release conduzida sob a liderança do
+     autor. As versões posteriores indicam a continuidade do projeto sob outros
+     mantenedores e não integram esta análise.</p>
+  <p class="nota">O primeiro commit do repositório é de 17 de julho de 2024,
+     anterior ao início da coleta em produção.</p>
+</section>
+
+<!-- 22 ---------------------------------------------------------------->
+<section class="slide">
+  <p class="pai">Processo de desenvolvimento</p>
+  <h1>Documentação e governança</h1>
+  <div class="arvore">
+    <code>aquario/</code><span class="obs"></span>
+    <code><span class="g">├── </span>README.md</code><span class="obs">o que é o projeto e como rodar</span>
+    <code><span class="g">├── </span>README-DEV.md</code><span class="obs">ambiente de desenvolvimento e convenções</span>
+    <code><span class="g">├── </span>CONTRIBUTING.md</code><span class="obs">como abrir PR, padrão de commit, revisão</span>
+    <code><span class="g">├── </span>CODE_OF_CONDUCT.md</code><span class="obs">conduta esperada na comunidade</span>
+    <code><span class="g">├── </span>SECURITY.md</code><span class="obs">como reportar uma vulnerabilidade</span>
+    <code><span class="g">├── </span>CHANGELOG.md</code><span class="obs">histórico das 27 releases, em versionamento semântico</span>
+    <code><span class="g">├── </span>LICENSE</code><span class="obs">MIT</span>
+    <code><span class="g">├── </span>REPLICANDO_NA_SUA_UNIVERSIDADE.md</code><span class="obs">guia para outro centro adotar o projeto</span>
+    <code><span class="g">│</span></code><span class="obs"></span>
+    <code><span class="g">├── </span><span class="d">.claude/</span>CLAUDE.md</code><span class="obs">contexto do projeto para ferramentas de IA</span>
+    <code><span class="g">├── </span><span class="d">.cursor/</span>rules.md</code><span class="obs">as mesmas regras, em versão enxuta</span>
+    <code><span class="g">└── </span><span class="d">.agents/skills/</span></code><span class="obs">instruções reutilizáveis — fonte única</span>
+  </div>
+  <p class="nota" style="margin-top:18px;max-width:none">Tudo que um colaborador
+     lê antes de escrever a primeira linha — a documentação é parte do artefato,
+     não um anexo.</p>
+</section>
+
+<!-- 23 ---------------------------------------------------------------->
+<section class="slide cheia">
+  <p class="pai">Processo de desenvolvimento</p>
+  <h1>Integração e entrega contínuas</h1>
+  <figure><img src="../figuras/infraestrutura-cicd.png" alt=""></figure>
+</section>
+
+<!-- 24 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Stack tecnológica</h1>
+  <table class="logos">
+    <tr><th>Função</th><th>Escolha</th></tr>
+    <tr><td>Aplicação</td><td><span class="marca"><span class="par"><img src="assets/logos/nextdotjs.svg" alt="Next.js"><img src="assets/logos/react.svg" alt="React"></span><span>Next.js 15 (App Router) + React</span></span></td></tr>
+    <tr><td>Linguagem</td><td><span class="marca"><img src="assets/logos/typescript.svg" alt="TypeScript"><span>TypeScript</span></span></td></tr>
+    <tr><td>Hospedagem</td><td><span class="marca"><img src="assets/logos/vercel.svg" alt="Vercel"><span>Vercel</span></span></td></tr>
+    <tr><td>Banco de dados</td><td><span class="marca"><img src="assets/logos/postgresql.svg" alt="PostgreSQL"><span>PostgreSQL</span></span></td></tr>
+    <tr><td>Banco gerenciado</td><td><span class="marca"><img src="assets/logos/neon.svg" alt="Neon"><span>Neon — branch por pull request</span></span></td></tr>
+    <tr><td>Acesso a dados</td><td><span class="marca"><img src="assets/logos/prisma.svg" alt="Prisma"><span>Prisma ORM</span></span></td></tr>
+    <tr><td>Interface</td><td><span class="marca"><span class="par"><img src="assets/logos/tailwindcss.svg" alt="Tailwind CSS"><img src="assets/logos/shadcnui.svg" alt="shadcn/ui"></span><span>Tailwind CSS e shadcn/ui</span></span></td></tr>
+    <tr><td>Ambiente local</td><td><span class="marca"><img src="assets/logos/docker.svg" alt="Docker"><span>Docker</span></span></td></tr>
+  </table>
+</section>
+
+<!-- 25 ---------------------------------------------------------------->
+<section class="slide">
+  <p class="pai">Arquitetura</p>
+  <h1>Monorepo</h1>
+  <div class="arvore">
+    <code>aquario/</code><span class="obs"></span>
+    <code><span class="g">├── </span><span class="d">src/</span></code><span class="obs"></span>
+    <code><span class="g">│   ├── </span><span class="d foco">app/</span></code><span class="obs">App Router — páginas <b>e</b> rotas de serviço na mesma árvore</span>
+    <code><span class="g">│   │   ├── </span><span class="d">entidades/  </span><span class="g">…</span></code><span class="obs">páginas</span>
+    <code><span class="g">│   │   └── </span><span class="d foco">api/</span></code><span class="obs">rotas de serviço: entidades, projetos, auth, search…</span>
+    <code><span class="g">│   │</span></code><span class="obs"></span>
+    <code><span class="g">│   ├── </span><span class="d">components/</span></code><span class="obs">interface — pages/, shared/, ui/</span>
+    <code><span class="g">│   ├── </span><span class="d foco">lib/</span></code><span class="obs"></span>
+    <code><span class="g">│   │   ├── </span><span class="d">client/</span></code><span class="obs">roda no navegador — hooks e chamadas de API</span>
+    <code><span class="g">│   │   ├── </span><span class="d">server/</span></code><span class="obs">roda no servidor — repositórios, serviços, container de DI</span>
+    <code><span class="g">│   │   └── </span><span class="d">shared/</span></code><span class="obs">os dois lados — tipos, validação Zod, constantes</span>
+    <code><span class="g">│   └── </span><span class="d">analytics/</span></code><span class="obs">catálogo tipado de 37 eventos</span>
+    <code><span class="g">│</span></code><span class="obs"></span>
+    <code><span class="g">├── </span><span class="d">prisma/</span></code><span class="obs">schema, migrações e seed</span>
+    <code><span class="g">├── </span><span class="d">content/</span></code><span class="obs">conteúdo versionado — 3 submódulos e 3 pastas</span>
+    <code><span class="g">└── </span><span class="d">.github/workflows/</span></code><span class="obs">nove workflows de CI/CD</span>
+  </div>
+</section>
+
+<!-- 26 ---------------------------------------------------------------->
+<section class="slide cheia">
+  <p class="pai">Arquitetura</p>
+  <h1>Camadas e integrações</h1>
+  <figure><img src="../figuras/arquitetura-sistema.png" alt=""></figure>
+</section>
+
+<!-- 27 ---------------------------------------------------------------->
+<section class="slide cheia">
+  <h1>Modelo de dados <span class="nota" style="font-size:19px">— 23 tabelas, 9 enums</span></h1>
+  <figure><img src="../figuras/modelo-dados.png" alt=""></figure>
+</section>
+
+<!-- 28 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Infraestrutura</h1>
+  <p class="lead">Quatro ambientes: local, <i>preview</i> por PR, staging e
+     produção.</p>
+  <table class="logos">
+    <tr><th>Serviço</th><th>Papel</th></tr>
+    <tr><td><span class="marca"><img src="assets/logos/neon.svg" alt="Neon"><span>Neon</span></span></td><td>banco gerenciado, com branch isolada por PR</td></tr>
+    <tr><td><span class="marca"><img src="assets/logos/githubactions.svg" alt="GitHub Actions"><span>GitHub Actions</span></span></td><td>nove workflows de teste, qualidade e deploy</td></tr>
+    <tr><td><span class="marca"><img src="assets/logos/resend.svg" alt="Resend"><span>Resend</span></span></td><td>e-mail transacional — verificação de conta (RNF03)</td></tr>
+    <tr><td><span class="marca"><img src="assets/logos/posthog.svg" alt="PostHog"><span>PostHog</span></span></td><td>analytics de produto</td></tr>
+    <tr><td><span class="marca"><img src="assets/logos/uptimerobot.png" alt="UptimeRobot"><span>UptimeRobot</span></span></td><td>monitoramento do endpoint de saúde (RNF01)</td></tr>
+    <tr><td><span class="marca"><img src="assets/logos/scalar.svg" alt="Scalar"><span>Scalar</span></span></td><td>documentação interativa da API</td></tr>
+  </table>
+  <p class="nota" style="margin-top:14px">Todos em plano gratuito na escala do
+     Aquário. Único custo: o registro do domínio.</p>
+</section>
+
+<!-- 29 ---------------------------------------------------------------->
+<section class="slide">
+  <p class="pai">Instrumentação do analytics</p>
+  <h1>Um catálogo de eventos tipado</h1>
+  <p>A instrumentação foi tratada como parte do produto. São
+     <b class="azul">37 eventos</b> declarados em um catálogo único, com nome e
+     propriedades verificados em tempo de compilação — um evento divergente não
+     compila.</p>
+  <p>Os eventos acompanham fluxos, e não apenas telas: o onboarding registra
+     separadamente a exibição, a conclusão e o salto de cada etapa.</p>
+  <p class="nota">Sobre esse catálogo é montado o painel público de métricas,
+     com pouco mais de vinte visualizações — alcance, uso e permanência.</p>
+</section>
+
+<!-- 30 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <p class="pai">Instrumentação do analytics</p>
+  <h1>O painel público de métricas</h1>
+  <figure><img src="../figuras/posthog-metricas.png" alt="">
+    <figcaption>aquarioufpb.com/metrics — o mesmo painel do PostHog, aberto à
+      comunidade. Dados pessoais borrados na captura</figcaption></figure>
+</section>
+
+<!-- 31 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Testes</h1>
+  <div class="nums">
+    <div><div class="num">38</div><div>arquivos de teste</div></div>
+    <div><div class="num">384</div><div>casos</div></div>
+    <div><div class="num">137</div><div>suítes</div></div>
+    <div><div class="num">78,8%</div><div>cobertura de linhas</div></div>
+  </div>
+  <p class="nota" style="text-align:center">Jest para unidade e componentes,
+     Vitest para integração. A cada contribuição o pipeline roda ESLint,
+     Prettier e verificação de tipos.</p>
+</section>
+
+<!-- 32 ---------------------------------------------------------------->
+<section class="slide divisor"><h1>5 — Resultados e Discussão</h1></section>
+
+<!-- 33 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Entidades</h1>
+  <figure><img src="../figuras/diretorio-entidades.png" alt="">
+    <figcaption>As 44 entidades do CI — laboratórios, grupos, ligas, atléticas — com filtro e busca</figcaption></figure>
+</section>
+
+<!-- 34 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Entidades — página individual</h1>
+  <figure><img src="../figuras/pagina-entidade-2.png" alt="">
+    <figcaption>Membros ativos com seus cargos e projetos publicados — cada entidade mantém o próprio perfil</figcaption></figure>
+</section>
+
+<!-- 35 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Projetos</h1>
+  <figure><img src="../figuras/projetos.png" alt="">
+    <figcaption>Portfólio público da produção do CI, com autoria múltipla entre usuários e entidades</figcaption></figure>
+</section>
+
+<!-- 36 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Guias</h1>
+  <figure><img src="../figuras/guias.png" alt="">
+    <figcaption>Orientações sobre os cursos em três níveis — guia, seção e subseção — com navegação lateral</figcaption></figure>
+</section>
+
+<!-- 37 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Grades curriculares</h1>
+  <figure><img src="../figuras/grades-curriculares.png" alt="">
+    <figcaption>Marcar disciplina como concluída ou cursando, com desbloqueio transitivo de pré-requisitos</figcaption></figure>
+</section>
+
+<!-- 38 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Minhas disciplinas</h1>
+  <figure><img src="../figuras/minhas-disciplinas.png" alt="">
+    <figcaption>Calendário semanal montado a partir das turmas do SACI — turmas, horários e salas</figcaption></figure>
+</section>
+
+<!-- 39 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Calendário acadêmico</h1>
+  <figure><img src="../figuras/calendario-academico.png" alt="">
+    <figcaption>O calendário oficial da UFPB em lista ou visão mensal, sem caçar o PDF institucional</figcaption></figure>
+</section>
+
+<!-- 40 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Mapas</h1>
+  <figure><img src="../figuras/mapas.png" alt="">
+    <figcaption>Prédios e salas do CI, cada um com seletor de andar</figcaption></figure>
+</section>
+
+<!-- 41 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Perfil de usuário</h1>
+  <figure><img src="../figuras/perfil-usuario.png" alt="">
+    <figcaption>Página pública em slug único: Projetos, Entidades e a Linha do Tempo de vínculos</figcaption></figure>
+</section>
+
+<!-- 42 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Administração</h1>
+  <figure><img src="../figuras/pagina-adm.png" alt="">
+    <figcaption>Painel de moderação: usuários e papéis, entidades, calendário
+      e demais conteúdos que exigem curadoria</figcaption></figure>
+</section>
+
+
+<!-- 43 ---------------------------------------------------------------->
+<section class="slide cheia tela">
+  <h1>Está no ar</h1>
+  <p class="url" style="margin:0 0 14px">aquarioufpb.com</p>
+  <figure><img src="../figuras/landing-page.png" alt=""></figure>
+</section>
+
+<!-- 44 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>O acervo deixou de ser uma estrutura vazia</h1>
+  <div class="nums">
+    <div><div class="num">157</div><div>contas</div></div>
+    <div><div class="num">44</div><div>entidades</div></div>
+    <div><div class="num">80</div><div>projetos</div></div>
+    <div><div class="num">239</div><div>vínculos de membros</div></div>
+  </div>
+  <p class="nota" style="text-align:center;max-width:70ch;margin:22px auto 0">
+     As 44 entidades cobrem laboratórios, grupos, ligas, empresas, centros
+     acadêmicos e atlética — e <b class="azul">todas</b> receberam ao menos um
+     acesso no período.</p>
+</section>
+
+<!-- 45 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>O resultado que mais importa</h1>
+  <table style="width:86%">
+    <tr><th>Funcionalidade</th><th class="n">Usuários</th><th class="n">Registros</th></tr>
+    <tr><td>Calendário de turmas do semestre</td><td class="n">129 (82,2%)</td><td class="n">956</td></tr>
+    <tr><td>Acompanhamento de grade curricular</td><td class="n">121 (77,1%)</td><td class="n">2.423</td></tr>
+    <tr><td>Vínculo com ao menos uma entidade</td><td class="n">93 (59,2%)</td><td class="n">239</td></tr>
+  </table>
+  <p style="margin-top:22px">A maioria não apenas visitou:
+     <b class="azul">registrou dados pessoais</b> de progresso acadêmico e
+     organização do semestre.</p>
+  <p class="nota">Média de 20 disciplinas por estudante — e são etapas que
+     podiam ser puladas com um clique.</p>
+</section>
+
+<!-- 46 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Alcance</h1>
+  <div class="nums">
+    <div><div class="num">2.026</div><div>sessões únicas</div></div>
+    <div><div class="num">6.976</div><div>visualizações</div></div>
+    <div><div class="num">3,4</div><div>páginas por sessão</div></div>
+    <div><div class="num">710</div><div>identificadores na<br>semana de pico</div></div>
+  </div>
+  <p class="nota" style="text-align:center;margin-top:22px">O pico coincide com
+     o início do período letivo, em março. 86,3% dos acessos vêm do Brasil;
+     João Pessoa é a cidade com maior volume.</p>
+</section>
+
+<!-- 47 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Verificação dos requisitos funcionais</h1>
+  <p style="max-width:none;font-size:19px;margin-bottom:0">Cada requisito foi
+     conferido por <b class="azul">execução no ambiente de produção</b>, e não
+     por inspeção de código.</p>
+  <div class="checks">
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF01</span>Entidades</span></div>
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF02</span>Projetos</span></div>
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF03</span>Guias</span></div>
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF04</span>Grades curriculares</span></div>
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF05</span>Minhas disciplinas</span></div>
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF06</span>Calendário acadêmico</span></div>
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF07</span>Mapas</span></div>
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF08</span>Busca global</span></div>
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF09</span>Cadastro e onboarding</span></div>
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF10</span>Perfil de usuário</span></div>
+    <div class="ck"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#17914F"/><path d="M7.4 12.4l3.1 3.1 6.1-6.6" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="rf">RF11</span>Administração</span></div>
+    <div class="ck total">11 / 11 conforme</div>
+  </div>
+  <p class="nota" style="max-width:none;margin-top:20px">Onde cabia, incluiu-se
+     o <b>caso negativo</b> — aquele em que o comportamento correto é recusar:
+     cadastro com domínio não institucional → HTTP 400 · rota administrativa
+     sem permissão → HTTP 401 · projeto em rascunho para visitante anônimo →
+     não listado.</p>
+</section>
+
+<!-- 48 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Verificação dos requisitos não funcionais</h1>
+  <table style="width:92%">
+    <tr><th>Requisito</th><th>Meta</th><th>Situação</th></tr>
+    <tr><td>RNF01 Disponibilidade</td><td>≥ 99%</td><td>Atendido (43 dos 219 dias)</td></tr>
+    <tr><td>RNF02 Desempenho</td><td>LCP 2,5 s · ≥ 90</td><td><b class="azul">Desktop sim, móvel não</b></td></tr>
+    <tr><td>RNF03 Segurança</td><td>rotas autenticadas</td><td>Atendido</td></tr>
+    <tr><td>RNF04 Manutenibilidade</td><td>cobertura ≥ 70%</td><td>Atendido (78,83%)</td></tr>
+    <tr><td>RNF05 Acessibilidade</td><td>≥ 90</td><td><b class="azul">Parcialmente atendido</b></td></tr>
+    <tr><td>RNF06 Responsividade</td><td>320–1920 px</td><td>Atendido</td></tr>
+  </table>
+  <p class="nota" style="margin-top:14px;max-width:none">Desempenho e
+     acessibilidade por <b>Google Lighthouse</b> (WCAG 2.2) sobre produção:
+     quatro páginas × dois perfis × três execuções, reportando a mediana.
+     Disponibilidade por <b>UptimeRobot</b>, sondando <span
+     style="font-family:ui-monospace,monospace">/api/health</span>; cobertura
+     pelo <b>relatório do Jest</b>; segurança por requisição direta às rotas.
+     Em móvel a pontuação ficou entre 67 e 75 nas quatro páginas, com LCP de
+     5,6 s a 13,0 s — deficiência sistêmica, não caso isolado.</p>
+</section>
+
+<!-- 49 ---------------------------------------------------------------->
+<section class="slide cheia">
+  <h1>Evolução do sistema</h1>
+  <div class="grafico">
+    <p class="destaque"><b>27 releases</b> no período<br>
+       fevereiro concentra dois terços<br>
+       — estabilização e três <i>minors</i></p>
+    <div class="barras">
+    <div class="barra"><span class="v">2</span><div class="haste" style="height:11.1%"></div></div>
+    <div class="barra zero"><span class="v">0</span><div class="haste" style="height:0.0%"></div></div>
+    <div class="barra"><span class="v">18</span><div class="haste" style="height:100.0%"></div></div>
+    <div class="barra"><span class="v">1</span><div class="haste" style="height:5.6%"></div></div>
+    <div class="barra"><span class="v">3</span><div class="haste" style="height:16.7%"></div></div>
+    <div class="barra"><span class="v">3</span><div class="haste" style="height:16.7%"></div></div>
+    <div class="barra"><span class="v">1</span><div class="haste" style="height:5.6%"></div></div>
+    </div>
+    <div class="eixo"><span>Dez</span><span>Jan</span><span>Fev</span><span>Mar</span><span>Abr</span><span>Mai</span><span>Jun</span></div>
+  </div>
+</section>
+
+<!-- 50 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Comunidade</h1>
+  <div class="grade-num">
+    <div class="item-num"><svg viewBox="0 0 24 24" fill="none" stroke="#3171B8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3.4"/><path d="M2.6 20a6.4 6.4 0 0 1 12.8 0"/><path d="M16.4 5.4a3.4 3.4 0 0 1 0 6.5"/><path d="M18 14.4A6.4 6.4 0 0 1 21.4 20"/></svg><div class="num">17</div><div class="rot">contribuidores</div></div>
+    <div class="item-num"><svg viewBox="0 0 24 24" fill="none" stroke="#3171B8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="4"/><path d="M2 12h6M16 12h6"/></svg><div class="num">643</div><div class="rot">commits</div></div>
+    <div class="item-num"><svg viewBox="0 0 24 24" fill="none" stroke="#3171B8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2.6 3.4h8.2l10.6 10.6-7.4 7.4L3.4 10.8V4.2z"/><circle cx="7.4" cy="7.4" r="1.5"/></svg><div class="num">27</div><div class="rot">releases</div></div>
+    <div class="item-num"><svg viewBox="0 0 24 24" fill="#3171B8" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.6l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.62l-5.88 3.09 1.12-6.55L2.48 9.52l6.58-.96z"/></svg><div class="num">82</div><div class="rot">estrelas no GitHub</div></div>
+    <div class="item-num"><svg viewBox="0 0 24 24" fill="none" stroke="#3171B8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="6.6" cy="4.6" r="2.4"/><circle cx="17.4" cy="4.6" r="2.4"/><circle cx="12" cy="19.4" r="2.4"/><path d="M6.6 7v2.2a2.6 2.6 0 0 0 2.6 2.6h5.6a2.6 2.6 0 0 0 2.6-2.6V7"/><path d="M12 11.8V17"/></svg><div class="num">32</div><div class="rot">forks</div></div>
+    <div class="item-num"><img src="assets/logos/instagram.svg" alt="Instagram"><div class="num">402</div><div class="rot">seguidores no Instagram</div></div>
+  </div>
+  <p class="nota" style="text-align:center;margin-top:26px;max-width:none">E o
+     projeto seguiu sob outros mantenedores depois da minha saída.</p>
+</section>
+
+<!-- 51 ---------------------------------------------------------------->
+<section class="slide divisor"><h1>6 — Conclusão</h1></section>
+
+<!-- 52 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Considerações finais</h1>
+  <p class="lead" style="margin-bottom:26px">O problema que motivou o projeto
+     foi endereçado de forma concreta: o ecossistema do CI está reunido em um
+     único ponto de acesso, <b class="azul">em produção e em uso</b>.</p>
+  <div class="cols c3">
+    <div><h2>Acervo</h2>
+      <p>Deixou de ser estrutura vazia: 157 contas e as 44 entidades do CI,
+         <b class="azul">todas com acesso registrado</b> — a visibilidade não
+         ficou restrita às já conhecidas.</p></div>
+    <div><h2>Uso</h2>
+      <p>A evidência mais forte não é o volume de acessos, e sim a
+         <b class="azul">maioria dos cadastrados registrando dados pessoais</b>
+         para acompanhar o progresso acadêmico: ação deliberada e persistente.</p></div>
+    <div><h2>Colaboração</h2>
+      <p>17 contribuidores e um ritmo de releases sustentado ao longo de todo o
+         período — <b class="azul">o projeto passou a receber contribuições da
+         comunidade do CI</b>, e não só da equipe que o começou.</p></div>
+  </div>
+  <p class="nota" style="margin-top:20px;max-width:none">Tecnicamente, o trabalho mostra que
+     uma equipe universitária voluntária consegue construir e manter uma
+     plataforma web moderna — e sustentá-la depois da saída de quem a começou.</p>
+</section>
+
+<!-- 53 ---------------------------------------------------------------->
+<section class="slide cheia">
+  <p class="pai">O problema, agora</p>
+  <h1>Ingressantes</h1>
+  <p style="max-width:none;font-size:18.5px;margin-bottom:6px">Chegavam sem saber o que existia. Hoje descobrem o que há no centro, quem está em cada grupo e o que essas pessoas produzem — sem depender de conhecer alguém.</p>
+  <div class="trio">
+    <figure><img src="../figuras/pagina-grupos-e-ligas.png" alt="">
+      <figcaption><b>O que existe</b>grupos, ligas, centros acadêmicos e atlética, num diretório só</figcaption></figure>
+    <figure><img src="../figuras/pagina-laboratorio-membros.png" alt="">
+      <figcaption><b>Quem está lá</b>os membros de cada entidade, com nome e curso</figcaption></figure>
+    <figure><img src="../figuras/pagina-projeto.png" alt="">
+      <figcaption><b>O que produzem</b>cada projeto com seus autores, período, tags e links</figcaption></figure>
+  </div>
+</section>
+
+<!-- 54 ---------------------------------------------------------------->
+<section class="slide cheia">
+  <p class="pai">O problema, agora</p>
+  <h1>Veteranos</h1>
+  <p style="max-width:none;font-size:18.5px;margin-bottom:6px">Já conheciam o centro, mas organizavam o semestre com ferramentas dispersas — ou com nenhuma. As que faltavam agora existem, no mesmo lugar.</p>
+  <div class="trio">
+    <figure><img src="../figuras/pagina-grade-selecionada.png" alt="">
+      <figcaption><b>A grade</b>marcar uma disciplina acende a cadeia de pré-requisitos que ela abre</figcaption></figure>
+    <figure><img src="../figuras/pagina-calendario-em-uso.png" alt="">
+      <figcaption><b>O semestre</b>o calendário montado a partir das turmas do SACI</figcaption></figure>
+    <figure><img src="../figuras/pagina-mapas-2.png" alt="">
+      <figcaption><b>O prédio</b>que laboratório ocupa cada sala, andar por andar</figcaption></figure>
+  </div>
+</section>
+
+<!-- 55 ---------------------------------------------------------------->
+<section class="slide cheia">
+  <p class="pai">O problema, agora</p>
+  <h1>Público externo</h1>
+  <p style="max-width:none;font-size:18.5px;margin-bottom:6px">Não tinha por onde olhar. Hoje o que o CI produz — e com quem produz — é público e navegável por quem nunca pisou no centro.</p>
+  <div class="trio">
+    <figure><img src="../figuras/pagina-empresas.png" alt="">
+      <figcaption><b>As parcerias</b>as empresas ligadas ao centro, listadas e buscáveis</figcaption></figure>
+    <figure><img src="../figuras/pagina-empresa-perfil.png" alt="">
+      <figcaption><b>Cada parceira</b>perfil próprio, com as pessoas e os projetos que mantém</figcaption></figure>
+    <figure><img src="../figuras/pagina-projetos.png" alt="">
+      <figcaption><b>A vitrine</b>a produção do centro reunida, com filtro e busca</figcaption></figure>
+  </div>
+</section>
+
+<!-- 56 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Limitações</h1>
+  <ul style="font-size:19px">
+    <li>O problema foi caracterizado pela <b class="azul">observação do autor</b>,
+        sem levantamento empírico junto aos estudantes.</li>
+    <li>Avalia-se <b class="azul">adoção</b>, medida por uso efetivo — não
+        usabilidade. Não houve SUS nem teste com usuários.</li>
+    <li>O desempenho móvel é deficiência medida e não resolvida.</li>
+    <li>A plataforma <b class="azul">não publica política de privacidade nem
+        termos de uso</b> — o usuário não sabe quais dados são coletados nem
+        por quanto tempo. Condição para adequação plena à LGPD.</li>
+  </ul>
+  <p class="nota">Estudo de caso único: os resultados não são estatisticamente
+     generalizáveis.</p>
+</section>
+
+<!-- 57 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Trabalhos futuros</h1>
+  <ul style="font-size:19px">
+    <li><b class="azul">Avaliação com usuários</b> — questionário de
+        caracterização e SUS. É a evolução de maior valor.</li>
+    <li><b class="azul">Desempenho móvel</b> — eliminar JavaScript não
+        utilizado, revisar cache, meta de LCP em 2,5 s.</li>
+    <li><b class="azul">Política de privacidade e termos de uso</b> — condição
+        para adequação plena à LGPD.</li>
+    <li><b class="azul">Integração com o SIGAA</b> — eliminaria o cadastro
+        separado e o preenchimento manual do perfil.</li>
+    <li><b class="azul">Expandir para a UFPB inteira</b> — a estrutura de
+        campus, centros e cursos já é genérica; o passo seguinte é abrir a
+        outros centros além do CI.</li>
+    <li><b class="azul">Apoiar a replicação em outras universidades</b> —
+        o guia já existe no repositório; falta acompanhar quem adota.</li>
+    <li>Módulo de Vagas e expansão dos guias por curso.</li>
+  </ul>
+</section>
+
+<!-- 58 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>O que fica</h1>
+  <ul class="lead" style="line-height:1.9;margin-top:20px">
+    <li>Uma plataforma <b class="azul">em produção</b>, aberta sob licença MIT,
+        com custo de infraestrutura zero.</li>
+    <li>O ecossistema do CI <b class="azul">visível e navegável</b> —
+        44 entidades, todas acessadas.</li>
+    <li>Um projeto que <b class="azul">continua sem mim</b>, mantido pela
+        comunidade do próprio centro.</li>
+  </ul>
+  <p class="url url-grande" style="margin-top:34px">aquarioufpb.com</p>
+  <p class="nota" style="text-align:center;margin:10px auto 0;max-width:none">
+     github.com/aquario-ufpb/aquario · MIT</p>
+</section>
+
+<!-- 59 ---------------------------------------------------------------->
+<section class="slide">
+  <h1>Referências</h1>
+  <ul class="refs">
+    <li>BRASIL. <b>Lei n.º 13.709, de 14 de agosto de 2018</b> — Lei Geral de
+        Proteção de Dados Pessoais. Brasília: Presidência da República, 2018.</li>
+    <li>FOGEL, K. <b>Producing Open Source Software: How to Run a Successful
+        Free Software Project</b>. Sebastopol: O'Reilly Media, 2017.</li>
+    <li>GOOGLE. <b>Lighthouse</b>. 2026.</li>
+    <li>JAFARI, A.; SHEEHAN, M. (org.). <b>Designing Portals: Opportunities and
+        Challenges</b>. Hershey: IGI Global, 2003.</li>
+    <li>MACHADO, G. <i>et al.</i> SIAC: Sistema de Apoio ao Calouro com
+        Integração ao Chatbot MICA. In: <b>SBSI</b>, 2023.</li>
+    <li>OSI. <b>The Open Source Definition</b>. Open Source Initiative, 2024.</li>
+    <li>RAYMOND, E. S. <b>The Cathedral and the Bazaar</b>. Sebastopol:
+        O'Reilly Media, 1999.</li>
+    <li>SELIVON, M.; BEZ, J. L.; TONIN, N. URI Online Judge Academic:
+        Integração e Consolidação da Ferramenta no Processo de
+        Ensino/Aprendizagem.</li>
+    <li>VELOZO, I. F. S. <i>et al.</i> Acompanhamento de Calouros em Sistemas
+        de Informação: Integração e Suporte no Início da Vida Universitária.
+        In: <b>WEI</b>, 2025.</li>
+    <li>W3C. <b>Web Content Accessibility Guidelines (WCAG) 2.2</b>. W3C
+        Recommendation, 2023.</li>
+  </ul>
+  <p class="nota" style="margin-top:12px">Lista completa na monografia — 39
+     referências.</p>
+</section>
+
+<!-- 60 ---------------------------------------------------------------->
+<section class="slide" style="align-items:center;justify-content:center">
+  <h1 style="font-size:64px;margin:0">Obrigado</h1>
+  <p class="nota" style="margin-top:18px">Perguntas</p>
+</section>
+
+</div>
+
+<div id="hud"><span id="atual">1</span> / <span id="total">–</span></div>
+<div id="ajuda">clique ou ← → navegar · clique direito volta · F tela cheia · P imprimir</div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let i=0;
+document.getElementById('total').textContent=slides.length;
+
+function mostra(n){
+  i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,k)=>s.classList.toggle('on',k===i));
+  document.getElementById('atual').textContent=i+1;
+  location.hash=i+1;
+}
+function ajusta(){
+  const p=document.getElementById('palco');
+  const e=Math.min(innerWidth/1280,innerHeight/720)*0.96;
+  p.style.transform='scale('+e+')';
+}
+addEventListener('resize',ajusta);
+addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();mostra(i+1)}
+  if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();mostra(i-1)}
+  if(e.key==='Home')mostra(0);
+  if(e.key==='End')mostra(slides.length-1);
+  if(e.key.toLowerCase()==='f'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
+  if(e.key.toLowerCase()==='p'){print()}
+});
+// mouse: esquerdo avanca, direito volta.
+// so navega uma vez por clique — segurar o botao nao repete;
+// o gatilho so rearma quando o botao e solto.
+let armado=true;
+function navegaMouse(n){ if(!armado) return; armado=false; mostra(n) }
+addEventListener('mouseup',()=>{ armado=true });
+addEventListener('mouseleave',()=>{ armado=true });
+addEventListener('click',e=>{ if(!e.target.closest('a')) navegaMouse(i+1) });
+addEventListener('contextmenu',e=>{ e.preventDefault(); navegaMouse(i-1) });
+ajusta();
+mostra(location.hash?parseInt(location.hash.slice(1))-1:0);
+</script>
