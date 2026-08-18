@@ -318,19 +318,28 @@ export function CurriculumGraph({
     });
   }, []);
 
-  // Bulk-add every obrigatória of a period to the selection. Only touches the
+  // Bulk-toggle every obrigatória of a period in the selection: adds them all, or
+  // removes them all once every one is already selected. Only touches the
   // selection — persisting still goes through the save button.
-  const handleSelectPeriodoObrigatorias = useCallback((discs: GradeDisciplinaNode[]) => {
+  const handleTogglePeriodoObrigatorias = useCallback((discs: GradeDisciplinaNode[]) => {
+    const obrigatoriaIds = discs.filter(d => d.natureza === "OBRIGATORIA").map(d => d.disciplinaId);
     setSelectionSet(prev => {
       const next = new Set(prev);
-      for (const d of discs) {
-        if (d.natureza === "OBRIGATORIA") {
-          next.add(d.disciplinaId);
+      const allSelected = obrigatoriaIds.every(id => prev.has(id));
+      for (const id of obrigatoriaIds) {
+        if (allSelected) {
+          next.delete(id);
+        } else {
+          next.add(id);
         }
       }
       return next;
     });
   }, []);
+
+  /** Whether every obrigatória of a period is already in the selection */
+  const areAllObrigatoriasSelected = (discs: GradeDisciplinaNode[]) =>
+    discs.filter(d => d.natureza === "OBRIGATORIA").every(d => selectionSet.has(d.disciplinaId));
 
   const handleContainerClick = useCallback(() => {
     setClickedCode(null);
@@ -737,7 +746,8 @@ export function CurriculumGraph({
                   {selectionMode && discs.some(d => d.natureza === "OBRIGATORIA") && (
                     <button
                       type="button"
-                      onClick={() => handleSelectPeriodoObrigatorias(discs)}
+                      aria-pressed={areAllObrigatoriasSelected(discs)}
+                      onClick={() => handleTogglePeriodoObrigatorias(discs)}
                       className={cn(
                         "min-h-11 shrink-0 rounded-md px-2 text-xs font-medium text-aquario-primary",
                         "touch-manipulation transition-colors hover:bg-accent",
@@ -745,7 +755,9 @@ export function CurriculumGraph({
                         "motion-reduce:transition-none"
                       )}
                     >
-                      Marcar obrigatórias
+                      {areAllObrigatoriasSelected(discs)
+                        ? "Desmarcar obrigatórias"
+                        : "Marcar obrigatórias"}
                     </button>
                   )}
                 </div>
@@ -905,6 +917,10 @@ export function CurriculumGraph({
             {periods.map(([periodo, discs]) => {
               const canBulkSelect =
                 !isExporting && selectionMode && discs.some(d => d.natureza === "OBRIGATORIA");
+              const allObrigatoriasSelected = areAllObrigatoriasSelected(discs);
+              const bulkActionLabel = allObrigatoriasSelected
+                ? "Desmarcar todas as obrigatórias"
+                : "Marcar todas as obrigatórias";
 
               return (
                 <div key={periodo} className="relative z-[1] flex flex-col gap-4 w-[105px]">
@@ -913,10 +929,11 @@ export function CurriculumGraph({
                       <TooltipTrigger asChild>
                         <button
                           type="button"
-                          aria-label={`Marcar todas as obrigatórias do ${periodo}º período`}
+                          aria-pressed={allObrigatoriasSelected}
+                          aria-label={`${bulkActionLabel} do ${periodo}º período`}
                           onClick={e => {
                             e.stopPropagation();
-                            handleSelectPeriodoObrigatorias(discs);
+                            handleTogglePeriodoObrigatorias(discs);
                           }}
                           className={cn(
                             "w-full text-center text-xs font-semibold text-muted-foreground py-2 rounded-md",
@@ -931,7 +948,7 @@ export function CurriculumGraph({
                       </TooltipTrigger>
                       <TooltipPortal>
                         <TooltipContent side="top" className="text-xs">
-                          Marcar todas as obrigatórias
+                          {bulkActionLabel}
                         </TooltipContent>
                       </TooltipPortal>
                     </Tooltip>

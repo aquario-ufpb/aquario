@@ -69,7 +69,8 @@ const ESTRUTURAS = makeDisciplina({
 
 const DISCIPLINAS = [CALCULO, PROGRAMACAO, LIBRAS, ESTRUTURAS];
 
-const PERIODO_1_LABEL = "Marcar todas as obrigatórias do 1º período";
+const PERIODO_1_MARCAR = "Marcar todas as obrigatórias do 1º período";
+const PERIODO_1_DESMARCAR = "Desmarcar todas as obrigatórias do 1º período";
 
 function renderGraph(props: Partial<React.ComponentProps<typeof CurriculumGraph>> = {}) {
   return render(
@@ -112,7 +113,7 @@ describe("CurriculumGraph — seleção por período", () => {
   it("seleciona todas as obrigatórias do período, sem tocar nas optativas", () => {
     renderGraph();
 
-    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_LABEL }));
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
 
     expect(selectionStateOf("Cálculo I")).toBe("true");
     expect(selectionStateOf("Introdução à Programação")).toBe("true");
@@ -123,7 +124,7 @@ describe("CurriculumGraph — seleção por período", () => {
   it("inclui as disciplinas já concluídas na seleção", () => {
     renderGraph({ completedDisciplinaIds: new Set(["disc-calculo"]) });
 
-    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_LABEL }));
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
 
     expect(selectionStateOf("Cálculo I")).toBe("true");
     expect(selectionStateOf("Introdução à Programação")).toBe("true");
@@ -133,7 +134,7 @@ describe("CurriculumGraph — seleção por período", () => {
     const onSaveWithStatus = jest.fn();
     renderGraph({ onSaveWithStatus, allowedSaveStatuses: ["concluida"] });
 
-    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_LABEL }));
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /Salvar como Concluídas \(2\)/ }));
@@ -146,10 +147,54 @@ describe("CurriculumGraph — seleção por período", () => {
     );
   });
 
+  it("tira as obrigatórias da seleção no segundo clique", () => {
+    renderGraph();
+
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
+
+    // O cabeçalho passa a oferecer a ação inversa
+    const desmarcar = screen.getByRole("button", { name: PERIODO_1_DESMARCAR });
+    expect(desmarcar).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(desmarcar);
+
+    expect(selectionStateOf("Cálculo I")).toBe("false");
+    expect(selectionStateOf("Introdução à Programação")).toBe("false");
+    expect(screen.getByRole("button", { name: PERIODO_1_MARCAR })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
+  });
+
+  it("mantém as obrigatórias de outros períodos ao desmarcar um período", () => {
+    renderGraph();
+
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Marcar todas as obrigatórias do 2º período" })
+    );
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_DESMARCAR }));
+
+    expect(selectionStateOf("Cálculo I")).toBe("false");
+    expect(selectionStateOf("Estruturas de Dados")).toBe("true");
+  });
+
+  it("desmarca também pela lista mobile", () => {
+    renderGraph({ mobileLayout: "list" });
+
+    const mobileList = within(screen.getByTestId("mobile-curriculum-list"));
+    fireEvent.click(mobileList.getAllByRole("button", { name: "Marcar obrigatórias" })[0]);
+    fireEvent.click(mobileList.getAllByRole("button", { name: "Desmarcar obrigatórias" })[0]);
+
+    expect(mobileList.getByRole("button", { name: /Cálculo I/ }).getAttribute("aria-pressed")).toBe(
+      "false"
+    );
+  });
+
   it("não transforma o cabeçalho do período em botão fora do modo seleção", () => {
     renderGraph({ selectionMode: false });
 
-    expect(screen.queryByRole("button", { name: PERIODO_1_LABEL })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: PERIODO_1_MARCAR })).not.toBeInTheDocument();
     expect(screen.getByText("1° Período")).toBeInTheDocument();
   });
 
@@ -171,7 +216,7 @@ describe("CurriculumGraph — ações de salvar conforme a seleção", () => {
       completedDisciplinaIds: new Set(["disc-calculo", "disc-programacao"]),
     });
 
-    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_LABEL }));
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
 
     expect(screen.getByRole("button", { name: /Desmarcar \(2\)/ })).toBeEnabled();
     expect(screen.queryByRole("button", { name: /Salvar/ })).not.toBeInTheDocument();
@@ -184,7 +229,7 @@ describe("CurriculumGraph — ações de salvar conforme a seleção", () => {
       onSaveWithStatus,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_LABEL }));
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /Desmarcar \(2\)/ }));
@@ -197,11 +242,11 @@ describe("CurriculumGraph — ações de salvar conforme a seleção", () => {
   it("mantém o menu com várias opções quando a seleção é mista", () => {
     renderGraph({ completedDisciplinaIds: new Set(["disc-calculo"]) });
 
-    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_LABEL }));
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
 
     // Mais de uma ação possível: continua sendo o dropdown genérico "Salvar"
     expect(screen.getByRole("button", { name: /Salvar \(2\)/ })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /^Desmarcar/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Desmarcar \(/ })).not.toBeInTheDocument();
   });
 
   it("desabilita o salvar quando a seleção não admite nenhuma ação permitida", () => {
@@ -211,7 +256,7 @@ describe("CurriculumGraph — ações de salvar conforme a seleção", () => {
       completedDisciplinaIds: new Set(["disc-calculo", "disc-programacao"]),
     });
 
-    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_LABEL }));
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
 
     expect(screen.getByRole("button", { name: /Salvar como Concluídas \(2\)/ })).toBeDisabled();
   });

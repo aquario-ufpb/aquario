@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Grade curricular – seleção em lote por período**: No modo seleção, o cabeçalho de cada período vira um botão que marca de uma vez todas as obrigatórias daquele período (tooltip "Marcar todas as obrigatórias" no desktop, botão "Marcar obrigatórias" na lista mobile). Vale tanto para `/grades-curriculares` quanto para os passos "Disciplinas Concluídas" e "Cursando" do onboarding.
+- **Grade curricular – seleção em lote por período**: No modo seleção, o cabeçalho de cada período vira um botão que marca de uma vez todas as obrigatórias daquele período e, num segundo clique, as tira da seleção (tooltip "Marcar/Desmarcar todas as obrigatórias" no desktop, botão equivalente na lista mobile). Vale tanto para `/grades-curriculares` quanto para os passos "Disciplinas Concluídas" e "Cursando" do onboarding.
 - **Admin Audit Logs**: Nova tabela `AuditLog`, API interna `GET /api/admin/audit-logs` e tela `/admin/audit-logs` para `MASTER_ADMIN` acompanhar ações administrativas sensíveis. Mutações administrativas de usuários agora registram criação/mescla de facade, alteração de role, edição de centro/curso/slug e deleção.
 
 ### Changed
