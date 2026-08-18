@@ -16,6 +16,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipPortal,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Save,
   CheckCircle2,
   ListChecks,
@@ -35,6 +42,16 @@ import { cn } from "@/lib/client/utils";
 
 /** Export modes — union type prevents invalid state combinations */
 type ExportMode = "progress" | "blank" | null;
+
+/** Statuses a bulk selection can be saved as */
+type SaveStatus = "concluida" | "cursando" | "none";
+
+/** Labels used when a single save action is rendered as a direct button */
+const SAVE_STATUS_LABEL: Record<SaveStatus, string> = {
+  concluida: "Salvar como Concluídas",
+  cursando: "Salvar como Cursando",
+  none: "Desmarcar",
+};
 
 function computeHighlightChain(
   code: string,
@@ -86,16 +103,13 @@ type CurriculumGraphProps = {
   cursandoDisciplinaIds?: Set<string>;
   selectionMode?: boolean;
   onSelectionModeChange?: (enabled: boolean) => void;
-  onSaveWithStatus?: (
-    disciplinaIds: string[],
-    status: "concluida" | "cursando" | "none"
-  ) => void | Promise<void>;
-  onMarcarDisciplina?: (disciplinaId: string, status: "concluida" | "cursando" | "none") => void;
+  onSaveWithStatus?: (disciplinaIds: string[], status: SaveStatus) => void | Promise<void>;
+  onMarcarDisciplina?: (disciplinaId: string, status: SaveStatus) => void;
   isSaving?: boolean;
   isLoggedIn?: boolean;
   activeSemestreNome?: string;
   /** Restrict which save statuses appear in the dropdown. If only one, renders a direct button. */
-  allowedSaveStatuses?: ("concluida" | "cursando" | "none")[];
+  allowedSaveStatuses?: SaveStatus[];
   /** Use a period-by-period list on small screens while preserving the full graph on desktop. */
   mobileLayout?: "graph" | "list";
 };
@@ -304,12 +318,26 @@ export function CurriculumGraph({
     });
   }, []);
 
+  // Bulk-add every obrigatória of a period to the selection. Only touches the
+  // selection — persisting still goes through the save button.
+  const handleSelectPeriodoObrigatorias = useCallback((discs: GradeDisciplinaNode[]) => {
+    setSelectionSet(prev => {
+      const next = new Set(prev);
+      for (const d of discs) {
+        if (d.natureza === "OBRIGATORIA") {
+          next.add(d.disciplinaId);
+        }
+      }
+      return next;
+    });
+  }, []);
+
   const handleContainerClick = useCallback(() => {
     setClickedCode(null);
   }, []);
 
   const handleSaveAs = useCallback(
-    async (status: "concluida" | "cursando" | "none") => {
+    async (status: SaveStatus) => {
       if (selectionSet.size === 0) {
         return;
       }
@@ -319,17 +347,25 @@ export function CurriculumGraph({
     [selectionSet, onSaveWithStatus]
   );
 
-  // Check if any selected disciplines already have a status (for "Desmarcar" option)
-  const hasMarkedInSelection = useMemo(() => {
-    if (selectionSet.size === 0) {
-      return false;
-    }
+  // Status breakdown of the current selection — drives which save actions make sense
+  const selectionStatus = useMemo(() => {
+    let concluidas = 0;
+    let cursando = 0;
+    let marcadas = 0;
     for (const id of selectionSet) {
-      if (completedDisciplinaIds?.has(id) || cursandoDisciplinaIds?.has(id)) {
-        return true;
+      const isConcluida = !!completedDisciplinaIds?.has(id);
+      const isCursando = !!cursandoDisciplinaIds?.has(id);
+      if (isConcluida) {
+        concluidas++;
+      }
+      if (isCursando) {
+        cursando++;
+      }
+      if (isConcluida || isCursando) {
+        marcadas++;
       }
     }
-    return false;
+    return { total: selectionSet.size, concluidas, cursando, marcadas };
   }, [selectionSet, completedDisciplinaIds, cursandoDisciplinaIds]);
 
   // Compute locked disciplines (prereqs not all completed or selected)
@@ -421,34 +457,47 @@ export function CurriculumGraph({
     ? !!cursandoDisciplinaIds?.has(selectedDisc.disciplinaId)
     : false;
 
-  // Determine which save statuses to show
-  const statuses = allowedSaveStatuses ?? ["concluida", "cursando", "none"];
-  const showConcluida = statuses.includes("concluida");
-  const showCursando = statuses.includes("cursando");
-  const showDesmarcar = statuses.includes("none") && hasMarkedInSelection;
-  const singleStatus = statuses.length === 1 ? statuses[0] : null;
+  // Determine which save statuses to show. A status is hidden when it would be a
+  // no-op for the current selection: "Concluídas" when everything picked is already
+  // concluded, "Cursando" when everything picked already has some status.
+  const statuses: SaveStatus[] = allowedSaveStatuses ?? ["concluida", "cursando", "none"];
+  const hasSelection = selectionStatus.total > 0;
+  const showConcluida =
+    statuses.includes("concluida") &&
+    (!hasSelection || selectionStatus.concluidas < selectionStatus.total);
+  const showCursando =
+    statuses.includes("cursando") &&
+    (!hasSelection || selectionStatus.marcadas < selectionStatus.total);
+  const showDesmarcar = statuses.includes("none") && selectionStatus.marcadas > 0;
 
-  const singleStatusLabel =
-    singleStatus === "concluida"
-      ? "Salvar como Concluídas"
-      : singleStatus === "cursando"
-        ? "Salvar como Cursando"
-        : null;
+  const visibleStatuses = [
+    showConcluida ? "concluida" : null,
+    showCursando ? "cursando" : null,
+    showDesmarcar ? "none" : null,
+  ].filter((status): status is SaveStatus => status !== null);
+
+  // A lone option is rendered as a direct button instead of a one-item dropdown
+  const singleStatus = visibleStatuses.length === 1 ? visibleStatuses[0] : null;
+  // Nothing left to do with this selection — e.g. only concluded disciplines picked
+  // in a flow that doesn't allow unmarking (onboarding). Keep the button, inert.
+  const noActionAvailable = hasSelection && visibleStatuses.length === 0;
+  const directStatus = singleStatus ?? statuses[0] ?? "concluida";
 
   const usesMobileList = mobileLayout === "list";
 
   const SaveActions = () => {
-    if (singleStatus && singleStatusLabel) {
+    if (singleStatus || noActionAvailable) {
+      const DirectIcon = directStatus === "none" ? XCircle : Save;
       return (
         <Button
           size="sm"
-          disabled={isSaving || selectionSet.size === 0}
+          disabled={isSaving || !hasSelection || noActionAvailable}
           className="min-h-11 gap-1.5 md:min-h-9"
-          onClick={() => void handleSaveAs(singleStatus)}
+          onClick={() => singleStatus && void handleSaveAs(singleStatus)}
         >
-          <Save aria-hidden="true" className="w-3.5 h-3.5" />
-          {isSaving ? "Salvando…" : singleStatusLabel}
-          {selectionSet.size > 0 && ` (${selectionSet.size})`}
+          <DirectIcon aria-hidden="true" className="w-3.5 h-3.5" />
+          {isSaving ? "Salvando…" : SAVE_STATUS_LABEL[directStatus]}
+          {hasSelection && ` (${selectionStatus.total})`}
         </Button>
       );
     }
@@ -457,12 +506,12 @@ export function CurriculumGraph({
         <DropdownMenuTrigger asChild>
           <Button
             size="sm"
-            disabled={isSaving || selectionSet.size === 0}
+            disabled={isSaving || !hasSelection}
             className="min-h-11 gap-1.5 md:min-h-9"
           >
             <Save aria-hidden="true" className="w-3.5 h-3.5" />
             {isSaving ? "Salvando…" : "Salvar"}
-            {selectionSet.size > 0 && ` (${selectionSet.size})`}
+            {hasSelection && ` (${selectionStatus.total})`}
             <ChevronDown className="w-3 h-3 ml-1" />
           </Button>
         </DropdownMenuTrigger>
@@ -492,400 +541,461 @@ export function CurriculumGraph({
   };
 
   return (
-    <div>
-      {/* Toolbar */}
-      <div
-        className={cn(
-          "flex items-center justify-between mb-4 flex-wrap gap-4",
-          usesMobileList && "hidden md:flex"
-        )}
-      >
-        <div>
-          <h2 className="text-lg font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">{cursoNome}</h2>
-          <p className="text-sm text-muted-foreground">Currículo: {curriculoCodigo}</p>
-        </div>
-        <div className="flex items-center gap-6 flex-wrap">
-          {isLoggedIn && (completedDisciplinaIds?.size || cursandoDisciplinaIds?.size) ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" disabled={isExporting} className="gap-2">
-                  <Download className="w-4 h-4" />
-                  {isExporting ? "Exportando..." : "Exportar Imagem"}
-                  <ChevronDown className="w-3 h-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => void handleExportImage("progress")}>
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-green-600" />
-                  Com meu progresso
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => void handleExportImage("blank")}>
-                  <BookOpen className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-                  Grade limpa
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void handleExportImage("blank")}
-              disabled={isExporting}
-              className="gap-2"
-            >
-              <Download className="w-4 h-4" />
-              {isExporting ? "Exportando..." : "Exportar Imagem"}
-            </Button>
+    <TooltipProvider delayDuration={200}>
+      <div>
+        {/* Toolbar */}
+        <div
+          className={cn(
+            "flex items-center justify-between mb-4 flex-wrap gap-4",
+            usesMobileList && "hidden md:flex"
           )}
-          {isLoggedIn && onSelectionModeChange && (
-            <Button
-              variant={selectionMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleSelectionModeChange(!selectionMode)}
-              className="gap-2"
-            >
-              {selectionMode ? (
-                <>
-                  <X className="w-4 h-4" /> Sair do modo seleção
-                </>
-              ) : (
-                <>
-                  <ListChecks className="w-4 h-4" /> Selecionar cadeiras
-                </>
-              )}
-            </Button>
-          )}
-          {hasOptativas && (
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="show-optativas"
-                checked={showOptativas}
-                onCheckedChange={checked => setShowOptativas(checked === true)}
-              />
-              <Label htmlFor="show-optativas" className="text-sm cursor-pointer">
-                Mostrar optativas
-              </Label>
-            </div>
-          )}
-          {/* Legend */}
-          <div className="flex items-center gap-3 text-xs flex-wrap">
-            <span className="flex items-center gap-1.5">
-              <span className="w-0.5 h-3 rounded-full bg-blue-400 dark:bg-blue-500" />
-              Obrigatória
-            </span>
-            {showOptativas && (
-              <>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-0.5 h-3 rounded-full bg-amber-400 dark:bg-amber-500" />
-                  Optativa
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-0.5 h-3 rounded-full bg-teal-400 dark:bg-teal-500" />
-                  Complementar
-                </span>
-              </>
-            )}
-            {isLoggedIn && (
-              <>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-0.5 h-3 rounded-full bg-green-500 dark:bg-green-400" />
-                  Concluída
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-0.5 h-3 rounded-full bg-purple-500 dark:bg-purple-400" />
-                  Cursando
-                </span>
-                <span className="flex items-center gap-1">
-                  <Lock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-                  Trancada
-                </span>
-              </>
-            )}
-            {selectionMode && (
-              <span className="flex items-center gap-1">
-                <CircleDot className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                Selecionada
-              </span>
-            )}
+        >
+          <div>
+            <h2 className="text-lg font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">
+              {cursoNome}
+            </h2>
+            <p className="text-sm text-muted-foreground">Currículo: {curriculoCodigo}</p>
           </div>
-        </div>
-      </div>
-
-      {/* Progress bar + Selection action */}
-      {selectionMode && progressStats && (
-        <div className="mb-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10">
-          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-            <div className="flex flex-wrap items-center gap-4 text-sm">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <strong>{progressStats.completedObrigatorias}</strong>/{progressStats.obrigatorias}{" "}
-                obrigatórias ({progressStats.percentObrigatorias}%)
-              </span>
-              <span className="text-muted-foreground">
-                {progressStats.totalHorasCompleted}h / {progressStats.totalHoras}h
-              </span>
-              {progressStats.totalCompleted > progressStats.completedObrigatorias && (
-                <span className="text-muted-foreground">
-                  +{progressStats.totalCompleted - progressStats.completedObrigatorias} optativa(s)
-                </span>
-              )}
-            </div>
-            {onSaveWithStatus && <SaveActions />}
-          </div>
-          <Progress value={progressStats.percentObrigatorias} className="h-2" />
-        </div>
-      )}
-
-      {usesMobileList && (
-        <div className="space-y-5 md:hidden" data-testid="mobile-curriculum-list">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="break-words text-base font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">
-                {cursoNome}
-              </h3>
-              <p className="text-sm text-muted-foreground">Currículo: {curriculoCodigo}</p>
-            </div>
-            {hasOptativas && (
-              <button
-                type="button"
-                aria-pressed={showOptativas}
-                onClick={() => setShowOptativas(current => !current)}
-                className={cn(
-                  "min-h-11 rounded-md border px-3 py-2 text-sm font-medium",
-                  "touch-manipulation transition-colors hover:bg-accent",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  "motion-reduce:transition-none",
-                  showOptativas &&
-                    "border-aquario-primary bg-aquario-primary/10 text-aquario-primary"
+          <div className="flex items-center gap-6 flex-wrap">
+            {isLoggedIn && (completedDisciplinaIds?.size || cursandoDisciplinaIds?.size) ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={isExporting} className="gap-2">
+                    <Download className="w-4 h-4" />
+                    {isExporting ? "Exportando..." : "Exportar Imagem"}
+                    <ChevronDown className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => void handleExportImage("progress")}>
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-green-600" />
+                    Com meu progresso
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => void handleExportImage("blank")}>
+                    <BookOpen className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+                    Grade limpa
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void handleExportImage("blank")}
+                disabled={isExporting}
+                className="gap-2"
+              >
+                <Download className="w-4 h-4" />
+                {isExporting ? "Exportando..." : "Exportar Imagem"}
+              </Button>
+            )}
+            {isLoggedIn && onSelectionModeChange && (
+              <Button
+                variant={selectionMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSelectionModeChange(!selectionMode)}
+                className="gap-2"
+              >
+                {selectionMode ? (
+                  <>
+                    <X className="w-4 h-4" /> Sair do modo seleção
+                  </>
+                ) : (
+                  <>
+                    <ListChecks className="w-4 h-4" /> Selecionar cadeiras
+                  </>
                 )}
-              >
-                {showOptativas ? "Ocultar optativas" : "Mostrar optativas"}
-              </button>
+              </Button>
             )}
+            {hasOptativas && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="show-optativas"
+                  checked={showOptativas}
+                  onCheckedChange={checked => setShowOptativas(checked === true)}
+                />
+                <Label htmlFor="show-optativas" className="text-sm cursor-pointer">
+                  Mostrar optativas
+                </Label>
+              </div>
+            )}
+            {/* Legend */}
+            <div className="flex items-center gap-3 text-xs flex-wrap">
+              <span className="flex items-center gap-1.5">
+                <span className="w-0.5 h-3 rounded-full bg-blue-400 dark:bg-blue-500" />
+                Obrigatória
+              </span>
+              {showOptativas && (
+                <>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-0.5 h-3 rounded-full bg-amber-400 dark:bg-amber-500" />
+                    Optativa
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-0.5 h-3 rounded-full bg-teal-400 dark:bg-teal-500" />
+                    Complementar
+                  </span>
+                </>
+              )}
+              {isLoggedIn && (
+                <>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-0.5 h-3 rounded-full bg-green-500 dark:bg-green-400" />
+                    Concluída
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-0.5 h-3 rounded-full bg-purple-500 dark:bg-purple-400" />
+                    Cursando
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+                    Trancada
+                  </span>
+                </>
+              )}
+              {selectionMode && (
+                <span className="flex items-center gap-1">
+                  <CircleDot className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                  Selecionada
+                </span>
+              )}
+            </div>
           </div>
+        </div>
 
-          <p className="text-sm text-muted-foreground">
-            Selecione as disciplinas na lista, organizadas por período.
-          </p>
+        {/* Progress bar + Selection action */}
+        {selectionMode && progressStats && (
+          <div className="mb-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10">
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-4 text-sm">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <strong>{progressStats.completedObrigatorias}</strong>/
+                  {progressStats.obrigatorias} obrigatórias ({progressStats.percentObrigatorias}%)
+                </span>
+                <span className="text-muted-foreground">
+                  {progressStats.totalHorasCompleted}h / {progressStats.totalHoras}h
+                </span>
+                {progressStats.totalCompleted > progressStats.completedObrigatorias && (
+                  <span className="text-muted-foreground">
+                    +{progressStats.totalCompleted - progressStats.completedObrigatorias}{" "}
+                    optativa(s)
+                  </span>
+                )}
+              </div>
+              {onSaveWithStatus && <SaveActions />}
+            </div>
+            <Progress value={progressStats.percentObrigatorias} className="h-2" />
+          </div>
+        )}
 
-          {periods.map(([periodo, discs]) => (
-            <section
-              key={periodo}
-              aria-labelledby={`mobile-periodo-${periodo}`}
-              className="space-y-2"
-            >
-              <h3
-                id={`mobile-periodo-${periodo}`}
-                className="text-sm font-semibold text-muted-foreground"
+        {usesMobileList && (
+          <div className="space-y-5 md:hidden" data-testid="mobile-curriculum-list">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="break-words text-base font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">
+                  {cursoNome}
+                </h3>
+                <p className="text-sm text-muted-foreground">Currículo: {curriculoCodigo}</p>
+              </div>
+              {hasOptativas && (
+                <button
+                  type="button"
+                  aria-pressed={showOptativas}
+                  onClick={() => setShowOptativas(current => !current)}
+                  className={cn(
+                    "min-h-11 rounded-md border px-3 py-2 text-sm font-medium",
+                    "touch-manipulation transition-colors hover:bg-accent",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    "motion-reduce:transition-none",
+                    showOptativas &&
+                      "border-aquario-primary bg-aquario-primary/10 text-aquario-primary"
+                  )}
+                >
+                  {showOptativas ? "Ocultar optativas" : "Mostrar optativas"}
+                </button>
+              )}
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Selecione as disciplinas na lista, organizadas por período.
+            </p>
+
+            {periods.map(([periodo, discs]) => (
+              <section
+                key={periodo}
+                aria-labelledby={`mobile-periodo-${periodo}`}
+                className="space-y-2"
               >
-                {periodo}º Período
-              </h3>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {discs.map(disc => {
-                  const isSelected = selectionSet.has(disc.disciplinaId);
-                  const isCompleted = !!completedDisciplinaIds?.has(disc.disciplinaId);
-                  const isCursando = !!cursandoDisciplinaIds?.has(disc.disciplinaId);
-
-                  return (
+                <div className="flex items-center justify-between gap-2">
+                  <h3
+                    id={`mobile-periodo-${periodo}`}
+                    className="text-sm font-semibold text-muted-foreground"
+                  >
+                    {periodo}º Período
+                  </h3>
+                  {selectionMode && discs.some(d => d.natureza === "OBRIGATORIA") && (
                     <button
-                      key={disc.id}
                       type="button"
-                      aria-pressed={selectionMode ? isSelected : undefined}
-                      onClick={() => {
-                        if (selectionMode) {
-                          handleToggleSelect(disc.disciplinaId);
-                          return;
-                        }
-                        setSelectedDisc(disc);
-                        setDialogOpen(true);
-                      }}
+                      onClick={() => handleSelectPeriodoObrigatorias(discs)}
                       className={cn(
-                        "min-h-11 w-full rounded-md border bg-card px-3 py-2 text-left",
-                        "touch-manipulation transition-[border-color,background-color,box-shadow]",
-                        "hover:border-aquario-primary/50 hover:bg-accent/50",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                        "motion-reduce:transition-none",
-                        isSelected &&
-                          "border-aquario-primary bg-aquario-primary/10 ring-2 ring-aquario-primary/30"
+                        "min-h-11 shrink-0 rounded-md px-2 text-xs font-medium text-aquario-primary",
+                        "touch-manipulation transition-colors hover:bg-accent",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "motion-reduce:transition-none"
                       )}
                     >
-                      <span className="flex min-w-0 items-start justify-between gap-3">
-                        <span className="min-w-0">
-                          <span className="block break-words text-sm font-medium">{disc.nome}</span>
-                          <span className="block text-xs text-muted-foreground">{disc.codigo}</span>
-                        </span>
-                        {(isCompleted || isCursando || isSelected) && (
-                          <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                            {isSelected ? "Selecionada" : isCompleted ? "Concluída" : "Cursando"}
-                          </span>
-                        )}
-                      </span>
+                      Marcar obrigatórias
                     </button>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
+                  )}
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {discs.map(disc => {
+                    const isSelected = selectionSet.has(disc.disciplinaId);
+                    const isCompleted = !!completedDisciplinaIds?.has(disc.disciplinaId);
+                    const isCursando = !!cursandoDisciplinaIds?.has(disc.disciplinaId);
 
-      {/* Graph container — fixed height, scrollable both axes */}
-      <div
-        ref={scrollWrapperRef}
-        className={cn(
-          "relative overflow-auto rounded-lg border border-slate-200 dark:border-white/10",
-          usesMobileList && "hidden md:block"
+                    return (
+                      <button
+                        key={disc.id}
+                        type="button"
+                        aria-pressed={selectionMode ? isSelected : undefined}
+                        onClick={() => {
+                          if (selectionMode) {
+                            handleToggleSelect(disc.disciplinaId);
+                            return;
+                          }
+                          setSelectedDisc(disc);
+                          setDialogOpen(true);
+                        }}
+                        className={cn(
+                          "min-h-11 w-full rounded-md border bg-card px-3 py-2 text-left",
+                          "touch-manipulation transition-[border-color,background-color,box-shadow]",
+                          "hover:border-aquario-primary/50 hover:bg-accent/50",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                          "motion-reduce:transition-none",
+                          isSelected &&
+                            "border-aquario-primary bg-aquario-primary/10 ring-2 ring-aquario-primary/30"
+                        )}
+                      >
+                        <span className="flex min-w-0 items-start justify-between gap-3">
+                          <span className="min-w-0">
+                            <span className="block break-words text-sm font-medium">
+                              {disc.nome}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              {disc.codigo}
+                            </span>
+                          </span>
+                          {(isCompleted || isCursando || isSelected) && (
+                            <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                              {isSelected ? "Selecionada" : isCompleted ? "Concluída" : "Cursando"}
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
         )}
-        style={{ maxHeight: "70dvh" }}
-        onScroll={measureNodes}
-      >
-        {isExporting && <div className="absolute inset-0 z-50 cursor-wait" />}
+
+        {/* Graph container — fixed height, scrollable both axes */}
         <div
-          ref={containerRef}
-          className={`relative flex gap-8 min-w-max p-3 ${exportMode === "progress" && progressStats ? "pt-16" : isExporting ? "pt-12" : ""}`}
-          onClick={handleContainerClick}
+          ref={scrollWrapperRef}
+          className={cn(
+            "relative overflow-auto rounded-lg border border-slate-200 dark:border-white/10",
+            usesMobileList && "hidden md:block"
+          )}
+          style={{ maxHeight: "70dvh" }}
+          onScroll={measureNodes}
         >
-          {/* Export-only header: course name + stats + legend (visible only during capture) */}
-          {isExporting && (
-            <div className="absolute top-0 left-0 right-0 z-[2] px-3 pt-2 pb-3 min-w-max">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-sm font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">
-                    {cursoNome}
-                  </h2>
-                  <p className="text-[10px] text-muted-foreground">Currículo: {curriculoCodigo}</p>
-                </div>
-                <div className="flex items-center gap-3 text-[10px] flex-wrap">
-                  {/* Natureza legend — always shown */}
-                  <span className="flex items-center gap-1">
-                    <span className="w-0.5 h-2.5 rounded-full bg-blue-400 dark:bg-blue-500" />
-                    Obrigatória
-                  </span>
-                  {/* Uses showOptativas (not hasOptativas) because the exported image
-                      only contains optativas when the toggle is active */}
-                  {showOptativas && (
-                    <>
-                      <span className="flex items-center gap-1">
-                        <span className="w-0.5 h-2.5 rounded-full bg-amber-400 dark:bg-amber-500" />
-                        Optativa
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-0.5 h-2.5 rounded-full bg-teal-400 dark:bg-teal-500" />
-                        Complementar
-                      </span>
-                    </>
-                  )}
-                  {/* Status legend — progress mode */}
-                  {exportMode === "progress" && (
-                    <>
-                      <span className="flex items-center gap-1">
-                        <span className="w-0.5 h-2.5 rounded-full bg-green-500 dark:bg-green-400" />
-                        Concluída
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-0.5 h-2.5 rounded-full bg-purple-500 dark:bg-purple-400" />
-                        Cursando
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-              {/* Progress stats bar — only in progress mode */}
-              {exportMode === "progress" && progressStats && (
-                <div className="mt-1.5 flex items-center gap-3 text-[10px]">
-                  <span className="font-medium text-[#0e3a6c] dark:text-[#C8E6FA]">
-                    {progressStats.completedObrigatorias}/{progressStats.obrigatorias} obrigatórias
-                    ({progressStats.percentObrigatorias}%)
-                  </span>
-                  <span className="text-muted-foreground">
-                    {progressStats.totalHorasCompleted}h / {progressStats.totalHoras}h
-                  </span>
-                  {progressStats.totalCompleted > progressStats.completedObrigatorias && (
-                    <span className="text-muted-foreground">
-                      +{progressStats.totalCompleted - progressStats.completedObrigatorias}{" "}
-                      optativa(s)
+          {isExporting && <div className="absolute inset-0 z-50 cursor-wait" />}
+          <div
+            ref={containerRef}
+            className={`relative flex gap-8 min-w-max p-3 ${exportMode === "progress" && progressStats ? "pt-16" : isExporting ? "pt-12" : ""}`}
+            onClick={handleContainerClick}
+          >
+            {/* Export-only header: course name + stats + legend (visible only during capture) */}
+            {isExporting && (
+              <div className="absolute top-0 left-0 right-0 z-[2] px-3 pt-2 pb-3 min-w-max">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-sm font-semibold text-[#0e3a6c] dark:text-[#C8E6FA]">
+                      {cursoNome}
+                    </h2>
+                    <p className="text-[10px] text-muted-foreground">
+                      Currículo: {curriculoCodigo}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] flex-wrap">
+                    {/* Natureza legend — always shown */}
+                    <span className="flex items-center gap-1">
+                      <span className="w-0.5 h-2.5 rounded-full bg-blue-400 dark:bg-blue-500" />
+                      Obrigatória
                     </span>
-                  )}
-                  <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 max-w-[200px]">
-                    <div
-                      className="h-full rounded-full bg-green-500 dark:bg-green-400"
-                      style={{ width: `${progressStats.percentObrigatorias}%` }}
-                    />
+                    {/* Uses showOptativas (not hasOptativas) because the exported image
+                      only contains optativas when the toggle is active */}
+                    {showOptativas && (
+                      <>
+                        <span className="flex items-center gap-1">
+                          <span className="w-0.5 h-2.5 rounded-full bg-amber-400 dark:bg-amber-500" />
+                          Optativa
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-0.5 h-2.5 rounded-full bg-teal-400 dark:bg-teal-500" />
+                          Complementar
+                        </span>
+                      </>
+                    )}
+                    {/* Status legend — progress mode */}
+                    {exportMode === "progress" && (
+                      <>
+                        <span className="flex items-center gap-1">
+                          <span className="w-0.5 h-2.5 rounded-full bg-green-500 dark:bg-green-400" />
+                          Concluída
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-0.5 h-2.5 rounded-full bg-purple-500 dark:bg-purple-400" />
+                          Cursando
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* SVG edge overlay */}
-          <GraphEdges
-            disciplines={visibleDisciplinas}
-            nodeRefs={nodeRects}
-            containerRect={containerRect}
-            highlightedCodes={isExporting ? null : activeHighlightedCodes}
-            hoveredCode={isExporting ? null : hoveredCode}
-          />
-
-          {/* Period columns */}
-          {periods.map(([periodo, discs]) => (
-            <div key={periodo} className="relative z-[1] flex flex-col gap-4 w-[105px]">
-              <div className="text-center text-xs font-semibold text-muted-foreground py-2 bg-slate-100 dark:bg-slate-800/50 rounded-md">
-                {periodo}° Período
+                {/* Progress stats bar — only in progress mode */}
+                {exportMode === "progress" && progressStats && (
+                  <div className="mt-1.5 flex items-center gap-3 text-[10px]">
+                    <span className="font-medium text-[#0e3a6c] dark:text-[#C8E6FA]">
+                      {progressStats.completedObrigatorias}/{progressStats.obrigatorias}{" "}
+                      obrigatórias ({progressStats.percentObrigatorias}%)
+                    </span>
+                    <span className="text-muted-foreground">
+                      {progressStats.totalHorasCompleted}h / {progressStats.totalHoras}h
+                    </span>
+                    {progressStats.totalCompleted > progressStats.completedObrigatorias && (
+                      <span className="text-muted-foreground">
+                        +{progressStats.totalCompleted - progressStats.completedObrigatorias}{" "}
+                        optativa(s)
+                      </span>
+                    )}
+                    <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 max-w-[200px]">
+                      <div
+                        className="h-full rounded-full bg-green-500 dark:bg-green-400"
+                        style={{ width: `${progressStats.percentObrigatorias}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-              {discs.map(disc => (
-                <DisciplineNode
-                  key={disc.id}
-                  ref={el => setNodeRef(disc.codigo, el)}
-                  discipline={disc}
-                  isHighlighted={
-                    !isExporting &&
-                    activeHighlightedCodes !== null &&
-                    activeHighlightedCodes.has(disc.codigo)
-                  }
-                  isFaded={
-                    !isExporting &&
-                    activeHighlightedCodes !== null &&
-                    !activeHighlightedCodes.has(disc.codigo)
-                  }
-                  isClicked={!isExporting && clickedCode === disc.codigo}
-                  isHovered={!isExporting && canHover && hoveredCode === disc.codigo}
-                  isCompleted={showStatus && !!completedDisciplinaIds?.has(disc.disciplinaId)}
-                  isCursando={showStatus && !!cursandoDisciplinaIds?.has(disc.disciplinaId)}
-                  isLocked={showStatus && lockedCodes.has(disc.codigo)}
-                  selectionMode={!isExporting && selectionMode}
-                  isSelected={!isExporting && selectionSet.has(disc.disciplinaId)}
-                  onClick={e => handleNodeClick(disc, e)}
-                  onMouseEnter={() => {
-                    if (canHover) {
-                      setHoveredCode(disc.codigo);
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    if (canHover) {
-                      setHoveredCode(null);
-                    }
-                  }}
-                  onToggleComplete={() => handleToggleSelect(disc.disciplinaId)}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
+            )}
 
-      {/* Detail dialog */}
-      <DisciplineDetailDialog
-        discipline={selectedDisc}
-        allDisciplines={disciplinas}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        isOwnCourse={isLoggedIn}
-        isCompleted={dialogIsCompleted}
-        isCursando={dialogIsCursando}
-        isMarking={isSaving}
-        activeSemestreNome={activeSemestreNome}
-        onMarcar={onMarcarDisciplina}
-      />
-    </div>
+            {/* SVG edge overlay */}
+            <GraphEdges
+              disciplines={visibleDisciplinas}
+              nodeRefs={nodeRects}
+              containerRect={containerRect}
+              highlightedCodes={isExporting ? null : activeHighlightedCodes}
+              hoveredCode={isExporting ? null : hoveredCode}
+            />
+
+            {/* Period columns */}
+            {periods.map(([periodo, discs]) => {
+              const canBulkSelect =
+                !isExporting && selectionMode && discs.some(d => d.natureza === "OBRIGATORIA");
+
+              return (
+                <div key={periodo} className="relative z-[1] flex flex-col gap-4 w-[105px]">
+                  {canBulkSelect ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label={`Marcar todas as obrigatórias do ${periodo}º período`}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleSelectPeriodoObrigatorias(discs);
+                          }}
+                          className={cn(
+                            "w-full text-center text-xs font-semibold text-muted-foreground py-2 rounded-md",
+                            "bg-slate-100 dark:bg-slate-800/50 cursor-pointer",
+                            "transition-colors hover:bg-slate-200 dark:hover:bg-slate-700/60",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            "motion-reduce:transition-none"
+                          )}
+                        >
+                          {periodo}° Período
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipPortal>
+                        <TooltipContent side="top" className="text-xs">
+                          Marcar todas as obrigatórias
+                        </TooltipContent>
+                      </TooltipPortal>
+                    </Tooltip>
+                  ) : (
+                    <div className="text-center text-xs font-semibold text-muted-foreground py-2 bg-slate-100 dark:bg-slate-800/50 rounded-md">
+                      {periodo}° Período
+                    </div>
+                  )}
+                  {discs.map(disc => (
+                    <DisciplineNode
+                      key={disc.id}
+                      ref={el => setNodeRef(disc.codigo, el)}
+                      discipline={disc}
+                      isHighlighted={
+                        !isExporting &&
+                        activeHighlightedCodes !== null &&
+                        activeHighlightedCodes.has(disc.codigo)
+                      }
+                      isFaded={
+                        !isExporting &&
+                        activeHighlightedCodes !== null &&
+                        !activeHighlightedCodes.has(disc.codigo)
+                      }
+                      isClicked={!isExporting && clickedCode === disc.codigo}
+                      isHovered={!isExporting && canHover && hoveredCode === disc.codigo}
+                      isCompleted={showStatus && !!completedDisciplinaIds?.has(disc.disciplinaId)}
+                      isCursando={showStatus && !!cursandoDisciplinaIds?.has(disc.disciplinaId)}
+                      isLocked={showStatus && lockedCodes.has(disc.codigo)}
+                      selectionMode={!isExporting && selectionMode}
+                      isSelected={!isExporting && selectionSet.has(disc.disciplinaId)}
+                      onClick={e => handleNodeClick(disc, e)}
+                      onMouseEnter={() => {
+                        if (canHover) {
+                          setHoveredCode(disc.codigo);
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        if (canHover) {
+                          setHoveredCode(null);
+                        }
+                      }}
+                      onToggleComplete={() => handleToggleSelect(disc.disciplinaId)}
+                    />
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Detail dialog */}
+        <DisciplineDetailDialog
+          discipline={selectedDisc}
+          allDisciplines={disciplinas}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          isOwnCourse={isLoggedIn}
+          isCompleted={dialogIsCompleted}
+          isCursando={dialogIsCursando}
+          isMarking={isSaving}
+          activeSemestreNome={activeSemestreNome}
+          onMarcar={onMarcarDisciplina}
+        />
+      </div>
+    </TooltipProvider>
   );
 }

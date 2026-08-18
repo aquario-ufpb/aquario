@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Grade curricular – seleção em lote por período**: No modo seleção, o cabeçalho de cada período vira um botão que marca de uma vez todas as obrigatórias daquele período (tooltip "Marcar todas as obrigatórias" no desktop, botão "Marcar obrigatórias" na lista mobile). Vale tanto para `/grades-curriculares` quanto para os passos "Disciplinas Concluídas" e "Cursando" do onboarding.
 - **Admin Audit Logs**: Nova tabela `AuditLog`, API interna `GET /api/admin/audit-logs` e tela `/admin/audit-logs` para `MASTER_ADMIN` acompanhar ações administrativas sensíveis. Mutações administrativas de usuários agora registram criação/mescla de facade, alteração de role, edição de centro/curso/slug e deleção.
 
 ### Changed
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Copa do Mundo 2026**: Removida a página `/copa-do-mundo` e todo o código relacionado — dataset compartilhado (`src/lib/shared/copa/`), componentes (`src/components/pages/copa/`), ilustração `worldcup` da landing, entradas no dropdown "Recursos" da navbar e no hub `/recursos`, snapshot `content/copa-resultados/`, script `scripts/update-copa-results.ts`, a action `Update Copa Results`, a variável `FOOTBALL_DATA_API_KEY` e o host de imagens `flagcdn.com`.
 
 ### Fixed
+- **Grade curricular – ações de salvar sem efeito**: O menu de salvar deixou de oferecer "Marcar como Concluídas" quando toda a seleção já está concluída e "Marcar como Cursando" quando toda a seleção já tem algum status. Sobrando uma única ação, ela vira botão direto em vez de dropdown de um item só.
 - **Permissões de entidade**: Rotas de edição de entidades, cargos e membros agora validam apenas membresias ADMIN ativas, impedindo que admins históricos mantenham permissões.
 - **Privacidade de usuários**: Endpoints públicos/de busca de usuários retornam um DTO sanitizado sem email, papel de plataforma, status de verificação ou permissões.
 - **Cadastro em produção**: Produção sem serviço de email configurado passa a bloquear cadastro em vez de auto-verificar usuários.
