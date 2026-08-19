@@ -318,28 +318,50 @@ export function CurriculumGraph({
     });
   }, []);
 
-  // Bulk-toggle every obrigatória of a period in the selection: adds them all, or
-  // removes them all once every one is already selected. Only touches the
-  // selection — persisting still goes through the save button.
-  const handleTogglePeriodoObrigatorias = useCallback((discs: GradeDisciplinaNode[]) => {
-    const obrigatoriaIds = discs.filter(d => d.natureza === "OBRIGATORIA").map(d => d.disciplinaId);
-    setSelectionSet(prev => {
-      const next = new Set(prev);
-      const allSelected = obrigatoriaIds.every(id => prev.has(id));
-      for (const id of obrigatoriaIds) {
-        if (allSelected) {
-          next.delete(id);
-        } else {
-          next.add(id);
-        }
-      }
-      return next;
-    });
-  }, []);
+  // Saving as "cursando" erases the concluded record of every id sent. Fine when the
+  // user picks a discipline on purpose, not when a shortcut sweeps it in.
+  const bulkSkipsConcluidas =
+    allowedSaveStatuses?.length === 1 && allowedSaveStatuses[0] === "cursando";
 
-  /** Whether every obrigatória of a period is already in the selection */
-  const areAllObrigatoriasSelected = (discs: GradeDisciplinaNode[]) =>
-    discs.filter(d => d.natureza === "OBRIGATORIA").every(d => selectionSet.has(d.disciplinaId));
+  /** Obrigatórias of a period the bulk shortcut is allowed to touch */
+  const getBulkObrigatoriaIds = useCallback(
+    (discs: GradeDisciplinaNode[]) =>
+      discs
+        .filter(d => d.natureza === "OBRIGATORIA")
+        .map(d => d.disciplinaId)
+        .filter(id => !bulkSkipsConcluidas || !completedDisciplinaIds?.has(id)),
+    [bulkSkipsConcluidas, completedDisciplinaIds]
+  );
+
+  // Adds every eligible obrigatória of a period, or removes them all once each one
+  // is selected. Only touches the selection — saving goes through the save button.
+  const handleTogglePeriodoObrigatorias = useCallback(
+    (discs: GradeDisciplinaNode[]) => {
+      const obrigatoriaIds = getBulkObrigatoriaIds(discs);
+      if (obrigatoriaIds.length === 0) {
+        return;
+      }
+      setSelectionSet(prev => {
+        const next = new Set(prev);
+        const allSelected = obrigatoriaIds.every(id => prev.has(id));
+        for (const id of obrigatoriaIds) {
+          if (allSelected) {
+            next.delete(id);
+          } else {
+            next.add(id);
+          }
+        }
+        return next;
+      });
+    },
+    [getBulkObrigatoriaIds]
+  );
+
+  /** Reads the same eligibility list the toggle writes, so the label can't lie */
+  const areAllObrigatoriasSelected = (discs: GradeDisciplinaNode[]) => {
+    const ids = getBulkObrigatoriaIds(discs);
+    return ids.length > 0 && ids.every(id => selectionSet.has(id));
+  };
 
   const handleContainerClick = useCallback(() => {
     setClickedCode(null);
@@ -466,9 +488,8 @@ export function CurriculumGraph({
     ? !!cursandoDisciplinaIds?.has(selectedDisc.disciplinaId)
     : false;
 
-  // Determine which save statuses to show. A status is hidden when it would be a
-  // no-op for the current selection: "Concluídas" when everything picked is already
-  // concluded, "Cursando" when everything picked already has some status.
+  // A status is hidden only when it would be a no-op for the current selection.
+  // Concluída → cursando is not a no-op: it moves the discipline to the active semester.
   const statuses: SaveStatus[] = allowedSaveStatuses ?? ["concluida", "cursando", "none"];
   const hasSelection = selectionStatus.total > 0;
   const showConcluida =
@@ -476,7 +497,7 @@ export function CurriculumGraph({
     (!hasSelection || selectionStatus.concluidas < selectionStatus.total);
   const showCursando =
     statuses.includes("cursando") &&
-    (!hasSelection || selectionStatus.marcadas < selectionStatus.total);
+    (!hasSelection || selectionStatus.cursando < selectionStatus.total);
   const showDesmarcar = statuses.includes("none") && selectionStatus.marcadas > 0;
 
   const visibleStatuses = [
@@ -730,87 +751,100 @@ export function CurriculumGraph({
               Selecione as disciplinas na lista, organizadas por período.
             </p>
 
-            {periods.map(([periodo, discs]) => (
-              <section
-                key={periodo}
-                aria-labelledby={`mobile-periodo-${periodo}`}
-                className="space-y-2"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <h3
-                    id={`mobile-periodo-${periodo}`}
-                    className="text-sm font-semibold text-muted-foreground"
-                  >
-                    {periodo}º Período
-                  </h3>
-                  {selectionMode && discs.some(d => d.natureza === "OBRIGATORIA") && (
-                    <button
-                      type="button"
-                      aria-pressed={areAllObrigatoriasSelected(discs)}
-                      onClick={() => handleTogglePeriodoObrigatorias(discs)}
-                      className={cn(
-                        "min-h-11 shrink-0 rounded-md px-2 text-xs font-medium text-aquario-primary",
-                        "touch-manipulation transition-colors hover:bg-accent",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        "motion-reduce:transition-none"
-                      )}
-                    >
-                      {areAllObrigatoriasSelected(discs)
-                        ? "Desmarcar obrigatórias"
-                        : "Marcar obrigatórias"}
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {discs.map(disc => {
-                    const isSelected = selectionSet.has(disc.disciplinaId);
-                    const isCompleted = !!completedDisciplinaIds?.has(disc.disciplinaId);
-                    const isCursando = !!cursandoDisciplinaIds?.has(disc.disciplinaId);
+            {periods.map(([periodo, discs]) => {
+              const canBulkSelect = selectionMode && getBulkObrigatoriaIds(discs).length > 0;
+              const allObrigatoriasSelected = areAllObrigatoriasSelected(discs);
+              // Visible text stays short; the accessible name adds the period and keeps
+              // the visible text as prefix (WCAG 2.5.3).
+              const bulkActionLabel = allObrigatoriasSelected
+                ? "Desmarcar obrigatórias"
+                : "Marcar obrigatórias";
 
-                    return (
+              return (
+                <section
+                  key={periodo}
+                  aria-labelledby={`mobile-periodo-${periodo}`}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <h3
+                      id={`mobile-periodo-${periodo}`}
+                      className="text-sm font-semibold text-muted-foreground"
+                    >
+                      {periodo}º Período
+                    </h3>
+                    {canBulkSelect && (
                       <button
-                        key={disc.id}
                         type="button"
-                        aria-pressed={selectionMode ? isSelected : undefined}
-                        onClick={() => {
-                          if (selectionMode) {
-                            handleToggleSelect(disc.disciplinaId);
-                            return;
-                          }
-                          setSelectedDisc(disc);
-                          setDialogOpen(true);
-                        }}
+                        aria-pressed={allObrigatoriasSelected}
+                        aria-label={`${bulkActionLabel} do ${periodo}º período`}
+                        onClick={() => handleTogglePeriodoObrigatorias(discs)}
                         className={cn(
-                          "min-h-11 w-full rounded-md border bg-card px-3 py-2 text-left",
-                          "touch-manipulation transition-[border-color,background-color,box-shadow]",
-                          "hover:border-aquario-primary/50 hover:bg-accent/50",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                          "motion-reduce:transition-none",
-                          isSelected &&
-                            "border-aquario-primary bg-aquario-primary/10 ring-2 ring-aquario-primary/30"
+                          "min-h-11 shrink-0 rounded-md px-2 text-xs font-medium text-aquario-primary",
+                          "touch-manipulation transition-colors hover:bg-accent",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          "motion-reduce:transition-none"
                         )}
                       >
-                        <span className="flex min-w-0 items-start justify-between gap-3">
-                          <span className="min-w-0">
-                            <span className="block break-words text-sm font-medium">
-                              {disc.nome}
-                            </span>
-                            <span className="block text-xs text-muted-foreground">
-                              {disc.codigo}
-                            </span>
-                          </span>
-                          {(isCompleted || isCursando || isSelected) && (
-                            <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                              {isSelected ? "Selecionada" : isCompleted ? "Concluída" : "Cursando"}
-                            </span>
-                          )}
-                        </span>
+                        {bulkActionLabel}
                       </button>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {discs.map(disc => {
+                      const isSelected = selectionSet.has(disc.disciplinaId);
+                      const isCompleted = !!completedDisciplinaIds?.has(disc.disciplinaId);
+                      const isCursando = !!cursandoDisciplinaIds?.has(disc.disciplinaId);
+
+                      return (
+                        <button
+                          key={disc.id}
+                          type="button"
+                          aria-pressed={selectionMode ? isSelected : undefined}
+                          onClick={() => {
+                            if (selectionMode) {
+                              handleToggleSelect(disc.disciplinaId);
+                              return;
+                            }
+                            setSelectedDisc(disc);
+                            setDialogOpen(true);
+                          }}
+                          className={cn(
+                            "min-h-11 w-full rounded-md border bg-card px-3 py-2 text-left",
+                            "touch-manipulation transition-[border-color,background-color,box-shadow]",
+                            "hover:border-aquario-primary/50 hover:bg-accent/50",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                            "motion-reduce:transition-none",
+                            isSelected &&
+                              "border-aquario-primary bg-aquario-primary/10 ring-2 ring-aquario-primary/30"
+                          )}
+                        >
+                          <span className="flex min-w-0 items-start justify-between gap-3">
+                            <span className="min-w-0">
+                              <span className="block break-words text-sm font-medium">
+                                {disc.nome}
+                              </span>
+                              <span className="block text-xs text-muted-foreground">
+                                {disc.codigo}
+                              </span>
+                            </span>
+                            {(isCompleted || isCursando || isSelected) && (
+                              <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                                {isSelected
+                                  ? "Selecionada"
+                                  : isCompleted
+                                    ? "Concluída"
+                                    : "Cursando"}
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         )}
 
@@ -916,7 +950,7 @@ export function CurriculumGraph({
             {/* Period columns */}
             {periods.map(([periodo, discs]) => {
               const canBulkSelect =
-                !isExporting && selectionMode && discs.some(d => d.natureza === "OBRIGATORIA");
+                !isExporting && selectionMode && getBulkObrigatoriaIds(discs).length > 0;
               const allObrigatoriasSelected = areAllObrigatoriasSelected(discs);
               const bulkActionLabel = allObrigatoriasSelected
                 ? "Desmarcar todas as obrigatórias"

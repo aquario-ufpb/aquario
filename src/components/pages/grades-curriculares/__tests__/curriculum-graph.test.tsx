@@ -71,6 +71,9 @@ const DISCIPLINAS = [CALCULO, PROGRAMACAO, LIBRAS, ESTRUTURAS];
 
 const PERIODO_1_MARCAR = "Marcar todas as obrigatórias do 1º período";
 const PERIODO_1_DESMARCAR = "Desmarcar todas as obrigatórias do 1º período";
+// A lista mobile mantém o texto curto na tela e leva o período no nome acessível
+const MOBILE_PERIODO_1_MARCAR = "Marcar obrigatórias do 1º período";
+const MOBILE_PERIODO_1_DESMARCAR = "Desmarcar obrigatórias do 1º período";
 
 function renderGraph(props: Partial<React.ComponentProps<typeof CurriculumGraph>> = {}) {
   return render(
@@ -130,6 +133,42 @@ describe("CurriculumGraph — seleção por período", () => {
     expect(selectionStateOf("Introdução à Programação")).toBe("true");
   });
 
+  it("deixa as concluídas de fora do lote quando a única ação é cursando", async () => {
+    // Salvar como cursando apaga a conclusão de todo ID enviado
+    const onSaveWithStatus = jest.fn();
+    renderGraph({
+      allowedSaveStatuses: ["cursando"],
+      completedDisciplinaIds: new Set(["disc-calculo"]),
+      onSaveWithStatus,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
+
+    expect(selectionStateOf("Cálculo I")).toBe("false");
+    expect(selectionStateOf("Introdução à Programação")).toBe("true");
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Salvar como Cursando \(1\)/ }));
+      await Promise.resolve();
+    });
+
+    expect(onSaveWithStatus).toHaveBeenCalledWith(["disc-programacao"], "cursando");
+  });
+
+  it("esconde o botão de lote quando não sobra obrigatória elegível no período", () => {
+    renderGraph({
+      allowedSaveStatuses: ["cursando"],
+      completedDisciplinaIds: new Set(["disc-calculo", "disc-programacao"]),
+    });
+
+    expect(screen.queryByRole("button", { name: PERIODO_1_MARCAR })).not.toBeInTheDocument();
+    expect(screen.getByText("1° Período")).toBeInTheDocument();
+    // O 2º período não tem concluídas, então continua com o atalho
+    expect(
+      screen.getByRole("button", { name: "Marcar todas as obrigatórias do 2º período" })
+    ).toBeInTheDocument();
+  });
+
   it("salva as obrigatórias selecionadas em lote", async () => {
     const onSaveWithStatus = jest.fn();
     renderGraph({ onSaveWithStatus, allowedSaveStatuses: ["concluida"] });
@@ -183,8 +222,8 @@ describe("CurriculumGraph — seleção por período", () => {
     renderGraph({ mobileLayout: "list" });
 
     const mobileList = within(screen.getByTestId("mobile-curriculum-list"));
-    fireEvent.click(mobileList.getAllByRole("button", { name: "Marcar obrigatórias" })[0]);
-    fireEvent.click(mobileList.getAllByRole("button", { name: "Desmarcar obrigatórias" })[0]);
+    fireEvent.click(mobileList.getByRole("button", { name: MOBILE_PERIODO_1_MARCAR }));
+    fireEvent.click(mobileList.getByRole("button", { name: MOBILE_PERIODO_1_DESMARCAR }));
 
     expect(mobileList.getByRole("button", { name: /Cálculo I/ }).getAttribute("aria-pressed")).toBe(
       "false"
@@ -202,29 +241,70 @@ describe("CurriculumGraph — seleção por período", () => {
     renderGraph({ mobileLayout: "list" });
 
     const mobileList = within(screen.getByTestId("mobile-curriculum-list"));
-    fireEvent.click(mobileList.getAllByRole("button", { name: "Marcar obrigatórias" })[0]);
+    fireEvent.click(mobileList.getByRole("button", { name: MOBILE_PERIODO_1_MARCAR }));
 
     expect(mobileList.getByRole("button", { name: /Cálculo I/ }).getAttribute("aria-pressed")).toBe(
       "true"
     );
   });
+
+  it("dá um nome acessível distinto ao botão de lote de cada período no mobile", () => {
+    renderGraph({ mobileLayout: "list" });
+
+    const mobileList = within(screen.getByTestId("mobile-curriculum-list"));
+    const botoes = mobileList.getAllByRole("button", { name: /obrigatórias do \d+º período/ });
+
+    // Um por período, e nenhum nome se repete
+    const nomes = botoes.map(b => b.getAttribute("aria-label"));
+    expect(nomes).toEqual([
+      "Marcar obrigatórias do 1º período",
+      "Marcar obrigatórias do 2º período",
+    ]);
+    // Texto visível é prefixo do nome acessível (WCAG 2.5.3)
+    expect(botoes[0]).toHaveTextContent("Marcar obrigatórias");
+  });
 });
 
 describe("CurriculumGraph — ações de salvar conforme a seleção", () => {
-  it("oferece apenas Desmarcar quando tudo que está selecionado já é concluído", () => {
+  it("mantém Cursando disponível quando a seleção só tem concluídas", () => {
+    // Caso de quem vai pagar a cadeira de novo
+    renderGraph({
+      allowedSaveStatuses: ["cursando"],
+      completedDisciplinaIds: new Set(["disc-calculo", "disc-programacao"]),
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Cálculo I" }));
+    fireEvent.click(screen.getByRole("button", { name: "Introdução à Programação" }));
+
+    expect(screen.getByRole("button", { name: /Salvar como Cursando \(2\)/ })).toBeEnabled();
+  });
+
+  it("não colapsa em Desmarcar quando a seleção concluída ainda admite Cursando", () => {
     renderGraph({
       completedDisciplinaIds: new Set(["disc-calculo", "disc-programacao"]),
     });
 
     fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
 
-    expect(screen.getByRole("button", { name: /Desmarcar \(2\)/ })).toBeEnabled();
-    expect(screen.queryByRole("button", { name: /Salvar/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Salvar \(2\)/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Desmarcar \(/ })).not.toBeInTheDocument();
+  });
+
+  it("esconde Cursando quando tudo que está selecionado já está cursando", () => {
+    renderGraph({
+      allowedSaveStatuses: ["cursando"],
+      cursandoDisciplinaIds: new Set(["disc-calculo", "disc-programacao"]),
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: PERIODO_1_MARCAR }));
+
+    expect(screen.getByRole("button", { name: /Salvar como Cursando \(2\)/ })).toBeDisabled();
   });
 
   it("desmarca em lote a partir do botão direto", async () => {
     const onSaveWithStatus = jest.fn();
     renderGraph({
+      allowedSaveStatuses: ["none"],
       completedDisciplinaIds: new Set(["disc-calculo", "disc-programacao"]),
       onSaveWithStatus,
     });
