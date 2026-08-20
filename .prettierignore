@@ -106,5 +106,8 @@ src/Tests & Examples - Dev/
 # Content folder (submodules, external data - separate formatting)
 content/
 
+# TCC materials (slides and assets of the defense, not application source)
+tcc/
+
 # Markdown files (documentation)
 *.md
