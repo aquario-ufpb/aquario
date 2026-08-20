@@ -65,7 +65,9 @@ function MiniAvatar({
       <div
         className={`relative h-6 w-6 shrink-0 rounded-md overflow-hidden border-2 border-background bg-muted ${className}`}
       >
-        {urlFotoPerfil && <Image src={urlFotoPerfil} alt={nome} fill className="object-cover" />}
+        {urlFotoPerfil && (
+          <Image src={urlFotoPerfil} alt={nome} fill unoptimized className="object-cover" />
+        )}
       </div>
     );
   }
