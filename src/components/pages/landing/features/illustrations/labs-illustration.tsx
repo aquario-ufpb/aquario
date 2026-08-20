@@ -181,6 +181,7 @@ export function LabsIllustration({ labs, appearance = "underwater" }: LabsIllust
                       fill
                       sizes="32px"
                       loading="eager"
+                      unoptimized
                       className="object-cover"
                     />
                   ) : (
