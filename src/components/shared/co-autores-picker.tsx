@@ -105,6 +105,7 @@ export function CoAutoresPicker({
                     src={u.urlFotoPerfil || getDefaultAvatarUrl(u.id, u.nome, u.eFacade)}
                     alt={u.nome}
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                 </div>
@@ -137,7 +138,13 @@ export function CoAutoresPicker({
               >
                 <div className="relative w-8 h-8 rounded-md overflow-hidden border bg-muted shrink-0">
                   {e.imagePath && (
-                    <Image src={e.imagePath} alt={e.name} fill className="object-cover" />
+                    <Image
+                      src={e.imagePath}
+                      alt={e.name}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">

@@ -317,6 +317,7 @@ export default function ProjetoDetailClient({ slug, initialData }: Props) {
                               src={colaborador.urlFotoPerfil}
                               alt={colaborador.nome}
                               fill
+                              unoptimized
                               className="object-cover"
                             />
                           )}

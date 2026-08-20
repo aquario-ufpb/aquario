@@ -198,6 +198,7 @@ function AddMemberFormContent({ onMemberAdded }: { onMemberAdded?: () => void })
                             }
                             alt={user.nome}
                             fill
+                            unoptimized
                             className="object-cover"
                           />
                         </div>

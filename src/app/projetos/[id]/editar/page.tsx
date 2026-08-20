@@ -513,6 +513,7 @@ export default function EditarProjetoPage() {
                                   src={ent.imagePath}
                                   alt={ent.nome}
                                   fill
+                                  unoptimized
                                   className="object-cover"
                                 />
                               )}

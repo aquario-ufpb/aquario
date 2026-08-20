@@ -429,6 +429,7 @@ export default function NovoProjetoPage() {
                                   src={ent.imagePath}
                                   alt={ent.nome}
                                   fill
+                                  unoptimized
                                   className="object-cover"
                                 />
                               )}
