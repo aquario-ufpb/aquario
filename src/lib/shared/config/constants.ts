@@ -35,6 +35,7 @@ export const ENDPOINTS = {
   MERGE_FACADE_USER: "/usuarios/merge-facade",
   USUARIO_ONBOARDING_ME: "/usuarios/me/onboarding",
   USUARIO_PERIODO_ME: "/usuarios/me/periodo",
+  SIGAA_REAUTH_ME: "/usuarios/me/sigaa/reauth",
 
   // Admin CRUD
   CAMPUS: "/campus",

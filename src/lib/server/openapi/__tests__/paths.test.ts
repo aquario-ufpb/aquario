@@ -98,6 +98,12 @@ describe("paths registry sanity checks", () => {
     });
   });
 
+  describe("sigaa", () => {
+    it("registers the reauthentication operation", () => {
+      expect(operations.has("post /usuarios/me/sigaa/reauth")).toBe(true);
+    });
+  });
+
   describe("entidades", () => {
     it("registers the core entidades operations", () => {
       const expected: OperationKey[] = [
