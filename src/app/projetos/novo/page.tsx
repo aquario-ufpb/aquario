@@ -414,6 +414,7 @@ export default function NovoProjetoPage() {
                               src={userAvatarUrl}
                               alt={usuario.nome}
                               fill
+                              unoptimized
                               className="object-cover"
                             />
                           </div>
@@ -443,7 +444,13 @@ export default function NovoProjetoPage() {
                 ) : (
                   <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
                     <div className="relative w-5 h-5 rounded-full overflow-hidden border">
-                      <Image src={userAvatarUrl} alt={usuario.nome} fill className="object-cover" />
+                      <Image
+                        src={userAvatarUrl}
+                        alt={usuario.nome}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
                     </div>
                     <span className="truncate">{usuario.nome}</span>
                   </div>
