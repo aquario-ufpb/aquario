@@ -25,6 +25,7 @@ import {
   type SigaaSnapshotCandidate,
   type UsuarioId,
 } from "@/lib/server/services/sigaa/storage.types";
+import { matchesVersionedSigaaCourseAlias } from "@/lib/server/services/sigaa/course-aliases";
 
 const LEASE_SECONDS = 240;
 const RETENTION_SECONDS = 90 * 24 * 60 * 60;
@@ -89,10 +90,10 @@ const isMatriculaUniqueViolation = (error: unknown): boolean => {
 export class PrismaSigaaRepository implements ISigaaRepository {
   constructor(
     private readonly database: PrismaClient = prisma,
-    private readonly courseMatches: (profileCourse: string, sigaaCourse: string) => boolean = (
-      profileCourse,
-      sigaaCourse
-    ) => normalizeCourseIdentity(profileCourse) === normalizeCourseIdentity(sigaaCourse)
+    private readonly courseMatches: (
+      profileCourse: string,
+      sigaaCourse: string
+    ) => boolean = matchesVersionedSigaaCourseAlias
   ) {}
 
   consumeRateLimit(input: {

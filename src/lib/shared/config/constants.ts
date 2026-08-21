@@ -36,6 +36,7 @@ export const ENDPOINTS = {
   USUARIO_ONBOARDING_ME: "/usuarios/me/onboarding",
   USUARIO_PERIODO_ME: "/usuarios/me/periodo",
   SIGAA_REAUTH_ME: "/usuarios/me/sigaa/reauth",
+  SIGAA_SYNC_ME: "/usuarios/me/sigaa/sync",
 
   // Admin CRUD
   CAMPUS: "/campus",

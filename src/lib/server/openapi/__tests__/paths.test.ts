@@ -99,8 +99,17 @@ describe("paths registry sanity checks", () => {
   });
 
   describe("sigaa", () => {
-    it("registers the reauthentication operation", () => {
-      expect(operations.has("post /usuarios/me/sigaa/reauth")).toBe(true);
+    it("registers the private SIGAA lifecycle", () => {
+      const expected: OperationKey[] = [
+        "post /usuarios/me/sigaa/reauth",
+        "post /usuarios/me/sigaa/sync",
+        "get /usuarios/me/academico",
+        "post /usuarios/me/sigaa/disconnect",
+        "delete /usuarios/me/sigaa/data",
+      ];
+      for (const operation of expected) {
+        expect(operations.has(operation)).toBe(true);
+      }
     });
   });
 

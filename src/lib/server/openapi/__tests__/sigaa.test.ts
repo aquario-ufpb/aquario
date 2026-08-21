@@ -31,5 +31,19 @@ describe("SIGAA OpenAPI contract", () => {
     expect(schemas).toHaveProperty("SigaaReauthResponse");
     expect(JSON.stringify(schemas.ErrorCode)).toContain("SIGAA_REAUTH_FAILED");
     expect(JSON.stringify(schemas.ErrorCode)).toContain("SIGAA_REAUTH_UNAVAILABLE");
+    expect(schemas).toHaveProperty("SigaaImportedAcademicState");
+    expect(JSON.stringify(schemas.ErrorCode)).toContain("SIGAA_SYNC_BUSY");
+  });
+
+  it("documents the private synchronization lifecycle", () => {
+    const paths = getOpenApiDocument().paths;
+
+    expect(paths?.["/usuarios/me/sigaa/sync"]?.post).toBeDefined();
+    expect(paths?.["/usuarios/me/academico"]?.get).toBeDefined();
+    expect(paths?.["/usuarios/me/sigaa/disconnect"]?.post).toBeDefined();
+    expect(paths?.["/usuarios/me/sigaa/data"]?.delete).toBeDefined();
+    expect(JSON.stringify(paths?.["/usuarios/me/sigaa/sync"]?.post?.requestBody)).not.toContain(
+      "connectorUrl"
+    );
   });
 });

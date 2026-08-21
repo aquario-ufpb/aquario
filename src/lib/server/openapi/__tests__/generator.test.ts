@@ -86,10 +86,9 @@ describe("getOpenApiDocument", () => {
     const doc = getOpenApiDocument();
     const paths = Object.keys(doc.paths ?? {});
 
-    // The aquario has 59 total route.ts files under src/app/api/,
-    // of which 3 live under /dev and must NEVER appear in the public spec.
-    // This leaves 57 documented paths.
-    expect(paths.length).toBe(57);
+    // Keep this count explicit so an undocumented or accidentally public route
+    // changes the API review surface instead of passing unnoticed.
+    expect(paths.length).toBe(61);
   });
 
   it("does not leak any /dev/* endpoints into the public spec", () => {
