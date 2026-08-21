@@ -45,6 +45,7 @@ export function EntidadeHeroSection({ entidade, canEdit, onEditClick }: Entidade
               src={entidade.imagePath || "/placeholder.png"}
               alt={`Logo de ${entidade.name}`}
               fill
+              unoptimized
             />
           </div>
         </div>

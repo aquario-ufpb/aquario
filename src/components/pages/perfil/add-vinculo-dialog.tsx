@@ -160,6 +160,7 @@ export function AddVinculoDialog({ open, onOpenChange }: AddVinculoDialogProps) 
                                 src={entidade.imagePath}
                                 alt={entidade.name}
                                 fill
+                                unoptimized
                                 className="object-cover"
                               />
                             </div>

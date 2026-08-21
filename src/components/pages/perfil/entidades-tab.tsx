@@ -135,6 +135,7 @@ export function EntidadesTab({
                       src={entidade.urlFoto}
                       alt={entidade.nome}
                       fill
+                      unoptimized
                       className="object-cover"
                     />
                   </div>
@@ -203,6 +204,7 @@ export function EntidadesTab({
                         src={entidade.urlFoto}
                         alt={entidade.nome}
                         fill
+                        unoptimized
                         className="object-cover"
                       />
                     </div>

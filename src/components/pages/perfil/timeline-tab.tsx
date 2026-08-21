@@ -79,6 +79,7 @@ export function TimelineTab({
                               src={membership.entidade.urlFoto}
                               alt={membership.entidade.nome}
                               fill
+                              unoptimized
                               className="object-cover"
                             />
                           </div>

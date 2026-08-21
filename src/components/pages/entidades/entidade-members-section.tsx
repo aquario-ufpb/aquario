@@ -235,6 +235,7 @@ export function EntidadeMembersSection({ entidade }: EntidadeMembersSectionProps
                           }
                           alt={merged.usuario.nome}
                           fill
+                          unoptimized
                           className="object-cover"
                         />
                       </div>

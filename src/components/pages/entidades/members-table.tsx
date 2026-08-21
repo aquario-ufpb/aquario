@@ -166,6 +166,7 @@ export function MembersTable({ members, cargos, entidade }: MembersTableProps) {
                               }
                               alt={membro.usuario.nome}
                               fill
+                              unoptimized
                               className="object-cover"
                             />
                           </div>

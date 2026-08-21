@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cadastro em produção**: Log de bloqueio por email indisponível não registra mais o email completo do usuário.
 - **Fotos de perfil**: Upload, atualização e remoção de foto só apagam o blob antigo depois que o banco deixa de referenciá-lo.
 - **Build com migrações**: `scripts/build-with-migrations.js` agora falha o build quando `prisma migrate deploy` falha.
+- **Imagens de entidades em produção**: Logos de entidades servidas por `/api/content-images` (lidas do submódulo `content/aquario-entidades` em tempo de execução) não apareciam em produção porque o Next.js não conseguia rastrear estaticamente o caminho dinâmico do arquivo e excluía os assets do bundle da função serverless. Adicionado `outputFileTracingIncludes` em `next.config.mjs` para incluir `content/**/*` explicitamente. Todos os usos de `next/image` para fotos de entidade/usuário (card de projeto, grupos/laboratórios da home, busca, seletores de coautor/entidade em projetos e vagas, membros de entidade, vínculos e timeline do perfil) passaram a usar `unoptimized`, já que são ícones pequenos e não precisam passar pelo otimizador de imagens da Vercel.
 - **Dependências**: Atualizadas versões de Scalar API Reference, PostHog e Vitest para remover vulnerabilidades críticas/altas reportadas pelo `npm audit`.
 
 ## [1.11.1] - 2026-07-06

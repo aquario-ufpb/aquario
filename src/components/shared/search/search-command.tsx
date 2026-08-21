@@ -603,6 +603,7 @@ function SearchResults({
                           alt={entityLogo.alt}
                           width={32}
                           height={32}
+                          unoptimized
                           className="h-full w-full object-contain"
                         />
                       </div>
