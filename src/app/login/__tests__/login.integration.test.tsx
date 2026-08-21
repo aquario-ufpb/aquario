@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import Login from "../page";
 import { AuthProvider } from "@/contexts/auth-context";
@@ -59,10 +60,15 @@ describe("Login Page", () => {
   });
 
   const renderLogin = async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
     const result = render(
-      <AuthProvider>
-        <Login />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Login />
+        </AuthProvider>
+      </QueryClientProvider>
     );
     // Wait for Suspense to resolve and form to be ready
     await waitFor(() => {

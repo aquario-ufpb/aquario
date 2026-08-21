@@ -13,6 +13,7 @@ import type { OnboardingMetadata } from "@/lib/shared/types";
 vi.mock("@/contexts/auth-context", () => ({
   useAuth: vi.fn(() => ({
     token: "test-token",
+    userId: "user-1",
     isAuthenticated: true,
     isLoading: false,
   })),

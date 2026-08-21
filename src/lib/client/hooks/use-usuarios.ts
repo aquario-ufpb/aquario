@@ -14,17 +14,17 @@ import { useAuth } from "@/contexts/auth-context";
  * Uses the token from auth context automatically
  */
 export const useCurrentUser = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
 
   return useQuery({
-    queryKey: queryKeys.usuarios.current,
+    queryKey: queryKeys.usuarios.current(userId),
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");
       }
       return usuariosService.getCurrentUser(token);
     },
-    enabled: !!token,
+    enabled: !!token && !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes - user data doesn't change often
   });
 };
@@ -93,7 +93,7 @@ export const useSearchUsers = (query: string, limit?: number) => {
  * Returns a mutation that can be called with userId and newRole
  */
 export const useUpdateUserRole = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -113,7 +113,7 @@ export const useUpdateUserRole = () => {
       // Invalidate and refetch users list after role update
       queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
       // Also invalidate current user if it was the updated user
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current(userId) });
     },
   });
 };
@@ -146,7 +146,7 @@ export const useDeleteUser = () => {
  * Automatically invalidates and refetches current user data
  */
 export const useUploadPhoto = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -159,9 +159,9 @@ export const useUploadPhoto = () => {
     },
     onSuccess: updatedUser => {
       // Update the cache directly with the new user data (includes new photo URL)
-      queryClient.setQueryData(queryKeys.usuarios.current, updatedUser);
+      queryClient.setQueryData(queryKeys.usuarios.current(userId), updatedUser);
       // Also invalidate to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current(userId) });
     },
   });
 };
@@ -171,7 +171,7 @@ export const useUploadPhoto = () => {
  * Automatically updates cache and refetches current user data
  */
 export const useDeletePhoto = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -183,9 +183,9 @@ export const useDeletePhoto = () => {
     },
     onSuccess: updatedUser => {
       // Update the cache directly with the new user data (photo removed)
-      queryClient.setQueryData(queryKeys.usuarios.current, updatedUser);
+      queryClient.setQueryData(queryKeys.usuarios.current(userId), updatedUser);
       // Also invalidate to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current(userId) });
     },
   });
 };
@@ -250,17 +250,17 @@ export const useUpdateUserSlug = () => {
  * Hook to get the current user's entity memberships
  */
 export const useMyMemberships = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
 
   return useQuery({
-    queryKey: queryKeys.usuarios.currentMemberships,
+    queryKey: queryKeys.usuarios.currentMemberships(userId),
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");
       }
       return usuariosService.getMyMemberships(token);
     },
-    enabled: !!token,
+    enabled: !!token && !!userId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
@@ -308,7 +308,7 @@ export const useMergeFacadeUser = () => {
  * Automatically invalidates membership queries on success
  */
 export const useCreateOwnMembership = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -319,8 +319,8 @@ export const useCreateOwnMembership = () => {
       return usuariosService.createOwnMembership(data, token);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships });
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current(userId) });
     },
   });
 };
@@ -330,7 +330,7 @@ export const useCreateOwnMembership = () => {
  * Automatically invalidates membership queries on success
  */
 export const useUpdateOwnMembership = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -341,8 +341,8 @@ export const useUpdateOwnMembership = () => {
       return usuariosService.updateOwnMembership(membroId, data, token);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships });
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current(userId) });
     },
   });
 };
@@ -352,7 +352,7 @@ export const useUpdateOwnMembership = () => {
  * Automatically invalidates membership queries on success
  */
 export const useDeleteOwnMembership = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -363,8 +363,8 @@ export const useDeleteOwnMembership = () => {
       return usuariosService.deleteOwnMembership(membroId, token);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships });
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current(userId) });
     },
   });
 };
