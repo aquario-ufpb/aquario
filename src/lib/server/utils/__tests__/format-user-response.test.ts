@@ -15,6 +15,8 @@ function makeUsuario(): UsuarioWithRelations {
     urlFotoPerfil: null,
     periodoAtual: "5",
     matricula: null,
+    matriculaOrigem: null,
+    matriculaVerificadaPeloSigaaEm: null,
     onboardingMetadata: null,
     centroId: "centro-1",
     cursoId: "curso-1",

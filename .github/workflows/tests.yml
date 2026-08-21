@@ -9,11 +9,13 @@ on:
       - "package.json"
       - ".github/workflows/tests.yml"
   pull_request:
-    branches: [main]
     paths:
       - "src/**"
       - "prisma/**"
+      - "scripts/run-sigaa-db-tests.mjs"
+      - "scripts/verify-sigaa-boundary.mjs"
       - "package.json"
+      - "package-lock.json"
       - ".github/workflows/tests.yml"
 
 jobs:
@@ -61,7 +63,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: aquario_test
+          POSTGRES_DB: aquario_sigaa_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -71,7 +73,7 @@ jobs:
           - 5432:5432
 
     env:
-      DATABASE_URL: postgresql://postgres:password@localhost:5432/aquario_test
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/aquario_sigaa_test
       NODE_ENV: test
       JWT_SECRET: test-jwt-secret-key-minimum-32-characters-long
       RESEND_API_KEY: test-resend-api-key
@@ -97,10 +99,18 @@ jobs:
         run: npm run db:generate
 
       - name: Run database migrations
-        run: npx prisma db push
+        run: npm run db:migrate:deploy
+
+      - name: Verify SIGAA persistence boundary
+        run: npm run verify:sigaa-boundary
+
+      - name: Run SIGAA database tests
+        run: npm run test:sigaa-db
+        env:
+          SIGAA_TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/aquario_sigaa_test
 
       - name: Run integration tests
-        run: npm run test:integration -- --run --reporter=verbose
+        run: npm run test:integration -- --run --reporter=verbose --exclude src/lib/server/db/implementations/prisma/__tests__/prisma-sigaa-repository.integration.test.ts
 
       - name: Upload integration test results
         uses: actions/upload-artifact@v4

@@ -20,6 +20,7 @@ import type { IDisciplinaRepository } from "@/lib/server/db/interfaces/disciplin
 import type { IDisciplinaConcluidaRepository } from "@/lib/server/db/interfaces/disciplina-concluida-repository.interface";
 import type { ISearchRepository } from "@/lib/server/db/interfaces/search-repository.interface";
 import type { IAuditLogsRepository } from "@/lib/server/db/interfaces/audit-logs-repository.interface";
+import type { ISigaaRepository } from "@/lib/server/db/interfaces/sigaa-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
 import type { IBlobStorage } from "@/lib/server/services/blob/blob-storage.interface";
 
@@ -51,6 +52,7 @@ export type Container = {
   disciplinaConcluidaRepository: IDisciplinaConcluidaRepository;
   searchRepository: ISearchRepository;
   auditLogsRepository: IAuditLogsRepository;
+  sigaaRepository: ISigaaRepository;
 
   // Services
   emailService: IEmailService;
