@@ -57,7 +57,7 @@ const STEP_DEFINITIONS: Record<
 };
 
 export const useOnboarding = () => {
-  const { token, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { token, userId, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: user } = useCurrentUser();
@@ -69,14 +69,14 @@ export const useOnboarding = () => {
     isLoading: isMetadataLoading,
     isFetched: isMetadataFetched,
   } = useQuery({
-    queryKey: queryKeys.usuarios.onboarding,
+    queryKey: queryKeys.usuarios.onboarding(userId),
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");
       }
       return usuariosService.getOnboardingMetadata(token);
     },
-    enabled: !!token,
+    enabled: !!token && !!userId,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -88,7 +88,7 @@ export const useOnboarding = () => {
       return usuariosService.updateOnboardingMetadata(data, token);
     },
     onSuccess: updated => {
-      queryClient.setQueryData(queryKeys.usuarios.onboarding, updated);
+      queryClient.setQueryData(queryKeys.usuarios.onboarding(userId), updated);
     },
   });
 

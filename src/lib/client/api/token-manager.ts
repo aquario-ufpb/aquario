@@ -3,9 +3,11 @@
  * Stores the current token and refresh callback
  * This allows the API client to automatically use them without passing explicitly
  */
+export type TokenRefreshCallback = (refreshedToken: string, sourceToken: string) => void;
+
 class TokenManager {
   private token: string | null = null;
-  private onTokenRefresh: ((token: string) => void) | null = null;
+  private onTokenRefresh: TokenRefreshCallback | null = null;
 
   setToken(token: string | null) {
     this.token = token;
@@ -15,11 +17,11 @@ class TokenManager {
     return this.token;
   }
 
-  setRefreshCallback(callback: ((token: string) => void) | null) {
+  setRefreshCallback(callback: TokenRefreshCallback | null) {
     this.onTokenRefresh = callback;
   }
 
-  getRefreshCallback(): ((token: string) => void) | null {
+  getRefreshCallback(): TokenRefreshCallback | null {
     return this.onTokenRefresh;
   }
 

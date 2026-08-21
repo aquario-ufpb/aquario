@@ -32,7 +32,7 @@ const PERIODO_OPTIONS = [
 ] as const;
 
 export function PeriodoStep({ onComplete, isMutating }: PeriodoStepProps) {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -44,7 +44,7 @@ export function PeriodoStep({ onComplete, isMutating }: PeriodoStepProps) {
     setIsSaving(true);
     try {
       await usuariosService.updatePeriodoAtual(selected, token);
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current(userId) });
       await onComplete();
     } finally {
       setIsSaving(false);

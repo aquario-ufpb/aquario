@@ -1,3 +1,8 @@
+export const privateQueryKeys = {
+  all: ["private"] as const,
+  byUser: (usuarioId: string | null) => ["private", { usuarioId }] as const,
+} as const;
+
 export const queryKeys = {
   campus: {
     all: ["campus"] as const,
@@ -22,9 +27,12 @@ export const queryKeys = {
   },
   usuarios: {
     all: ["usuarios"] as const,
-    current: ["usuarios", "current"] as const,
-    currentMemberships: ["usuarios", "current", "memberships"] as const,
-    onboarding: ["usuarios", "onboarding"] as const,
+    current: (usuarioId: string | null) =>
+      [...privateQueryKeys.byUser(usuarioId), "usuarios", "current"] as const,
+    currentMemberships: (usuarioId: string | null) =>
+      [...privateQueryKeys.byUser(usuarioId), "usuarios", "current", "memberships"] as const,
+    onboarding: (usuarioId: string | null) =>
+      [...privateQueryKeys.byUser(usuarioId), "usuarios", "onboarding"] as const,
     byId: (id: string) => ["usuarios", id] as const,
     bySlug: (slug: string) => ["usuarios", "slug", slug] as const,
     memberships: (userId: string) => ["usuarios", userId, "memberships"] as const,
@@ -59,13 +67,15 @@ export const queryKeys = {
     grade: (cursoId: string) => ["curriculos", "grade", cursoId] as const,
   },
   disciplinasConcluidas: {
-    me: ["disciplinasConcluidas", "me"] as const,
+    me: (usuarioId: string | null) =>
+      [...privateQueryKeys.byUser(usuarioId), "disciplinasConcluidas", "me"] as const,
   },
   disciplinas: {
     search: (query: string) => ["disciplinas", "search", query] as const,
   },
   disciplinasSemestre: {
-    ativo: ["disciplinasSemestre", "ativo"] as const,
+    ativo: (usuarioId: string | null) =>
+      [...privateQueryKeys.byUser(usuarioId), "disciplinasSemestre", "ativo"] as const,
   },
   calendarioAcademico: {
     all: ["calendarioAcademico"] as const,

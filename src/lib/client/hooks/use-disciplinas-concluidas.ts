@@ -7,17 +7,17 @@ import { useAuth } from "@/contexts/auth-context";
  * Hook to fetch the current user's completed disciplines
  */
 export const useDisciplinasConcluidas = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
 
   return useQuery({
-    queryKey: queryKeys.disciplinasConcluidas.me,
+    queryKey: queryKeys.disciplinasConcluidas.me(userId),
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");
       }
       return usuariosService.getMyDisciplinasConcluidas(token);
     },
-    enabled: !!token,
+    enabled: !!token && !!userId,
     staleTime: 5 * 60 * 1000,
   });
 };

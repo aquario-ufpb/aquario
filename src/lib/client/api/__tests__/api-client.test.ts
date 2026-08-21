@@ -7,6 +7,28 @@ global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 
+const createDeferred = <T>() => {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+};
+
+const response = (status: number, body?: unknown) =>
+  ({
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => body,
+  }) as Response;
+
+const flushPromises = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+};
+
 describe("apiClient", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -137,7 +159,80 @@ describe("apiClient", () => {
 
       await apiClient("/test", { token: "old-token", onTokenRefresh });
 
-      expect(onTokenRefresh).toHaveBeenCalledWith("refreshed-token");
+      expect(onTokenRefresh).toHaveBeenCalledWith("refreshed-token", "old-token");
+    });
+
+    it("deduplicates simultaneous refreshes from the same source token", async () => {
+      const refresh = createDeferred<Response>();
+      let refreshCalls = 0;
+      mockFetch.mockImplementation(async (input, init) => {
+        const authorization = (init?.headers as Record<string, string> | undefined)?.Authorization;
+        if (String(input).endsWith("/auth/refresh")) {
+          refreshCalls += 1;
+          return refresh.promise;
+        }
+        if (authorization === "Bearer refreshed-token") {
+          return response(200);
+        }
+        return response(401);
+      });
+
+      const first = apiClient("/first", { token: "source-token" });
+      const second = apiClient("/second", { token: "source-token" });
+      await flushPromises();
+
+      expect(refreshCalls).toBe(1);
+
+      refresh.resolve(response(200, { token: "refreshed-token" }));
+      await expect(Promise.all([first, second])).resolves.toEqual([
+        expect.objectContaining({ status: 200 }),
+        expect.objectContaining({ status: 200 }),
+      ]);
+      expect(refreshCalls).toBe(1);
+    });
+
+    it("keeps refreshes from different source tokens separate", async () => {
+      const refreshA = createDeferred<Response>();
+      const refreshB = createDeferred<Response>();
+      const refreshSources: string[] = [];
+      const refreshEvents: Array<[string, string]> = [];
+      mockFetch.mockImplementation(async (input, init) => {
+        const authorization = (init?.headers as Record<string, string> | undefined)?.Authorization;
+        if (String(input).endsWith("/auth/refresh")) {
+          const sourceToken = authorization?.replace("Bearer ", "") ?? "";
+          refreshSources.push(sourceToken);
+          return sourceToken === "token-a" ? refreshA.promise : refreshB.promise;
+        }
+        if (authorization === "Bearer refreshed-a" || authorization === "Bearer refreshed-b") {
+          return response(200);
+        }
+        return response(401);
+      });
+
+      const first = apiClient("/first", {
+        token: "token-a",
+        onTokenRefresh: (refreshedToken, sourceToken) =>
+          refreshEvents.push([refreshedToken, sourceToken]),
+      });
+      const second = apiClient("/second", {
+        token: "token-b",
+        onTokenRefresh: (refreshedToken, sourceToken) =>
+          refreshEvents.push([refreshedToken, sourceToken]),
+      });
+      await flushPromises();
+
+      expect(refreshSources).toEqual(["token-a", "token-b"]);
+
+      refreshB.resolve(response(200, { token: "refreshed-b" }));
+      await expect(second).resolves.toEqual(expect.objectContaining({ status: 200 }));
+      expect(refreshEvents).toEqual([["refreshed-b", "token-b"]]);
+
+      refreshA.resolve(response(200, { token: "refreshed-a" }));
+      await expect(first).resolves.toEqual(expect.objectContaining({ status: 200 }));
+      expect(refreshEvents).toEqual([
+        ["refreshed-b", "token-b"],
+        ["refreshed-a", "token-a"],
+      ]);
     });
 
     it("should return original 401 response when refresh fails", async () => {
