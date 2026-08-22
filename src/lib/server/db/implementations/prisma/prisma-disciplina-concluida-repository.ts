@@ -1,13 +1,24 @@
 import { prisma } from "@/lib/server/db/prisma";
-import type { IDisciplinaConcluidaRepository } from "@/lib/server/db/interfaces/disciplina-concluida-repository.interface";
+import type {
+  CompletedDiscipline,
+  IDisciplinaConcluidaRepository,
+} from "@/lib/server/db/interfaces/disciplina-concluida-repository.interface";
 
 export class PrismaDisciplinaConcluidaRepository implements IDisciplinaConcluidaRepository {
-  async findByUsuario(usuarioId: string): Promise<string[]> {
+  async findByUsuario(usuarioId: string): Promise<CompletedDiscipline[]> {
     const records = await prisma.disciplinaConcluida.findMany({
       where: { usuarioId },
-      select: { disciplinaId: true },
+      orderBy: { concluidaEm: "asc" },
+      select: {
+        disciplinaId: true,
+        disciplina: { select: { codigo: true, nome: true } },
+      },
     });
-    return records.map(r => r.disciplinaId);
+    return records.map(record => ({
+      disciplinaId: record.disciplinaId,
+      code: record.disciplina.codigo,
+      name: record.disciplina.nome,
+    }));
   }
 
   async replaceForUsuario(usuarioId: string, disciplinaIds: string[]): Promise<void> {

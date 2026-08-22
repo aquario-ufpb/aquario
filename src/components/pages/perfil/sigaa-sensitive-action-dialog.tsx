@@ -1,7 +1,9 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
+import { trackEvent } from "@/analytics/posthog-client";
+import type { SigaaSensitiveAction } from "@/analytics/posthog-events";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +26,7 @@ type SigaaSensitiveActionDialogProps = {
   confirmLabel: string;
   pendingLabel: string;
   destructive?: boolean;
+  actionName: SigaaSensitiveAction;
   onOpenChange: (open: boolean) => void;
   action: (proofToken: string) => Promise<unknown>;
   onCompleted: () => Promise<void> | void;
@@ -36,14 +39,22 @@ export function SigaaSensitiveActionDialog({
   confirmLabel,
   pendingLabel,
   destructive = false,
+  actionName,
   onOpenChange,
   action,
   onCompleted,
 }: SigaaSensitiveActionDialogProps) {
   const formRef = useRef<HTMLFormElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
   const passwordId = useId();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.focus();
+    }
+  }, [error]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -53,13 +64,16 @@ export function SigaaSensitiveActionDialog({
 
     setError(null);
     setIsPending(true);
+    trackEvent("sigaa_sensitive_action_started", { action: actionName });
     try {
       const proof = await reauthenticateForSigaa(password);
       proofToken = proof.proofToken;
       await action(proofToken);
       await onCompleted();
+      trackEvent("sigaa_sensitive_action_succeeded", { action: actionName });
       onOpenChange(false);
     } catch (caught) {
+      trackEvent("sigaa_sensitive_action_failed", { action: actionName });
       setError(getErrorMessage(caught, "Não foi possível concluir a operação."));
     } finally {
       formData.delete("aquarioPassword");
@@ -80,7 +94,7 @@ export function SigaaSensitiveActionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md" data-ph-no-capture="true">
+      <DialogContent className="ph-no-capture max-w-md" data-ph-no-capture="true">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -99,8 +113,18 @@ export function SigaaSensitiveActionDialog({
             />
           </div>
           {error && (
-            <p role="alert" className="text-sm text-destructive">
+            <p
+              ref={errorRef}
+              tabIndex={-1}
+              role="alert"
+              className="text-sm text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               {error}
+            </p>
+          )}
+          {isPending && (
+            <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
+              {pendingLabel}
             </p>
           )}
           <DialogFooter>

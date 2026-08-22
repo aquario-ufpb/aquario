@@ -22,7 +22,9 @@ describe("combineAcademicDisplay", () => {
   it.each(["completed", "enrolled", "pending", "unknown"] as const)(
     "uses SIGAA presentation for %s while retaining a conflicting manual value",
     status => {
-      const manual = [{ code: "gdco0001", state: "completed" as const }];
+      const manual = [
+        { disciplinaId: "disc-1", code: "gdco0001", name: "Manual", state: "completed" as const },
+      ];
       const result = combineAcademicDisplay({
         catalog: [{ disciplinaId: "disc-1", code: "GDCO0001", name: "Catálogo" }],
         manual,
@@ -34,7 +36,9 @@ describe("combineAcademicDisplay", () => {
         manual: manual[0],
         presentation: { origin: "SIGAA", state: status, name: "SIGAA GDCO0001" },
       });
-      expect(manual).toEqual([{ code: "gdco0001", state: "completed" }]);
+      expect(manual).toEqual([
+        { disciplinaId: "disc-1", code: "gdco0001", name: "Manual", state: "completed" },
+      ]);
     }
   );
 
@@ -58,14 +62,16 @@ describe("combineAcademicDisplay", () => {
     expect(
       combineAcademicDisplay({
         catalog: [{ disciplinaId: "disc-1", code: "GDCO0001", name: "Catálogo" }],
-        manual: [{ code: "GDCO0001", state: "enrolled" }],
+        manual: [{ disciplinaId: "disc-1", code: "GDCO0001", name: "Catálogo", state: "enrolled" }],
         sigaa: [],
       })[0].presentation
     ).toEqual({ origin: "MANUAL", state: "enrolled", name: "Catálogo" });
   });
 
   it("normalizes source codes without mutating or duplicating the source values", () => {
-    const manual = [{ code: " gdco0001 ", state: "completed" as const }];
+    const manual = [
+      { disciplinaId: "disc-1", code: " gdco0001 ", name: "Manual", state: "completed" as const },
+    ];
     const result = combineAcademicDisplay({
       catalog: [{ disciplinaId: "disc-1", code: "GDCO0001", name: "Catálogo" }],
       manual,
@@ -77,16 +83,34 @@ describe("combineAcademicDisplay", () => {
       code: "GDCO0001",
       presentation: { origin: "MANUAL", state: "completed" },
     });
-    expect(manual).toEqual([{ code: " gdco0001 ", state: "completed" }]);
+    expect(manual).toEqual([
+      { disciplinaId: "disc-1", code: " gdco0001 ", name: "Manual", state: "completed" },
+    ]);
   });
 
   it("keeps completed precedence when enrolled data uses a different code shape", () => {
     expect(
       collectManualAcademicComponents({
         catalog: [{ disciplinaId: "disc-1", code: " GDCO0001 ", name: "Catálogo" }],
-        completedDisciplineIds: ["disc-1"],
+        completed: [{ disciplinaId: "disc-1", code: "GDCO0001", name: "Catálogo" }],
         enrolled: [{ disciplinaId: "disc-1", code: "gdco0001" }],
       })
-    ).toEqual([{ code: "GDCO0001", state: "completed" }]);
+    ).toEqual([{ disciplinaId: "disc-1", code: "GDCO0001", name: "Catálogo", state: "completed" }]);
+  });
+
+  it("keeps a completed discipline from a previous course visible by its stored identity", () => {
+    const manual = collectManualAcademicComponents({
+      catalog: [{ disciplinaId: "current", code: "EC0001", name: "Circuitos" }],
+      completed: [{ disciplinaId: "previous", code: "CC0001", name: "Algoritmos antigos" }],
+      enrolled: [],
+    });
+
+    expect(combineAcademicDisplay({ catalog: [], manual, sigaa: [] })).toEqual([
+      expect.objectContaining({
+        code: "CC0001",
+        catalog: null,
+        presentation: { origin: "MANUAL", state: "completed", name: "Algoritmos antigos" },
+      }),
+    ]);
   });
 });

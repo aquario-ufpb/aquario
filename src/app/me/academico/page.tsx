@@ -1,23 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, BookOpenCheck, GraduationCap } from "lucide-react";
-import { useMemo } from "react";
+import { ArrowLeft, BookOpenCheck, GraduationCap, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
+import { trackEvent } from "@/analytics/posthog-client";
+import { SigaaConnectDialog } from "@/components/pages/perfil/sigaa-connect-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { SIGAA_CONSENT_VERSION } from "@/lib/client/api/sigaa";
 import { useOwnSigaaAcademicState } from "@/lib/client/hooks/use-sigaa";
 import { useRequireAuth } from "@/lib/client/hooks/use-require-auth";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { useGradeCurricular } from "@/lib/client/hooks/use-grade-curricular";
 import { useDisciplinasConcluidas } from "@/lib/client/hooks/use-disciplinas-concluidas";
 import { useDisciplinasSemestreAtivo } from "@/lib/client/hooks/use-disciplinas-semestre";
+import { queryKeys } from "@/lib/client/query-keys";
+import { toSigaaIntegrationView } from "@/lib/client/sigaa/view-model";
 import {
   collectManualAcademicComponents,
   combineAcademicDisplay,
 } from "@/lib/shared/sigaa/combine-academic-display";
+import type { SigaaAcademicSnapshotPayload } from "@/lib/shared/types/sigaa-academic";
 
 const stateLabels = {
   completed: "Concluída",
@@ -31,8 +40,16 @@ const formatDateTime = (value: string) =>
     new Date(value)
   );
 
+const percentFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+type ComponentFilter = "all" | "completed" | "enrolled" | "pending" | "unknown";
+
 export default function MeusDadosAcademicosPage() {
   useRequireAuth();
+  const queryClient = useQueryClient();
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<ComponentFilter>("all");
+  const [visibleCount, setVisibleCount] = useState(30);
   const currentUser = useCurrentUser();
   const hasBeta = currentUser.data?.permissoes.includes("sigaa:beta") ?? false;
   const stateQuery = useOwnSigaaAcademicState(hasBeta);
@@ -49,11 +66,14 @@ export default function MeusDadosAcademicosPage() {
       })) ?? [];
     const manual = collectManualAcademicComponents({
       catalog,
-      completedDisciplineIds: completedQuery.data?.disciplinaIds ?? [],
+      completed: completedQuery.data?.disciplinas ?? [],
       enrolled:
         enrolledQuery.data?.disciplinas.map(item => ({
           disciplinaId: item.disciplinaId,
           code: item.disciplinaCodigo,
+          name:
+            catalog.find(component => component.disciplinaId === item.disciplinaId)?.name ??
+            item.disciplinaCodigo,
         })) ?? [],
     });
 
@@ -63,6 +83,63 @@ export default function MeusDadosAcademicosPage() {
       sigaa: stateQuery.data?.snapshot?.payload.curriculum.components ?? [],
     });
   }, [completedQuery.data, enrolledQuery.data, gradeQuery.data, stateQuery.data]);
+
+  const integrationView = stateQuery.data ? toSigaaIntegrationView(stateQuery.data) : null;
+  const integrationKind = integrationView?.kind;
+  useEffect(() => {
+    if (integrationKind) {
+      trackEvent("sigaa_academic_page_opened", { connection_state: integrationKind });
+    }
+  }, [integrationKind]);
+
+  const filteredComponents = useMemo(() => {
+    const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
+    return academicDisplay.filter(component => {
+      const matchesFilter = filter === "all" || component.presentation.state === filter;
+      const matchesSearch =
+        !normalizedSearch ||
+        component.code.toLocaleLowerCase("pt-BR").includes(normalizedSearch) ||
+        component.presentation.name.toLocaleLowerCase("pt-BR").includes(normalizedSearch);
+      return matchesFilter && matchesSearch;
+    });
+  }, [academicDisplay, filter, search]);
+
+  const componentGroups = useMemo(() => {
+    const groups = new Map<string, typeof filteredComponents>();
+    filteredComponents.slice(0, visibleCount).forEach(component => {
+      const key = component.sigaa?.period ? `${component.sigaa.period}º período` : "Sem período";
+      groups.set(key, [...(groups.get(key) ?? []), component]);
+    });
+    return [...groups.entries()];
+  }, [filteredComponents, visibleCount]);
+
+  const gradeGroups = useMemo(() => {
+    const groups = new Map<string, SigaaAcademicSnapshotPayload["grades"]>();
+    stateQuery.data?.snapshot?.payload.grades.forEach(item => {
+      groups.set(item.semester, [...(groups.get(item.semester) ?? []), item]);
+    });
+    return [...groups.entries()];
+  }, [stateQuery.data]);
+
+  const refreshAfterSync = async (courseReplaced: boolean) => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.sigaa.state(currentUser.data?.id ?? null),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.disciplinasConcluidas.me(currentUser.data?.id ?? null),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.disciplinasSemestre.ativo(currentUser.data?.id ?? null),
+      }),
+    ]);
+    if (courseReplaced) {
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.usuarios.current(currentUser.data?.id ?? null),
+      });
+    }
+    toast.success("Dados acadêmicos atualizados");
+  };
 
   if (
     currentUser.isLoading ||
@@ -94,18 +171,51 @@ export default function MeusDadosAcademicosPage() {
   }
 
   const snapshot = stateQuery.data?.snapshot;
-  if (stateQuery.isError || !snapshot) {
+  if (!snapshot) {
     return (
-      <main className="container mx-auto max-w-3xl px-6 pb-24 pt-32 text-center">
+      <main
+        className="ph-no-capture container mx-auto max-w-3xl px-6 pb-24 pt-32 text-center"
+        data-ph-no-capture="true"
+      >
         <h1 className="text-2xl font-semibold">Meus dados acadêmicos</h1>
         <p className="mt-3 text-muted-foreground">
           {stateQuery.isError
             ? "Não foi possível carregar os dados importados."
             : "Você ainda não sincronizou um snapshot acadêmico."}
         </p>
-        <Button asChild variant="outline" className="mt-6">
-          <Link href="/perfil">Voltar ao perfil</Link>
-        </Button>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {stateQuery.isError ? (
+            <Button variant="outline" onClick={() => stateQuery.refetch()}>
+              Tentar novamente
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                trackEvent("sigaa_connect_opened", {
+                  operation: "connect",
+                  consent_required: true,
+                });
+                trackEvent("sigaa_sync_again_clicked", {
+                  connection_state: integrationView?.kind ?? "never_connected",
+                });
+                setConnectOpen(true);
+              }}
+            >
+              Conectar e sincronizar
+            </Button>
+          )}
+          <Button asChild variant="outline">
+            <Link href="/perfil">Voltar ao perfil</Link>
+          </Button>
+        </div>
+        {stateQuery.data && (
+          <SigaaConnectDialog
+            open={connectOpen}
+            requireConsent={stateQuery.data.connection?.consentVersion !== SIGAA_CONSENT_VERSION}
+            onOpenChange={setConnectOpen}
+            onSynchronized={refreshAfterSync}
+          />
+        )}
       </main>
     );
   }
@@ -113,7 +223,10 @@ export default function MeusDadosAcademicosPage() {
   const { payload } = snapshot;
 
   return (
-    <main className="container mx-auto max-w-5xl space-y-8 px-6 pb-24 pt-32">
+    <main
+      className="ph-no-capture container mx-auto max-w-5xl space-y-8 px-6 pb-24 pt-32"
+      data-ph-no-capture="true"
+    >
       <div>
         <Button asChild variant="ghost" className="mb-4 -ml-3">
           <Link href="/perfil">
@@ -130,9 +243,50 @@ export default function MeusDadosAcademicosPage() {
             </p>
           </div>
         </div>
+        <Button
+          className="mt-4"
+          variant="outline"
+          onClick={() => {
+            trackEvent("sigaa_connect_opened", {
+              operation: "sync",
+              consent_required:
+                stateQuery.data?.connection?.consentVersion !== SIGAA_CONSENT_VERSION,
+            });
+            trackEvent("sigaa_sync_again_clicked", {
+              connection_state: integrationView?.kind ?? "connected",
+            });
+            setConnectOpen(true);
+          }}
+        >
+          <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+          Sincronizar novamente
+        </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      {integrationView?.kind === "disconnected" && (
+        <div
+          role="status"
+          className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+        >
+          A integração está desconectada. Este é o último snapshot preservado; sincronize novamente
+          para buscar mudanças no SIGAA.
+        </div>
+      )}
+
+      {stateQuery.isError && (
+        <div
+          role="alert"
+          className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"
+        >
+          Não foi possível verificar o estado mais recente. O último snapshot salvo continua
+          visível.
+          <Button className="ml-3" size="sm" variant="outline" onClick={() => stateQuery.refetch()}>
+            Tentar novamente
+          </Button>
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">CRA</CardTitle>
@@ -140,6 +294,12 @@ export default function MeusDadosAcademicosPage() {
           <CardContent className="text-2xl font-semibold">
             {payload.curriculum.cra.value ?? "Indisponível"}
           </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Matrícula</CardTitle>
+          </CardHeader>
+          <CardContent className="text-2xl font-semibold">{payload.identity.matricula}</CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
@@ -157,6 +317,34 @@ export default function MeusDadosAcademicosPage() {
         </Card>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Dados do currículo no SIGAA</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+          <p>
+            <span className="font-medium">Curso informado:</span>{" "}
+            {payload.identity.sourceCourse ?? "Indisponível"}
+          </p>
+          <p>
+            <span className="font-medium">Prazo máximo:</span>{" "}
+            {payload.curriculum.maximumCompletionTerm ?? "Indisponível"}
+          </p>
+          <p>
+            <span className="font-medium">Carga semestral mínima:</span>{" "}
+            {payload.curriculum.semesterWorkload.minimum === null
+              ? "Indisponível"
+              : `${payload.curriculum.semesterWorkload.minimum}h`}
+          </p>
+          <p>
+            <span className="font-medium">Carga semestral máxima:</span>{" "}
+            {payload.curriculum.semesterWorkload.maximum === null
+              ? "Indisponível"
+              : `${payload.curriculum.semesterWorkload.maximum}h`}
+          </p>
+        </CardContent>
+      </Card>
+
       {payload.curriculum.progress.length > 0 && (
         <section aria-labelledby="academic-progress-heading">
           <h2 id="academic-progress-heading" className="mb-4 text-xl font-semibold">
@@ -168,15 +356,27 @@ export default function MeusDadosAcademicosPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between gap-4 text-sm">
                     <span className="font-medium">{item.description}</span>
-                    <span>{item.completedPercent}%</span>
+                    <span>{percentFormatter.format(item.completedPercent)}%</span>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
                     {item.completedHours}h concluídas de {item.totalHours}h
+                    {` · ${item.remainingHours}h restantes`}
                   </p>
                 </CardContent>
               </Card>
             ))}
           </div>
+        </section>
+      )}
+
+      {payload.curriculum.progress.length === 0 && (
+        <section aria-labelledby="academic-progress-heading-empty">
+          <h2 id="academic-progress-heading-empty" className="mb-2 text-xl font-semibold">
+            Progresso
+          </h2>
+          <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            O SIGAA não informou o progresso do currículo neste snapshot.
+          </p>
         </section>
       )}
 
@@ -188,59 +388,204 @@ export default function MeusDadosAcademicosPage() {
           </h2>
         </div>
         {(gradeQuery.isError || completedQuery.isError || enrolledQuery.isError) && (
-          <p role="alert" className="mb-3 text-sm text-amber-700 dark:text-amber-300">
-            Parte dos dados manuais não pôde ser combinada. Os dados do último snapshot SIGAA
-            continuam visíveis.
-          </p>
-        )}
-        <div className="space-y-2">
-          {academicDisplay.map(component => (
-            <div
-              key={component.code}
-              className="flex flex-col gap-2 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+          <div
+            role="alert"
+            className="mb-3 flex flex-wrap items-center gap-2 text-sm text-amber-700 dark:text-amber-300"
+          >
+            <p>
+              Parte dos dados manuais não pôde ser combinada. Os dados do último snapshot SIGAA
+              continuam visíveis.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                Promise.all([
+                  gradeQuery.refetch(),
+                  completedQuery.refetch(),
+                  enrolledQuery.refetch(),
+                ])
+              }
             >
-              <div>
-                <p className="font-medium">{component.presentation.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {component.code}
-                  {component.sigaa ? ` · ${component.sigaa.workloadHours}h` : ""}
-                  {component.sigaa?.period !== null && component.sigaa?.period !== undefined
-                    ? ` · ${component.sigaa.period}º período`
-                    : ""}
-                </p>
-                {component.sigaa &&
-                  component.manual &&
-                  component.sigaa.status !== component.manual.state && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Valor manual preservado: {stateLabels[component.manual.state]}.
-                    </p>
-                  )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">{stateLabels[component.presentation.state]}</Badge>
-                <Badge variant="secondary">
-                  {component.presentation.origin === "CATALOG"
-                    ? "Catálogo"
-                    : component.presentation.origin === "MANUAL"
-                      ? "Manual"
-                      : "SIGAA"}
-                </Badge>
-              </div>
+              Tentar novamente
+            </Button>
+          </div>
+        )}
+        <div className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div>
+            <label htmlFor="academic-component-search" className="mb-1 block text-sm font-medium">
+              Buscar componente
+            </label>
+            <Input
+              id="academic-component-search"
+              type="search"
+              value={search}
+              placeholder="Código ou nome"
+              onChange={event => {
+                setSearch(event.target.value);
+                setVisibleCount(30);
+              }}
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-sm font-medium">Filtrar por situação</p>
+            <div className="flex flex-wrap gap-1" role="group" aria-label="Situação do componente">
+              {(
+                [
+                  ["all", "Todos"],
+                  ["completed", "Concluídos"],
+                  ["enrolled", "Cursando"],
+                  ["pending", "Pendentes"],
+                  ["unknown", "Desconhecidos"],
+                ] as const
+              ).map(([value, label]) => (
+                <Button
+                  key={value}
+                  type="button"
+                  size="sm"
+                  variant={filter === value ? "default" : "outline"}
+                  aria-pressed={filter === value}
+                  onClick={() => {
+                    setFilter(value);
+                    setVisibleCount(30);
+                  }}
+                >
+                  {label}
+                </Button>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
+        {componentGroups.length === 0 ? (
+          <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            Nenhum componente corresponde à busca e ao filtro selecionados.
+          </p>
+        ) : (
+          componentGroups.map(([group, components]) => (
+            <div key={group} className="mb-6 space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground">{group}</h3>
+              {components.map(component => (
+                <div
+                  key={component.code}
+                  className="flex flex-col gap-2 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-medium">{component.presentation.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {component.code}
+                      {component.sigaa ? ` · ${component.sigaa.workloadHours}h` : ""}
+                      {component.sigaa ? ` · ${component.sigaa.integrationType}` : ""}
+                      {component.sigaa?.period !== null && component.sigaa?.period !== undefined
+                        ? ` · ${component.sigaa.period}º período`
+                        : ""}
+                    </p>
+                    {component.sigaa &&
+                      component.manual &&
+                      component.sigaa.status !== component.manual.state && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Valor manual preservado: {stateLabels[component.manual.state]}.
+                        </p>
+                      )}
+                    {component.sigaa &&
+                      (component.sigaa.prerequisite || component.sigaa.corequisite) && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {component.sigaa.prerequisite
+                            ? `Pré-requisito: ${component.sigaa.prerequisite}`
+                            : ""}
+                          {component.sigaa.prerequisite && component.sigaa.corequisite ? " · " : ""}
+                          {component.sigaa.corequisite
+                            ? `Correquisito: ${component.sigaa.corequisite}`
+                            : ""}
+                        </p>
+                      )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{stateLabels[component.presentation.state]}</Badge>
+                    <Badge variant="secondary">
+                      {component.presentation.origin === "CATALOG"
+                        ? "Catálogo"
+                        : component.presentation.origin === "MANUAL"
+                          ? "Manual"
+                          : "SIGAA"}
+                    </Badge>
+                    {component.sigaa && (
+                      <Badge variant="outline">
+                        {component.sigaa.required ? "Obrigatória" : "Optativa"}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))
+        )}
+        {visibleCount < filteredComponents.length && (
+          <Button variant="outline" onClick={() => setVisibleCount(count => count + 30)}>
+            Mostrar mais {Math.min(30, filteredComponents.length - visibleCount)}
+          </Button>
+        )}
       </section>
 
-      {payload.classes.length > 0 && (
-        <section aria-labelledby="academic-classes-heading">
-          <h2 id="academic-classes-heading" className="mb-4 text-xl font-semibold">
-            Turmas atuais
-          </h2>
+      <section aria-labelledby="academic-grades-heading">
+        <h2 id="academic-grades-heading" className="mb-4 text-xl font-semibold">
+          Notas, resultados e faltas
+        </h2>
+        {gradeGroups.length === 0 ? (
+          <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            O SIGAA não informou notas ou resultados neste snapshot.
+          </p>
+        ) : (
+          gradeGroups.map(([semester, grades]) => (
+            <div key={semester} className="mb-6">
+              <h3 className="mb-2 text-sm font-semibold text-muted-foreground">{semester}</h3>
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full min-w-[680px] text-left text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="p-3">Componente</th>
+                      <th className="p-3">Notas</th>
+                      <th className="p-3">Exame</th>
+                      <th className="p-3">Resultado</th>
+                      <th className="p-3">Faltas</th>
+                      <th className="p-3">Situação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {grades.map(item => (
+                      <tr key={`${semester}-${item.code}`} className="border-t">
+                        <td className="p-3">
+                          <span className="font-medium">{item.discipline}</span>
+                          <br />
+                          <span className="text-xs text-muted-foreground">{item.code}</span>
+                        </td>
+                        <td className="p-3">{item.units.length ? item.units.join(" · ") : "—"}</td>
+                        <td className="p-3">{item.exam ?? "—"}</td>
+                        <td className="p-3">{item.result ?? "—"}</td>
+                        <td className="p-3">{item.absences ?? "—"}</td>
+                        <td className="p-3">{item.status ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))
+        )}
+      </section>
+
+      <section aria-labelledby="academic-classes-heading">
+        <h2 id="academic-classes-heading" className="mb-4 text-xl font-semibold">
+          Turmas atuais
+        </h2>
+        {payload.classes.length > 0 ? (
           <div className="grid gap-3 md:grid-cols-2">
             {payload.classes.map(item => (
               <Card key={item.sourceKey}>
                 <CardContent className="space-y-1 pt-6">
                   <p className="font-medium">{item.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {[item.code, item.semester].filter(Boolean).join(" · ")}
+                  </p>
                   {item.scheduleRaw && (
                     <p className="text-sm text-muted-foreground">{item.scheduleRaw}</p>
                   )}
@@ -249,8 +594,12 @@ export default function MeusDadosAcademicosPage() {
               </Card>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            O SIGAA não informou turmas atuais neste snapshot.
+          </p>
+        )}
+      </section>
 
       <p className="text-xs text-muted-foreground">
         Fonte de integração:{" "}
@@ -264,6 +613,12 @@ export default function MeusDadosAcademicosPage() {
         </a>
         .
       </p>
+      <SigaaConnectDialog
+        open={connectOpen}
+        requireConsent={stateQuery.data?.connection?.consentVersion !== SIGAA_CONSENT_VERSION}
+        onOpenChange={setConnectOpen}
+        onSynchronized={refreshAfterSync}
+      />
     </main>
   );
 }

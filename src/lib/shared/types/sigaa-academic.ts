@@ -172,7 +172,9 @@ export type CatalogAcademicComponent = Readonly<{
 }>;
 
 export type ManualAcademicComponent = Readonly<{
+  disciplinaId: string;
   code: string;
+  name: string;
   state: "completed" | "enrolled";
 }>;
 

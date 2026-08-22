@@ -13,7 +13,11 @@ type CombineAcademicDisplayInput = Readonly<{
 
 type ManualAcademicSources = Readonly<{
   catalog: readonly CatalogAcademicComponent[];
-  completedDisciplineIds: readonly string[];
+  completed: readonly Readonly<{
+    disciplinaId: string;
+    code: string;
+    name: string;
+  }>[];
   enrolled: readonly Readonly<{ disciplinaId: string; code: string }>[];
 }>;
 
@@ -21,26 +25,50 @@ const normalizeCode = (code: string): string => code.trim().toUpperCase();
 
 export function collectManualAcademicComponents({
   catalog,
-  completedDisciplineIds,
+  completed,
   enrolled,
 }: ManualAcademicSources): readonly ManualAcademicComponent[] {
-  const completedIds = new Set(completedDisciplineIds);
+  const completedById = new Map(completed.map(item => [item.disciplinaId, item]));
   const enrolledIds = new Set(enrolled.map(item => item.disciplinaId));
   const manualByCode = new Map<string, ManualAcademicComponent>();
 
   for (const item of catalog) {
     const code = normalizeCode(item.code);
-    if (completedIds.has(item.disciplinaId)) {
-      manualByCode.set(code, { code, state: "completed" });
+    const completedItem = completedById.get(item.disciplinaId);
+    if (completedItem) {
+      manualByCode.set(code, {
+        disciplinaId: item.disciplinaId,
+        code,
+        name: completedItem.name,
+        state: "completed",
+      });
     } else if (enrolledIds.has(item.disciplinaId)) {
-      manualByCode.set(code, { code, state: "enrolled" });
+      manualByCode.set(code, {
+        disciplinaId: item.disciplinaId,
+        code,
+        name: item.name,
+        state: "enrolled",
+      });
+    }
+  }
+
+  for (const item of completed) {
+    const code = normalizeCode(item.code);
+    if (!manualByCode.has(code)) {
+      manualByCode.set(code, { ...item, code, state: "completed" });
     }
   }
 
   for (const item of enrolled) {
     const code = normalizeCode(item.code);
     if (!manualByCode.has(code)) {
-      manualByCode.set(code, { code, state: "enrolled" });
+      const catalogItem = catalog.find(candidate => candidate.disciplinaId === item.disciplinaId);
+      manualByCode.set(code, {
+        disciplinaId: item.disciplinaId,
+        code,
+        name: catalogItem?.name ?? code,
+        state: "enrolled",
+      });
     }
   }
 
@@ -85,7 +113,7 @@ export function combineAcademicDisplay({
         presentation: {
           origin: "MANUAL",
           state: manualItem.state,
-          name: catalogItem?.name ?? code,
+          name: manualItem.name,
         },
       };
     }

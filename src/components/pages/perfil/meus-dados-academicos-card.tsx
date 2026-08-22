@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { BookOpenCheck, ExternalLink, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
+import { trackEvent } from "@/analytics/posthog-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,7 +113,10 @@ export function MeusDadosAcademicosCard({ usuarioId }: MeusDadosAcademicosCardPr
 
   return (
     <>
-      <Card className="overflow-hidden border-sky-200 dark:border-sky-900">
+      <Card
+        className="ph-no-capture overflow-hidden border-sky-200 dark:border-sky-900"
+        data-ph-no-capture="true"
+      >
         <CardHeader className="bg-sky-50/70 dark:bg-sky-950/20">
           <div className="flex items-start gap-3">
             <div className="rounded-full bg-sky-100 p-2 text-sky-800 dark:bg-sky-900 dark:text-sky-100">
@@ -133,7 +137,15 @@ export function MeusDadosAcademicosCard({ usuarioId }: MeusDadosAcademicosCardPr
           )}
 
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => setConnectOpen(true)}>
+            <Button
+              onClick={() => {
+                trackEvent("sigaa_connect_opened", {
+                  operation: view.kind === "never_connected" ? "connect" : "sync",
+                  consent_required: requireConsent,
+                });
+                setConnectOpen(true);
+              }}
+            >
               <span
                 className="mr-2 flex h-5 w-5 items-center justify-center rounded-sm bg-white/90 p-0.5"
                 aria-hidden="true"
@@ -148,7 +160,13 @@ export function MeusDadosAcademicosCard({ usuarioId }: MeusDadosAcademicosCardPr
               </Button>
             )}
             {stateQuery.data.connection && stateQuery.data.connection.status !== "DISCONNECTED" && (
-              <Button variant="outline" onClick={() => setDisconnectOpen(true)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  trackEvent("sigaa_sensitive_action_opened", { action: "disconnect" });
+                  setDisconnectOpen(true);
+                }}
+              >
                 Desconectar
               </Button>
             )}
@@ -156,7 +174,10 @@ export function MeusDadosAcademicosCard({ usuarioId }: MeusDadosAcademicosCardPr
               <Button
                 variant="ghost"
                 className="text-destructive"
-                onClick={() => setDeleteOpen(true)}
+                onClick={() => {
+                  trackEvent("sigaa_sensitive_action_opened", { action: "delete" });
+                  setDeleteOpen(true);
+                }}
               >
                 Excluir dados importados
               </Button>
@@ -190,7 +211,8 @@ export function MeusDadosAcademicosCard({ usuarioId }: MeusDadosAcademicosCardPr
         title="Desconectar do SIGAA"
         description="A conexão será encerrada, mas o último snapshot acadêmico e o histórico de tentativas serão preservados."
         confirmLabel="Desconectar"
-        pendingLabel="Desconectando..."
+        pendingLabel="Desconectando…"
+        actionName="disconnect"
         onOpenChange={setDisconnectOpen}
         action={disconnectOwnSigaa}
         onCompleted={disconnected}
@@ -200,7 +222,8 @@ export function MeusDadosAcademicosCard({ usuarioId }: MeusDadosAcademicosCardPr
         title="Excluir dados importados"
         description="A conexão, o snapshot e as tentativas importadas serão removidos. Dados acadêmicos adicionados manualmente serão preservados."
         confirmLabel="Excluir dados importados"
-        pendingLabel="Excluindo..."
+        pendingLabel="Excluindo…"
+        actionName="delete"
         destructive
         onOpenChange={setDeleteOpen}
         action={deleteOwnSigaaData}

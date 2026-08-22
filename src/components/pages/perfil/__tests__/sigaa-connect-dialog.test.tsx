@@ -1,6 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 
+import { trackEvent } from "@/analytics/posthog-client";
 import { SigaaConnectDialog } from "../sigaa-connect-dialog";
 import { reauthenticateForSigaa } from "@/lib/client/api/sigaa-reauth";
 import {
@@ -11,6 +13,7 @@ import {
 } from "@/lib/client/api/sigaa";
 
 jest.mock("@/lib/client/api/sigaa-reauth", () => ({ reauthenticateForSigaa: jest.fn() }));
+jest.mock("@/analytics/posthog-client", () => ({ trackEvent: jest.fn() }));
 jest.mock("@/lib/client/api/sigaa", () => {
   const actual = jest.requireActual("@/lib/client/api/sigaa");
   return {
@@ -23,6 +26,7 @@ jest.mock("@/lib/client/api/sigaa", () => {
 const mockReauthenticate = jest.mocked(reauthenticateForSigaa);
 const mockSynchronize = jest.mocked(synchronizeOwnSigaa);
 const mockConfirmCourseChange = jest.mocked(confirmOwnSigaaCourseChange);
+const mockTrackEvent = jest.mocked(trackEvent);
 
 describe("SIGAA connect dialog", () => {
   beforeEach(() => {
@@ -65,6 +69,13 @@ describe("SIGAA connect dialog", () => {
     );
 
     expect(screen.getByRole("dialog", { name: "Conectar ao SIGAA" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveClass("ph-no-capture");
+    expect(
+      screen.getByText(/matrícula, curso, período, currículo, CRA e progresso/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Metadados seguros das tentativas são removidos após 90 dias/)
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Usuário do SIGAA")).toHaveAttribute("autocomplete", "username");
     expect(screen.getByLabelText("Senha do SIGAA")).toHaveAttribute(
       "autocomplete",
@@ -81,6 +92,8 @@ describe("SIGAA connect dialog", () => {
     await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent("Confirme o consentimento");
+    expect(screen.getByLabelText(/Autorizo o Aquário/)).toHaveFocus();
+    expect(screen.getByLabelText(/Autorizo o Aquário/)).toHaveAttribute("aria-invalid", "true");
     expect(mockReauthenticate).not.toHaveBeenCalled();
   });
 
@@ -108,6 +121,14 @@ describe("SIGAA connect dialog", () => {
       expect.objectContaining({ username: "student", proofToken: "short-lived-proof" })
     );
     expect(onSynchronized).toHaveBeenCalledTimes(1);
+    expect(mockTrackEvent).toHaveBeenCalledWith("sigaa_connect_started", {
+      operation: "connect",
+      consent_required: true,
+    });
+    expect(mockTrackEvent).toHaveBeenCalledWith("sigaa_connect_succeeded", {
+      operation: "connect",
+      course_replaced: false,
+    });
   });
 
   it("reuses the idempotency key after an ambiguous network failure", async () => {
@@ -232,6 +253,7 @@ describe("SIGAA connect dialog", () => {
     await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
 
     expect(await screen.findByText("Ciência da Computação")).toBeInTheDocument();
+    expect(screen.getByText("Ciência da Computação").closest('[role="status"]')).toHaveFocus();
     expect(screen.getByText("Engenharia da Computação")).toBeInTheDocument();
     expect(screen.getByText(/Engenharia de Computação - Graduação/)).toBeInTheDocument();
     expect(screen.getByText(/Esta ação é irreversível no Aquário\./)).toBeInTheDocument();
@@ -265,6 +287,8 @@ describe("SIGAA connect dialog", () => {
       "550e8400-e29b-41d4-a716-446655440020"
     );
     expect(onSynchronized).toHaveBeenCalledWith(true);
+    expect(mockTrackEvent).toHaveBeenCalledWith("sigaa_course_change_shown");
+    expect(mockTrackEvent).toHaveBeenCalledWith("sigaa_course_change_confirmed");
   });
 
   it("returns to fresh credentials when a confirmation is stale", async () => {
@@ -313,5 +337,50 @@ describe("SIGAA connect dialog", () => {
     expect(screen.queryByText("Confirmar substituição de curso")).not.toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Inicie uma nova sincronização");
     expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("allows leaving a pending wait and preserves a later failure for the next open", async () => {
+    const user = userEvent.setup();
+    let rejectSync!: (reason: unknown) => void;
+    mockSynchronize.mockReturnValueOnce(
+      new Promise((_, reject) => {
+        rejectSync = reject;
+      })
+    );
+
+    function Harness() {
+      const [open, setOpen] = useState(true);
+      return (
+        <>
+          <button onClick={() => setOpen(true)}>Abrir novamente</button>
+          <SigaaConnectDialog
+            open={open}
+            requireConsent
+            onOpenChange={setOpen}
+            onSynchronized={jest.fn()}
+          />
+        </>
+      );
+    }
+
+    render(<Harness />);
+    await user.click(screen.getByLabelText(/Autorizo o Aquário/));
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "student");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "sigaa-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "aquario-password");
+    await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("não garante o cancelamento");
+
+    await user.click(screen.getByRole("button", { name: "Parar de esperar" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    rejectSync(new Error("Falha segura ao sincronizar."));
+    await waitFor(() =>
+      expect(mockTrackEvent).toHaveBeenCalledWith("sigaa_connect_failed", {
+        operation: "connect",
+      })
+    );
+
+    await user.click(screen.getByRole("button", { name: "Abrir novamente" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Falha segura ao sincronizar");
   });
 });

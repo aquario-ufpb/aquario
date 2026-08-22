@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { trackEvent } from "@/analytics/posthog-client";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -58,12 +59,41 @@ export function SigaaConnectDialog({
   onSynchronized,
 }: SigaaConnectDialogProps) {
   const formRef = useRef<HTMLFormElement>(null);
+  const courseChangeRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
   const attemptRef = useRef<Attempt | null>(null);
   const [state, setState] = useState<DialogState>({ kind: "credentials", error: null });
   const isPending = state.kind === "submitting";
   const mismatch = state.kind === "credentials" ? undefined : state.mismatch;
   const confirmingCourseChange = Boolean(mismatch);
   const error = state.kind === "submitting" ? null : state.error;
+  const consentError =
+    state.kind === "credentials" && error === "Confirme o consentimento para continuar.";
+  const acknowledgmentError =
+    state.kind === "course_change_confirmation" &&
+    error === "Reconheça que a substituição do curso é irreversível para continuar.";
+
+  useEffect(() => {
+    if (state.kind === "course_change_confirmation") {
+      courseChangeRef.current?.focus();
+    }
+  }, [state.kind]);
+
+  useEffect(() => {
+    if (error) {
+      const targetName = consentError
+        ? "consent"
+        : acknowledgmentError
+          ? "courseChangeAcknowledged"
+          : null;
+      const target = targetName ? formRef.current?.elements.namedItem(targetName) : null;
+      if (target instanceof HTMLElement) {
+        target.focus();
+      } else {
+        errorRef.current?.focus();
+      }
+    }
+  }, [acknowledgmentError, consentError, error]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -79,6 +109,8 @@ export function SigaaConnectDialog({
     let proofToken = "";
     let connectorStarted = false;
     const operation = state.kind === "course_change_confirmation" ? "course_change" : "sync";
+    const analyticsOperation =
+      operation === "course_change" ? operation : requireConsent ? "connect" : "sync";
     const proposal = state.kind === "course_change_confirmation" ? state.mismatch : null;
 
     if (operation === "sync" && requireConsent && formData.get("consent") !== "accepted") {
@@ -95,6 +127,14 @@ export function SigaaConnectDialog({
         error: "Reconheça que a substituição do curso é irreversível para continuar.",
       });
       return;
+    }
+
+    trackEvent("sigaa_connect_started", {
+      operation: analyticsOperation,
+      consent_required: operation === "sync" && requireConsent,
+    });
+    if (operation === "course_change") {
+      trackEvent("sigaa_course_change_confirmed");
     }
 
     setState({
@@ -126,6 +166,10 @@ export function SigaaConnectDialog({
         });
         attemptRef.current = null;
         await onSynchronized(result.courseReplaced);
+        trackEvent("sigaa_connect_succeeded", {
+          operation: analyticsOperation,
+          course_replaced: result.courseReplaced,
+        });
       } else {
         await synchronizeOwnSigaa({
           username,
@@ -135,17 +179,23 @@ export function SigaaConnectDialog({
         });
         attemptRef.current = null;
         await onSynchronized(false);
+        trackEvent("sigaa_connect_succeeded", {
+          operation: analyticsOperation,
+          course_replaced: false,
+        });
       }
       setState({ kind: "credentials", error: null });
       onOpenChange(false);
     } catch (caught) {
       if (caught instanceof SigaaCourseChangeRequiredError) {
+        trackEvent("sigaa_course_change_shown");
         attemptRef.current = null;
         setState({
           kind: "course_change_confirmation",
           mismatch: caught.mismatch,
           error: null,
         });
+        return;
       } else if (caught instanceof SigaaCourseChangeInvalidError) {
         attemptRef.current = null;
         setState({
@@ -163,6 +213,7 @@ export function SigaaConnectDialog({
             : { kind: "credentials", error: message }
         );
       }
+      trackEvent("sigaa_connect_failed", { operation: analyticsOperation });
     } finally {
       formData.delete("aquarioPassword");
       formData.delete("sigaaUsername");
@@ -176,20 +227,18 @@ export function SigaaConnectDialog({
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!isPending) {
-      clearSensitiveForm(formRef.current);
-      if (!nextOpen) {
-        attemptRef.current = null;
-        setState({ kind: "credentials", error: null });
-      }
-      onOpenChange(nextOpen);
+    clearSensitiveForm(formRef.current);
+    if (!nextOpen && !isPending) {
+      attemptRef.current = null;
+      setState({ kind: "credentials", error: null });
     }
+    onOpenChange(nextOpen);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg"
+        className="ph-no-capture max-h-[calc(100dvh-2rem)] overscroll-contain overflow-y-auto sm:max-w-lg"
         data-ph-no-capture="true"
       >
         <DialogHeader>
@@ -209,7 +258,13 @@ export function SigaaConnectDialog({
 
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           {mismatch && (
-            <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/5 p-4">
+            <div
+              ref={courseChangeRef}
+              tabIndex={-1}
+              role="status"
+              aria-live="polite"
+              className="space-y-3 rounded-md border border-destructive/40 bg-destructive/5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <div className="grid gap-3 text-sm sm:grid-cols-2">
                 <div>
                   <p className="font-medium">Curso atual</p>
@@ -235,6 +290,15 @@ export function SigaaConnectDialog({
                   ? "O curso e o centro do perfil serão substituídos pelos dados acima."
                   : "O curso do perfil será substituído pelo dado acima."}
               </p>
+              <p className="text-sm text-muted-foreground">
+                A alteração muda o curso e, quando indicado, o centro exibidos publicamente no seu
+                perfil. Confirme antes de{" "}
+                {new Intl.DateTimeFormat("pt-BR", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                }).format(new Date(mismatch.expiresAt))}
+                .
+              </p>
               <label
                 className="flex items-start gap-3 text-sm"
                 htmlFor="course-change-acknowledged"
@@ -245,6 +309,8 @@ export function SigaaConnectDialog({
                   value="accepted"
                   type="checkbox"
                   className="mt-0.5 h-4 w-4"
+                  aria-invalid={acknowledgmentError}
+                  aria-describedby={acknowledgmentError ? "sigaa-form-error" : undefined}
                   disabled={isPending}
                 />
                 <span>Entendo que meu curso será substituído e quero continuar.</span>
@@ -261,14 +327,31 @@ export function SigaaConnectDialog({
                   value="accepted"
                   type="checkbox"
                   className="mt-0.5 h-4 w-4"
-                  aria-describedby="sigaa-consent-description"
+                  aria-invalid={consentError}
+                  aria-describedby={
+                    consentError
+                      ? "sigaa-consent-description sigaa-form-error"
+                      : "sigaa-consent-description"
+                  }
                   disabled={isPending}
                 />
                 <span id="sigaa-consent-description">
                   Autorizo o Aquário a consultar meus dados acadêmicos no SIGAA e guardar apenas o
-                  snapshot acadêmico descrito nesta tela.
+                  último snapshot acadêmico.
                 </span>
               </label>
+              <div className="mt-3 space-y-2 text-xs text-muted-foreground">
+                <p>O snapshot inclui:</p>
+                <ul className="list-disc space-y-1 pl-5">
+                  <li>matrícula, curso, período, currículo, CRA e progresso;</li>
+                  <li>componentes curriculares, cargas, pré-requisitos e correquisitos;</li>
+                  <li>turmas, horários, salas, notas, resultados e faltas.</li>
+                </ul>
+                <p>
+                  O Aquário mantém somente o snapshot mais recente. Metadados seguros das tentativas
+                  são removidos após 90 dias. Senhas, cookies, HTML e PDF não são guardados.
+                </p>
+              </div>
             </div>
           )}
 
@@ -314,7 +397,13 @@ export function SigaaConnectDialog({
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-destructive">
+            <p
+              ref={errorRef}
+              tabIndex={-1}
+              id="sigaa-form-error"
+              role="alert"
+              className="text-sm text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               {error}
             </p>
           )}
@@ -330,9 +419,9 @@ export function SigaaConnectDialog({
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
-              disabled={isPending}
+              disabled={false}
             >
-              Cancelar
+              {isPending ? "Parar de esperar" : "Cancelar"}
             </Button>
             <Button
               type="submit"
@@ -340,7 +429,7 @@ export function SigaaConnectDialog({
               disabled={isPending}
             >
               {isPending
-                ? "Sincronizando..."
+                ? "Sincronizando…"
                 : confirmingCourseChange
                   ? "Substituir meu curso e sincronizar"
                   : requireConsent

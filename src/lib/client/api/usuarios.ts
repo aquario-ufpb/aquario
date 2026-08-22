@@ -41,6 +41,12 @@ export type UpdateUserInfoRequest = {
   cursoId?: string;
 };
 
+export type CompletedDiscipline = Readonly<{
+  disciplinaId: string;
+  code: string;
+  name: string;
+}>;
+
 export type UserMembership = {
   id: string;
   entidade: {
@@ -346,7 +352,9 @@ export const usuariosService = {
     return response.json();
   },
 
-  getMyDisciplinasConcluidas: async (token: string): Promise<{ disciplinaIds: string[] }> => {
+  getMyDisciplinasConcluidas: async (
+    token: string
+  ): Promise<{ disciplinaIds: string[]; disciplinas: CompletedDiscipline[] }> => {
     const response = await apiClient(`${ENDPOINTS.USUARIO_DISCIPLINAS_ME}`, {
       method: "GET",
       token,

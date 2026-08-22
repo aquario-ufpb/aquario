@@ -94,6 +94,36 @@ type OnboardingEvent =
   | { name: "onboarding_step_completed"; step_id: OnboardingStepId }
   | { name: "onboarding_step_skipped"; step_id: OnboardingStepId };
 
+export type SigaaFlowOperation = "connect" | "sync" | "course_change";
+export type SigaaConnectionState = "never_connected" | "pending" | "connected" | "disconnected";
+export type SigaaSensitiveAction = "disconnect" | "delete";
+
+type SigaaEvent =
+  | {
+      name: "sigaa_connect_opened";
+      operation: "connect" | "sync";
+      consent_required: boolean;
+    }
+  | {
+      name: "sigaa_connect_started";
+      operation: SigaaFlowOperation;
+      consent_required: boolean;
+    }
+  | {
+      name: "sigaa_connect_succeeded";
+      operation: SigaaFlowOperation;
+      course_replaced: boolean;
+    }
+  | { name: "sigaa_connect_failed"; operation: SigaaFlowOperation }
+  | { name: "sigaa_course_change_shown" }
+  | { name: "sigaa_course_change_confirmed" }
+  | { name: "sigaa_academic_page_opened"; connection_state: SigaaConnectionState }
+  | { name: "sigaa_sync_again_clicked"; connection_state: SigaaConnectionState }
+  | { name: "sigaa_sensitive_action_opened"; action: SigaaSensitiveAction }
+  | { name: "sigaa_sensitive_action_started"; action: SigaaSensitiveAction }
+  | { name: "sigaa_sensitive_action_succeeded"; action: SigaaSensitiveAction }
+  | { name: "sigaa_sensitive_action_failed"; action: SigaaSensitiveAction };
+
 export type ProjetoStatus = "PUBLICADO" | "RASCUNHO" | "ARQUIVADO";
 
 type ProjetosEvent =
@@ -130,4 +160,5 @@ export type PostHogEvent =
   | GuiasEvent
   | UsuariosEvent
   | OnboardingEvent
+  | SigaaEvent
   | ProjetosEvent;
