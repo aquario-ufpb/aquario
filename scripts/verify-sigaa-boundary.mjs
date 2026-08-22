@@ -3,11 +3,21 @@ import { extname, join } from "node:path";
 
 const schema = readFileSync("prisma/schema.prisma", "utf8");
 const sigaaModels = [...schema.matchAll(/model (Sigaa\w+) \{([\s\S]*?)\n\}/g)];
+const expectedSigaaModels = [
+  "SigaaAcademicSnapshot",
+  "SigaaConnection",
+  "SigaaCourseChangeProposal",
+  "SigaaRateLimitBucket",
+  "SigaaSyncRun",
+];
 const forbiddenField =
   /password|senha|username|cookie|html|pdf|viewstate|raw(?:body|error|response)|requestbody|responsebody|bearer/i;
 
-if (sigaaModels.length !== 4) {
-  throw new Error(`Expected four SIGAA persistence models, found ${sigaaModels.length}.`);
+const actualSigaaModels = sigaaModels.map(([, modelName]) => modelName).sort();
+if (actualSigaaModels.join(",") !== expectedSigaaModels.join(",")) {
+  throw new Error(
+    `Unexpected SIGAA persistence models: ${actualSigaaModels.join(", ") || "none"}.`
+  );
 }
 
 for (const [, modelName, body] of sigaaModels) {
