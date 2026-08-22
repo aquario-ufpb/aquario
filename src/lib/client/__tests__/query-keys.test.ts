@@ -7,6 +7,7 @@ describe("private query keys", () => {
     queryKeys.usuarios.onboarding("user-1"),
     queryKeys.disciplinasConcluidas.me("user-1"),
     queryKeys.disciplinasSemestre.ativo("user-1"),
+    queryKeys.sigaa.state("user-1"),
   ];
 
   it.each(privateKeys.map(key => [key]))("scopes %p to the authenticated user", key => {
@@ -18,5 +19,6 @@ describe("private query keys", () => {
     expect(queryKeys.disciplinasConcluidas.me("user-1")).not.toEqual(
       queryKeys.disciplinasConcluidas.me("user-2")
     );
+    expect(queryKeys.sigaa.state("user-1")).not.toEqual(queryKeys.sigaa.state("user-2"));
   });
 });

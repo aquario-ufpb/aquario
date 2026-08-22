@@ -3,16 +3,22 @@ name: Staging Deployment
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
 
+concurrency:
+  group: staging-deployment
+  cancel-in-progress: false
+
 jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
+    environment: staging
 
     steps:
       - name: Checkout code
@@ -136,15 +142,48 @@ jobs:
         env:
           DATABASE_URL: ${{ steps.db-url.outputs.url }}
 
+      - name: Purge inherited SIGAA data
+        run: npx prisma db execute --file scripts/sql/clear-sigaa-staging.sql
+        env:
+          DATABASE_URL: ${{ steps.db-url.outputs.url }}
+
       - name: Install Vercel CLI
         run: npm install -g vercel
 
+      - name: Validate isolated SIGAA staging secrets
+        env:
+          STAGING_SIGAA_REAUTH_JWT_SECRET: ${{ secrets.STAGING_SIGAA_REAUTH_JWT_SECRET }}
+          STAGING_SIGAA_CONNECTOR_URL: ${{ secrets.STAGING_SIGAA_CONNECTOR_URL }}
+          STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS: ${{ secrets.STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS }}
+          STAGING_SIGAA_CONNECTOR_API_SECRET: ${{ secrets.STAGING_SIGAA_CONNECTOR_API_SECRET }}
+        run: |
+          for name in \
+            STAGING_SIGAA_REAUTH_JWT_SECRET \
+            STAGING_SIGAA_CONNECTOR_URL \
+            STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS \
+            STAGING_SIGAA_CONNECTOR_API_SECRET
+          do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::$name is required for isolated SIGAA staging"
+              exit 1
+            fi
+          done
+
       - name: Deploy to Vercel (Staging)
         id: deploy
+        env:
+          STAGING_SIGAA_REAUTH_JWT_SECRET: ${{ secrets.STAGING_SIGAA_REAUTH_JWT_SECRET }}
+          STAGING_SIGAA_CONNECTOR_URL: ${{ secrets.STAGING_SIGAA_CONNECTOR_URL }}
+          STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS: ${{ secrets.STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS }}
+          STAGING_SIGAA_CONNECTOR_API_SECRET: ${{ secrets.STAGING_SIGAA_CONNECTOR_API_SECRET }}
         run: |
           URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} \
             --env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
             --env NEXT_PUBLIC_IS_STAGING="true" \
+            --env SIGAA_REAUTH_JWT_SECRET="$STAGING_SIGAA_REAUTH_JWT_SECRET" \
+            --env SIGAA_CONNECTOR_URL="$STAGING_SIGAA_CONNECTOR_URL" \
+            --env SIGAA_CONNECTOR_ALLOWED_ORIGINS="$STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS" \
+            --env SIGAA_CONNECTOR_API_SECRET="$STAGING_SIGAA_CONNECTOR_API_SECRET" \
             --build-env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
             --build-env NEXT_PUBLIC_IS_STAGING="true")
 

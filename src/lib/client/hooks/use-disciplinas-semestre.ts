@@ -11,7 +11,7 @@ import type {
 /**
  * Fetch the current user's enrolled disciplines for the active semester.
  */
-export const useDisciplinasSemestreAtivo = () => {
+export const useDisciplinasSemestreAtivo = (enabled = true) => {
   const { token, userId } = useAuth();
 
   return useQuery({
@@ -22,7 +22,7 @@ export const useDisciplinasSemestreAtivo = () => {
       }
       return disciplinaSemestreService.getByActiveSemestre(token);
     },
-    enabled: !!token && !!userId,
+    enabled: enabled && !!token && !!userId,
     staleTime: 5 * 60 * 1000,
   });
 };

@@ -20,10 +20,10 @@ type RequireAuthOptions = {
 export function useRequireAuth(options: RequireAuthOptions = {}) {
   const { redirectTo = "/login", requireRole } = options;
   const { isLoading: authLoading, isAuthenticated, token } = useAuth();
-  const { data: user, isLoading: userLoading } = useCurrentUser();
+  const { data: user, isLoading: userQueryLoading } = useCurrentUser();
   const router = useRouter();
 
-  const isLoading = authLoading || userLoading;
+  const isLoading = authLoading || (Boolean(token) && userQueryLoading);
 
   useEffect(() => {
     // Don't redirect while still loading

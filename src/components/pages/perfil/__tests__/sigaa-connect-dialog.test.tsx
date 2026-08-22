@@ -1,0 +1,176 @@
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+import { SigaaConnectDialog } from "../sigaa-connect-dialog";
+import { reauthenticateForSigaa } from "@/lib/client/api/sigaa-reauth";
+import { synchronizeOwnSigaa } from "@/lib/client/api/sigaa";
+
+jest.mock("@/lib/client/api/sigaa-reauth", () => ({ reauthenticateForSigaa: jest.fn() }));
+jest.mock("@/lib/client/api/sigaa", () => ({ synchronizeOwnSigaa: jest.fn() }));
+
+const mockReauthenticate = jest.mocked(reauthenticateForSigaa);
+const mockSynchronize = jest.mocked(synchronizeOwnSigaa);
+
+describe("SIGAA connect dialog", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockReauthenticate.mockResolvedValue({
+      proofToken: "short-lived-proof",
+      expiresAt: "2026-08-21T12:15:00.000Z",
+    });
+    mockSynchronize.mockResolvedValue({
+      status: "synchronized",
+      synchronizedAt: "2026-08-21T12:00:00.000Z",
+      run: {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        status: "SUCCEEDED",
+        failureCode: null,
+        connectorRequestId: "request-id",
+        startedAt: "2026-08-21T11:59:00.000Z",
+        finishedAt: "2026-08-21T12:00:00.000Z",
+      },
+    });
+  });
+
+  it("exposes labeled secret fields and requires explicit consent", async () => {
+    const user = userEvent.setup();
+    render(
+      <SigaaConnectDialog open requireConsent onOpenChange={jest.fn()} onSynchronized={jest.fn()} />
+    );
+
+    expect(screen.getByRole("dialog", { name: "Conectar ao SIGAA" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Usuário do SIGAA")).toHaveAttribute("autocomplete", "username");
+    expect(screen.getByLabelText("Senha do SIGAA")).toHaveAttribute(
+      "autocomplete",
+      "current-password"
+    );
+    expect(screen.getByLabelText("Senha do Aquário")).toHaveAttribute(
+      "autocomplete",
+      "current-password"
+    );
+
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "student");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "example-sigaa-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "example-aquario-password");
+    await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Confirme o consentimento");
+    expect(mockReauthenticate).not.toHaveBeenCalled();
+  });
+
+  it("passes the proof directly to a single synchronization call", async () => {
+    const user = userEvent.setup();
+    const onSynchronized = jest.fn();
+    render(
+      <SigaaConnectDialog
+        open
+        requireConsent
+        onOpenChange={jest.fn()}
+        onSynchronized={onSynchronized}
+      />
+    );
+
+    await user.click(screen.getByLabelText(/Autorizo o Aquário/));
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "student");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "example-sigaa-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "example-aquario-password");
+    await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+
+    expect(mockReauthenticate).toHaveBeenCalledTimes(1);
+    expect(mockSynchronize).toHaveBeenCalledTimes(1);
+    expect(mockSynchronize).toHaveBeenCalledWith(
+      expect.objectContaining({ username: "student", proofToken: "short-lived-proof" })
+    );
+    expect(onSynchronized).toHaveBeenCalledTimes(1);
+  });
+
+  it("reuses the idempotency key after an ambiguous network failure", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = jest.fn();
+    mockSynchronize
+      .mockRejectedValueOnce(new TypeError("network interrupted"))
+      .mockResolvedValueOnce({
+        status: "synchronized",
+        synchronizedAt: "2026-08-21T12:00:00.000Z",
+        run: {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          status: "SUCCEEDED",
+          failureCode: null,
+          connectorRequestId: "request-id",
+          startedAt: "2026-08-21T11:59:00.000Z",
+          finishedAt: "2026-08-21T12:00:00.000Z",
+        },
+      });
+
+    render(
+      <SigaaConnectDialog
+        open
+        requireConsent
+        onOpenChange={onOpenChange}
+        onSynchronized={jest.fn()}
+      />
+    );
+
+    const fillAndSubmit = async () => {
+      await user.click(screen.getByLabelText(/Autorizo o Aquário/));
+      await user.type(screen.getByLabelText("Usuário do SIGAA"), "student");
+      await user.type(screen.getByLabelText("Senha do SIGAA"), "example-sigaa-password");
+      await user.type(screen.getByLabelText("Senha do Aquário"), "example-aquario-password");
+      await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+    };
+
+    await fillAndSubmit();
+    expect(await screen.findByRole("alert")).toHaveTextContent("network interrupted");
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Usuário do SIGAA")).toHaveValue("");
+    expect(screen.getByLabelText("Senha do SIGAA")).toHaveValue("");
+    expect(screen.getByLabelText("Senha do Aquário")).toHaveValue("");
+    await fillAndSubmit();
+
+    const firstKey = mockSynchronize.mock.calls[0][0].idempotencyKey;
+    const secondKey = mockSynchronize.mock.calls[1][0].idempotencyKey;
+    expect(mockSynchronize.mock.calls.map(([input]) => input.username)).toEqual([
+      "student",
+      "student",
+    ]);
+    expect(secondKey).toBe(firstKey);
+  });
+
+  it("starts a new operation when the username changes after an ambiguous failure", async () => {
+    const user = userEvent.setup();
+    mockSynchronize
+      .mockRejectedValueOnce(new TypeError("network interrupted"))
+      .mockResolvedValueOnce({
+        status: "synchronized",
+        synchronizedAt: "2026-08-21T12:00:00.000Z",
+        run: {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          status: "SUCCEEDED",
+          failureCode: null,
+          connectorRequestId: "request-id",
+          startedAt: "2026-08-21T11:59:00.000Z",
+          finishedAt: "2026-08-21T12:00:00.000Z",
+        },
+      });
+
+    render(
+      <SigaaConnectDialog open requireConsent onOpenChange={jest.fn()} onSynchronized={jest.fn()} />
+    );
+
+    const submit = async (username: string) => {
+      await user.click(screen.getByLabelText(/Autorizo o Aquário/));
+      await user.type(screen.getByLabelText("Usuário do SIGAA"), username);
+      await user.type(screen.getByLabelText("Senha do SIGAA"), "example-sigaa-password");
+      await user.type(screen.getByLabelText("Senha do Aquário"), "example-aquario-password");
+      await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+    };
+
+    await submit("student-one");
+    expect(await screen.findByRole("alert")).toHaveTextContent("network interrupted");
+    await submit("student-two");
+
+    expect(mockSynchronize.mock.calls[1][0].idempotencyKey).not.toBe(
+      mockSynchronize.mock.calls[0][0].idempotencyKey
+    );
+  });
+});

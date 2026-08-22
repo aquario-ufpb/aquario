@@ -4,6 +4,7 @@
 import {
   readSigaaConnectorEnvironment,
   readSigaaReauthEnvironment,
+  readSigaaRetentionEnvironment,
   SIGAA_ENV_NAMES,
 } from "../sigaa-env";
 
@@ -158,5 +159,44 @@ describe("SIGAA server environment", () => {
         JWT_SECRET: CONNECTOR_SECRET,
       })
     ).toThrow("must be unique");
+    expect(() =>
+      readSigaaReauthEnvironment({
+        [SIGAA_ENV_NAMES.reauthJwtSecret]: REAUTH_SECRET,
+        [SIGAA_ENV_NAMES.cronSecret]: REAUTH_SECRET,
+      })
+    ).toThrow("must differ from CRON_SECRET");
+    expect(() =>
+      readSigaaConnectorEnvironment({
+        ...connectorEnvironment(),
+        [SIGAA_ENV_NAMES.cronSecret]: CONNECTOR_SECRET,
+      })
+    ).toThrow("must be unique");
+  });
+
+  it("requires a distinct retention cron secret", () => {
+    const cronSecret = "cron-secret-that-is-at-least-thirty-two-chars";
+
+    expect(readSigaaRetentionEnvironment({ [SIGAA_ENV_NAMES.cronSecret]: cronSecret })).toEqual({
+      cronSecret,
+    });
+    expect(() => readSigaaRetentionEnvironment({})).toThrow("CRON_SECRET");
+    expect(() =>
+      readSigaaRetentionEnvironment({
+        [SIGAA_ENV_NAMES.cronSecret]: cronSecret,
+        [SIGAA_ENV_NAMES.connectorApiSecret]: cronSecret,
+      })
+    ).toThrow("CRON_SECRET must be unique");
+  });
+
+  it("fails closed in public previews while permitting explicitly isolated staging", () => {
+    expect(() =>
+      readSigaaConnectorEnvironment(connectorEnvironment({ VERCEL_ENV: "preview" }))
+    ).toThrow("disabled in preview deployments");
+
+    expect(
+      readSigaaConnectorEnvironment(
+        connectorEnvironment({ VERCEL_ENV: "preview", NEXT_PUBLIC_IS_STAGING: "true" })
+      ).url.origin
+    ).toBe(CONNECTOR_ORIGIN);
   });
 });
