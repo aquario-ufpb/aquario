@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin Audit Logs**: Nova tabela `AuditLog`, API interna `GET /api/admin/audit-logs` e tela `/admin/audit-logs` para `MASTER_ADMIN` acompanhar ações administrativas sensíveis. Mutações administrativas de usuários agora registram criação/mescla de facade, alteração de role, edição de centro/curso/slug e deleção.
 
 ### Changed
+- **Integração SIGAA**: Botão de conexão agora usa o ícone SIGAA em SVG vetorial leve.
 - **Perfis públicos**: `/usuarios/[slug]`, `/entidade/[slug]` e `/projetos/[id]` agora deduplicam leituras server-side entre metadata e página; perfis de usuário e entidade também hidratam o React Query com `initialData`.
 - **Onboarding**: O modal agora usa altura dinâmica com safe areas e rolagem contida; o fluxo móvel ganhou alvos de toque de 44 px, foco e estados acessíveis, animações reduzidas e uma lista curricular vertical sem rolagem horizontal aninhada.
 

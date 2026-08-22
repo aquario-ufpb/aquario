@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { BookOpenCheck, ExternalLink, RefreshCw, ShieldCheck } from "lucide-react";
+import { BookOpenCheck, ExternalLink, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -125,7 +126,12 @@ export function MeusDadosAcademicosCard({ usuarioId }: MeusDadosAcademicosCardPr
 
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => setConnectOpen(true)}>
-              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+              <span
+                className="mr-2 flex h-5 w-5 items-center justify-center rounded-sm bg-white/90 p-0.5"
+                aria-hidden="true"
+              >
+                <Image src="/sigaa-icon.svg" alt="" width={16} height={16} aria-hidden="true" />
+              </span>
               {view.kind === "never_connected" ? "Conectar ao SIGAA" : "Sincronizar agora"}
             </Button>
             {hasSnapshot && (
