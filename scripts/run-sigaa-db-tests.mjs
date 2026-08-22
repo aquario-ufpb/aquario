@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 
 const databaseNamePattern = /^aquario_sigaa_test(?:_[a-z0-9]+)?$/;
 let containerName = null;
+const prismaCli = "node_modules/prisma/build/index.js";
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -73,22 +74,15 @@ function startPostgres() {
   return `postgresql://postgres:${password}@127.0.0.1:${port}/aquario_sigaa_test`;
 }
 
-try {
-  const databaseUrl = process.env.SIGAA_TEST_DATABASE_URL || startPostgres();
-  assertDisposableDatabase(databaseUrl);
-  const environment = {
-    ...process.env,
-    DATABASE_URL: databaseUrl,
-    NODE_ENV: "test",
-  };
+function deployMigrations(environment) {
+  run(process.execPath, [prismaCli, "migrate", "deploy"], { env: environment });
+}
 
-  run(process.execPath, ["node_modules/prisma/build/index.js", "migrate", "deploy"], {
-    env: environment,
-  });
+function assertNoSchemaDrift(databaseUrl, environment) {
   run(
     process.execPath,
     [
-      "node_modules/prisma/build/index.js",
+      prismaCli,
       "migrate",
       "diff",
       "--from-url",
@@ -99,6 +93,9 @@ try {
     ],
     { env: environment }
   );
+}
+
+function runRepositoryTests(environment) {
   run(
     process.execPath,
     [
@@ -109,6 +106,36 @@ try {
     ],
     { env: environment }
   );
+}
+
+try {
+  const databaseUrl = process.env.SIGAA_TEST_DATABASE_URL || startPostgres();
+  assertDisposableDatabase(databaseUrl);
+  const environment = {
+    ...process.env,
+    DATABASE_URL: databaseUrl,
+    NODE_ENV: "test",
+  };
+
+  deployMigrations(environment);
+  assertNoSchemaDrift(databaseUrl, environment);
+  runRepositoryTests(environment);
+  run(
+    process.execPath,
+    [
+      prismaCli,
+      "db",
+      "execute",
+      "--url",
+      databaseUrl,
+      "--file",
+      "scripts/sql/verify-sigaa-persistence-reversal.sql",
+    ],
+    { env: environment }
+  );
+  deployMigrations(environment);
+  assertNoSchemaDrift(databaseUrl, environment);
+  runRepositoryTests(environment);
 } finally {
   if (containerName) {
     spawnSync("docker", ["rm", "--force", containerName], { stdio: "ignore" });
