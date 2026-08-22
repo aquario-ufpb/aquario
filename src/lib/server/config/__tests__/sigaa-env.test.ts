@@ -62,36 +62,40 @@ describe("SIGAA server environment", () => {
     }
   });
 
-  it("allows local HTTP only behind the explicit development flag", () => {
-    expect(
-      readSigaaConnectorEnvironment(
-        connectorEnvironment({
-          NODE_ENV: "development",
-          [SIGAA_ENV_NAMES.connectorUrl]: "http://localhost:8000/v1/sync",
-          [SIGAA_ENV_NAMES.connectorAllowedOrigins]: "http://localhost:8000",
-          [SIGAA_ENV_NAMES.connectorAllowLocalHttp]: "true",
-        })
-      ).url.href
-    ).toBe("http://localhost:8000/v1/sync");
-    expect(() =>
-      readSigaaConnectorEnvironment(
-        connectorEnvironment({
-          NODE_ENV: "development",
-          [SIGAA_ENV_NAMES.connectorUrl]: "http://localhost:8000/v1/sync",
-          [SIGAA_ENV_NAMES.connectorAllowedOrigins]: "http://localhost:8000",
-        })
-      )
-    ).toThrow("must use HTTPS");
-    expect(() =>
-      readSigaaConnectorEnvironment(
-        connectorEnvironment({
-          [SIGAA_ENV_NAMES.connectorUrl]: "http://localhost:8000/v1/sync",
-          [SIGAA_ENV_NAMES.connectorAllowedOrigins]: "http://localhost:8000",
-          [SIGAA_ENV_NAMES.connectorAllowLocalHttp]: "true",
-        })
-      )
-    ).toThrow("allowed only in development");
-  });
+  it.each(["localhost", "127.0.0.1", "[::1]"])(
+    "allows local HTTP for %s only behind the explicit development flag",
+    hostname => {
+      const origin = `http://${hostname}:8000`;
+      expect(
+        readSigaaConnectorEnvironment(
+          connectorEnvironment({
+            NODE_ENV: "development",
+            [SIGAA_ENV_NAMES.connectorUrl]: `${origin}/v1/sync`,
+            [SIGAA_ENV_NAMES.connectorAllowedOrigins]: origin,
+            [SIGAA_ENV_NAMES.connectorAllowLocalHttp]: "true",
+          })
+        ).url.href
+      ).toBe(`${origin}/v1/sync`);
+      expect(() =>
+        readSigaaConnectorEnvironment(
+          connectorEnvironment({
+            NODE_ENV: "development",
+            [SIGAA_ENV_NAMES.connectorUrl]: "http://localhost:8000/v1/sync",
+            [SIGAA_ENV_NAMES.connectorAllowedOrigins]: "http://localhost:8000",
+          })
+        )
+      ).toThrow("must use HTTPS");
+      expect(() =>
+        readSigaaConnectorEnvironment(
+          connectorEnvironment({
+            [SIGAA_ENV_NAMES.connectorUrl]: "http://localhost:8000/v1/sync",
+            [SIGAA_ENV_NAMES.connectorAllowedOrigins]: "http://localhost:8000",
+            [SIGAA_ENV_NAMES.connectorAllowLocalHttp]: "true",
+          })
+        )
+      ).toThrow("allowed only in development");
+    }
+  );
 
   it("requires the exact /v1/sync URL and an exact origin allowlist match", () => {
     expect(() =>

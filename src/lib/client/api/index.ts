@@ -12,3 +12,4 @@ export * from "./vagas";
 export * from "./curriculos";
 export * from "./calendario-academico";
 export * from "./sigaa-reauth";
+export * from "./sigaa";

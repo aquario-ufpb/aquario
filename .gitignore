@@ -126,6 +126,8 @@ public/uploads/
 # Local-only data (bulk CSVs, source dumps) — used post-merge to backfill prod.
 # The curated subset that ships with the repo lives in content/aquario-projetos/.
 data/
+!src/app/api/usuarios/me/sigaa/data/
+!src/app/api/usuarios/me/sigaa/data/route.ts
 
 # Local-only scripts — same backfill flow. Hidden subdirectory makes the intent
 # obvious vs. listing tracked-shaped paths inside a tracked directory.

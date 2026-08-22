@@ -15,6 +15,12 @@ import {
 
 const database = new PrismaClient();
 const repository = new PrismaSigaaRepository(database);
+const testCourseNames = [
+  "Ciência da Computação",
+  "Ciencia da Computacao",
+  "Ciência da Computação (Bacharelado)",
+] as const;
+let testCourseNameIndex = 0;
 
 type OwnerOptions = {
   matricula?: string;
@@ -33,7 +39,7 @@ async function createOwner(options: OwnerOptions = {}): Promise<UsuarioId> {
   });
   const curso = await database.curso.create({
     data: {
-      nome: options.courseName ?? `Ciência da Computação ${randomUUID()}`,
+      nome: options.courseName ?? testCourseNames[testCourseNameIndex++ % testCourseNames.length],
       centroId: centro.id,
     },
   });
@@ -116,6 +122,7 @@ async function reserve(ownerId: UsuarioId, key = randomUUID()) {
 }
 
 beforeEach(async () => {
+  testCourseNameIndex = 0;
   await database.$executeRawUnsafe('TRUNCATE TABLE "Campus" CASCADE');
 });
 
