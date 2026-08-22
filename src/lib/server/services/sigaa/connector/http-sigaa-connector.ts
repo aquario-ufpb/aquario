@@ -8,6 +8,7 @@ import {
   decodeSyncResponse,
   serializeSyncRequest,
 } from "./connector-contract-v1";
+import { isExplicitLoopbackHostname } from "./explicit-loopback-hostname";
 import { SigaaConnectorError } from "./sigaa-connector.error";
 import type { ISigaaConnector, SigaaSnapshotCandidate } from "./sigaa-connector.port";
 
@@ -167,7 +168,7 @@ function parseAllowedOrigins(
 }
 
 function isAllowedConnectorOrigin(url: URL, allowLocalDevelopment: boolean): boolean {
-  if (isExplicitLocalHostname(url.hostname)) {
+  if (isExplicitLoopbackHostname(url.hostname)) {
     return (
       allowLocalDevelopment &&
       Reflect.get(process.env, "NODE_ENV") !== "production" &&
@@ -182,10 +183,6 @@ function isAllowedConnectorOrigin(url: URL, allowLocalDevelopment: boolean): boo
     url.hostname.includes(".") &&
     !url.hostname.endsWith(".localhost")
   );
-}
-
-function isExplicitLocalHostname(hostname: string): boolean {
-  return hostname === "localhost" || hostname === "127.0.0.1";
 }
 
 function stripIpv6Brackets(hostname: string): string {

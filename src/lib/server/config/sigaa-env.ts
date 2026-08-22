@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isExplicitLoopbackHostname } from "@/lib/server/services/sigaa/connector/explicit-loopback-hostname";
+
 export const SIGAA_ENV_NAMES = {
   reauthJwtSecret: "SIGAA_REAUTH_JWT_SECRET",
   connectorUrl: "SIGAA_CONNECTOR_URL",
@@ -80,7 +82,7 @@ export function readSigaaConnectorEnvironment(
 
   const allowLocalHttp = localHttpFlag.data === "true";
   const isDevelopment = environment.NODE_ENV === "development";
-  const isLocalHostname = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  const isLocalHostname = isExplicitLoopbackHostname(url.hostname);
 
   if (
     url.pathname !== "/v1/sync" ||
@@ -134,7 +136,7 @@ export function readSigaaConnectorEnvironment(
       allowLocalHttp &&
       isDevelopment &&
       parsedOrigin.protocol === "http:" &&
-      ["localhost", "127.0.0.1", "[::1]"].includes(parsedOrigin.hostname);
+      isExplicitLoopbackHostname(parsedOrigin.hostname);
 
     if (parsedOrigin.protocol !== "https:" && !localAllowedOrigin) {
       throw new Error("SIGAA_CONNECTOR_ALLOWED_ORIGINS must use HTTPS");

@@ -420,7 +420,7 @@ describe("HttpSigaaConnector", () => {
     }
   );
 
-  it.each(["http://127.0.0.1:8787", "http://localhost:8787"])(
+  it.each(["http://localhost:8787", "http://127.0.0.1:8787", "http://[::1]:8787"])(
     "allows explicit local development origin %s outside production",
     origin => {
       expect(
