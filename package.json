@@ -19,6 +19,8 @@
     "test:integration": "vitest",
     "test:integration:ui": "vitest --ui",
     "test:integration:watch": "vitest --watch",
+    "test:sigaa-db": "node scripts/run-sigaa-db-tests.mjs",
+    "verify:sigaa-boundary": "node scripts/verify-sigaa-boundary.mjs",
     "test:all": "npm run test && npm run test:integration",
     "db:generate": "prisma generate",
     "db:migrate": "dotenv -e .env -- prisma migrate dev",
