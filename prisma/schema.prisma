@@ -112,6 +112,12 @@ enum SigaaSyncFailureCode {
   INTERNAL_ERROR
 }
 
+enum SigaaCourseChangeProposalState {
+  PENDING
+  CONSUMED
+  SUPERSEDED
+}
+
 enum SigaaRateLimitOperation {
   REAUTH
   SYNC
@@ -152,6 +158,7 @@ model Curso {
   usuarios   Usuario[]
   guias      Guia[]
   curriculos Curriculo[]
+  sigaaCourseChangeProposals SigaaCourseChangeProposal[]
 }
 
 // ============================================================================
@@ -191,6 +198,7 @@ model Usuario {
   projetosAutor          ProjetoAutor[]
   auditLogs              AuditLog[] @relation("AuditLogActor")
   sigaaConnection       SigaaConnection?
+  sigaaCourseChangeProposals SigaaCourseChangeProposal[]
   sigaaRateLimitBuckets SigaaRateLimitBucket[]
 
   @@index([email])
@@ -255,16 +263,47 @@ model SigaaSyncRun {
   iniciadoEm          DateTime              @default(now())
   finalizadoEm        DateTime?
   retentionExpiresAt  DateTime?
+  confirmationProposalId String?
 
   connection        SigaaConnection        @relation("ConnectionRuns", fields: [usuarioId], references: [usuarioId], onDelete: Cascade)
   activeFor         SigaaConnection?       @relation("ActiveLease")
   installedSnapshot SigaaAcademicSnapshot?
+  detectedCourseChangeProposal SigaaCourseChangeProposal? @relation("CourseChangeInitiatingRun")
+  confirmationProposal         SigaaCourseChangeProposal? @relation("CourseChangeConfirmationRuns", fields: [confirmationProposalId], references: [id], onDelete: SetNull)
 
   @@unique([usuarioId, idempotencyKey])
   @@unique([usuarioId, id])
   @@index([usuarioId, iniciadoEm])
   @@index([status, leaseExpiresAt])
   @@index([status, retentionExpiresAt])
+  @@index([confirmationProposalId])
+}
+
+model SigaaCourseChangeProposal {
+  id                           String                         @id @default(uuid())
+  usuarioId                    String
+  initiatingRunId              String                         @unique
+  profileAcademicIdentityToken String                         @db.Char(64)
+  targetCourseId               String
+  targetCatalogToken           String                         @db.Char(64)
+  sourceCourseLabel            String                         @db.VarChar(255)
+  profileMatricula             String?                        @db.VarChar(11)
+  expectedMatricula            String                         @db.VarChar(11)
+  aliasVersion                 String                         @db.VarChar(64)
+  consentVersion               String                         @db.VarChar(64)
+  expiresAt                    DateTime
+  state                        SigaaCourseChangeProposalState @default(PENDING)
+  consumedAt                   DateTime?
+  criadoEm                     DateTime                       @default(now())
+  atualizadoEm                 DateTime                       @updatedAt
+
+  usuario          Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  initiatingRun    SigaaSyncRun   @relation("CourseChangeInitiatingRun", fields: [initiatingRunId], references: [id], onDelete: Cascade)
+  targetCourse     Curso          @relation(fields: [targetCourseId], references: [id], onDelete: Cascade)
+  confirmationRuns SigaaSyncRun[] @relation("CourseChangeConfirmationRuns")
+
+  @@index([usuarioId, state, expiresAt])
+  @@index([targetCourseId])
 }
 
 model SigaaRateLimitBucket {

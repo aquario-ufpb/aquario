@@ -106,6 +106,18 @@ describe("SIGAA reauthentication proof", () => {
     expect(proof.expiresAt).toBe("2026-08-21T15:15:00.000Z");
   });
 
+  it("binds a confirmation proof to one concrete proposal", () => {
+    const service = createSigaaReauthProofService(SECRET, {
+      now: () => NOW,
+      createJti: () => JTI,
+    });
+    const proposalId = "550e8400-e29b-41d4-a716-446655440010";
+
+    const proof = service.issueProof("user-1", proposalId);
+
+    expect(service.verifyProof(proof.proofToken, "user-1")).toMatchObject({ proposalId });
+  });
+
   it("rejects another subject, another secret, another purpose, and another algorithm", () => {
     const service = createSigaaReauthProofService(SECRET, {
       now: () => NOW,
@@ -346,7 +358,12 @@ describe("recent SIGAA proof wrapper", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({ usuarioId: "user-1", authTime: NOW / 1000, proofJti: JTI });
+    expect(body).toEqual({
+      usuarioId: "user-1",
+      authTime: NOW / 1000,
+      proposalId: null,
+      proofJti: JTI,
+    });
     expect(body).not.toHaveProperty("passwordHash");
   });
 

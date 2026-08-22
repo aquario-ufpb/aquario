@@ -10,6 +10,7 @@ export const sigaaReauthRequestSchema = z
       .string({ required_error: "Senha do Aquário é obrigatória" })
       .min(1, "Senha do Aquário é obrigatória")
       .max(128, "Senha do Aquário deve ter no máximo 128 caracteres"),
+    proposalId: z.string().uuid().optional(),
   })
   .strict();
 
@@ -25,3 +26,17 @@ export const sigaaSyncRequestSchema = z
   .strict();
 
 export type SigaaSyncRequest = z.infer<typeof sigaaSyncRequestSchema>;
+
+export const sigaaCourseChangeConfirmationRequestSchema = z
+  .object({
+    proposalId: z.string().uuid(),
+    username: z.string().min(1).max(64),
+    password: z.string().min(1).max(256),
+    idempotencyKey: idempotencyKeySchema,
+    consentVersion: z.literal(SIGAA_CONSENT_VERSION),
+  })
+  .strict();
+
+export type SigaaCourseChangeConfirmationRequest = z.infer<
+  typeof sigaaCourseChangeConfirmationRequestSchema
+>;

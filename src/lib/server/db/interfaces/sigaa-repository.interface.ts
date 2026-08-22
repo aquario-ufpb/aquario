@@ -32,6 +32,25 @@ export type SigaaRunReceipt = Readonly<{
   finishedAt: Date | null;
 }>;
 
+export type SigaaCourseChangeProposalView = Readonly<{
+  proposalId: string;
+  expiresAt: Date;
+  currentCourse: string;
+  sigaaCourse: string;
+  targetCourse: string;
+  currentCenter?: string;
+  targetCenter?: string;
+}>;
+
+export type SigaaCourseResolution =
+  | Readonly<{ kind: "matched_current" }>
+  | Readonly<{ kind: "confirmation_required"; proposal: SigaaCourseChangeProposalView }>
+  | Readonly<{
+      kind: "blocked";
+      reason: "source_missing" | "source_unrecognized" | "catalog_unavailable" | "profile_changed";
+    }>
+  | Readonly<{ kind: "stale" }>;
+
 export type RateLimitDecision =
   | Readonly<{ kind: "allowed"; remaining: number; resetAt: Date }>
   | Readonly<{ kind: "rate_limited"; retryAt: Date }>;
@@ -48,15 +67,44 @@ export type LeaseGrant = Readonly<{
 export type ReserveAttemptResult =
   | Readonly<{ kind: "reserved"; lease: LeaseGrant }>
   | Readonly<{ kind: "replay"; run: SigaaRunReceipt }>
+  | Readonly<{ kind: "course_resolution"; run: SigaaRunReceipt; resolution: SigaaCourseResolution }>
+  | Readonly<{ kind: "failed"; run: SigaaRunReceipt; failure: SigaaSyncFailureCode }>
   | Readonly<{ kind: "busy"; retryAt: Date }>
   | Readonly<{ kind: "rate_limited"; retryAt: Date }>;
 
 export type CommitLatestResult =
-  | Readonly<{ kind: "committed"; run: SigaaRunReceipt; synchronizedAt: Date }>
+  | Readonly<{
+      kind: "committed";
+      run: SigaaRunReceipt;
+      synchronizedAt: Date;
+    }>
+  | Readonly<{ kind: "course_resolution"; run: SigaaRunReceipt; resolution: SigaaCourseResolution }>
   | Readonly<{
       kind: "rejected";
       run: SigaaRunReceipt;
       failure: "COURSE_MISMATCH" | "SIGAA_IDENTITY_MISMATCH" | "LEASE_LOST";
+    }>;
+
+export type ReserveCourseChangeConfirmationResult =
+  | Readonly<{ kind: "reserved"; lease: LeaseGrant; proposalId: string }>
+  | Readonly<{ kind: "replay"; run: SigaaRunReceipt; courseReplaced: true }>
+  | Readonly<{ kind: "busy"; retryAt: Date }>
+  | Readonly<{ kind: "rate_limited"; retryAt: Date }>
+  | Readonly<{ kind: "blocked"; reason: "proposal_invalid" | "reauth_proposal_mismatch" }>
+  | Readonly<{ kind: "stale" }>;
+
+export type CommitCourseChangeResult =
+  | Readonly<{
+      kind: "committed";
+      run: SigaaRunReceipt;
+      synchronizedAt: Date;
+      courseReplaced: true;
+    }>
+  | Readonly<{
+      kind: "rejected";
+      run: SigaaRunReceipt;
+      failure: "COURSE_MISMATCH" | "SIGAA_IDENTITY_MISMATCH" | "LEASE_LOST";
+      resolution: SigaaCourseResolution;
     }>;
 
 export type ImportedAcademicState = Readonly<{
@@ -107,6 +155,21 @@ export type ISigaaRepository = {
     lease: LeaseGrant;
     candidate: SigaaSnapshotCandidate;
   }): Promise<CommitLatestResult>;
+
+  reserveCourseChangeConfirmation(input: {
+    ownerId: UsuarioId;
+    proposalId: string;
+    proofProposalId: string | null;
+    idempotencyKey: IdempotencyKey;
+    consentVersion: string;
+  }): Promise<ReserveCourseChangeConfirmationResult>;
+
+  commitCourseChange(input: {
+    ownerId: UsuarioId;
+    proposalId: string;
+    lease: LeaseGrant;
+    candidate: SigaaSnapshotCandidate;
+  }): Promise<CommitCourseChangeResult>;
 
   finishAttempt(input: {
     ownerId: UsuarioId;

@@ -20,6 +20,7 @@ const runSchema = z
     finishedAt: isoDateSchema.nullable(),
   })
   .strict();
+const succeededRunSchema = runSchema.extend({ status: z.literal("SUCCEEDED") }).strict();
 
 const importedStateSchema = z
   .object({
@@ -58,11 +59,67 @@ const syncResponseSchema = z.discriminatedUnion("status", [
   z
     .object({
       status: z.literal("synchronized"),
-      run: runSchema,
+      run: succeededRunSchema,
       synchronizedAt: isoDateSchema,
     })
     .strict(),
-  z.object({ status: z.literal("replay"), run: runSchema }).strict(),
+  z.object({ status: z.literal("replay"), run: succeededRunSchema }).strict(),
+]);
+
+const courseChangeMismatchSchema = z
+  .object({
+    message: z.string(),
+    code: z.literal(ErrorCode.SIGAA_COURSE_MISMATCH),
+    resolution: z.literal("confirmation_required"),
+    proposalId: z.string().uuid(),
+    expiresAt: isoDateSchema,
+    currentCourse: z.string().min(1),
+    sigaaCourse: z.string().min(1),
+    targetCourse: z.string().min(1),
+    currentCenter: z.string().min(1).optional(),
+    targetCenter: z.string().min(1).optional(),
+  })
+  .strict();
+
+const courseChangeInvalidSchema = z.discriminatedUnion("resolution", [
+  z
+    .object({
+      message: z.string(),
+      code: z.literal(ErrorCode.SIGAA_COURSE_MISMATCH),
+      resolution: z.literal("blocked"),
+      reason: z.enum([
+        "source_missing",
+        "source_unrecognized",
+        "catalog_unavailable",
+        "profile_changed",
+      ]),
+    })
+    .strict(),
+  z
+    .object({
+      message: z.string(),
+      code: z.literal(ErrorCode.SIGAA_COURSE_MISMATCH),
+      resolution: z.literal("stale"),
+    })
+    .strict(),
+]);
+
+const courseChangeConfirmationResponseSchema = z.discriminatedUnion("status", [
+  z
+    .object({
+      status: z.literal("synchronized"),
+      run: runSchema,
+      synchronizedAt: isoDateSchema,
+      courseReplaced: z.literal(true),
+    })
+    .strict(),
+  z
+    .object({
+      status: z.literal("replay"),
+      run: runSchema,
+      courseReplaced: z.literal(true),
+    })
+    .strict(),
 ]);
 
 const disconnectResponseSchema = z
@@ -79,6 +136,26 @@ const deleteResponseSchema = z
 
 export type SigaaImportedState = z.infer<typeof importedStateSchema>;
 export type SigaaSyncResponse = z.infer<typeof syncResponseSchema>;
+export type SigaaCourseChangeMismatch = z.infer<typeof courseChangeMismatchSchema>;
+export type SigaaCourseChangeConfirmationResponse = z.infer<
+  typeof courseChangeConfirmationResponseSchema
+>;
+
+export class SigaaCourseChangeRequiredError extends Error {
+  readonly name = "SigaaCourseChangeRequiredError";
+
+  constructor(readonly mismatch: SigaaCourseChangeMismatch) {
+    super(mismatch.message);
+  }
+}
+
+export class SigaaCourseChangeInvalidError extends Error {
+  readonly name = "SigaaCourseChangeInvalidError";
+
+  constructor(readonly resolution: z.infer<typeof courseChangeInvalidSchema>) {
+    super(resolution.message);
+  }
+}
 
 export type SigaaSyncInput = Readonly<{
   username: string;
@@ -86,6 +163,8 @@ export type SigaaSyncInput = Readonly<{
   proofToken: string;
   idempotencyKey: string;
 }>;
+
+export type SigaaCourseChangeConfirmationInput = SigaaSyncInput & Readonly<{ proposalId: string }>;
 
 async function parseResponse<T>(response: Response, schema: z.ZodType<T>): Promise<T> {
   if (!response.ok) {
@@ -145,7 +224,44 @@ export async function synchronizeOwnSigaa(input: SigaaSyncInput): Promise<SigaaS
       consentVersion: SIGAA_CONSENT_VERSION,
     }),
   });
+  if (response.status === 409) {
+    const body = await readJson(response);
+    const mismatch = courseChangeMismatchSchema.safeParse(body);
+    if (mismatch.success) {
+      throw new SigaaCourseChangeRequiredError(mismatch.data);
+    }
+    await throwParsedApiError(response, body);
+  }
   return parseResponse(response, syncResponseSchema);
+}
+
+export async function confirmOwnSigaaCourseChange(
+  input: SigaaCourseChangeConfirmationInput
+): Promise<SigaaCourseChangeConfirmationResponse> {
+  const response = await sensitiveSigaaRequest(
+    ENDPOINTS.SIGAA_COURSE_CHANGE_CONFIRM_ME,
+    input.proofToken,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        proposalId: input.proposalId,
+        username: input.username,
+        password: input.password,
+        idempotencyKey: input.idempotencyKey,
+        consentVersion: SIGAA_CONSENT_VERSION,
+      }),
+    }
+  );
+  if (response.status === 409) {
+    const body = await readJson(response);
+    const invalid = courseChangeInvalidSchema.safeParse(body);
+    if (invalid.success) {
+      throw new SigaaCourseChangeInvalidError(invalid.data);
+    }
+    await throwParsedApiError(response, body);
+  }
+  return parseResponse(response, courseChangeConfirmationResponseSchema);
 }
 
 export async function disconnectOwnSigaa(proofToken: string) {
@@ -164,4 +280,22 @@ export async function deleteOwnSigaaData(proofToken: string) {
 
 function invalidResponse(status: number): ApiError {
   return new ApiError("Resposta SIGAA inválida", ErrorCode.INTERNAL_ERROR, undefined, status);
+}
+
+async function readJson(response: Response): Promise<unknown> {
+  try {
+    return await response.clone().json();
+  } catch {
+    throw invalidResponse(response.status);
+  }
+}
+
+async function throwParsedApiError(response: Response, body: unknown): Promise<never> {
+  const replay = new Response(JSON.stringify(body), {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+  await throwApiError(replay);
+  throw invalidResponse(response.status);
 }

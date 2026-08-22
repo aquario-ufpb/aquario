@@ -3,13 +3,26 @@ import userEvent from "@testing-library/user-event";
 
 import { SigaaConnectDialog } from "../sigaa-connect-dialog";
 import { reauthenticateForSigaa } from "@/lib/client/api/sigaa-reauth";
-import { synchronizeOwnSigaa } from "@/lib/client/api/sigaa";
+import {
+  confirmOwnSigaaCourseChange,
+  SigaaCourseChangeInvalidError,
+  SigaaCourseChangeRequiredError,
+  synchronizeOwnSigaa,
+} from "@/lib/client/api/sigaa";
 
 jest.mock("@/lib/client/api/sigaa-reauth", () => ({ reauthenticateForSigaa: jest.fn() }));
-jest.mock("@/lib/client/api/sigaa", () => ({ synchronizeOwnSigaa: jest.fn() }));
+jest.mock("@/lib/client/api/sigaa", () => {
+  const actual = jest.requireActual("@/lib/client/api/sigaa");
+  return {
+    ...actual,
+    synchronizeOwnSigaa: jest.fn(),
+    confirmOwnSigaaCourseChange: jest.fn(),
+  };
+});
 
 const mockReauthenticate = jest.mocked(reauthenticateForSigaa);
 const mockSynchronize = jest.mocked(synchronizeOwnSigaa);
+const mockConfirmCourseChange = jest.mocked(confirmOwnSigaaCourseChange);
 
 describe("SIGAA connect dialog", () => {
   beforeEach(() => {
@@ -26,6 +39,19 @@ describe("SIGAA connect dialog", () => {
         status: "SUCCEEDED",
         failureCode: null,
         connectorRequestId: "request-id",
+        startedAt: "2026-08-21T11:59:00.000Z",
+        finishedAt: "2026-08-21T12:00:00.000Z",
+      },
+    });
+    mockConfirmCourseChange.mockResolvedValue({
+      status: "synchronized",
+      synchronizedAt: "2026-08-21T12:00:00.000Z",
+      courseReplaced: true,
+      run: {
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        status: "SUCCEEDED",
+        failureCode: null,
+        connectorRequestId: "confirmation-request-id",
         startedAt: "2026-08-21T11:59:00.000Z",
         finishedAt: "2026-08-21T12:00:00.000Z",
       },
@@ -172,5 +198,120 @@ describe("SIGAA connect dialog", () => {
     expect(mockSynchronize.mock.calls[1][0].idempotencyKey).not.toBe(
       mockSynchronize.mock.calls[0][0].idempotencyKey
     );
+  });
+
+  it("shows before and after, clears secrets, and requires explicit irreversible confirmation", async () => {
+    const user = userEvent.setup();
+    const onSynchronized = jest.fn();
+    mockSynchronize.mockRejectedValueOnce(
+      new SigaaCourseChangeRequiredError({
+        message: "O SIGAA informou um curso diferente do perfil.",
+        code: "SIGAA_COURSE_MISMATCH",
+        resolution: "confirmation_required",
+        proposalId: "550e8400-e29b-41d4-a716-446655440020",
+        expiresAt: "2026-08-21T12:10:00.000Z",
+        currentCourse: "Ciência da Computação",
+        sigaaCourse: "Engenharia de Computação - Graduação",
+        targetCourse: "Engenharia da Computação",
+      })
+    );
+
+    render(
+      <SigaaConnectDialog
+        open
+        requireConsent
+        onOpenChange={jest.fn()}
+        onSynchronized={onSynchronized}
+      />
+    );
+
+    await user.click(screen.getByLabelText(/Autorizo o Aquário/));
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "first-user");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "first-sigaa-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "first-aquario-password");
+    await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+
+    expect(await screen.findByText("Ciência da Computação")).toBeInTheDocument();
+    expect(screen.getByText("Engenharia da Computação")).toBeInTheDocument();
+    expect(screen.getByText(/Engenharia de Computação - Graduação/)).toBeInTheDocument();
+    expect(screen.getByText(/Esta ação é irreversível no Aquário\./)).toBeInTheDocument();
+    expect(screen.getByLabelText("Usuário do SIGAA")).toHaveValue("");
+    expect(screen.getByLabelText("Senha do SIGAA")).toHaveValue("");
+    expect(screen.getByLabelText("Senha do Aquário")).toHaveValue("");
+
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "fresh-user");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "fresh-sigaa-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "fresh-aquario-password");
+    await user.click(screen.getByRole("button", { name: "Substituir meu curso e sincronizar" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("irreversível");
+    expect(mockConfirmCourseChange).not.toHaveBeenCalled();
+
+    await user.click(screen.getByLabelText(/Entendo que meu curso será substituído/));
+    await user.click(screen.getByRole("button", { name: "Substituir meu curso e sincronizar" }));
+
+    expect(mockConfirmCourseChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        proposalId: "550e8400-e29b-41d4-a716-446655440020",
+        username: "fresh-user",
+        password: "fresh-sigaa-password",
+        proofToken: "short-lived-proof",
+      })
+    );
+    expect(mockConfirmCourseChange.mock.calls[0][0].idempotencyKey).not.toBe(
+      mockSynchronize.mock.calls[0][0].idempotencyKey
+    );
+    expect(mockReauthenticate).toHaveBeenLastCalledWith(
+      "fresh-aquario-password",
+      "550e8400-e29b-41d4-a716-446655440020"
+    );
+    expect(onSynchronized).toHaveBeenCalledWith(true);
+  });
+
+  it("returns to fresh credentials when a confirmation is stale", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = jest.fn();
+    const mismatch = {
+      message: "Curso divergente",
+      code: "SIGAA_COURSE_MISMATCH" as const,
+      resolution: "confirmation_required" as const,
+      proposalId: "550e8400-e29b-41d4-a716-446655440020",
+      expiresAt: "2026-08-21T12:10:00.000Z",
+      currentCourse: "Ciência da Computação",
+      sigaaCourse: "Engenharia de Computação - Graduação",
+      targetCourse: "Engenharia da Computação",
+    };
+    mockSynchronize.mockRejectedValueOnce(new SigaaCourseChangeRequiredError(mismatch));
+    mockConfirmCourseChange.mockRejectedValueOnce(
+      new SigaaCourseChangeInvalidError({
+        message: "A proposta de substituição de curso não é mais válida.",
+        code: "SIGAA_COURSE_MISMATCH",
+        resolution: "stale",
+      })
+    );
+    render(
+      <SigaaConnectDialog
+        open
+        requireConsent
+        onOpenChange={onOpenChange}
+        onSynchronized={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByLabelText(/Autorizo o Aquário/));
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "first-user");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "first-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "first-aquario");
+    await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+    await screen.findByText("Confirmar substituição de curso");
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "fresh-user");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "fresh-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "fresh-aquario");
+    await user.click(screen.getByLabelText(/Entendo que meu curso será substituído/));
+    await user.click(screen.getByRole("button", { name: "Substituir meu curso e sincronizar" }));
+
+    expect(await screen.findByText("Conectar ao SIGAA")).toBeInTheDocument();
+    expect(screen.queryByText("Confirmar substituição de curso")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Inicie uma nova sincronização");
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 });

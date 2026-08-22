@@ -48,9 +48,17 @@ export function MeusDadosAcademicosCard({ usuarioId }: MeusDadosAcademicosCardPr
     }
   };
 
-  const synchronized = async () => {
+  const synchronized = async (courseReplaced: boolean) => {
     await refreshState();
-    toast.success("Dados acadêmicos atualizados");
+    if (courseReplaced) {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current(usuarioId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all }),
+      ]);
+    }
+    toast.success(
+      courseReplaced ? "Curso substituído e dados atualizados" : "Dados acadêmicos atualizados"
+    );
   };
 
   const disconnected = async () => {

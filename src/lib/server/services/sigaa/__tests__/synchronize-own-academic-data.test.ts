@@ -12,6 +12,7 @@ import {
 } from "@/lib/server/services/sigaa/storage.types";
 
 import { SigaaConnectorError, type ISigaaConnector } from "../connector";
+import { confirmOwnCourseChange } from "../confirm-own-course-change";
 import { synchronizeOwnAcademicData } from "../synchronize-own-academic-data";
 
 const OWNER_ID = "550e8400-e29b-41d4-a716-446655440000";
@@ -74,6 +75,8 @@ function repository(): jest.Mocked<ISigaaRepository> {
     consumeRateLimit: jest.fn(),
     reserveAttempt: jest.fn().mockResolvedValue({ kind: "reserved", lease }),
     commitLatest: jest.fn(),
+    reserveCourseChangeConfirmation: jest.fn(),
+    commitCourseChange: jest.fn(),
     finishAttempt: jest.fn(),
     readImportedState: jest.fn(),
     disconnect: jest.fn(),
@@ -186,6 +189,90 @@ describe("synchronizeOwnAcademicData", () => {
       ownerId: OWNER_ID,
       lease,
       failure: "INTERNAL_ERROR",
+    });
+  });
+});
+
+describe("confirmOwnCourseChange", () => {
+  const confirmationInput = () => ({
+    ...input(),
+    proposalId: "550e8400-e29b-41d4-a716-446655440010",
+    proofProposalId: "550e8400-e29b-41d4-a716-446655440010",
+  });
+
+  it("blocks an invalid proposal before connector work", async () => {
+    const repo = repository();
+    const connector: jest.Mocked<ISigaaConnector> = { synchronize: jest.fn() };
+    repo.reserveCourseChangeConfirmation.mockResolvedValue({
+      kind: "blocked",
+      reason: "proposal_invalid",
+    });
+
+    const result = await confirmOwnCourseChange(confirmationInput(), {
+      repository: repo,
+      connector,
+    });
+
+    expect(result).toEqual({ kind: "blocked", reason: "proposal_invalid" });
+    expect(connector.synchronize).not.toHaveBeenCalled();
+    expect(repo.commitCourseChange).not.toHaveBeenCalled();
+  });
+
+  it("replays the same idempotency key without another connector call", async () => {
+    const repo = repository();
+    const connector: jest.Mocked<ISigaaConnector> = { synchronize: jest.fn() };
+    repo.reserveCourseChangeConfirmation.mockResolvedValue({
+      kind: "replay",
+      run: succeededRun,
+      courseReplaced: true,
+    });
+
+    const result = await confirmOwnCourseChange(confirmationInput(), {
+      repository: repo,
+      connector,
+    });
+
+    expect(result).toEqual({ kind: "replay", run: succeededRun, courseReplaced: true });
+    expect(connector.synchronize).not.toHaveBeenCalled();
+  });
+
+  it("calls SIGAA again and commits the fresh candidate", async () => {
+    const repo = repository();
+    const connector: jest.Mocked<ISigaaConnector> = {
+      synchronize: jest.fn().mockResolvedValue(candidate()),
+    };
+    repo.reserveCourseChangeConfirmation.mockResolvedValue({
+      kind: "reserved",
+      lease,
+      proposalId: confirmationInput().proposalId,
+    });
+    repo.commitCourseChange.mockResolvedValue({
+      kind: "committed",
+      run: succeededRun,
+      synchronizedAt: FINISHED_AT,
+      courseReplaced: true,
+    });
+
+    const result = await confirmOwnCourseChange(confirmationInput(), {
+      repository: repo,
+      connector,
+    });
+
+    expect(connector.synchronize).toHaveBeenCalledWith({
+      credentials: expect.any(Object),
+      expectedMatricula: "20260000001",
+    });
+    expect(repo.commitCourseChange).toHaveBeenCalledWith({
+      ownerId: OWNER_ID,
+      proposalId: confirmationInput().proposalId,
+      lease,
+      candidate: candidate(),
+    });
+    expect(result).toEqual({
+      kind: "synchronized",
+      run: succeededRun,
+      synchronizedAt: FINISHED_AT,
+      courseReplaced: true,
     });
   });
 });

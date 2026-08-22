@@ -38,6 +38,7 @@ export type SigaaReauthOwner = Readonly<{
 export type RecentlyReauthenticatedSigaaOwner = Readonly<{
   usuarioId: string;
   authTime: number;
+  proposalId: string | null;
   proofJti: string;
   [recentlyReauthenticatedOwnerBrand]: true;
 }>;
@@ -50,6 +51,7 @@ const sigaaProofClaimsSchema = z
     purpose: z.literal(SIGAA_REAUTH_PURPOSE),
     jti: z.string().uuid(),
     authTime: z.number().int().nonnegative(),
+    proposalId: z.string().uuid().optional(),
     iat: z.number().int().nonnegative(),
     exp: z.number().int().positive(),
   })
@@ -78,7 +80,7 @@ export type SigaaReauthProof = Readonly<{
 }>;
 
 export type SigaaReauthProofService = Readonly<{
-  issueProof(usuarioId: string): SigaaReauthProof;
+  issueProof(usuarioId: string, proposalId?: string): SigaaReauthProof;
   verifyProof(token: string, expectedUsuarioId: string): SigaaProofClaims | null;
 }>;
 
@@ -127,13 +129,14 @@ export function createSigaaReauthProofService(
   const createJti = options.createJti ?? randomUUID;
 
   return {
-    issueProof(usuarioId) {
+    issueProof(usuarioId, proposalId) {
       const authTime = Math.floor(now() / 1000);
       const proofToken = jwt.sign(
         {
           purpose: SIGAA_REAUTH_PURPOSE,
           authTime,
           iat: authTime,
+          ...(proposalId ? { proposalId } : {}),
         },
         secret,
         {
@@ -205,6 +208,7 @@ function makeRecentlyReauthenticatedOwner(
   return {
     usuarioId: claims.sub,
     authTime: claims.authTime,
+    proposalId: claims.proposalId ?? null,
     proofJti: claims.jti,
     [recentlyReauthenticatedOwnerBrand]: true,
   };
@@ -307,7 +311,7 @@ export function withRecentSigaaProof(
 }
 
 export async function reauthenticateForSigaa(
-  input: Readonly<{ owner: SigaaReauthOwner; password: string }>,
+  input: Readonly<{ owner: SigaaReauthOwner; password: string; proposalId?: string }>,
   dependencies: Readonly<{
     limiter: ISigaaReauthAttemptLimiter;
     proofIssuer: Pick<SigaaReauthProofService, "issueProof">;
@@ -334,7 +338,9 @@ export async function reauthenticateForSigaa(
 
   return {
     kind: "issued",
-    proof: dependencies.proofIssuer.issueProof(input.owner.usuarioId),
+    proof: input.proposalId
+      ? dependencies.proofIssuer.issueProof(input.owner.usuarioId, input.proposalId)
+      : dependencies.proofIssuer.issueProof(input.owner.usuarioId),
   };
 }
 
@@ -380,11 +386,14 @@ async function handleReauthRequest(
   }
 
   const result = await reauthenticateForSigaa(
-    { owner, password: parsed.data.password },
+    { owner, password: parsed.data.password, proposalId: parsed.data.proposalId },
     {
       limiter: dependencies.limiter,
       proofIssuer: {
-        issueProof: usuarioId => dependencies.getProofService().issueProof(usuarioId),
+        issueProof: (usuarioId, proposalId) =>
+          proposalId
+            ? dependencies.getProofService().issueProof(usuarioId, proposalId)
+            : dependencies.getProofService().issueProof(usuarioId),
       },
       comparePassword: dependencies.comparePassword,
     }

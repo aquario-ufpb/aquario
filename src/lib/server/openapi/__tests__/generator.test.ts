@@ -88,7 +88,7 @@ describe("getOpenApiDocument", () => {
 
     // Keep this count explicit so an undocumented or accidentally public route
     // changes the API review surface instead of passing unnoticed.
-    expect(paths.length).toBe(61);
+    expect(paths.length).toBe(62);
   });
 
   it("does not leak any /dev/* endpoints into the public spec", () => {

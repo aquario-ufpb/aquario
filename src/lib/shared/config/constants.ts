@@ -38,6 +38,7 @@ export const ENDPOINTS = {
   SIGAA_REAUTH_ME: "/usuarios/me/sigaa/reauth",
   SIGAA_ACADEMIC_ME: "/usuarios/me/academico",
   SIGAA_SYNC_ME: "/usuarios/me/sigaa/sync",
+  SIGAA_COURSE_CHANGE_CONFIRM_ME: "/usuarios/me/sigaa/course-change/confirm",
   SIGAA_DISCONNECT_ME: "/usuarios/me/sigaa/disconnect",
   SIGAA_DATA_ME: "/usuarios/me/sigaa/data",
 

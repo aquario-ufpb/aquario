@@ -1,7 +1,11 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 
-import { sigaaReauthRequestSchema, sigaaSyncRequestSchema } from "@/lib/server/api-schemas/sigaa";
+import {
+  sigaaCourseChangeConfirmationRequestSchema,
+  sigaaReauthRequestSchema,
+  sigaaSyncRequestSchema,
+} from "@/lib/server/api-schemas/sigaa";
 import { sigaaAcademicSnapshotPayloadSchema } from "@/lib/server/services/sigaa/storage.types";
 import { ErrorCode } from "@/lib/shared/errors";
 
@@ -28,7 +32,7 @@ export function registerSigaaPaths(registry: OpenAPIRegistry, schemas: CommonSch
     tags: ["SIGAA"],
     summary: "Reautenticar para operações SIGAA",
     description:
-      "Confirma a senha da conta Aquário e emite uma prova separada, limitada ao SIGAA e válida por 15 minutos. A conta precisa participar da beta SIGAA. A senha e a prova não são persistidas.",
+      "Confirma a senha da conta Aquário e emite uma prova separada, limitada ao SIGAA e válida por 15 minutos. proposalId vincula a prova a uma confirmação de curso específica quando informado. A conta precisa participar da beta SIGAA. A senha e a prova não são persistidas.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -36,7 +40,10 @@ export function registerSigaaPaths(registry: OpenAPIRegistry, schemas: CommonSch
         content: {
           "application/json": {
             schema: requestSchema,
-            example: { password: "senha-da-conta-aquario" },
+            example: {
+              password: "senha-da-conta-aquario",
+              proposalId: "550e8400-e29b-41d4-a716-446655440010",
+            },
           },
         },
       },
@@ -92,12 +99,47 @@ export function registerSigaaPaths(registry: OpenAPIRegistry, schemas: CommonSch
     })
     .strict()
     .openapi("SigaaSyncRun");
+  const succeededRunSchema = runSchema.extend({ status: z.literal("SUCCEEDED") }).strict();
   const privateHeaders = {
     "Cache-Control": {
       description: "Respostas SIGAA são privadas e não podem ser armazenadas.",
       schema: { type: "string" as const, const: "private, no-store" },
     },
   };
+  const mismatchBase = {
+    message: z.string(),
+    code: z.literal(ErrorCode.SIGAA_COURSE_MISMATCH),
+  };
+  const courseMismatchSchema = z
+    .discriminatedUnion("resolution", [
+      z
+        .object({
+          ...mismatchBase,
+          resolution: z.literal("confirmation_required"),
+          proposalId: z.string().uuid(),
+          expiresAt: z.string().datetime(),
+          currentCourse: z.string(),
+          sigaaCourse: z.string(),
+          targetCourse: z.string(),
+          currentCenter: z.string().optional(),
+          targetCenter: z.string().optional(),
+        })
+        .strict(),
+      z
+        .object({
+          ...mismatchBase,
+          resolution: z.literal("blocked"),
+          reason: z.enum([
+            "source_missing",
+            "source_unrecognized",
+            "catalog_unavailable",
+            "profile_changed",
+          ]),
+        })
+        .strict(),
+      z.object({ ...mismatchBase, resolution: z.literal("stale") }).strict(),
+    ])
+    .openapi("SigaaCourseMismatch");
 
   registry.registerPath({
     method: "post",
@@ -123,17 +165,82 @@ export function registerSigaaPaths(registry: OpenAPIRegistry, schemas: CommonSch
               z
                 .object({
                   status: z.literal("synchronized"),
-                  run: runSchema,
+                  run: succeededRunSchema,
                   synchronizedAt: z.string().datetime(),
                 })
                 .strict(),
-              z.object({ status: z.literal("replay"), run: runSchema }).strict(),
+              z.object({ status: z.literal("replay"), run: succeededRunSchema }).strict(),
             ]),
           },
         },
         headers: privateHeaders,
       },
-      ...schemas.errorResponses([400, 401, 403, 409, 429, 500, 502, 503, 504]),
+      ...schemas.errorResponses([400, 401, 403, 429, 500, 502, 503, 504]),
+      409: {
+        description: "Curso divergente. Somente confirmation_required inclui proposta confirmável.",
+        content: {
+          "application/json": {
+            schema: z.union([courseMismatchSchema, schemas.ApiErrorBodySchema]),
+          },
+        },
+        headers: privateHeaders,
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/usuarios/me/sigaa/course-change/confirm",
+    tags: ["SIGAA"],
+    summary: "Confirmar substituição irreversível do curso e sincronizar",
+    description:
+      "Exige uma proposta pendente, uma prova Aquário vinculada ao proposalId, novas credenciais SIGAA e uma nova chave idempotente. Revalida SIGAA, matrícula, perfil e catálogo antes do commit atômico.",
+    security: [{ bearerAuth: [] }],
+    request: {
+      headers: z.object({ "X-Sigaa-Reauth-Token": z.string().min(1) }),
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: sigaaCourseChangeConfirmationRequestSchema },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Curso substituído e snapshot instalado, ou replay da mesma operação.",
+        content: {
+          "application/json": {
+            schema: z.union([
+              z
+                .object({
+                  status: z.literal("synchronized"),
+                  run: succeededRunSchema,
+                  synchronizedAt: z.string().datetime(),
+                  courseReplaced: z.literal(true),
+                })
+                .strict(),
+              z
+                .object({
+                  status: z.literal("replay"),
+                  run: succeededRunSchema,
+                  courseReplaced: z.literal(true),
+                })
+                .strict(),
+            ]),
+          },
+        },
+        headers: privateHeaders,
+      },
+      ...schemas.errorResponses([400, 401, 403, 429, 500, 502, 503, 504]),
+      409: {
+        description: "Proposta stale, dados frescos divergentes ou sincronização concorrente.",
+        content: {
+          "application/json": {
+            schema: z.union([courseMismatchSchema, schemas.ApiErrorBodySchema]),
+          },
+        },
+        headers: privateHeaders,
+      },
     },
   });
 

@@ -64,6 +64,33 @@ async function ownerCourse(ownerId: UsuarioId): Promise<string> {
   return owner.curso.nome;
 }
 
+async function createCatalogCourse(name: string) {
+  const campus = await database.campus.create({ data: { nome: `Campus ${randomUUID()}` } });
+  const center = await database.centro.create({
+    data: {
+      nome: `Centro ${randomUUID()}`,
+      sigla: `C${randomUUID().slice(0, 7)}`,
+      campusId: campus.id,
+    },
+  });
+  return database.curso.create({ data: { nome: name, centroId: center.id } });
+}
+
+async function detectCourseChange(ownerId: UsuarioId, matricula = "20260000020") {
+  const target = await createCatalogCourse("Engenharia da Computação");
+  const lease = await reserve(ownerId);
+  const result = await repository.commitLatest({
+    ownerId,
+    lease,
+    candidate: candidate(matricula, "Engenharia de Computação - Graduação", "E"),
+  });
+  expect(result.kind).toBe("course_resolution");
+  if (result.kind !== "course_resolution" || result.resolution.kind !== "confirmation_required") {
+    throw new Error("Expected a confirmable course change");
+  }
+  return { target, lease, proposal: result.resolution.proposal };
+}
+
 function candidate(matricula: string, courseName: string, marker = "A"): SigaaSnapshotCandidate {
   return sigaaSnapshotCandidateSchema.parse({
     contractVersion: "1.0",
@@ -234,12 +261,92 @@ describe("PrismaSigaaRepository on PostgreSQL", () => {
       )
     );
 
-    expect([first.kind, replay.kind].sort()).toEqual(["replay", "reserved"]);
+    expect([first.kind, replay.kind].sort()).toEqual(["busy", "reserved"]);
     expect(
       await database.sigaaRateLimitBucket.findUniqueOrThrow({
         where: { usuarioId_operation: { usuarioId: ownerId, operation: "SYNC" } },
       })
     ).toMatchObject({ count: 1 });
+  });
+
+  it.each(["SUCCEEDED", "RUNNING", "FAILED", "SUPERSEDED"] as const)(
+    "handles a normal same-key run safely when its status is %s",
+    async status => {
+      const ownerId = await createOwner();
+      const key = idempotencyKeySchema.parse(randomUUID());
+      const first = await repository.reserveAttempt({
+        ownerId,
+        idempotencyKey: key,
+        consentVersion: "sigaa-v1-2026-08",
+      });
+      expect(first.kind).toBe("reserved");
+      if (first.kind !== "reserved") {
+        return;
+      }
+      if (status !== "RUNNING") {
+        await database.sigaaSyncRun.update({
+          where: { id: first.lease.runId },
+          data: {
+            status,
+            failureCode:
+              status === "FAILED"
+                ? "SIGAA_AUTH_FAILED"
+                : status === "SUPERSEDED"
+                  ? "LEASE_LOST"
+                  : null,
+            finalizadoEm: new Date(),
+            retentionExpiresAt: new Date(Date.now() + 86_400_000),
+          },
+        });
+      }
+
+      const replay = await repository.reserveAttempt({
+        ownerId,
+        idempotencyKey: key,
+        consentVersion: "sigaa-v1-2026-08",
+      });
+
+      if (status === "SUCCEEDED") {
+        expect(replay).toMatchObject({ kind: "replay", run: { status: "SUCCEEDED" } });
+      } else if (status === "RUNNING") {
+        expect(replay).toMatchObject({ kind: "busy", retryAt: first.lease.expiresAt });
+      } else {
+        expect(replay).toMatchObject({
+          kind: "failed",
+          failure: status === "FAILED" ? "SIGAA_AUTH_FAILED" : "LEASE_LOST",
+        });
+      }
+    }
+  );
+
+  it("supersedes an expired same-key normal run and returns lease lost", async () => {
+    const ownerId = await createOwner();
+    const key = idempotencyKeySchema.parse(randomUUID());
+    const first = await repository.reserveAttempt({
+      ownerId,
+      idempotencyKey: key,
+      consentVersion: "sigaa-v1-2026-08",
+    });
+    expect(first.kind).toBe("reserved");
+    if (first.kind !== "reserved") {
+      return;
+    }
+    await database.sigaaSyncRun.update({
+      where: { id: first.lease.runId },
+      data: { leaseExpiresAt: new Date(Date.now() - 60_000) },
+    });
+
+    await expect(
+      repository.reserveAttempt({
+        ownerId,
+        idempotencyKey: key,
+        consentVersion: "sigaa-v1-2026-08",
+      })
+    ).resolves.toMatchObject({
+      kind: "failed",
+      failure: "LEASE_LOST",
+      run: { status: "SUPERSEDED" },
+    });
   });
 
   it("supersedes expired generations and rejects their late commits", async () => {
@@ -655,5 +762,488 @@ describe("PrismaSigaaRepository on PostgreSQL", () => {
     expect(
       await database.sigaaSyncRun.findUnique({ where: { id: activeLease.runId } })
     ).not.toBeNull();
+  });
+
+  it("creates a replayable mismatch proposal without mutating profile, matricula, or snapshot", async () => {
+    const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+    const before = await database.usuario.findUniqueOrThrow({ where: { id: ownerId } });
+
+    const { proposal } = await detectCourseChange(ownerId);
+
+    const after = await database.usuario.findUniqueOrThrow({ where: { id: ownerId } });
+    expect(after.cursoId).toBe(before.cursoId);
+    expect(after.centroId).toBe(before.centroId);
+    expect(after.matricula).toBeNull();
+    expect(
+      await database.sigaaAcademicSnapshot.findUnique({ where: { usuarioId: ownerId } })
+    ).toBeNull();
+    expect(
+      await database.sigaaCourseChangeProposal.findUniqueOrThrow({
+        where: { id: proposal.proposalId },
+      })
+    ).toMatchObject({
+      usuarioId: ownerId,
+      expectedMatricula: "20260000020",
+      state: "PENDING",
+      aliasVersion: "ufpb-2026-08-22",
+    });
+
+    const replay = await repository.reserveAttempt({
+      ownerId,
+      idempotencyKey: idempotencyKeySchema.parse(
+        (
+          await database.sigaaSyncRun.findFirstOrThrow({
+            where: { usuarioId: ownerId },
+            select: { idempotencyKey: true },
+          })
+        ).idempotencyKey
+      ),
+      consentVersion: "sigaa-v1-2026-08",
+    });
+    expect(replay).toMatchObject({
+      kind: "course_resolution",
+      resolution: {
+        kind: "confirmation_required",
+        proposal: {
+          proposalId: proposal.proposalId,
+          currentCourse: "Ciência da Computação",
+          sigaaCourse: "Engenharia de Computação - Graduação",
+          targetCourse: "Engenharia da Computação",
+        },
+      },
+    });
+  });
+
+  it.each([null, "Curso Experimental"])(
+    "blocks an unresolved source %p without creating a proposal",
+    async sourceCourse => {
+      const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+      await createCatalogCourse("Engenharia da Computação");
+      const lease = await reserve(ownerId);
+      const base = candidate("20260000021", "Engenharia de Computação - Graduação", "a");
+      const unresolved = sigaaSnapshotCandidateSchema.parse({
+        ...base,
+        identity: { ...base.identity, sourceCourse },
+      });
+
+      const result = await repository.commitLatest({ ownerId, lease, candidate: unresolved });
+
+      expect(result).toMatchObject({
+        kind: "course_resolution",
+        resolution: {
+          kind: "blocked",
+          reason: sourceCourse === null ? "source_missing" : "source_unrecognized",
+        },
+      });
+      expect(
+        await database.sigaaCourseChangeProposal.count({ where: { usuarioId: ownerId } })
+      ).toBe(0);
+      expect(
+        await database.sigaaAcademicSnapshot.findUnique({ where: { usuarioId: ownerId } })
+      ).toBeNull();
+    }
+  );
+
+  it("rejects invalid or pre-proposal authorization before consuming confirmation quota", async () => {
+    const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+    const { proposal } = await detectCourseChange(ownerId);
+    const storedProposal = await database.sigaaCourseChangeProposal.findUniqueOrThrow({
+      where: { id: proposal.proposalId },
+    });
+    const initialBucket = await database.sigaaRateLimitBucket.findUniqueOrThrow({
+      where: { usuarioId_operation: { usuarioId: ownerId, operation: "SYNC" } },
+    });
+
+    const invalidProposalId = randomUUID();
+    await expect(
+      repository.reserveCourseChangeConfirmation({
+        ownerId,
+        proposalId: invalidProposalId,
+        proofProposalId: invalidProposalId,
+        idempotencyKey: idempotencyKeySchema.parse(randomUUID()),
+        consentVersion: "sigaa-v1-2026-08",
+      })
+    ).resolves.toEqual({ kind: "blocked", reason: "proposal_invalid" });
+    await expect(
+      repository.reserveCourseChangeConfirmation({
+        ownerId,
+        proposalId: proposal.proposalId,
+        proofProposalId: randomUUID(),
+        idempotencyKey: idempotencyKeySchema.parse(randomUUID()),
+        consentVersion: "sigaa-v1-2026-08",
+      })
+    ).resolves.toEqual({ kind: "blocked", reason: "reauth_proposal_mismatch" });
+    await expect(
+      repository.reserveCourseChangeConfirmation({
+        ownerId,
+        proposalId: proposal.proposalId,
+        proofProposalId: null,
+        idempotencyKey: idempotencyKeySchema.parse(randomUUID()),
+        consentVersion: "sigaa-v1-2026-08",
+      })
+    ).resolves.toEqual({ kind: "blocked", reason: "reauth_proposal_mismatch" });
+
+    const otherOwner = await createOwner({
+      courseName: "Ciência de Dados e Inteligência Artificial",
+    });
+    await expect(
+      repository.reserveCourseChangeConfirmation({
+        ownerId: otherOwner,
+        proposalId: proposal.proposalId,
+        proofProposalId: storedProposal.id,
+        idempotencyKey: idempotencyKeySchema.parse(randomUUID()),
+        consentVersion: "sigaa-v1-2026-08",
+      })
+    ).resolves.toEqual({ kind: "blocked", reason: "proposal_invalid" });
+    expect(
+      await database.sigaaRateLimitBucket.findUnique({
+        where: { usuarioId_operation: { usuarioId: otherOwner, operation: "SYNC" } },
+      })
+    ).toBeNull();
+
+    await database.sigaaCourseChangeProposal.update({
+      where: { id: proposal.proposalId },
+      data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+    await expect(
+      repository.reserveCourseChangeConfirmation({
+        ownerId,
+        proposalId: proposal.proposalId,
+        proofProposalId: storedProposal.id,
+        idempotencyKey: idempotencyKeySchema.parse(randomUUID()),
+        consentVersion: "sigaa-v1-2026-08",
+      })
+    ).resolves.toEqual({ kind: "stale" });
+
+    expect(
+      await database.sigaaRateLimitBucket.findUniqueOrThrow({
+        where: { usuarioId_operation: { usuarioId: ownerId, operation: "SYNC" } },
+      })
+    ).toMatchObject({ count: initialBucket.count });
+    expect(await database.sigaaSyncRun.count({ where: { usuarioId: ownerId } })).toBe(1);
+  });
+
+  it.each(["profile", "catalog"] as const)(
+    "blocks a concurrent %s change before confirmation quota",
+    async changedState => {
+      const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+      const { target, proposal } = await detectCourseChange(ownerId, "20260000024");
+      const storedProposal = await database.sigaaCourseChangeProposal.findUniqueOrThrow({
+        where: { id: proposal.proposalId },
+      });
+      if (changedState === "profile") {
+        await database.usuario.update({
+          where: { id: ownerId },
+          data: { cursoId: target.id, centroId: target.centroId },
+        });
+      } else {
+        await database.curso.update({
+          where: { id: target.id },
+          data: { nome: `Engenharia alterada ${randomUUID()}` },
+        });
+      }
+
+      await expect(
+        repository.reserveCourseChangeConfirmation({
+          ownerId,
+          proposalId: proposal.proposalId,
+          proofProposalId: storedProposal.id,
+          idempotencyKey: idempotencyKeySchema.parse(randomUUID()),
+          consentVersion: "sigaa-v1-2026-08",
+        })
+      ).resolves.toEqual({ kind: "stale" });
+      expect(
+        await database.sigaaRateLimitBucket.findUniqueOrThrow({
+          where: { usuarioId_operation: { usuarioId: ownerId, operation: "SYNC" } },
+        })
+      ).toMatchObject({ count: 1 });
+    }
+  );
+
+  it("atomically replaces course, center, matricula, snapshot, connection, and proposal", async () => {
+    const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+    const discipline = await database.disciplina.create({
+      data: { codigo: `D${randomUUID()}`, nome: "Manual" },
+    });
+    const semester = await database.semestreLetivo.create({
+      data: {
+        nome: `2026.${randomUUID()}`,
+        dataInicio: new Date("2026-01-01T00:00:00.000Z"),
+        dataFim: new Date("2026-06-30T00:00:00.000Z"),
+      },
+    });
+    await database.disciplinaConcluida.create({
+      data: { usuarioId: ownerId, disciplinaId: discipline.id },
+    });
+    await database.disciplinaSemestre.create({
+      data: { usuarioId: ownerId, disciplinaId: discipline.id, semestreLetivoId: semester.id },
+    });
+    const { target, proposal } = await detectCourseChange(ownerId, "20260000022");
+    const storedProposal = await database.sigaaCourseChangeProposal.findUniqueOrThrow({
+      where: { id: proposal.proposalId },
+    });
+    const confirmationKeys = [
+      idempotencyKeySchema.parse(randomUUID()),
+      idempotencyKeySchema.parse(randomUUID()),
+    ] as const;
+    const confirmations = await Promise.all(
+      confirmationKeys.map(idempotencyKey =>
+        repository.reserveCourseChangeConfirmation({
+          ownerId,
+          proposalId: proposal.proposalId,
+          proofProposalId: storedProposal.id,
+          idempotencyKey,
+          consentVersion: "sigaa-v1-2026-08",
+        })
+      )
+    );
+    expect(confirmations.map(result => result.kind).sort()).toEqual(["busy", "reserved"]);
+    const reservedIndex = confirmations.findIndex(result => result.kind === "reserved");
+    const reservation = confirmations[reservedIndex];
+    const confirmationKey = confirmationKeys[reservedIndex];
+    expect(reservation.kind).toBe("reserved");
+    if (reservation.kind !== "reserved") {
+      throw new Error(`Expected confirmation reservation, received ${reservation.kind}`);
+    }
+    expect(
+      await database.sigaaRateLimitBucket.findUniqueOrThrow({
+        where: { usuarioId_operation: { usuarioId: ownerId, operation: "SYNC" } },
+      })
+    ).toMatchObject({ count: 2 });
+
+    const result = await repository.commitCourseChange({
+      ownerId,
+      proposalId: proposal.proposalId,
+      lease: reservation.lease,
+      candidate: candidate("20260000022", "Engenharia da Computação - Graduação", "b"),
+    });
+
+    expect(result).toMatchObject({ kind: "committed", courseReplaced: true });
+    expect(await database.usuario.findUniqueOrThrow({ where: { id: ownerId } })).toMatchObject({
+      cursoId: target.id,
+      centroId: target.centroId,
+      matricula: "20260000022",
+      matriculaOrigem: "SIGAA",
+    });
+    expect(
+      await database.sigaaAcademicSnapshot.findUniqueOrThrow({ where: { usuarioId: ownerId } })
+    ).toMatchObject({ installedByRunId: reservation.lease.runId });
+    expect(
+      await database.sigaaConnection.findUniqueOrThrow({ where: { usuarioId: ownerId } })
+    ).toMatchObject({ status: "CONNECTED", leaseRunId: null });
+    expect(
+      await database.sigaaCourseChangeProposal.findUniqueOrThrow({
+        where: { id: proposal.proposalId },
+      })
+    ).toMatchObject({ state: "CONSUMED", consumedAt: expect.any(Date) });
+    expect(await database.disciplinaConcluida.count({ where: { usuarioId: ownerId } })).toBe(1);
+    expect(await database.disciplinaSemestre.count({ where: { usuarioId: ownerId } })).toBe(1);
+
+    await expect(
+      repository.reserveCourseChangeConfirmation({
+        ownerId,
+        proposalId: proposal.proposalId,
+        proofProposalId: storedProposal.id,
+        idempotencyKey: confirmationKey,
+        consentVersion: "sigaa-v1-2026-08",
+      })
+    ).resolves.toMatchObject({ kind: "replay", courseReplaced: true });
+    await expect(
+      repository.reserveCourseChangeConfirmation({
+        ownerId,
+        proposalId: proposal.proposalId,
+        proofProposalId: storedProposal.id,
+        idempotencyKey: idempotencyKeySchema.parse(randomUUID()),
+        consentVersion: "sigaa-v1-2026-08",
+      })
+    ).resolves.toEqual({ kind: "stale" });
+  });
+
+  it.each([
+    {
+      mismatch: "course",
+      freshMatricula: "20260000023",
+      freshCourse: "Ciência da Computação",
+      expectedFailure: "COURSE_MISMATCH",
+    },
+    {
+      mismatch: "matricula",
+      freshMatricula: "20260000999",
+      freshCourse: "Engenharia de Computação - Graduação",
+      expectedFailure: "SIGAA_IDENTITY_MISMATCH",
+    },
+  ] as const)(
+    "rolls back replacement when fresh SIGAA $mismatch differs from the proposal",
+    async ({ freshMatricula, freshCourse, expectedFailure }) => {
+      const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+      const before = await database.usuario.findUniqueOrThrow({ where: { id: ownerId } });
+      const { proposal } = await detectCourseChange(ownerId, "20260000023");
+      const storedProposal = await database.sigaaCourseChangeProposal.findUniqueOrThrow({
+        where: { id: proposal.proposalId },
+      });
+      const reservation = await repository.reserveCourseChangeConfirmation({
+        ownerId,
+        proposalId: proposal.proposalId,
+        proofProposalId: storedProposal.id,
+        idempotencyKey: idempotencyKeySchema.parse(randomUUID()),
+        consentVersion: "sigaa-v1-2026-08",
+      });
+      if (reservation.kind !== "reserved") {
+        throw new Error(`Expected confirmation reservation, received ${reservation.kind}`);
+      }
+
+      const result = await repository.commitCourseChange({
+        ownerId,
+        proposalId: proposal.proposalId,
+        lease: reservation.lease,
+        candidate: candidate(freshMatricula, freshCourse, "c"),
+      });
+
+      expect(result).toMatchObject({ kind: "rejected", failure: expectedFailure });
+      expect(await database.usuario.findUniqueOrThrow({ where: { id: ownerId } })).toMatchObject({
+        cursoId: before.cursoId,
+        centroId: before.centroId,
+        matricula: null,
+      });
+      expect(
+        await database.sigaaAcademicSnapshot.findUnique({ where: { usuarioId: ownerId } })
+      ).toBeNull();
+      expect(
+        await database.sigaaCourseChangeProposal.findUniqueOrThrow({
+          where: { id: proposal.proposalId },
+        })
+      ).toMatchObject({ state: "SUPERSEDED" });
+    }
+  );
+
+  it.each(["SUCCEEDED", "RUNNING", "FAILED", "SUPERSEDED"] as const)(
+    "replays an existing confirmation run safely when its status is %s",
+    async status => {
+      const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+      const { proposal } = await detectCourseChange(ownerId, "20260000025");
+      const idempotencyKey = idempotencyKeySchema.parse(randomUUID());
+      const reserved = await repository.reserveCourseChangeConfirmation({
+        ownerId,
+        proposalId: proposal.proposalId,
+        proofProposalId: proposal.proposalId,
+        idempotencyKey,
+        consentVersion: "sigaa-v1-2026-08",
+      });
+      expect(reserved.kind).toBe("reserved");
+      if (reserved.kind !== "reserved") {
+        return;
+      }
+      if (status !== "RUNNING") {
+        await database.sigaaSyncRun.update({
+          where: { id: reserved.lease.runId },
+          data: {
+            status,
+            failureCode:
+              status === "FAILED"
+                ? "INTERNAL_ERROR"
+                : status === "SUPERSEDED"
+                  ? "LEASE_LOST"
+                  : null,
+            finalizadoEm: new Date(),
+            retentionExpiresAt: new Date(Date.now() + 86_400_000),
+          },
+        });
+      }
+
+      const replay = await repository.reserveCourseChangeConfirmation({
+        ownerId,
+        proposalId: proposal.proposalId,
+        proofProposalId: proposal.proposalId,
+        idempotencyKey,
+        consentVersion: "sigaa-v1-2026-08",
+      });
+
+      if (status === "SUCCEEDED") {
+        expect(replay).toMatchObject({ kind: "replay", courseReplaced: true });
+      } else if (status === "RUNNING") {
+        expect(replay).toMatchObject({ kind: "busy", retryAt: reserved.lease.expiresAt });
+      } else {
+        expect(replay).toEqual({ kind: "stale" });
+      }
+    }
+  );
+
+  it.each(["consent", "matricula"] as const)(
+    "supersedes a proposal when its pre-connector %s state changed",
+    async changed => {
+      const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+      const { proposal } = await detectCourseChange(ownerId, "20260000026");
+      const before = await database.sigaaRateLimitBucket.findUniqueOrThrow({
+        where: { usuarioId_operation: { usuarioId: ownerId, operation: "SYNC" } },
+      });
+      if (changed === "matricula") {
+        await database.usuario.update({
+          where: { id: ownerId },
+          data: { matricula: "20260000998", matriculaOrigem: "MANUAL" },
+        });
+      }
+
+      await expect(
+        repository.reserveCourseChangeConfirmation({
+          ownerId,
+          proposalId: proposal.proposalId,
+          proofProposalId: proposal.proposalId,
+          idempotencyKey: idempotencyKeySchema.parse(randomUUID()),
+          consentVersion: changed === "consent" ? "changed-consent" : "sigaa-v1-2026-08",
+        })
+      ).resolves.toEqual({ kind: "stale" });
+      expect(
+        await database.sigaaRateLimitBucket.findUniqueOrThrow({
+          where: { usuarioId_operation: { usuarioId: ownerId, operation: "SYNC" } },
+        })
+      ).toMatchObject({ count: before.count });
+      expect(
+        await database.sigaaCourseChangeProposal.findUniqueOrThrow({
+          where: { id: proposal.proposalId },
+        })
+      ).toMatchObject({ state: "SUPERSEDED" });
+    }
+  );
+
+  it("supersedes pending proposals on disconnect", async () => {
+    const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+    const { proposal } = await detectCourseChange(ownerId, "20260000027");
+
+    await repository.disconnect(ownerId);
+
+    expect(
+      await database.sigaaCourseChangeProposal.findUniqueOrThrow({
+        where: { id: proposal.proposalId },
+      })
+    ).toMatchObject({ state: "SUPERSEDED" });
+  });
+
+  it("deletes expired proposals without deleting their operational run", async () => {
+    const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+    const { proposal } = await detectCourseChange(ownerId, "20260000028");
+    const stored = await database.sigaaCourseChangeProposal.update({
+      where: { id: proposal.proposalId },
+      data: { expiresAt: new Date(Date.now() - 60_000) },
+    });
+
+    await repository.deleteExpiredRuns();
+
+    expect(
+      await database.sigaaCourseChangeProposal.findUnique({ where: { id: proposal.proposalId } })
+    ).toBeNull();
+    expect(
+      await database.sigaaSyncRun.findUnique({ where: { id: stored.initiatingRunId } })
+    ).not.toBeNull();
+  });
+
+  it("allows catalog course deletion to cascade through a short-lived proposal", async () => {
+    const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+    const { target, proposal } = await detectCourseChange(ownerId, "20260000029");
+
+    await database.curso.delete({ where: { id: target.id } });
+
+    expect(
+      await database.sigaaCourseChangeProposal.findUnique({ where: { id: proposal.proposalId } })
+    ).toBeNull();
   });
 });
