@@ -1168,6 +1168,74 @@ describe("PrismaSigaaRepository on PostgreSQL", () => {
     }
   );
 
+  it("supersedes an expired same-key confirmation run and permits a fresh retry", async () => {
+    const ownerId = await createOwner({ courseName: "Ciência da Computação" });
+    const { proposal } = await detectCourseChange(ownerId, "20260000029");
+    const idempotencyKey = idempotencyKeySchema.parse(randomUUID());
+    const reserved = await repository.reserveCourseChangeConfirmation({
+      ownerId,
+      proposalId: proposal.proposalId,
+      proofProposalId: proposal.proposalId,
+      idempotencyKey,
+      consentVersion: "sigaa-v1-2026-08",
+    });
+    expect(reserved.kind).toBe("reserved");
+    if (reserved.kind !== "reserved") {
+      return;
+    }
+
+    const expiredAt = new Date(Date.now() - 60_000);
+    await database.$transaction([
+      database.sigaaSyncRun.update({
+        where: { id: reserved.lease.runId },
+        data: { leaseExpiresAt: expiredAt },
+      }),
+      database.sigaaConnection.update({
+        where: { usuarioId: ownerId },
+        data: { leaseExpiresAt: expiredAt },
+      }),
+    ]);
+
+    await expect(
+      repository.reserveCourseChangeConfirmation({
+        ownerId,
+        proposalId: proposal.proposalId,
+        proofProposalId: proposal.proposalId,
+        idempotencyKey,
+        consentVersion: "sigaa-v1-2026-08",
+      })
+    ).resolves.toEqual({ kind: "stale" });
+    expect(
+      await database.sigaaSyncRun.findUniqueOrThrow({ where: { id: reserved.lease.runId } })
+    ).toMatchObject({ status: "SUPERSEDED", failureCode: "LEASE_LOST" });
+    expect(
+      await database.sigaaConnection.findUniqueOrThrow({ where: { usuarioId: ownerId } })
+    ).toMatchObject({ leaseRunId: null, leaseTokenDigest: null, leaseExpiresAt: null });
+    expect(
+      await database.sigaaCourseChangeProposal.findUniqueOrThrow({
+        where: { id: proposal.proposalId },
+      })
+    ).toMatchObject({ state: "PENDING" });
+
+    const replacement = await repository.reserveCourseChangeConfirmation({
+      ownerId,
+      proposalId: proposal.proposalId,
+      proofProposalId: proposal.proposalId,
+      idempotencyKey: idempotencyKeySchema.parse(randomUUID()),
+      consentVersion: "sigaa-v1-2026-08",
+    });
+    expect(replacement.kind).toBe("reserved");
+    if (replacement.kind !== "reserved") {
+      return;
+    }
+    expect(
+      await database.sigaaConnection.findUniqueOrThrow({ where: { usuarioId: ownerId } })
+    ).toMatchObject({ leaseRunId: replacement.lease.runId });
+    expect(
+      await database.sigaaSyncRun.count({ where: { usuarioId: ownerId, status: "RUNNING" } })
+    ).toBe(1);
+  });
+
   it.each(["consent", "matricula"] as const)(
     "supersedes a proposal when its pre-connector %s state changed",
     async changed => {

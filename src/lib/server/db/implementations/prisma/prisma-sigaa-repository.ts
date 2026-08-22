@@ -545,7 +545,18 @@ export class PrismaSigaaRepository implements ISigaaRepository {
           return { kind: "replay", run: toRunReceipt(existing), courseReplaced: true };
         }
         if (existing.status === "RUNNING") {
-          return { kind: "busy", retryAt: existing.leaseExpiresAt };
+          const times = await this.databaseTimes(transaction);
+          if (existing.leaseExpiresAt > times.now) {
+            return { kind: "busy", retryAt: existing.leaseExpiresAt };
+          }
+          await this.supersedeCurrentAttempt(
+            transaction,
+            input.ownerId,
+            existing.id,
+            existing.leaseGeneration,
+            times
+          );
+          return { kind: "stale" };
         }
         return { kind: "stale" };
       }
