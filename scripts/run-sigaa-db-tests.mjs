@@ -2,6 +2,10 @@ import { randomBytes } from "node:crypto";
 import { spawnSync } from "node:child_process";
 
 const databaseNamePattern = /^aquario_sigaa_test(?:_[a-z0-9]+)?$/;
+const reversalFiles = [
+  "scripts/sql/verify-sigaa-course-change-reversal.sql",
+  "scripts/sql/verify-sigaa-persistence-reversal.sql",
+];
 let containerName = null;
 const prismaCli = "node_modules/prisma/build/index.js";
 
@@ -120,19 +124,13 @@ try {
   deployMigrations(environment);
   assertNoSchemaDrift(databaseUrl, environment);
   runRepositoryTests(environment);
-  run(
-    process.execPath,
-    [
-      prismaCli,
-      "db",
-      "execute",
-      "--url",
-      databaseUrl,
-      "--file",
-      "scripts/sql/verify-sigaa-persistence-reversal.sql",
-    ],
-    { env: environment }
-  );
+  for (const reversalFile of reversalFiles) {
+    run(
+      process.execPath,
+      [prismaCli, "db", "execute", "--url", databaseUrl, "--file", reversalFile],
+      { env: environment }
+    );
+  }
   deployMigrations(environment);
   assertNoSchemaDrift(databaseUrl, environment);
   runRepositoryTests(environment);

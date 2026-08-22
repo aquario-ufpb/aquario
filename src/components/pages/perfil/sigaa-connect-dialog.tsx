@@ -63,6 +63,7 @@ export function SigaaConnectDialog({
   const errorRef = useRef<HTMLParagraphElement>(null);
   const attemptRef = useRef<Attempt | null>(null);
   const [state, setState] = useState<DialogState>({ kind: "credentials", error: null });
+  const [proposalExpired, setProposalExpired] = useState(false);
   const isPending = state.kind === "submitting";
   const mismatch = state.kind === "credentials" ? undefined : state.mismatch;
   const confirmingCourseChange = Boolean(mismatch);
@@ -80,20 +81,44 @@ export function SigaaConnectDialog({
   }, [state.kind]);
 
   useEffect(() => {
-    if (error) {
-      const targetName = consentError
-        ? "consent"
-        : acknowledgmentError
-          ? "courseChangeAcknowledged"
-          : null;
-      const target = targetName ? formRef.current?.elements.namedItem(targetName) : null;
-      if (target instanceof HTMLElement) {
-        target.focus();
-      } else {
-        errorRef.current?.focus();
-      }
+    if (open && error) {
+      const timeout = window.setTimeout(() => {
+        const targetName = consentError
+          ? "consent"
+          : acknowledgmentError
+            ? "courseChangeAcknowledged"
+            : null;
+        const target = targetName ? formRef.current?.elements.namedItem(targetName) : null;
+        if (target instanceof HTMLElement) {
+          target.focus();
+        } else {
+          errorRef.current?.focus();
+        }
+      }, 0);
+      return () => window.clearTimeout(timeout);
     }
-  }, [acknowledgmentError, consentError, error]);
+  }, [acknowledgmentError, consentError, error, open]);
+
+  useEffect(() => {
+    if (!mismatch) {
+      setProposalExpired(false);
+      return;
+    }
+
+    const expiresAt = Date.parse(mismatch.expiresAt);
+    const updateExpiry = () =>
+      setProposalExpired(!Number.isFinite(expiresAt) || expiresAt <= Date.now());
+    updateExpiry();
+    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      return;
+    }
+
+    const timeout = window.setTimeout(
+      updateExpiry,
+      Math.min(expiresAt - Date.now(), 2_147_483_647)
+    );
+    return () => window.clearTimeout(timeout);
+  }, [mismatch]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -235,6 +260,12 @@ export function SigaaConnectDialog({
     onOpenChange(nextOpen);
   };
 
+  const restartSynchronization = () => {
+    attemptRef.current = null;
+    clearSensitiveForm(formRef.current);
+    setState({ kind: "credentials", error: null });
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
@@ -299,6 +330,17 @@ export function SigaaConnectDialog({
                 }).format(new Date(mismatch.expiresAt))}
                 .
               </p>
+              {proposalExpired && (
+                <div className="space-y-2 rounded-md border border-destructive/40 bg-background p-3">
+                  <p role="alert" className="text-sm text-destructive">
+                    Esta confirmação expirou. Inicie uma nova sincronização para conferir os dados
+                    atualizados antes de substituir o curso.
+                  </p>
+                  <Button type="button" variant="outline" onClick={restartSynchronization}>
+                    Iniciar nova sincronização
+                  </Button>
+                </div>
+              )}
               <label
                 className="flex items-start gap-3 text-sm"
                 htmlFor="course-change-acknowledged"
@@ -311,7 +353,7 @@ export function SigaaConnectDialog({
                   className="mt-0.5 h-4 w-4"
                   aria-invalid={acknowledgmentError}
                   aria-describedby={acknowledgmentError ? "sigaa-form-error" : undefined}
-                  disabled={isPending}
+                  disabled={isPending || proposalExpired}
                 />
                 <span>Entendo que meu curso será substituído e quero continuar.</span>
               </label>
@@ -426,7 +468,7 @@ export function SigaaConnectDialog({
             <Button
               type="submit"
               variant={confirmingCourseChange ? "destructive" : "default"}
-              disabled={isPending}
+              disabled={isPending || proposalExpired}
             >
               {isPending
                 ? "Sincronizando…"

@@ -18,7 +18,7 @@ type ManualAcademicSources = Readonly<{
     code: string;
     name: string;
   }>[];
-  enrolled: readonly Readonly<{ disciplinaId: string; code: string }>[];
+  enrolled: readonly Readonly<{ disciplinaId: string; code: string; name: string }>[];
 }>;
 
 const normalizeCode = (code: string): string => code.trim().toUpperCase();
@@ -66,7 +66,7 @@ export function collectManualAcademicComponents({
       manualByCode.set(code, {
         disciplinaId: item.disciplinaId,
         code,
-        name: catalogItem?.name ?? code,
+        name: catalogItem?.name ?? item.name,
         state: "enrolled",
       });
     }

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { trackEvent } from "@/analytics/posthog-client";
+import type { SigaaConnectionState } from "@/analytics/posthog-events";
 import { SigaaConnectDialog } from "@/components/pages/perfil/sigaa-connect-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,36 @@ const formatDateTime = (value: string) =>
 const percentFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
 type ComponentFilter = "all" | "completed" | "enrolled" | "pending" | "unknown";
 
+type AcademicConnectAction = Readonly<{
+  operation: "connect" | "sync";
+  consentRequired: boolean;
+  connectionState: SigaaConnectionState;
+  emptyStateLabel: string;
+}>;
+
+const getAcademicConnectAction = (
+  connectionState: SigaaConnectionState | undefined,
+  consentRequired: boolean
+): AcademicConnectAction => {
+  const resolvedState = connectionState ?? "never_connected";
+  if (resolvedState === "never_connected") {
+    return {
+      operation: "connect",
+      consentRequired,
+      connectionState: resolvedState,
+      emptyStateLabel: "Conectar e sincronizar",
+    };
+  }
+
+  return {
+    operation: "sync",
+    consentRequired,
+    connectionState: resolvedState,
+    emptyStateLabel:
+      resolvedState === "disconnected" ? "Reconectar e sincronizar" : "Continuar sincronização",
+  };
+};
+
 export default function MeusDadosAcademicosPage() {
   useRequireAuth();
   const queryClient = useQueryClient();
@@ -71,9 +102,7 @@ export default function MeusDadosAcademicosPage() {
         enrolledQuery.data?.disciplinas.map(item => ({
           disciplinaId: item.disciplinaId,
           code: item.disciplinaCodigo,
-          name:
-            catalog.find(component => component.disciplinaId === item.disciplinaId)?.name ??
-            item.disciplinaCodigo,
+          name: item.disciplinaNome,
         })) ?? [],
     });
 
@@ -86,6 +115,23 @@ export default function MeusDadosAcademicosPage() {
 
   const integrationView = stateQuery.data ? toSigaaIntegrationView(stateQuery.data) : null;
   const integrationKind = integrationView?.kind;
+  const connectAction = getAcademicConnectAction(
+    integrationKind,
+    stateQuery.data?.connection?.consentVersion !== SIGAA_CONSENT_VERSION
+  );
+
+  const openConnectDialog = () => {
+    trackEvent("sigaa_connect_opened", {
+      operation: connectAction.operation,
+      consent_required: connectAction.consentRequired,
+    });
+    if (connectAction.operation === "sync") {
+      trackEvent("sigaa_sync_again_clicked", {
+        connection_state: connectAction.connectionState,
+      });
+    }
+    setConnectOpen(true);
+  };
   useEffect(() => {
     if (integrationKind) {
       trackEvent("sigaa_academic_page_opened", { connection_state: integrationKind });
@@ -107,7 +153,8 @@ export default function MeusDadosAcademicosPage() {
   const componentGroups = useMemo(() => {
     const groups = new Map<string, typeof filteredComponents>();
     filteredComponents.slice(0, visibleCount).forEach(component => {
-      const key = component.sigaa?.period ? `${component.sigaa.period}º período` : "Sem período";
+      const period = component.sigaa?.period;
+      const key = period !== null && period !== undefined ? `${period}º período` : "Sem período";
       groups.set(key, [...(groups.get(key) ?? []), component]);
     });
     return [...groups.entries()];
@@ -158,6 +205,25 @@ export default function MeusDadosAcademicosPage() {
     );
   }
 
+  if (currentUser.isError && !currentUser.data) {
+    return (
+      <main className="container mx-auto max-w-3xl px-6 pb-24 pt-32 text-center">
+        <h1 className="text-2xl font-semibold">Não foi possível carregar seu perfil</h1>
+        <p className="mt-3 text-muted-foreground">
+          Tente novamente para verificar seu acesso à integração SIGAA.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <Button variant="outline" onClick={() => currentUser.refetch()}>
+            Tentar novamente
+          </Button>
+          <Button asChild variant="ghost">
+            <Link href="/perfil">Voltar ao perfil</Link>
+          </Button>
+        </div>
+      </main>
+    );
+  }
+
   if (!hasBeta) {
     return (
       <main className="container mx-auto max-w-3xl px-6 pb-24 pt-32 text-center">
@@ -189,20 +255,7 @@ export default function MeusDadosAcademicosPage() {
               Tentar novamente
             </Button>
           ) : (
-            <Button
-              onClick={() => {
-                trackEvent("sigaa_connect_opened", {
-                  operation: "connect",
-                  consent_required: true,
-                });
-                trackEvent("sigaa_sync_again_clicked", {
-                  connection_state: integrationView?.kind ?? "never_connected",
-                });
-                setConnectOpen(true);
-              }}
-            >
-              Conectar e sincronizar
-            </Button>
+            <Button onClick={openConnectDialog}>{connectAction.emptyStateLabel}</Button>
           )}
           <Button asChild variant="outline">
             <Link href="/perfil">Voltar ao perfil</Link>
@@ -211,7 +264,7 @@ export default function MeusDadosAcademicosPage() {
         {stateQuery.data && (
           <SigaaConnectDialog
             open={connectOpen}
-            requireConsent={stateQuery.data.connection?.consentVersion !== SIGAA_CONSENT_VERSION}
+            requireConsent={connectAction.consentRequired}
             onOpenChange={setConnectOpen}
             onSynchronized={refreshAfterSync}
           />
@@ -243,21 +296,7 @@ export default function MeusDadosAcademicosPage() {
             </p>
           </div>
         </div>
-        <Button
-          className="mt-4"
-          variant="outline"
-          onClick={() => {
-            trackEvent("sigaa_connect_opened", {
-              operation: "sync",
-              consent_required:
-                stateQuery.data?.connection?.consentVersion !== SIGAA_CONSENT_VERSION,
-            });
-            trackEvent("sigaa_sync_again_clicked", {
-              connection_state: integrationView?.kind ?? "connected",
-            });
-            setConnectOpen(true);
-          }}
-        >
+        <Button className="mt-4" variant="outline" onClick={openConnectDialog}>
           <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
           Sincronizar novamente
         </Button>
@@ -499,7 +538,7 @@ export default function MeusDadosAcademicosPage() {
                         </p>
                       )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline">{stateLabels[component.presentation.state]}</Badge>
                     <Badge variant="secondary">
                       {component.presentation.origin === "CATALOG"
@@ -538,16 +577,69 @@ export default function MeusDadosAcademicosPage() {
           gradeGroups.map(([semester, grades]) => (
             <div key={semester} className="mb-6">
               <h3 className="mb-2 text-sm font-semibold text-muted-foreground">{semester}</h3>
-              <div className="overflow-x-auto rounded-lg border">
+              <div
+                className="space-y-3 sm:hidden"
+                role="list"
+                aria-label={`Notas do semestre ${semester}`}
+              >
+                {grades.map(item => (
+                  <Card key={`${semester}-${item.code}`} role="listitem">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">{item.discipline}</CardTitle>
+                      <p className="text-xs text-muted-foreground">{item.code}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                        <div>
+                          <dt className="text-muted-foreground">Notas</dt>
+                          <dd className="font-medium">
+                            {item.units.length ? item.units.join(" · ") : "—"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">Exame</dt>
+                          <dd className="font-medium">{item.exam ?? "—"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">Resultado</dt>
+                          <dd className="font-medium">{item.result ?? "—"}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">Faltas</dt>
+                          <dd className="font-medium">{item.absences ?? "—"}</dd>
+                        </div>
+                        <div className="col-span-2">
+                          <dt className="text-muted-foreground">Situação</dt>
+                          <dd className="font-medium">{item.status ?? "—"}</dd>
+                        </div>
+                      </dl>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto rounded-lg border sm:block">
                 <table className="w-full min-w-[680px] text-left text-sm">
+                  <caption className="sr-only">Notas do semestre {semester}</caption>
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="p-3">Componente</th>
-                      <th className="p-3">Notas</th>
-                      <th className="p-3">Exame</th>
-                      <th className="p-3">Resultado</th>
-                      <th className="p-3">Faltas</th>
-                      <th className="p-3">Situação</th>
+                      <th scope="col" className="p-3">
+                        Componente
+                      </th>
+                      <th scope="col" className="p-3">
+                        Notas
+                      </th>
+                      <th scope="col" className="p-3">
+                        Exame
+                      </th>
+                      <th scope="col" className="p-3">
+                        Resultado
+                      </th>
+                      <th scope="col" className="p-3">
+                        Faltas
+                      </th>
+                      <th scope="col" className="p-3">
+                        Situação
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -615,7 +707,7 @@ export default function MeusDadosAcademicosPage() {
       </p>
       <SigaaConnectDialog
         open={connectOpen}
-        requireConsent={stateQuery.data?.connection?.consentVersion !== SIGAA_CONSENT_VERSION}
+        requireConsent={connectAction.consentRequired}
         onOpenChange={setConnectOpen}
         onSynchronized={refreshAfterSync}
       />

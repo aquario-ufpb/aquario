@@ -230,7 +230,7 @@ describe("SIGAA connect dialog", () => {
         code: "SIGAA_COURSE_MISMATCH",
         resolution: "confirmation_required",
         proposalId: "550e8400-e29b-41d4-a716-446655440020",
-        expiresAt: "2026-08-21T12:10:00.000Z",
+        expiresAt: "2099-08-21T12:10:00.000Z",
         currentCourse: "Ciência da Computação",
         sigaaCourse: "Engenharia de Computação - Graduação",
         targetCourse: "Engenharia da Computação",
@@ -299,7 +299,7 @@ describe("SIGAA connect dialog", () => {
       code: "SIGAA_COURSE_MISMATCH" as const,
       resolution: "confirmation_required" as const,
       proposalId: "550e8400-e29b-41d4-a716-446655440020",
-      expiresAt: "2026-08-21T12:10:00.000Z",
+      expiresAt: "2099-08-21T12:10:00.000Z",
       currentCourse: "Ciência da Computação",
       sigaaCourse: "Engenharia de Computação - Graduação",
       targetCourse: "Engenharia da Computação",
@@ -382,5 +382,42 @@ describe("SIGAA connect dialog", () => {
 
     await user.click(screen.getByRole("button", { name: "Abrir novamente" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Falha segura ao sincronizar");
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveFocus());
+  });
+
+  it("blocks an expired course replacement and offers a fresh synchronization", async () => {
+    const user = userEvent.setup();
+    mockSynchronize.mockRejectedValueOnce(
+      new SigaaCourseChangeRequiredError({
+        message: "Curso divergente",
+        code: "SIGAA_COURSE_MISMATCH",
+        resolution: "confirmation_required",
+        proposalId: "550e8400-e29b-41d4-a716-446655440020",
+        expiresAt: "2020-01-01T00:00:00.000Z",
+        currentCourse: "Ciência da Computação",
+        sigaaCourse: "Engenharia de Computação - Graduação",
+        targetCourse: "Engenharia da Computação",
+      })
+    );
+
+    render(
+      <SigaaConnectDialog open requireConsent onOpenChange={jest.fn()} onSynchronized={jest.fn()} />
+    );
+    await user.click(screen.getByLabelText(/Autorizo o Aquário/));
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "student");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "sigaa-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "aquario-password");
+    await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+
+    expect(await screen.findByText(/Esta confirmação expirou/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Substituir meu curso e sincronizar" })
+    ).toBeDisabled();
+    expect(screen.getByLabelText(/Entendo que meu curso será substituído/)).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Iniciar nova sincronização" }));
+    expect(screen.getByRole("dialog", { name: "Conectar ao SIGAA" })).toBeInTheDocument();
+    expect(screen.queryByText(/Esta confirmação expirou/)).not.toBeInTheDocument();
+    expect(mockConfirmCourseChange).not.toHaveBeenCalled();
   });
 });

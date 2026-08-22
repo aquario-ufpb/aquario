@@ -93,7 +93,7 @@ describe("combineAcademicDisplay", () => {
       collectManualAcademicComponents({
         catalog: [{ disciplinaId: "disc-1", code: " GDCO0001 ", name: "Catálogo" }],
         completed: [{ disciplinaId: "disc-1", code: "GDCO0001", name: "Catálogo" }],
-        enrolled: [{ disciplinaId: "disc-1", code: "gdco0001" }],
+        enrolled: [{ disciplinaId: "disc-1", code: "gdco0001", name: "Catálogo" }],
       })
     ).toEqual([{ disciplinaId: "disc-1", code: "GDCO0001", name: "Catálogo", state: "completed" }]);
   });
@@ -110,6 +110,26 @@ describe("combineAcademicDisplay", () => {
         code: "CC0001",
         catalog: null,
         presentation: { origin: "MANUAL", state: "completed", name: "Algoritmos antigos" },
+      }),
+    ]);
+  });
+
+  it("keeps an enrolled discipline from a previous course visible by its stored name", () => {
+    const manual = collectManualAcademicComponents({
+      catalog: [{ disciplinaId: "current", code: "EC0001", name: "Circuitos" }],
+      completed: [],
+      enrolled: [{ disciplinaId: "previous", code: "CC0002", name: "Estruturas de dados antigas" }],
+    });
+
+    expect(combineAcademicDisplay({ catalog: [], manual, sigaa: [] })).toEqual([
+      expect.objectContaining({
+        code: "CC0002",
+        catalog: null,
+        presentation: {
+          origin: "MANUAL",
+          state: "enrolled",
+          name: "Estruturas de dados antigas",
+        },
       }),
     ]);
   });
