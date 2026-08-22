@@ -41,7 +41,8 @@ export const ApiError = {
     errorResponse("Email ou senha incorretos", ErrorCode.INVALID_CREDENTIALS, 401),
 
   // 403 Forbidden
-  forbidden: (message = "Acesso negado") => errorResponse(message, ErrorCode.FORBIDDEN, 403),
+  forbidden: (message = "Acesso negado", code: ErrorCode = ErrorCode.FORBIDDEN) =>
+    errorResponse(message, code, 403),
 
   // 404 Not Found
   notFound: (resource = "Recurso", code: ErrorCode = ErrorCode.NOT_FOUND) =>
@@ -70,8 +71,16 @@ export const ApiError = {
     errorResponse("Este usuário já é membro ativo desta entidade", ErrorCode.ALREADY_MEMBER, 409),
 
   // 429 Too Many Requests
-  rateLimited: (message = "Muitas tentativas. Tente novamente mais tarde.") =>
-    errorResponse(message, ErrorCode.RATE_LIMITED, 429),
+  rateLimited: (
+    message = "Muitas tentativas. Tente novamente mais tarde.",
+    code: ErrorCode = ErrorCode.RATE_LIMITED
+  ) => errorResponse(message, code, 429),
+
+  // 503 Service Unavailable
+  serviceUnavailable: (
+    message = "Serviço temporariamente indisponível",
+    code: ErrorCode = ErrorCode.SERVICE_UNAVAILABLE
+  ) => errorResponse(message, code, 503),
 
   // 500 Internal Server Error
   internal: (message = "Erro interno do servidor") =>
