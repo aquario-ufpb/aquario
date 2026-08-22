@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { Prisma, PrismaClient } from "@prisma/client";
 import type {
   CommitLatestResult,
+  CommitCourseChangeResult,
   DeleteImportedDataResult,
   DisconnectResult,
   ImportedAcademicState,
@@ -9,6 +10,8 @@ import type {
   LeaseGrant,
   RateLimitDecision,
   ReserveAttemptResult,
+  ReserveCourseChangeConfirmationResult,
+  SigaaCourseResolution,
   SigaaRateLimitOperation,
   SigaaRunReceipt,
   SigaaSyncFailureCode,
@@ -25,10 +28,18 @@ import {
   type SigaaSnapshotCandidate,
   type UsuarioId,
 } from "@/lib/server/services/sigaa/storage.types";
-import { matchesVersionedSigaaCourseAlias } from "@/lib/server/services/sigaa/course-aliases";
+import {
+  matchesVersionedSigaaCourseAlias,
+  resolveVersionedSigaaCourse,
+  sigaaProfileAcademicIdentityToken,
+  sigaaTargetCatalogToken,
+  SIGAA_COURSE_ALIASES_VERSION,
+  type SigaaCatalogCourse,
+} from "@/lib/server/services/sigaa/course-aliases";
 
 const LEASE_SECONDS = 240;
 const RETENTION_SECONDS = 90 * 24 * 60 * 60;
+const COURSE_CHANGE_PROPOSAL_SECONDS = 10 * 60;
 
 const RATE_LIMIT_POLICIES = {
   REAUTH: { limit: 5, windowSeconds: 15 * 60 },
@@ -56,11 +67,25 @@ type DatabaseTimes = {
 
 const digest = (value: string): string => createHash("sha256").update(value).digest("hex");
 
-const normalizeCourseIdentity = (value: string): string =>
-  value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleUpperCase("pt-BR");
+type AcademicOwner = Readonly<{
+  matricula: string | null;
+  matriculaOrigem: "LEGACY" | "MANUAL" | "SIGAA" | null;
+  centroId: string;
+  curso: Readonly<{
+    id: string;
+    nome: string;
+    centro: Readonly<{ id: string; nome: string; sigla: string }>;
+  }>;
+}>;
 
-const courseIdentityToken = (cursoId: string, courseName: string): string =>
-  digest(`${cursoId}\u0000${normalizeCourseIdentity(courseName)}`);
+const academicIdentityToken = (owner: AcademicOwner): string =>
+  sigaaProfileAcademicIdentityToken({
+    courseId: owner.curso.id,
+    courseName: owner.curso.nome,
+    profileCenterId: owner.centroId,
+    catalogCenterId: owner.curso.centro.id,
+    catalogCenterName: owner.curso.centro.nome,
+  });
 
 const secretsEqual = (first: string, second: string): boolean => {
   const firstBuffer = Buffer.from(first, "hex");
@@ -88,13 +113,7 @@ const isMatriculaUniqueViolation = (error: unknown): boolean => {
 };
 
 export class PrismaSigaaRepository implements ISigaaRepository {
-  constructor(
-    private readonly database: PrismaClient = prisma,
-    private readonly courseMatches: (
-      profileCourse: string,
-      sigaaCourse: string
-    ) => boolean = matchesVersionedSigaaCourseAlias
-  ) {}
+  constructor(private readonly database: PrismaClient = prisma) {}
 
   consumeRateLimit(input: {
     ownerId: UsuarioId;
@@ -124,7 +143,38 @@ export class PrismaSigaaRepository implements ISigaaRepository {
       });
 
       if (existing) {
-        return { kind: "replay", run: toRunReceipt(existing) };
+        if (existing.status === "SUCCEEDED") {
+          return { kind: "replay", run: toRunReceipt(existing) };
+        }
+        const times = await this.databaseTimes(transaction);
+        if (existing.status === "RUNNING") {
+          if (existing.leaseExpiresAt > times.now) {
+            return { kind: "busy", retryAt: existing.leaseExpiresAt };
+          }
+          const superseded = await this.supersedeCurrentAttempt(
+            transaction,
+            input.ownerId,
+            existing.id,
+            existing.leaseGeneration,
+            times
+          );
+          return { kind: "failed", run: superseded, failure: "LEASE_LOST" };
+        }
+        if (existing.failureCode === "COURSE_MISMATCH") {
+          const resolution = await this.replayCourseResolution(
+            transaction,
+            input.ownerId,
+            existing.id
+          );
+          if (resolution) {
+            return { kind: "course_resolution", run: toRunReceipt(existing), resolution };
+          }
+        }
+        return {
+          kind: "failed",
+          run: toRunReceipt(existing),
+          failure: existing.failureCode ?? "INTERNAL_ERROR",
+        };
       }
 
       await this.lockRateLimit(transaction, input.ownerId, "SYNC");
@@ -136,7 +186,18 @@ export class PrismaSigaaRepository implements ISigaaRepository {
       await this.lockUsuario(transaction, input.ownerId);
       const owner = await transaction.usuario.findUnique({
         where: { id: input.ownerId },
-        select: { matricula: true, curso: { select: { id: true, nome: true } } },
+        select: {
+          matricula: true,
+          matriculaOrigem: true,
+          centroId: true,
+          curso: {
+            select: {
+              id: true,
+              nome: true,
+              centro: { select: { id: true, nome: true, sigla: true } },
+            },
+          },
+        },
       });
       if (!owner) {
         throw new Error("SIGAA_OWNER_NOT_FOUND");
@@ -155,18 +216,9 @@ export class PrismaSigaaRepository implements ISigaaRepository {
         return { kind: "busy", retryAt: existingConnection.leaseExpiresAt };
       }
 
-      const connection = await transaction.sigaaConnection.upsert({
-        where: { usuarioId: input.ownerId },
-        create: {
-          usuarioId: input.ownerId,
-          consentVersion: input.consentVersion,
-          consentedAt: times.now,
-        },
-        update: {
-          consentVersion: input.consentVersion,
-          consentedAt: times.now,
-        },
-      });
+      const connection =
+        existingConnection ??
+        (await transaction.sigaaConnection.create({ data: { usuarioId: input.ownerId } }));
 
       if (connection.leaseRunId) {
         await transaction.sigaaSyncRun.updateMany({
@@ -183,7 +235,7 @@ export class PrismaSigaaRepository implements ISigaaRepository {
       const runId = sigaaRunIdSchema.parse(randomUUID());
       const secret = leaseSecretSchema.parse(randomBytes(32).toString("hex"));
       const generation = connection.leaseGeneration + BigInt(1);
-      const identityToken = courseIdentityToken(owner.curso.id, owner.curso.nome);
+      const identityToken = academicIdentityToken(owner);
 
       await transaction.sigaaSyncRun.create({
         data: {
@@ -241,7 +293,14 @@ export class PrismaSigaaRepository implements ISigaaRepository {
             select: {
               matricula: true,
               matriculaOrigem: true,
-              curso: { select: { id: true, nome: true } },
+              centroId: true,
+              curso: {
+                select: {
+                  id: true,
+                  nome: true,
+                  centro: { select: { id: true, nome: true, sigla: true } },
+                },
+              },
             },
           }),
           transaction.sigaaConnection.findUnique({ where: { usuarioId: input.ownerId } }),
@@ -283,12 +342,8 @@ export class PrismaSigaaRepository implements ISigaaRepository {
           return { kind: "rejected", run: superseded, failure: "LEASE_LOST" };
         }
 
-        const currentCourseToken = courseIdentityToken(owner.curso.id, owner.curso.nome);
-        if (
-          currentCourseToken !== run.courseIdentityToken ||
-          candidate.identity.sourceCourse === null ||
-          !this.courseMatches(owner.curso.nome, candidate.identity.sourceCourse)
-        ) {
+        const currentCourseToken = academicIdentityToken(owner);
+        if (currentCourseToken !== run.courseIdentityToken) {
           const rejected = await this.rejectCurrentAttempt(
             transaction,
             input.ownerId,
@@ -321,6 +376,68 @@ export class PrismaSigaaRepository implements ISigaaRepository {
             times
           );
           return { kind: "rejected", run: rejected, failure: "SIGAA_IDENTITY_MISMATCH" };
+        }
+
+        const sourceMatchesCurrent =
+          owner.centroId === owner.curso.centro.id &&
+          candidate.identity.sourceCourse !== null &&
+          matchesVersionedSigaaCourseAlias(owner.curso.nome, candidate.identity.sourceCourse);
+        if (!sourceMatchesCurrent) {
+          const resolution = resolveVersionedSigaaCourse(
+            candidate.identity.sourceCourse,
+            await this.readCourseCatalog(transaction)
+          );
+          if (resolution.kind === "blocked") {
+            const rejected = await this.rejectCurrentAttempt(
+              transaction,
+              input.ownerId,
+              run.id,
+              input.lease.generation,
+              "COURSE_MISMATCH",
+              times
+            );
+            return {
+              kind: "course_resolution",
+              run: rejected,
+              resolution,
+            };
+          }
+
+          await transaction.sigaaCourseChangeProposal.updateMany({
+            where: { usuarioId: input.ownerId, state: "PENDING" },
+            data: { state: "SUPERSEDED" },
+          });
+          const proposal = await transaction.sigaaCourseChangeProposal.create({
+            data: {
+              usuarioId: input.ownerId,
+              initiatingRunId: run.id,
+              profileAcademicIdentityToken: currentCourseToken,
+              targetCourseId: resolution.target.id,
+              targetCatalogToken: resolution.targetCatalogToken,
+              sourceCourseLabel: resolution.sourceLabel,
+              profileMatricula: owner.matricula,
+              expectedMatricula: candidate.identity.matricula,
+              aliasVersion: SIGAA_COURSE_ALIASES_VERSION,
+              consentVersion: run.consentVersion,
+              expiresAt: new Date(times.now.getTime() + COURSE_CHANGE_PROPOSAL_SECONDS * 1000),
+            },
+          });
+          const rejected = await this.rejectCurrentAttempt(
+            transaction,
+            input.ownerId,
+            run.id,
+            input.lease.generation,
+            "COURSE_MISMATCH",
+            times
+          );
+          return {
+            kind: "course_resolution",
+            run: rejected,
+            resolution: {
+              kind: "confirmation_required",
+              proposal: this.proposalView(owner, resolution.target, proposal),
+            },
+          };
         }
 
         await transaction.usuario.update({
@@ -372,6 +489,8 @@ export class PrismaSigaaRepository implements ISigaaRepository {
           where: { usuarioId: input.ownerId },
           data: {
             status: "CONNECTED",
+            consentVersion: run.consentVersion,
+            consentedAt: run.iniciadoEm,
             connectedAt:
               connection.status === "CONNECTED" ? (connection.connectedAt ?? times.now) : times.now,
             disconnectedAt: null,
@@ -385,11 +504,429 @@ export class PrismaSigaaRepository implements ISigaaRepository {
           kind: "committed",
           run: toRunReceipt(completedRun),
           synchronizedAt: snapshot.synchronizedAt,
+          resolution: { kind: "matched_current" },
         };
       });
     } catch (error) {
       if (isMatriculaUniqueViolation(error)) {
         return this.closeMatriculaConflict(input.ownerId, input.lease);
+      }
+      throw error;
+    }
+  }
+
+  reserveCourseChangeConfirmation(input: {
+    ownerId: UsuarioId;
+    proposalId: string;
+    proofProposalId: string | null;
+    idempotencyKey: string;
+    consentVersion: string;
+  }): Promise<ReserveCourseChangeConfirmationResult> {
+    return this.database.$transaction(async transaction => {
+      await this.lockAggregate(transaction, input.ownerId);
+
+      if (input.proofProposalId !== input.proposalId) {
+        return { kind: "blocked", reason: "reauth_proposal_mismatch" };
+      }
+
+      const existing = await transaction.sigaaSyncRun.findUnique({
+        where: {
+          usuarioId_idempotencyKey: {
+            usuarioId: input.ownerId,
+            idempotencyKey: input.idempotencyKey,
+          },
+        },
+      });
+      if (existing) {
+        if (existing.confirmationProposalId !== input.proposalId) {
+          return { kind: "blocked", reason: "proposal_invalid" };
+        }
+        if (existing.status === "SUCCEEDED") {
+          return { kind: "replay", run: toRunReceipt(existing), courseReplaced: true };
+        }
+        if (existing.status === "RUNNING") {
+          const times = await this.databaseTimes(transaction);
+          if (existing.leaseExpiresAt > times.now) {
+            return { kind: "busy", retryAt: existing.leaseExpiresAt };
+          }
+          await this.supersedeCurrentAttempt(
+            transaction,
+            input.ownerId,
+            existing.id,
+            existing.leaseGeneration,
+            times
+          );
+          return { kind: "stale" };
+        }
+        return { kind: "stale" };
+      }
+
+      const times = await this.databaseTimes(transaction);
+      const proposal = await transaction.sigaaCourseChangeProposal.findFirst({
+        where: { id: input.proposalId, usuarioId: input.ownerId },
+        include: {
+          targetCourse: { include: { centro: true } },
+          usuario: {
+            select: {
+              matricula: true,
+              matriculaOrigem: true,
+              centroId: true,
+              curso: { include: { centro: true } },
+            },
+          },
+        },
+      });
+      if (!proposal) {
+        return { kind: "blocked", reason: "proposal_invalid" };
+      }
+      if (proposal.state !== "PENDING" || proposal.expiresAt <= times.now) {
+        if (proposal.state === "PENDING") {
+          await transaction.sigaaCourseChangeProposal.update({
+            where: { id: proposal.id },
+            data: { state: "SUPERSEDED" },
+          });
+        }
+        return { kind: "stale" };
+      }
+      const target = this.toCatalogCourse(proposal.targetCourse);
+      if (
+        proposal.consentVersion !== input.consentVersion ||
+        proposal.usuario.matricula !== proposal.profileMatricula ||
+        proposal.aliasVersion !== SIGAA_COURSE_ALIASES_VERSION ||
+        academicIdentityToken(proposal.usuario) !== proposal.profileAcademicIdentityToken ||
+        sigaaTargetCatalogToken(target) !== proposal.targetCatalogToken
+      ) {
+        await transaction.sigaaCourseChangeProposal.update({
+          where: { id: proposal.id },
+          data: { state: "SUPERSEDED" },
+        });
+        return { kind: "stale" };
+      }
+
+      const connection = await transaction.sigaaConnection.findUnique({
+        where: { usuarioId: input.ownerId },
+      });
+      if (!connection) {
+        return { kind: "stale" };
+      }
+      if (
+        connection.leaseRunId &&
+        connection.leaseExpiresAt &&
+        connection.leaseExpiresAt > times.now
+      ) {
+        return { kind: "busy", retryAt: connection.leaseExpiresAt };
+      }
+
+      await this.lockRateLimit(transaction, input.ownerId, "SYNC");
+      const limit = await this.consumeRateLimitInTransaction(transaction, input.ownerId, "SYNC");
+      if (limit.kind === "rate_limited") {
+        return limit;
+      }
+      if (connection.leaseRunId) {
+        await transaction.sigaaSyncRun.updateMany({
+          where: { id: connection.leaseRunId, status: "RUNNING" },
+          data: {
+            status: "SUPERSEDED",
+            failureCode: "LEASE_LOST",
+            finalizadoEm: times.now,
+            retentionExpiresAt: times.retentionExpiresAt,
+          },
+        });
+      }
+
+      const runId = sigaaRunIdSchema.parse(randomUUID());
+      const secret = leaseSecretSchema.parse(randomBytes(32).toString("hex"));
+      const generation = connection.leaseGeneration + BigInt(1);
+      const identityToken = academicIdentityToken(proposal.usuario);
+      await transaction.sigaaSyncRun.create({
+        data: {
+          id: runId,
+          usuarioId: input.ownerId,
+          idempotencyKey: input.idempotencyKey,
+          leaseGeneration: generation,
+          leaseExpiresAt: times.leaseExpiresAt,
+          courseIdentityToken: identityToken,
+          consentVersion: input.consentVersion,
+          confirmationProposalId: proposal.id,
+        },
+      });
+      await transaction.sigaaConnection.update({
+        where: { usuarioId: input.ownerId },
+        data: {
+          leaseGeneration: generation,
+          leaseRunId: runId,
+          leaseTokenDigest: digest(secret),
+          leaseExpiresAt: times.leaseExpiresAt,
+        },
+      });
+
+      return {
+        kind: "reserved",
+        proposalId: proposal.id,
+        lease: {
+          runId,
+          generation,
+          secret,
+          expiresAt: times.leaseExpiresAt,
+          courseIdentityToken: identityToken,
+          expectedMatricula: matriculaSchema.parse(proposal.expectedMatricula),
+        },
+      };
+    });
+  }
+
+  async commitCourseChange(input: {
+    ownerId: UsuarioId;
+    proposalId: string;
+    lease: LeaseGrant;
+    candidate: SigaaSnapshotCandidate;
+  }): Promise<CommitCourseChangeResult> {
+    const candidate = parseSigaaSnapshotCandidate(input.candidate);
+    const payload = toSigaaAcademicSnapshotPayload(candidate);
+
+    try {
+      return await this.database.$transaction(async transaction => {
+        await this.lockAggregate(transaction, input.ownerId);
+        await this.lockUsuario(transaction, input.ownerId);
+        await this.lockConnection(transaction, input.ownerId);
+        await transaction.$queryRaw`
+          SELECT "id" FROM "SigaaCourseChangeProposal"
+          WHERE "id" = ${input.proposalId} FOR UPDATE
+        `;
+
+        const ownerIdentity = await transaction.usuario.findUnique({
+          where: { id: input.ownerId },
+          select: { cursoId: true, centroId: true },
+        });
+        const proposalIdentity = await transaction.sigaaCourseChangeProposal.findFirst({
+          where: { id: input.proposalId, usuarioId: input.ownerId },
+          select: { targetCourseId: true },
+        });
+        if (!ownerIdentity || !proposalIdentity) {
+          throw new Error("SIGAA_COURSE_CHANGE_ATTEMPT_NOT_FOUND");
+        }
+        const lockedCourses = await transaction.$queryRaw<Array<{ id: string; centroId: string }>>`
+          SELECT "id", "centroId" FROM "Curso"
+          WHERE "id" IN (${ownerIdentity.cursoId}, ${proposalIdentity.targetCourseId})
+          ORDER BY "id" FOR UPDATE
+        `;
+        const centerIds = [
+          ...new Set([ownerIdentity.centroId, ...lockedCourses.map(c => c.centroId)]),
+        ];
+        if (centerIds.length > 0) {
+          await transaction.$queryRaw(
+            Prisma.sql`SELECT "id" FROM "Centro" WHERE "id" IN (${Prisma.join(
+              centerIds
+            )}) ORDER BY "id" FOR UPDATE`
+          );
+        }
+
+        const [owner, connection, run, proposal] = await Promise.all([
+          transaction.usuario.findUnique({
+            where: { id: input.ownerId },
+            select: {
+              matricula: true,
+              matriculaOrigem: true,
+              centroId: true,
+              curso: { include: { centro: true } },
+            },
+          }),
+          transaction.sigaaConnection.findUnique({ where: { usuarioId: input.ownerId } }),
+          transaction.sigaaSyncRun.findFirst({
+            where: { id: input.lease.runId, usuarioId: input.ownerId },
+          }),
+          transaction.sigaaCourseChangeProposal.findFirst({
+            where: { id: input.proposalId, usuarioId: input.ownerId },
+            include: { targetCourse: { include: { centro: true } } },
+          }),
+        ]);
+        if (!owner || !connection || !run || !proposal) {
+          throw new Error("SIGAA_COURSE_CHANGE_ATTEMPT_NOT_FOUND");
+        }
+
+        const times = await this.databaseTimes(transaction);
+        const ownsAuthenticatedLease =
+          run.status === "RUNNING" &&
+          run.confirmationProposalId === proposal.id &&
+          connection.leaseRunId === run.id &&
+          connection.leaseGeneration === input.lease.generation &&
+          run.leaseGeneration === input.lease.generation &&
+          input.lease.courseIdentityToken === run.courseIdentityToken &&
+          connection.leaseTokenDigest !== null &&
+          secretsEqual(connection.leaseTokenDigest, digest(input.lease.secret));
+        if (!ownsAuthenticatedLease) {
+          return {
+            kind: "rejected",
+            run: toRunReceipt(run),
+            failure: "LEASE_LOST",
+            resolution: { kind: "stale" },
+          };
+        }
+        if (
+          connection.leaseExpiresAt === null ||
+          connection.leaseExpiresAt <= times.now ||
+          run.leaseExpiresAt <= times.now
+        ) {
+          const superseded = await this.supersedeCurrentAttempt(
+            transaction,
+            input.ownerId,
+            run.id,
+            input.lease.generation,
+            times
+          );
+          return {
+            kind: "rejected",
+            run: superseded,
+            failure: "LEASE_LOST",
+            resolution: { kind: "stale" },
+          };
+        }
+
+        const target = this.toCatalogCourse(proposal.targetCourse);
+        if (
+          proposal.state !== "PENDING" ||
+          proposal.expiresAt <= times.now ||
+          proposal.aliasVersion !== SIGAA_COURSE_ALIASES_VERSION ||
+          proposal.consentVersion !== run.consentVersion ||
+          owner.matricula !== proposal.profileMatricula ||
+          academicIdentityToken(owner) !== proposal.profileAcademicIdentityToken ||
+          sigaaTargetCatalogToken(target) !== proposal.targetCatalogToken
+        ) {
+          return this.rejectCourseChangeAttempt(
+            transaction,
+            input.ownerId,
+            proposal.id,
+            run.id,
+            input.lease.generation,
+            "COURSE_MISMATCH",
+            { kind: "stale" },
+            times
+          );
+        }
+
+        await this.lockMatricula(transaction, candidate.identity.matricula);
+        const conflictingOwner = await transaction.usuario.findFirst({
+          where: { matricula: candidate.identity.matricula, id: { not: input.ownerId } },
+          select: { id: true },
+        });
+        if (
+          conflictingOwner ||
+          candidate.identity.matricula !== proposal.expectedMatricula ||
+          (owner.matricula !== null && owner.matricula !== proposal.expectedMatricula)
+        ) {
+          return this.rejectCourseChangeAttempt(
+            transaction,
+            input.ownerId,
+            proposal.id,
+            run.id,
+            input.lease.generation,
+            "SIGAA_IDENTITY_MISMATCH",
+            { kind: "blocked", reason: "profile_changed" },
+            times
+          );
+        }
+
+        const resolution = resolveVersionedSigaaCourse(
+          candidate.identity.sourceCourse,
+          await this.readCourseCatalog(transaction)
+        );
+        if (
+          resolution.kind === "blocked" ||
+          resolution.target.id !== proposal.targetCourseId ||
+          resolution.targetCatalogToken !== proposal.targetCatalogToken
+        ) {
+          return this.rejectCourseChangeAttempt(
+            transaction,
+            input.ownerId,
+            proposal.id,
+            run.id,
+            input.lease.generation,
+            "COURSE_MISMATCH",
+            resolution.kind === "blocked" ? resolution : { kind: "stale" },
+            times
+          );
+        }
+
+        await transaction.usuario.update({
+          where: { id: input.ownerId },
+          data: {
+            cursoId: resolution.target.id,
+            centroId: resolution.target.centerId,
+            matricula: candidate.identity.matricula,
+            matriculaOrigem: owner.matricula === null ? "SIGAA" : owner.matriculaOrigem,
+            matriculaVerificadaPeloSigaaEm: times.now,
+          },
+        });
+        const snapshot = await transaction.sigaaAcademicSnapshot.upsert({
+          where: { usuarioId: input.ownerId },
+          create: {
+            usuarioId: input.ownerId,
+            contractVersion: candidate.contractVersion,
+            connectorObservedAt: candidate.connectorObservedAt,
+            synchronizedAt: times.now,
+            upstreamCommit: candidate.upstreamCommit,
+            installedByRunId: run.id,
+            payload,
+          },
+          update: {
+            contractVersion: candidate.contractVersion,
+            connectorObservedAt: candidate.connectorObservedAt,
+            synchronizedAt: times.now,
+            upstreamCommit: candidate.upstreamCommit,
+            installedByRunId: run.id,
+            payload,
+          },
+        });
+        const completedRun = await transaction.sigaaSyncRun.update({
+          where: { id: run.id },
+          data: {
+            status: "SUCCEEDED",
+            failureCode: null,
+            connectorRequestId: candidate.connectorRequestId,
+            contractVersion: candidate.contractVersion,
+            upstreamCommit: candidate.upstreamCommit,
+            componentCount: candidate.curriculum.components.length,
+            gradeCount: candidate.grades.length,
+            classCount: candidate.classes.length,
+            finalizadoEm: times.now,
+            retentionExpiresAt: times.retentionExpiresAt,
+          },
+        });
+        await transaction.sigaaConnection.update({
+          where: { usuarioId: input.ownerId },
+          data: {
+            status: "CONNECTED",
+            consentVersion: run.consentVersion,
+            consentedAt: run.iniciadoEm,
+            connectedAt:
+              connection.status === "CONNECTED" ? (connection.connectedAt ?? times.now) : times.now,
+            disconnectedAt: null,
+            leaseRunId: null,
+            leaseTokenDigest: null,
+            leaseExpiresAt: null,
+          },
+        });
+        await transaction.sigaaCourseChangeProposal.update({
+          where: { id: proposal.id },
+          data: { state: "CONSUMED", consumedAt: times.now },
+        });
+
+        return {
+          kind: "committed",
+          run: toRunReceipt(completedRun),
+          synchronizedAt: snapshot.synchronizedAt,
+          courseReplaced: true,
+        };
+      });
+    } catch (error) {
+      if (isMatriculaUniqueViolation(error)) {
+        const closed = await this.closeMatriculaConflict(input.ownerId, input.lease);
+        return {
+          kind: "rejected",
+          run: closed.run,
+          failure: "SIGAA_IDENTITY_MISMATCH",
+          resolution: { kind: "blocked", reason: "profile_changed" },
+        };
       }
       throw error;
     }
@@ -510,6 +1047,10 @@ export class PrismaSigaaRepository implements ISigaaRepository {
       const connection = await transaction.sigaaConnection.findUnique({
         where: { usuarioId: ownerId },
       });
+      await transaction.sigaaCourseChangeProposal.updateMany({
+        where: { usuarioId: ownerId, state: "PENDING" },
+        data: { state: "SUPERSEDED" },
+      });
       if (!connection) {
         return { kind: "disconnected", disconnectedAt: times.now };
       }
@@ -604,6 +1145,10 @@ export class PrismaSigaaRepository implements ISigaaRepository {
 
   deleteExpiredRuns(): Promise<{ deleted: number }> {
     return this.database.$transaction(async transaction => {
+      await transaction.$executeRaw`
+        DELETE FROM "SigaaCourseChangeProposal"
+        WHERE "expiresAt" <= clock_timestamp()
+      `;
       const expired = await transaction.$queryRaw<Array<{ id: string }>>`
         SELECT "id"
         FROM "SigaaSyncRun"
@@ -625,6 +1170,114 @@ export class PrismaSigaaRepository implements ISigaaRepository {
       });
       return { deleted: deleted.count };
     });
+  }
+
+  private toCatalogCourse(course: {
+    id: string;
+    nome: string;
+    centroId: string;
+    centro: { id: string; nome: string; sigla: string };
+  }): SigaaCatalogCourse {
+    return {
+      id: course.id,
+      name: course.nome,
+      centerId: course.centroId,
+      centerName: course.centro.nome,
+      centerAcronym: course.centro.sigla,
+    };
+  }
+
+  private async readCourseCatalog(transaction: Transaction): Promise<SigaaCatalogCourse[]> {
+    const courses = await transaction.curso.findMany({ include: { centro: true } });
+    return courses.map(course => this.toCatalogCourse(course));
+  }
+
+  private proposalView(
+    owner: AcademicOwner,
+    target: SigaaCatalogCourse,
+    proposal: { id: string; expiresAt: Date; sourceCourseLabel: string }
+  ) {
+    const centerChanged = owner.centroId !== target.centerId;
+    return {
+      proposalId: proposal.id,
+      expiresAt: proposal.expiresAt,
+      currentCourse: owner.curso.nome,
+      sigaaCourse: proposal.sourceCourseLabel,
+      targetCourse: target.name,
+      ...(centerChanged
+        ? {
+            currentCenter: `${owner.curso.centro.sigla}, ${owner.curso.centro.nome}`,
+            targetCenter: `${target.centerAcronym}, ${target.centerName}`,
+          }
+        : {}),
+    };
+  }
+
+  private async replayCourseResolution(
+    transaction: Transaction,
+    ownerId: UsuarioId,
+    runId: string
+  ): Promise<SigaaCourseResolution | null> {
+    const proposal = await transaction.sigaaCourseChangeProposal.findUnique({
+      where: { initiatingRunId: runId },
+      include: {
+        targetCourse: { include: { centro: true } },
+        usuario: {
+          select: {
+            matricula: true,
+            matriculaOrigem: true,
+            centroId: true,
+            curso: { include: { centro: true } },
+          },
+        },
+      },
+    });
+    if (!proposal || proposal.usuarioId !== ownerId) {
+      return null;
+    }
+
+    const [times] = await transaction.$queryRaw<Array<{ now: Date }>>`
+      SELECT clock_timestamp() AS "now"
+    `;
+    const target = this.toCatalogCourse(proposal.targetCourse);
+    if (
+      proposal.state !== "PENDING" ||
+      proposal.expiresAt <= times.now ||
+      proposal.aliasVersion !== SIGAA_COURSE_ALIASES_VERSION ||
+      academicIdentityToken(proposal.usuario) !== proposal.profileAcademicIdentityToken ||
+      sigaaTargetCatalogToken(target) !== proposal.targetCatalogToken
+    ) {
+      return { kind: "stale" };
+    }
+    return {
+      kind: "confirmation_required",
+      proposal: this.proposalView(proposal.usuario, target, proposal),
+    };
+  }
+
+  private async rejectCourseChangeAttempt(
+    transaction: Transaction,
+    ownerId: UsuarioId,
+    proposalId: string,
+    runId: string,
+    generation: bigint,
+    failure: "COURSE_MISMATCH" | "SIGAA_IDENTITY_MISMATCH",
+    resolution: SigaaCourseResolution,
+    times: DatabaseTimes
+  ): Promise<CommitCourseChangeResult> {
+    await transaction.sigaaCourseChangeProposal.updateMany({
+      where: { id: proposalId, state: "PENDING" },
+      data: { state: "SUPERSEDED" },
+    });
+    const run = await this.rejectCurrentAttempt(
+      transaction,
+      ownerId,
+      runId,
+      generation,
+      failure,
+      times
+    );
+    return { kind: "rejected", run, failure, resolution };
   }
 
   private async rejectCurrentAttempt(

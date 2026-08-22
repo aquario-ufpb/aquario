@@ -14,7 +14,10 @@ const sigaaReauthResponseSchema = z
 
 export type SigaaReauthResponse = z.infer<typeof sigaaReauthResponseSchema>;
 
-export async function reauthenticateForSigaa(password: string): Promise<SigaaReauthResponse> {
+export async function reauthenticateForSigaa(
+  password: string,
+  proposalId?: string
+): Promise<SigaaReauthResponse> {
   const token = tokenManager.getToken();
 
   if (!token) {
@@ -30,7 +33,7 @@ export async function reauthenticateForSigaa(password: string): Promise<SigaaRea
       "Cache-Control": "no-store",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ password, ...(proposalId ? { proposalId } : {}) }),
   });
 
   if (!response.ok) {

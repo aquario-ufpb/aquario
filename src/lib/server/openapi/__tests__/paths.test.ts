@@ -103,6 +103,7 @@ describe("paths registry sanity checks", () => {
       const expected: OperationKey[] = [
         "post /usuarios/me/sigaa/reauth",
         "post /usuarios/me/sigaa/sync",
+        "post /usuarios/me/sigaa/course-change/confirm",
         "get /usuarios/me/academico",
         "post /usuarios/me/sigaa/disconnect",
         "delete /usuarios/me/sigaa/data",

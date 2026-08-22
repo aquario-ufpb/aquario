@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/auth-context";
 /**
  * Hook to fetch the current user's completed disciplines
  */
-export const useDisciplinasConcluidas = () => {
+export const useDisciplinasConcluidas = (enabled = true) => {
   const { token, userId } = useAuth();
 
   return useQuery({
@@ -17,7 +17,7 @@ export const useDisciplinasConcluidas = () => {
       }
       return usuariosService.getMyDisciplinasConcluidas(token);
     },
-    enabled: !!token && !!userId,
+    enabled: enabled && !!token && !!userId,
     staleTime: 5 * 60 * 1000,
   });
 };

@@ -39,6 +39,7 @@ describe("SIGAA OpenAPI contract", () => {
     const paths = getOpenApiDocument().paths;
 
     expect(paths?.["/usuarios/me/sigaa/sync"]?.post).toBeDefined();
+    expect(paths?.["/usuarios/me/sigaa/course-change/confirm"]?.post).toBeDefined();
     expect(paths?.["/usuarios/me/academico"]?.get).toBeDefined();
     expect(paths?.["/usuarios/me/sigaa/disconnect"]?.post).toBeDefined();
     expect(paths?.["/usuarios/me/sigaa/data"]?.delete).toBeDefined();

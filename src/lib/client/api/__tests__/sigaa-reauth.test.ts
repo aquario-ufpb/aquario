@@ -54,6 +54,22 @@ describe("reauthenticateForSigaa", () => {
     });
   });
 
+  it("binds a course-change reauthentication request to its proposal", async () => {
+    mockFetch.mockResolvedValueOnce(
+      response(200, {
+        proofToken: "bound-proof",
+        expiresAt: "2026-08-21T15:15:00.000Z",
+      })
+    );
+    const proposalId = "550e8400-e29b-41d4-a716-446655440010";
+
+    await reauthenticateForSigaa("aquario-password", proposalId);
+
+    expect(mockFetch.mock.calls[0][1]?.body).toBe(
+      JSON.stringify({ password: "aquario-password", proposalId })
+    );
+  });
+
   it.each([307, 308])("refuses a %i redirect without replaying the password", async status => {
     mockFetch.mockResolvedValueOnce(response(status, null));
 

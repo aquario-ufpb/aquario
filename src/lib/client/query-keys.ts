@@ -77,6 +77,10 @@ export const queryKeys = {
     ativo: (usuarioId: string | null) =>
       [...privateQueryKeys.byUser(usuarioId), "disciplinasSemestre", "ativo"] as const,
   },
+  sigaa: {
+    state: (usuarioId: string | null) =>
+      [...privateQueryKeys.byUser(usuarioId), "sigaa", "state"] as const,
+  },
   calendarioAcademico: {
     all: ["calendarioAcademico"] as const,
     ativo: ["calendarioAcademico", "ativo"] as const,

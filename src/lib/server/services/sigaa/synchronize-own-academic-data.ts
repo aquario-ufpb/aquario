@@ -20,13 +20,21 @@ export type SynchronizeOwnAcademicDataInput = Readonly<{
 
 export type SynchronizeOwnAcademicDataResult =
   | Readonly<{ kind: "synchronized"; run: SigaaRunReceipt; synchronizedAt: Date }>
-  | Readonly<{ kind: "replay"; run: SigaaRunReceipt }>
+  | Readonly<{
+      kind: "replay";
+      run: SigaaRunReceipt;
+    }>
   | Readonly<{ kind: "busy"; retryAt: Date }>
   | Readonly<{ kind: "rate_limited"; retryAt: Date }>
   | Readonly<{
       kind: "rejected";
       run: SigaaRunReceipt;
       failure: "COURSE_MISMATCH" | "SIGAA_IDENTITY_MISMATCH" | "LEASE_LOST";
+    }>
+  | Readonly<{
+      kind: "course_resolution";
+      run: SigaaRunReceipt;
+      resolution: import("@/lib/server/db/interfaces/sigaa-repository.interface").SigaaCourseResolution;
     }>
   | Readonly<{ kind: "failed"; run: SigaaRunReceipt; failure: SigaaSyncFailureCode }>;
 
@@ -69,6 +77,10 @@ export async function synchronizeOwnAcademicData(
         run: commit.run,
         synchronizedAt: commit.synchronizedAt,
       };
+    }
+
+    if (commit.kind === "course_resolution") {
+      return commit;
     }
 
     return {

@@ -25,6 +25,7 @@ import ProjectCard from "@/components/shared/project-card";
 import { mapProjetoToCard } from "@/lib/client/mappers/projeto-mapper";
 import { trackEvent } from "@/analytics/posthog-client";
 import type { PublicUser } from "@/lib/client/api/usuarios";
+import { MeusDadosAcademicosCard } from "@/components/pages/perfil/meus-dados-academicos-card";
 
 type UsuarioProfileClientProps = {
   slug: string;
@@ -313,6 +314,12 @@ export default function UsuarioProfileClient({ slug, initialData }: UsuarioProfi
             cursoNome={user.curso.nome}
             isOwnProfile={isOwnProfile}
           />
+        </div>
+      )}
+
+      {isOwnProfile && currentUser?.permissoes.includes("sigaa:beta") && (
+        <div className="mt-6">
+          <MeusDadosAcademicosCard usuarioId={currentUser.id} />
         </div>
       )}
 

@@ -7,6 +7,7 @@ const mockReadImportedState = jest.fn();
 const mockDisconnect = jest.fn();
 const mockDeleteImportedData = jest.fn();
 const mockReserveAttempt = jest.fn();
+const mockReserveCourseChangeConfirmation = jest.fn();
 const mockConnectorSynchronize = jest.fn();
 
 jest.mock("@/lib/server/services/auth/middleware", () => ({
@@ -20,6 +21,8 @@ jest.mock("@/lib/server/container", () => ({
       disconnect: (...args: unknown[]) => mockDisconnect(...args),
       deleteImportedData: (...args: unknown[]) => mockDeleteImportedData(...args),
       reserveAttempt: (...args: unknown[]) => mockReserveAttempt(...args),
+      reserveCourseChangeConfirmation: (...args: unknown[]) =>
+        mockReserveCourseChangeConfirmation(...args),
     },
   }),
 }));
@@ -34,6 +37,7 @@ import { GET as getAcademicState } from "../../academico/route";
 import { DELETE as deleteImportedData } from "../data/route";
 import { POST as disconnect } from "../disconnect/route";
 import { POST as synchronize } from "../sync/route";
+import { POST as confirmCourseChange } from "../course-change/confirm/route";
 import { createSigaaReauthProofService } from "@/lib/server/services/sigaa/reauth";
 
 const OWNER_ID = "550e8400-e29b-41d4-a716-446655440000";
@@ -42,12 +46,12 @@ const PROOF = createSigaaReauthProofService(REAUTH_SECRET, {
   createJti: () => "550e8400-e29b-41d4-a716-446655440001",
 }).issueProof(OWNER_ID).proofToken;
 
-function request(path: string, method: string, body?: unknown): Request {
+function request(path: string, method: string, body?: unknown, proof = PROOF): Request {
   return new Request(`http://localhost/api${path}`, {
     method,
     headers: {
       Authorization: "Bearer normal-aquario-jwt",
-      "X-Sigaa-Reauth-Token": PROOF,
+      "X-Sigaa-Reauth-Token": proof,
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
     },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -142,6 +146,71 @@ describe("private SIGAA route exports", () => {
       idempotencyKey: "550e8400-e29b-41d4-a716-446655440002",
       consentVersion: "sigaa-v1-2026-08",
     });
+    expect(mockConnectorSynchronize).not.toHaveBeenCalled();
+  });
+
+  it("does not turn a failed same-key normal run into HTTP 200", async () => {
+    mockReserveAttempt.mockResolvedValue({
+      kind: "failed",
+      failure: "SIGAA_AUTH_FAILED",
+      run: {
+        id: "550e8400-e29b-41d4-a716-446655440003",
+        status: "FAILED",
+        failureCode: "SIGAA_AUTH_FAILED",
+        connectorRequestId: null,
+        startedAt: new Date("2026-08-21T15:00:00.000Z"),
+        finishedAt: new Date("2026-08-21T15:01:00.000Z"),
+      },
+    });
+
+    const response = await synchronize(
+      request("/usuarios/me/sigaa/sync", "POST", {
+        username: "test-user",
+        password: "test-password",
+        idempotencyKey: "550e8400-e29b-41d4-a716-446655440002",
+        consentVersion: "sigaa-v1-2026-08",
+      })
+    );
+
+    expect(response.status).toBe(401);
+    expect(mockConnectorSynchronize).not.toHaveBeenCalled();
+  });
+
+  it("blocks an invalid course-change proposal before calling the connector", async () => {
+    mockReserveCourseChangeConfirmation.mockResolvedValue({
+      kind: "blocked",
+      reason: "proposal_invalid",
+    });
+
+    const proposalId = "550e8400-e29b-41d4-a716-446655440009";
+    const boundProof = createSigaaReauthProofService(REAUTH_SECRET).issueProof(
+      OWNER_ID,
+      proposalId
+    ).proofToken;
+    const response = await confirmCourseChange(
+      request(
+        "/usuarios/me/sigaa/course-change/confirm",
+        "POST",
+        {
+          proposalId,
+          username: "fresh-user",
+          password: "fresh-password",
+          idempotencyKey: "550e8400-e29b-41d4-a716-446655440008",
+          consentVersion: "sigaa-v1-2026-08",
+        },
+        boundProof
+      )
+    );
+
+    expect(response.status).toBe(409);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(mockReserveCourseChangeConfirmation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownerId: OWNER_ID,
+        proposalId,
+        proofProposalId: proposalId,
+      })
+    );
     expect(mockConnectorSynchronize).not.toHaveBeenCalled();
   });
 });
