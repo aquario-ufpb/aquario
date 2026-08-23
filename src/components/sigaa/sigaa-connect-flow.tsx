@@ -630,7 +630,7 @@ export function useSigaaConnectFlowContent({
     </div>
   );
 
-  return { content, clearForExternalExit, headingId };
+  return { content, clearForExternalExit, headingId, isPending };
 }
 
 function SigaaSynchronizationProgress({
@@ -653,7 +653,7 @@ function SigaaSynchronizationProgress({
   const description = state.isSlow
     ? mode === "continue_manual"
       ? "A consulta continua em andamento. Você pode seguir com a configuração manual e conferir os dados depois."
-      : "A consulta continua em andamento. Você pode fechar esta janela e verificar seus dados acadêmicos depois."
+      : "A consulta ainda está em andamento."
     : isSynchronizing
       ? "O Aquário está importando seus dados acadêmicos."
       : "Estamos confirmando sua senha do Aquário antes de iniciar a consulta.";
@@ -718,12 +718,15 @@ function SigaaSynchronizationProgress({
 
       <div className="space-y-3 border-t pt-4">
         <p className="text-xs leading-relaxed text-muted-foreground">
-          O processo pode levar até 3 minutos. Suas credenciais já foram removidas desta tela. Sair
-          desta etapa não cancela um trabalho que já tenha sido iniciado.
+          {mode === "continue_manual"
+            ? "O processo pode levar até 3 minutos. Suas credenciais já foram removidas desta tela e não são salvas. Sair desta etapa não cancela um trabalho que já tenha sido iniciado."
+            : "O processo pode levar até 3 minutos. Mantenha esta janela aberta até concluir. Suas credenciais já foram removidas desta tela e não são salvas."}
         </p>
-        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={onExit}>
-          {exitLabel}
-        </Button>
+        {mode === "continue_manual" && (
+          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={onExit}>
+            {exitLabel}
+          </Button>
+        )}
       </div>
     </section>
   );

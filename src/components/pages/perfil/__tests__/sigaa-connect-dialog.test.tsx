@@ -1,6 +1,5 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useState } from "react";
 
 import { trackEvent } from "@/analytics/posthog-client";
 import { SigaaConnectDialog } from "../sigaa-connect-dialog";
@@ -241,11 +240,12 @@ describe("SIGAA connect dialog", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "O SIGAA está demorando mais que o normal"
     );
-    expect(screen.getByText(/Sair desta etapa não cancela/)).toBeInTheDocument();
+    expect(screen.getByText(/Mantenha esta janela aberta/)).toBeInTheDocument();
+    expect(screen.getByText(/não são salvas/)).toBeInTheDocument();
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Fechar e verificar depois" }));
-    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(
+      screen.queryByRole("button", { name: "Fechar e verificar depois" })
+    ).not.toBeInTheDocument();
   });
 
   it("does not ask for credentials again when only the local refresh fails", async () => {
@@ -493,8 +493,9 @@ describe("SIGAA connect dialog", () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
-  it("allows leaving a pending wait and preserves a later failure for the next open", async () => {
+  it("blocks every dialog dismissal while pending and restores closing after failure", async () => {
     const user = userEvent.setup();
+    const onOpenChange = jest.fn();
     let rejectSync!: (reason: unknown) => void;
     mockSynchronize.mockReturnValueOnce(
       new Promise((_, reject) => {
@@ -502,42 +503,42 @@ describe("SIGAA connect dialog", () => {
       })
     );
 
-    function Harness() {
-      const [open, setOpen] = useState(true);
-      return (
-        <>
-          <button onClick={() => setOpen(true)}>Abrir novamente</button>
-          <SigaaConnectDialog
-            open={open}
-            requireConsent
-            onOpenChange={setOpen}
-            onSynchronized={jest.fn()}
-          />
-        </>
-      );
-    }
-
-    render(<Harness />);
+    render(
+      <SigaaConnectDialog
+        open
+        requireConsent
+        onOpenChange={onOpenChange}
+        onSynchronized={jest.fn()}
+      />
+    );
     await user.click(screen.getByLabelText(/Autorizo o Aquário/));
     await user.type(screen.getByLabelText("Usuário do SIGAA"), "student");
     await user.type(screen.getByLabelText("Senha do SIGAA"), "sigaa-password");
     await user.type(screen.getByLabelText("Senha do Aquário"), "aquario-password");
     await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
     expect(await screen.findByRole("status")).toHaveTextContent("Consultando seus dados no SIGAA");
-    expect(screen.getByText(/Sair desta etapa não cancela/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Fechar" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Fechar e verificar depois" })
+    ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Fechar e verificar depois" }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    rejectSync(new Error("Falha segura ao sincronizar."));
+    await user.keyboard("{Escape}");
+    const overlay = screen.getByRole("dialog").previousElementSibling;
+    expect(overlay).toBeInstanceOf(HTMLElement);
+    await user.click(overlay as HTMLElement);
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    act(() => rejectSync(new Error("Falha segura ao sincronizar.")));
     await waitFor(() =>
       expect(mockTrackEvent).toHaveBeenCalledWith("sigaa_connect_failed", {
         operation: "connect",
       })
     );
-
-    await user.click(screen.getByRole("button", { name: "Abrir novamente" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Falha segura ao sincronizar");
     await waitFor(() => expect(screen.getByRole("alert")).toHaveFocus());
+    await user.click(screen.getByRole("button", { name: "Fechar" }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("blocks an expired course replacement and offers a fresh synchronization", async () => {

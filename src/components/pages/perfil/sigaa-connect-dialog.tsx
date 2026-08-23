@@ -25,6 +25,9 @@ export function SigaaConnectDialog({
   });
 
   const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && flow.isPending) {
+      return;
+    }
     if (!nextOpen) {
       flow.clearForExternalExit();
     }
@@ -37,6 +40,22 @@ export function SigaaConnectDialog({
         aria-labelledby={flow.headingId}
         className="ph-no-capture max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain sm:max-w-lg"
         data-ph-no-capture="true"
+        showCloseButton={!flow.isPending}
+        onEscapeKeyDown={event => {
+          if (flow.isPending) {
+            event.preventDefault();
+          }
+        }}
+        onPointerDownOutside={event => {
+          if (flow.isPending) {
+            event.preventDefault();
+          }
+        }}
+        onInteractOutside={event => {
+          if (flow.isPending) {
+            event.preventDefault();
+          }
+        }}
       >
         <DialogTitle className="sr-only">Sincronização com o sistema acadêmico</DialogTitle>
         <DialogDescription className="sr-only">
