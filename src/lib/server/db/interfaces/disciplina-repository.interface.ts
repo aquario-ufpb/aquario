@@ -7,4 +7,5 @@ export type DisciplinaSearchResult = {
 export type IDisciplinaRepository = {
   search(query: string, limit?: number): Promise<DisciplinaSearchResult[]>;
   findByCodigos(codigos: string[]): Promise<{ id: string; codigo: string }[]>;
+  getRelacoes(codigo: string): Promise<{ preRequisitos: string[]; dependentes: string[] }>;
 };

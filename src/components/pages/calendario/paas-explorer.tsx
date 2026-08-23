@@ -11,6 +11,7 @@ import CalendarioHeader from "@/components/pages/calendario/header";
 import SearchSection from "@/components/pages/calendario/search-section";
 import CalendarGrid from "@/components/pages/calendario/calendar-grid";
 import type { ClassWithRoom } from "@/components/pages/calendario/types";
+import { toast } from "sonner";
 
 function removeDiacritics(str: string): string {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -144,14 +145,65 @@ export function PaasExplorer() {
     setStorage("calendario_selected_classes", classIdsArray);
   }, [selectedClassIds]);
 
-  const toggleClassSelection = (classId: number) => {
+  const toggleClassSelection = async (classId: number) => {
     const newSet = new Set(selectedClassIds);
+
     if (newSet.has(classId)) {
       newSet.delete(classId);
-    } else {
-      newSet.add(classId);
+      setSelectedClassIds(newSet);
+      return;
     }
-    setSelectedClassIds(newSet);
+
+    const disciplinaBuscada = allClasses.find(c => c.id === classId);
+
+    if (!disciplinaBuscada) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/disciplinas/${disciplinaBuscada.codigo}/relacoes`);
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar relações: ${response.statusText}`);
+      }
+
+      const relacoes = await response.json();
+
+      // vê quais disciplinas já estão marcadas
+      const codigosCursando = selectedClasses.map(c => c.codigo);
+
+      const conflitoDireto = relacoes.preRequisitos.filter((pr: string) =>
+        codigosCursando.includes(pr)
+      );
+
+      if (conflitoDireto.length > 0) {
+        const nomesDireto = selectedClasses
+          .filter(c => conflitoDireto.includes(c.codigo))
+          .map(c => c.nome)
+          .join(", ");
+
+        toast.error(`A disciplina ${nomesDireto} é pré-requisito para ${disciplinaBuscada.nome}.`);
+        return; // interrompe pra não marcar o chackbox
+      }
+
+      const conflitoInverso = relacoes.dependentes.filter((dep: string) =>
+        codigosCursando.includes(dep)
+      );
+      if (conflitoInverso.length > 0) {
+        const nomesInverso = selectedClasses
+          .filter(c => conflitoInverso.includes(c.codigo))
+          .map(c => c.nome)
+          .join(", ");
+
+        toast.error(`A disciplina ${disciplinaBuscada.nome} é pré-requisito para ${nomesInverso}.`);
+        return; // Interrompe e não marca o checkbox
+      }
+
+      newSet.add(classId);
+      setSelectedClassIds(newSet); //adiciona disciplina se não houver conflito
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao verificar relações da disciplina. Tente novamente.");
+    }
   };
 
   const clearSelection = () => {

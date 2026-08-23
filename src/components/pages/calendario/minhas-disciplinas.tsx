@@ -180,25 +180,75 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
     [patchMutation]
   );
 
-  const handleAddDisciplina = useCallback(
-    async (disciplinaId: string) => {
-      try {
-        await marcarMutation.mutateAsync({ disciplinaIds: [disciplinaId], status: "cursando" });
-        setSearchQuery("");
-        toast.success("Disciplina adicionada!");
-      } catch {
-        toast.error("Erro ao adicionar disciplina.");
-      }
-    },
-    [marcarMutation]
-  );
-
   const disciplinas = useMemo(() => semestreData?.disciplinas ?? [], [semestreData?.disciplinas]);
 
   // Exclude already-added disciplines from search results
   const existingDisciplinaIds = useMemo(
     () => new Set(disciplinas.map(d => d.disciplinaId)),
     [disciplinas]
+  );
+
+  const handleAddDisciplina = useCallback(
+    async (disciplinaBuscada: { id: string; codigo: string; nome: string }) => {
+      try {
+        // 1. Busca as relações (pré-requisitos e dependentes) da disciplina selecionada
+        const response = await fetch(`/api/disciplinas/${disciplinaBuscada.codigo}/relacoes`);
+        if (!response.ok) {
+          throw new Error("Falha ao buscar relações");
+        }
+
+        const relacoes = await response.json();
+
+        //mapeia os códigos das disciplinas que o usuário colocou na grade
+        const codigosCursando = disciplinas.map(d => d.disciplinaCodigo);
+
+        // 2. Conflito Direto: A buscada exige alguma que já está neste mesmo semestre?
+        const conflitoDireto = relacoes.preRequisitos.filter((pr: string) =>
+          codigosCursando.includes(pr)
+        );
+
+        if (conflitoDireto.length > 0) {
+          const nomesDireto = disciplinas
+            .filter(d => conflitoDireto.includes(d.disciplinaCodigo))
+            .map(d => d.disciplinaNome)
+            .join(", ");
+
+          toast.error(
+            `A disciplina ${nomesDireto} é pré-requisito para ${disciplinaBuscada.nome}, que você está tentando cursar no mesmo semestre.`
+          );
+          return; // Interrompe a adição
+        }
+
+        // 3. Conflito Inverso: A buscada é pré-requisito de alguma já adicionada?
+        const conflitoInverso = relacoes.dependentes.filter((dep: string) =>
+          codigosCursando.includes(dep)
+        );
+
+        if (conflitoInverso.length > 0) {
+          const nomesInversos = disciplinas
+            .filter(d => conflitoInverso.includes(d.disciplinaCodigo))
+            .map(d => d.disciplinaNome)
+            .join(", ");
+
+          toast.error(
+            `A disciplina ${disciplinaBuscada.nome} é pré-requisito para ${nomesInversos}, que já está na sua grade atual.`
+          );
+          return; // Interrompe a adição
+        }
+
+        // Se passar nas verificações, faz a mutation normal
+        await marcarMutation.mutateAsync({
+          disciplinaIds: [disciplinaBuscada.id],
+          status: "cursando",
+        });
+        setSearchQuery("");
+        toast.success("Disciplina adicionada!");
+      } catch (error) {
+        console.error(error);
+        toast.error("Erro ao adicionar disciplina ou verificar pré-requisitos.");
+      }
+    },
+    [marcarMutation, disciplinas]
   );
 
   const filteredSearchResults = useMemo(() => {
@@ -358,7 +408,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
                   {filteredSearchResults.map(result => (
                     <button
                       key={result.id}
-                      onClick={() => handleAddDisciplina(result.id)}
+                      onClick={() => handleAddDisciplina(result)}
                       disabled={marcarMutation.isPending}
                       className="w-full text-left p-2 rounded-md hover:bg-accent text-xs flex items-center justify-between gap-2"
                     >
