@@ -36,6 +36,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const calendarRef = useRef<HTMLDivElement>(null);
+  const isCheckingPrereqRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -190,6 +191,12 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
 
   const handleAddDisciplina = useCallback(
     async (disciplinaBuscada: { id: string; codigo: string; nome: string }) => {
+      if (isCheckingPrereqRef.current || marcarMutation.isPending) {
+        return;
+      }
+
+      isCheckingPrereqRef.current = true;
+
       try {
         // 1. Busca as relações (pré-requisitos e dependentes) da disciplina selecionada
         const response = await fetch(`/api/disciplinas/${disciplinaBuscada.codigo}/relacoes`);
@@ -246,6 +253,8 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
       } catch (error) {
         console.error(error);
         toast.error("Erro ao adicionar disciplina ou verificar pré-requisitos.");
+      } finally {
+        isCheckingPrereqRef.current = false;
       }
     },
     [marcarMutation, disciplinas]

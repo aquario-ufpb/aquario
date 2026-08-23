@@ -37,23 +37,31 @@ export class PrismaDisciplinaRepository implements IDisciplinaRepository {
   async getRelacoes(codigo: string): Promise<{ preRequisitos: string[]; dependentes: string[] }> {
     const disciplina = await prisma.disciplina.findUnique({
       where: { codigo },
-      include: {
+      select: {
         // 1. Busca o que a disciplina exige
         curriculos: {
-          include: {
+          select: {
             preRequisitos: {
-              include: {
-                disciplinaRequerida: true,
+              select: {
+                disciplinaRequerida: {
+                  select: {
+                    codigo: true,
+                  },
+                },
               },
             },
           },
         },
         // 2. Busca quem exige a disciplina
         preRequisitoEm: {
-          include: {
+          select: {
             curriculoDisciplina: {
-              include: {
-                disciplina: true,
+              select: {
+                disciplina: {
+                  select: {
+                    codigo: true,
+                  },
+                },
               },
             },
           },

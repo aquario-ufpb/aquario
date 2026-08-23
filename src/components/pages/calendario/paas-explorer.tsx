@@ -160,6 +160,17 @@ export function PaasExplorer() {
       return;
     }
 
+    const isCurrentlySelected = selectedClassIds.has(classId);
+
+    if (isCurrentlySelected) {
+      setSelectedClassIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(classId);
+        return newSet;
+      });
+      return;
+    }
+
     try {
       const response = await fetch(`/api/disciplinas/${disciplinaBuscada.codigo}/relacoes`);
       if (!response.ok) {
@@ -169,7 +180,8 @@ export function PaasExplorer() {
       const relacoes = await response.json();
 
       // vê quais disciplinas já estão marcadas
-      const codigosCursando = selectedClasses.map(c => c.codigo);
+      const currentSelectedClasses = allClasses.filter(c => selectedClassIds.has(c.id));
+      const codigosCursando = currentSelectedClasses.map(c => c.codigo);
 
       const conflitoDireto = relacoes.preRequisitos.filter((pr: string) =>
         codigosCursando.includes(pr)
@@ -199,7 +211,11 @@ export function PaasExplorer() {
       }
 
       newSet.add(classId);
-      setSelectedClassIds(newSet); //adiciona disciplina se não houver conflito
+      setSelectedClassIds(prev => {
+        const newSet = new Set(prev);
+        newSet.add(classId);
+        return newSet;
+      }); //adiciona disciplina se não houver conflito
     } catch (error) {
       console.error(error);
       toast.error("Erro ao verificar relações da disciplina. Tente novamente.");
