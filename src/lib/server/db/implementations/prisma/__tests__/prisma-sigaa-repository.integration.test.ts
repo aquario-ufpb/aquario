@@ -12,6 +12,9 @@ import {
   type SigaaSnapshotCandidate,
   type UsuarioId,
 } from "@/lib/server/services/sigaa/storage.types";
+import { assertDisposableSigaaDatabase } from "./sigaa-test-database-guard";
+
+assertDisposableSigaaDatabase(process.env.DATABASE_URL);
 
 const database = new PrismaClient();
 const repository = new PrismaSigaaRepository(database);
