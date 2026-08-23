@@ -21,7 +21,8 @@ type ManualAcademicSources = Readonly<{
   enrolled: readonly Readonly<{ disciplinaId: string; code: string; name: string }>[];
 }>;
 
-const normalizeCode = (code: string): string => code.trim().toUpperCase();
+export const normalizeAcademicCode = (code: string): string =>
+  code.normalize("NFKC").toUpperCase().replace(/\s+/gu, " ").trim();
 
 export function collectManualAcademicComponents({
   catalog,
@@ -33,7 +34,7 @@ export function collectManualAcademicComponents({
   const manualByCode = new Map<string, ManualAcademicComponent>();
 
   for (const item of catalog) {
-    const code = normalizeCode(item.code);
+    const code = normalizeAcademicCode(item.code);
     const completedItem = completedById.get(item.disciplinaId);
     if (completedItem) {
       manualByCode.set(code, {
@@ -53,14 +54,14 @@ export function collectManualAcademicComponents({
   }
 
   for (const item of completed) {
-    const code = normalizeCode(item.code);
+    const code = normalizeAcademicCode(item.code);
     if (!manualByCode.has(code)) {
       manualByCode.set(code, { ...item, code, state: "completed" });
     }
   }
 
   for (const item of enrolled) {
-    const code = normalizeCode(item.code);
+    const code = normalizeAcademicCode(item.code);
     if (!manualByCode.has(code)) {
       const catalogItem = catalog.find(candidate => candidate.disciplinaId === item.disciplinaId);
       manualByCode.set(code, {
@@ -80,13 +81,13 @@ export function combineAcademicDisplay({
   manual,
   sigaa,
 }: CombineAcademicDisplayInput): readonly EffectiveAcademicComponent[] {
-  const catalogByCode = new Map(catalog.map(item => [normalizeCode(item.code), item]));
-  const manualByCode = new Map(manual.map(item => [normalizeCode(item.code), item]));
-  const sigaaByCode = new Map(sigaa.map(item => [normalizeCode(item.code), item]));
+  const catalogByCode = new Map(catalog.map(item => [normalizeAcademicCode(item.code), item]));
+  const manualByCode = new Map(manual.map(item => [normalizeAcademicCode(item.code), item]));
+  const sigaaByCode = new Map(sigaa.map(item => [normalizeAcademicCode(item.code), item]));
   const orderedCodes = new Set([
-    ...catalog.map(item => normalizeCode(item.code)),
-    ...manual.map(item => normalizeCode(item.code)),
-    ...sigaa.map(item => normalizeCode(item.code)),
+    ...catalog.map(item => normalizeAcademicCode(item.code)),
+    ...manual.map(item => normalizeAcademicCode(item.code)),
+    ...sigaa.map(item => normalizeAcademicCode(item.code)),
   ]);
 
   return Array.from(orderedCodes, code => {

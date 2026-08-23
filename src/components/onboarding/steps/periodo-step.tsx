@@ -8,6 +8,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/client/query-keys";
 import { ArrowRight, GraduationCap, Loader2 } from "lucide-react";
 import { cn } from "@/lib/client/utils";
+import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
+import { useOwnSigaaAcademicState } from "@/lib/client/hooks/use-sigaa";
 
 type PeriodoStepProps = {
   onComplete: () => Promise<void>;
@@ -34,6 +36,9 @@ const PERIODO_OPTIONS = [
 export function PeriodoStep({ onComplete, isMutating }: PeriodoStepProps) {
   const { token, userId } = useAuth();
   const queryClient = useQueryClient();
+  const { data: user } = useCurrentUser();
+  const canUseSigaa = user?.permissoes.includes("sigaa:beta") ?? false;
+  const sigaaQuery = useOwnSigaaAcademicState(canUseSigaa);
   const [selected, setSelected] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -67,6 +72,18 @@ export function PeriodoStep({ onComplete, isMutating }: PeriodoStepProps) {
           Selecione o período atual do seu curso.
         </p>
       </div>
+
+      {sigaaQuery.data?.snapshot && (
+        <div className="mx-auto max-w-md rounded-lg border bg-muted/30 p-3 text-left text-sm">
+          <p className="font-medium">Confirme seu período curricular</p>
+          <p className="mt-1 text-muted-foreground">
+            O SIGAA informou o semestre letivo{" "}
+            {sigaaQuery.data.snapshot.payload.identity.sourceSemester ?? "atual"}, mas isso não
+            permite descobrir com segurança o período do seu curso. Escolha abaixo a opção que
+            corresponde à sua situação.
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
         {PERIODO_OPTIONS.map(option => (

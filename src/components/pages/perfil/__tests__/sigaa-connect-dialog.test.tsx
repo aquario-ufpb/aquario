@@ -241,10 +241,47 @@ describe("SIGAA connect dialog", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "O SIGAA está demorando mais que o normal"
     );
-    expect(screen.getByText(/Fechar a janela não cancela/)).toBeInTheDocument();
+    expect(screen.getByText(/Sair desta etapa não cancela/)).toBeInTheDocument();
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Fechar e verificar depois" }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("does not ask for credentials again when only the local refresh fails", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = jest.fn();
+    const onSynchronized = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("temporary refresh failure"))
+      .mockResolvedValueOnce(undefined);
+
+    render(
+      <SigaaConnectDialog
+        open
+        requireConsent
+        onOpenChange={onOpenChange}
+        onSynchronized={onSynchronized}
+      />
+    );
+
+    await user.click(screen.getByLabelText(/Autorizo o Aquário/));
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "student");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "sigaa-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "aquario-password");
+    await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+
+    expect(await screen.findByRole("heading", { name: "Dados sincronizados" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Senha do SIGAA")).not.toBeInTheDocument();
+    expect(mockTrackEvent).toHaveBeenCalledWith("sigaa_connect_succeeded", {
+      operation: "connect",
+      course_replaced: false,
+    });
+    expect(mockTrackEvent).not.toHaveBeenCalledWith("sigaa_connect_failed", expect.anything());
+
+    await user.click(screen.getByRole("button", { name: "Carregar dados novamente" }));
+
+    await waitFor(() => expect(onSynchronized).toHaveBeenCalledTimes(2));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
@@ -487,7 +524,7 @@ describe("SIGAA connect dialog", () => {
     await user.type(screen.getByLabelText("Senha do Aquário"), "aquario-password");
     await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
     expect(await screen.findByRole("status")).toHaveTextContent("Consultando seus dados no SIGAA");
-    expect(screen.getByText(/Fechar a janela não cancela/)).toBeInTheDocument();
+    expect(screen.getByText(/Sair desta etapa não cancela/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Fechar e verificar depois" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

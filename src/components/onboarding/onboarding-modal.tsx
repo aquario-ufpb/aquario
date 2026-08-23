@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { OnboardingProgress } from "./onboarding-progress";
 import { WelcomeStep } from "./steps/welcome-step";
 import { PeriodoStep } from "./steps/periodo-step";
+import { SigaaStep } from "./steps/sigaa-step";
 import { ConcluidasStep } from "./steps/concluidas-step";
 import { CursandoStep } from "./steps/cursando-step";
 import { TurmasStep } from "./steps/turmas-step";
@@ -44,9 +45,11 @@ export function OnboardingModal({
   const [history, setHistory] = useState<OnboardingStepId[]>([]);
   const [viewingPastStep, setViewingPastStep] = useState<OnboardingStepId | null>(null);
   const [welcomePage, setWelcomePage] = useState<1 | 2>(1);
+  const [sigaaFlowPending, setSigaaFlowPending] = useState(false);
   const { data: memberships = [] } = useMyMemberships();
 
   const stepDefsRef = useRef<Map<OnboardingStepId, OnboardingStep>>(new Map());
+  const stepContentRef = useRef<HTMLDivElement>(null);
   steps.forEach(s => stepDefsRef.current.set(s.id, s));
 
   const activeStepId = viewingPastStep ?? currentStep.id;
@@ -56,6 +59,17 @@ export function OnboardingModal({
   // Track whenever the visible step changes
   useEffect(() => {
     trackEvent("onboarding_step_viewed", { step_id: activeStepId });
+    const frame = window.requestAnimationFrame(() => {
+      const content = stepContentRef.current;
+      const heading = content?.querySelector<HTMLElement>("h2");
+      if (heading) {
+        heading.tabIndex = -1;
+        heading.focus();
+        return;
+      }
+      content?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [activeStepId]);
 
   const handleComplete = useCallback(
@@ -133,6 +147,15 @@ export function OnboardingModal({
         );
       case "periodo":
         return <PeriodoStep onComplete={() => handleComplete("periodo")} isMutating={isMutating} />;
+      case "sigaa":
+        return (
+          <SigaaStep
+            onComplete={() => handleComplete("sigaa")}
+            onSkip={() => handleSkip("sigaa")}
+            isMutating={isMutating}
+            onPendingChange={setSigaaFlowPending}
+          />
+        );
       case "concluidas":
         return (
           <ConcluidasStep onComplete={() => handleComplete("concluidas")} isMutating={isMutating} />
@@ -195,6 +218,9 @@ export function OnboardingModal({
           {/* Scrollable step content */}
           <div className="min-h-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-y-contain p-4 [scrollbar-gutter:stable] sm:p-6">
             <div
+              ref={stepContentRef}
+              tabIndex={-1}
+              aria-label={`Etapa: ${activeStepDef.title}`}
               className="flex min-h-full min-w-0 w-full flex-col justify-start animate-in fade-in duration-300 motion-reduce:animate-none motion-reduce:transition-none sm:justify-center"
               key={activeStepId}
             >
@@ -211,7 +237,7 @@ export function OnboardingModal({
                   size="sm"
                   className="min-h-11 gap-1.5 text-muted-foreground"
                   onClick={handleBack}
-                  disabled={isMutating}
+                  disabled={isMutating || (activeStepId === "sigaa" && sigaaFlowPending)}
                 >
                   <ArrowLeft aria-hidden="true" className="w-4 h-4" />
                   Voltar
@@ -244,27 +270,30 @@ export function OnboardingModal({
                   )}
                 </Button>
               )}
-              {activeStepDef.isSkippable && !isRevisiting && activeStepId !== "entidades" && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="min-h-11"
-                  onClick={() => handleSkip(activeStepId)}
-                  disabled={isMutating}
-                >
-                  {isMutating ? (
-                    <>
-                      <Loader2
-                        aria-hidden="true"
-                        className="w-4 h-4 animate-spin motion-reduce:animate-none"
-                      />
-                      <span className="sr-only">Salvando…</span>
-                    </>
-                  ) : (
-                    "Pular"
-                  )}
-                </Button>
-              )}
+              {activeStepDef.isSkippable &&
+                !isRevisiting &&
+                activeStepId !== "entidades" &&
+                activeStepId !== "sigaa" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="min-h-11"
+                    onClick={() => handleSkip(activeStepId)}
+                    disabled={isMutating}
+                  >
+                    {isMutating ? (
+                      <>
+                        <Loader2
+                          aria-hidden="true"
+                          className="w-4 h-4 animate-spin motion-reduce:animate-none"
+                        />
+                        <span className="sr-only">Salvando…</span>
+                      </>
+                    ) : (
+                      "Pular"
+                    )}
+                  </Button>
+                )}
               {isRevisiting && (
                 <Button
                   size="sm"

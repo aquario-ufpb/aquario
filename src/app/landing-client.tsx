@@ -4,12 +4,21 @@ import { FeatureCard } from "@/components/pages/landing/features/feature-card";
 import { landingFeatures } from "@/components/pages/landing/features/feature-data";
 import { TopProjetosCarousel } from "@/components/pages/landing/top-projetos-carousel";
 import { WaterTransitionSection } from "@/components/pages/landing/water-transition-section";
+import { SigaaMcpLink } from "@/components/shared/sigaa-mcp-link";
 import { Button } from "@/components/ui/button";
 import { useEntidades } from "@/lib/client/hooks";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, GitBranch, Github, MapIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  ExternalLink,
+  GitBranch,
+  Github,
+  MapIcon,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 type LandingStats = {
   totalUsuarios: number;
@@ -17,6 +26,8 @@ type LandingStats = {
 };
 
 export default function LandingClient() {
+  const sigaaHighlightRef = useRef<HTMLElement>(null);
+  const sigaaHighlightTrackedRef = useRef(false);
   const { data: entidades = [] } = useEntidades();
   const { data: landingStats } = useQuery({
     queryKey: ["landing-stats"],
@@ -85,6 +96,38 @@ export default function LandingClient() {
     }
   }, []);
 
+  useEffect(() => {
+    const highlight = sigaaHighlightRef.current;
+    if (!highlight || sigaaHighlightTrackedRef.current) {
+      return;
+    }
+
+    const markViewed = () => {
+      if (sigaaHighlightTrackedRef.current) {
+        return;
+      }
+      sigaaHighlightTrackedRef.current = true;
+      trackEvent("sigaa_highlight_viewed");
+    };
+
+    if (!("IntersectionObserver" in window)) {
+      markViewed();
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries.some(entry => entry.isIntersecting)) {
+          markViewed();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 }
+    );
+    observer.observe(highlight);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
       <div className="container relative z-20 mx-auto px-4 pt-20 md:pt-8">
@@ -144,6 +187,62 @@ export default function LandingClient() {
       <WaterTransitionSection>
         <TopProjetosCarousel />
         <div className="mx-auto max-w-6xl">
+          <section
+            ref={sigaaHighlightRef}
+            aria-labelledby="sigaa-highlight-title"
+            className="mb-16 overflow-hidden rounded-[2rem] border border-sky-200/20 bg-gradient-to-br from-white/[0.12] to-sky-300/[0.06] p-6 shadow-sm backdrop-blur-sm md:p-9"
+          >
+            <div className="grid gap-7 md:grid-cols-[auto_1fr_auto] md:items-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100 text-aquario-primary shadow-sm">
+                <ShieldCheck className="h-7 w-7" aria-hidden="true" />
+              </div>
+              <div>
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-sky-200/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-100">
+                    Novidade
+                  </span>
+                  <span className="text-sm font-medium text-sky-200">Acesso beta</span>
+                </div>
+                <h2
+                  id="sigaa-highlight-title"
+                  className="font-display text-3xl font-bold leading-tight text-white md:text-4xl"
+                >
+                  Sua vida acadêmica, organizada a partir do SIGAA.
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-sky-100 md:text-base">
+                  Participantes da beta podem sincronizar disciplinas, notas e progresso quando
+                  quiserem. A senha do SIGAA é usada só naquela consulta e não fica salva.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
+                <Button
+                  asChild
+                  className="min-h-11 rounded-full bg-white px-5 font-semibold text-aquario-primary hover:bg-sky-50"
+                >
+                  <Link
+                    href="/login"
+                    onClick={() =>
+                      trackEvent("sigaa_entrypoint_clicked", {
+                        location: "landing",
+                        connection_state: "unknown",
+                      })
+                    }
+                  >
+                    Entrar para conferir
+                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+                <SigaaMcpLink
+                  location="landing"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/20 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  <Bot className="h-4 w-4" aria-hidden="true" />
+                  MCP para IA
+                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                </SigaaMcpLink>
+              </div>
+            </div>
+          </section>
           <div className="mb-10 grid gap-6 md:grid-cols-[1fr_0.75fr] md:items-end">
             <div>
               <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-sky-200">

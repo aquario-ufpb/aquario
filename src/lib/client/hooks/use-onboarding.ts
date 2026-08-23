@@ -24,6 +24,11 @@ const STEP_DEFINITIONS: Record<
     description: "Vamos configurar seu perfil do Aquário.",
     isSkippable: false,
   },
+  sigaa: {
+    title: "Conecte seu SIGAA",
+    description: "Traga seus dados acadêmicos para preencher seu perfil mais rápido.",
+    isSkippable: true,
+  },
   periodo: {
     title: "Período Atual",
     description: "Selecione o período que você está cursando.",
@@ -121,6 +126,9 @@ export const useOnboarding = () => {
     const m = metadata as OnboardingMetadata;
     const semNome = isInsideSemester ? semestreAtivo?.nome : undefined;
     const semesterMeta = semNome ? m.semesters?.[semNome] : undefined;
+    const isEmptyMetadata = Object.keys(m).length === 0;
+    const usesV2Flow = m.flowVersion === 2 || isEmptyMetadata;
+    const canUseSigaa = user?.permissoes?.includes("sigaa:beta") ?? false;
 
     // Build the full list of relevant steps (both completed and pending)
     const allSteps: OnboardingStep[] = [];
@@ -131,6 +139,16 @@ export const useOnboarding = () => {
       ...STEP_DEFINITIONS.welcome,
       isCompleted: !!m.welcome,
     });
+
+    // Fresh accounts adopt V2. Existing unversioned flows keep their original
+    // sequence so this rollout never inserts a new step mid-onboarding.
+    if (usesV2Flow && canUseSigaa) {
+      allSteps.push({
+        id: "sigaa",
+        ...STEP_DEFINITIONS.sigaa,
+        isCompleted: !!m.sigaa,
+      });
+    }
 
     // 2. Período (one-time, auto-detect if user already has periodoAtual)
     const hasPeriodo = !!user?.periodoAtual;
@@ -196,6 +214,7 @@ export const useOnboarding = () => {
     isMetadataFetched,
     semestreAtivo,
     user?.periodoAtual,
+    user?.permissoes,
     paasAvailable,
     isInsideSemester,
   ]);
@@ -206,7 +225,14 @@ export const useOnboarding = () => {
       const semNome = semestreAtivo?.nome;
 
       if (stepId === "welcome") {
-        await updateMutation.mutateAsync({ welcome: { completedAt: now } });
+        const adoptsV2 =
+          metadata?.flowVersion === 2 || (!!metadata && Object.keys(metadata).length === 0);
+        await updateMutation.mutateAsync({
+          ...(adoptsV2 ? { flowVersion: 2 as const } : {}),
+          welcome: { completedAt: now },
+        });
+      } else if (stepId === "sigaa") {
+        await updateMutation.mutateAsync({ sigaa: { completedAt: now } });
       } else if (stepId === "periodo") {
         await updateMutation.mutateAsync({ periodo: { completedAt: now } });
       } else if (stepId === "concluidas") {
@@ -225,7 +251,7 @@ export const useOnboarding = () => {
         await updateMutation.mutateAsync({ done: { completedAt: now } });
       }
     },
-    [updateMutation, semestreAtivo?.nome]
+    [updateMutation, semestreAtivo?.nome, metadata]
   );
 
   const skipStep = useCallback(
@@ -235,6 +261,8 @@ export const useOnboarding = () => {
 
       if (stepId === "periodo") {
         await updateMutation.mutateAsync({ periodo: { skippedAt: now } });
+      } else if (stepId === "sigaa") {
+        await updateMutation.mutateAsync({ sigaa: { skippedAt: now } });
       } else if (stepId === "concluidas") {
         await updateMutation.mutateAsync({ concluidas: { skippedAt: now } });
       } else if (stepId === "cursando" && semNome) {
@@ -253,8 +281,7 @@ export const useOnboarding = () => {
   );
 
   const isLoading = isAuthLoading || isMetadataLoading;
-  const shouldShow =
-    isAuthenticated && !isLoading && isMetadataFetched && !status.isComplete && isInsideSemester;
+  const shouldShow = isAuthenticated && !isLoading && isMetadataFetched && !status.isComplete;
 
   return {
     ...status,

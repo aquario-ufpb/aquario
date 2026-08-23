@@ -207,9 +207,17 @@ export function MeusDadosAcademicosCard({ usuarioId }: MeusDadosAcademicosCardPr
             {hasSnapshot && (
               <Badge
                 variant="outline"
-                className="w-fit border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
+                className={
+                  view.kind === "connected"
+                    ? "w-fit border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
+                    : "w-fit border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+                }
               >
-                <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span
+                  className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
+                    view.kind === "connected" ? "bg-emerald-500" : "bg-amber-500"
+                  }`}
+                />
                 {view.kind === "connected" ? "Sincronizado" : "Snapshot disponível"}
               </Badge>
             )}

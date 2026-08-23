@@ -27,6 +27,7 @@ vi.mock("@/lib/client/hooks/use-usuarios", () => ({
       nome: "Test User",
       periodoAtual: null,
       centro: { sigla: "CI" },
+      permissoes: [],
     },
   })),
 }));
@@ -84,6 +85,7 @@ describe("useOnboarding", () => {
         nome: "Test User",
         periodoAtual: null,
         centro: { sigla: "CI" },
+        permissoes: [] as string[],
       },
     } as ReturnType<typeof useCurrentUser>);
 
@@ -128,6 +130,82 @@ describe("useOnboarding", () => {
       expect(stepIds).toContain("done");
       // turmas NOT shown because cursando is not yet completed
       expect(stepIds).not.toContain("turmas");
+    });
+
+    it("inserts SIGAA after welcome for a fresh V2-eligible account", async () => {
+      mockUseCurrentUser.mockReturnValue({
+        data: {
+          id: "user-1",
+          nome: "Test User",
+          periodoAtual: null,
+          centro: { sigla: "CI" },
+          permissoes: ["sigaa:beta"],
+        },
+      } as ReturnType<typeof useCurrentUser>);
+      mockGetMetadata.mockResolvedValue(freshMetadata());
+
+      const { result } = renderHookWithProviders(() => useOnboarding());
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.steps.slice(0, 3).map(step => step.id)).toEqual([
+        "welcome",
+        "sigaa",
+        "periodo",
+      ]);
+    });
+
+    it("does not insert SIGAA into an unversioned legacy flow", async () => {
+      mockUseCurrentUser.mockReturnValue({
+        data: {
+          id: "user-1",
+          nome: "Test User",
+          periodoAtual: null,
+          centro: { sigla: "CI" },
+          permissoes: ["sigaa:beta"],
+        },
+      } as ReturnType<typeof useCurrentUser>);
+      mockGetMetadata.mockResolvedValue(freshMetadata({ welcome: { completedAt: "2025-01-01" } }));
+
+      const { result } = renderHookWithProviders(() => useOnboarding());
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.steps.map(step => step.id)).not.toContain("sigaa");
+      expect(result.current.currentStep?.id).toBe("periodo");
+    });
+
+    it("does not reopen a completed legacy onboarding just to insert SIGAA", async () => {
+      mockUseCurrentUser.mockReturnValue({
+        data: {
+          id: "user-1",
+          nome: "Test User",
+          periodoAtual: null,
+          centro: { sigla: "CI" },
+          permissoes: ["sigaa:beta"],
+        },
+      } as ReturnType<typeof useCurrentUser>);
+      mockGetMetadata.mockResolvedValue(
+        freshMetadata({
+          welcome: { completedAt: "2025-01-01" },
+          periodo: { completedAt: "2025-01-01" },
+          concluidas: { completedAt: "2025-01-01" },
+          entidades: { completedAt: "2025-01-01" },
+          done: { completedAt: "2025-01-01" },
+          semesters: {
+            "2025.1": {
+              cursando: { completedAt: "2025-01-01" },
+              turmas: { completedAt: "2025-01-01" },
+            },
+          },
+        })
+      );
+
+      const { result } = renderHookWithProviders(() => useOnboarding());
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.isComplete).toBe(true);
+      expect(result.current.shouldShow).toBe(false);
+      expect(result.current.steps).toEqual([]);
+      expect(result.current.totalCount).toBe(7);
     });
 
     it("shows turmas step when cursando is completed and PAAS is available", async () => {
@@ -193,7 +271,10 @@ describe("useOnboarding", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(result.current.shouldShow).toBe(false);
+      expect(result.current.shouldShow).toBe(true);
+      expect(result.current.currentStep?.id).toBe("welcome");
+      expect(result.current.steps.map(step => step.id)).not.toContain("cursando");
+      expect(result.current.steps.map(step => step.id)).not.toContain("turmas");
     });
 
     it("hides cursando step when no active semester", async () => {
@@ -224,6 +305,7 @@ describe("useOnboarding", () => {
           nome: "Test User",
           periodoAtual: "5",
           centro: { sigla: "CI" },
+          permissoes: [] as string[],
         },
       } as ReturnType<typeof useCurrentUser>);
 
@@ -341,8 +423,48 @@ describe("useOnboarding", () => {
 
       expect(mockUpdateMetadata).toHaveBeenCalledWith(
         expect.objectContaining({
+          flowVersion: 2,
           welcome: { completedAt: expect.any(String) },
         }),
+        "test-token"
+      );
+    });
+
+    it("does not upgrade a partial legacy flow when welcome completes", async () => {
+      const meta = freshMetadata({ periodo: { completedAt: "2025-01-01" } });
+      mockGetMetadata.mockResolvedValue(meta);
+      mockUpdateMetadata.mockResolvedValue({
+        ...meta,
+        welcome: { completedAt: "2025-01-01" },
+      });
+
+      const { result } = renderHookWithProviders(() => useOnboarding());
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await result.current.completeStep("welcome");
+
+      expect(mockUpdateMetadata).toHaveBeenCalledWith(
+        { welcome: { completedAt: expect.any(String) } },
+        "test-token"
+      );
+    });
+
+    it("completes and skips SIGAA without inspecting snapshot state", async () => {
+      const meta = freshMetadata({ flowVersion: 2, welcome: { completedAt: "2025-01-01" } });
+      mockGetMetadata.mockResolvedValue(meta);
+      mockUpdateMetadata.mockResolvedValue(meta);
+
+      const { result } = renderHookWithProviders(() => useOnboarding());
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await result.current.completeStep("sigaa");
+      expect(mockUpdateMetadata).toHaveBeenLastCalledWith(
+        { sigaa: { completedAt: expect.any(String) } },
+        "test-token"
+      );
+
+      await result.current.skipStep("sigaa");
+      expect(mockUpdateMetadata).toHaveBeenLastCalledWith(
+        { sigaa: { skippedAt: expect.any(String) } },
         "test-token"
       );
     });

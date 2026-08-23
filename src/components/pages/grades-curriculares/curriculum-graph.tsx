@@ -112,6 +112,8 @@ type CurriculumGraphProps = {
   allowedSaveStatuses?: SaveStatus[];
   /** Use a period-by-period list on small screens while preserving the full graph on desktop. */
   mobileLayout?: "graph" | "list";
+  /** Initial bulk selection. Read once on mount so refetches never undo user edits. */
+  initialSelectedDisciplinaIds?: readonly string[];
 };
 
 export function CurriculumGraph({
@@ -129,6 +131,7 @@ export function CurriculumGraph({
   activeSemestreNome,
   allowedSaveStatuses,
   mobileLayout = "graph",
+  initialSelectedDisciplinaIds,
 }: CurriculumGraphProps) {
   const [showOptativas, setShowOptativas] = useState(true);
   const [clickedCode, setClickedCode] = useState<string | null>(null);
@@ -138,7 +141,24 @@ export function CurriculumGraph({
   const [nodeRects, setNodeRects] = useState<Map<string, DOMRect>>(new Map());
   const [containerRect, setContainerRect] = useState<DOMRect | null>(null);
   // Selection set for bulk mode (keyed on disciplinaId)
-  const [selectionSet, setSelectionSet] = useState<Set<string>>(new Set());
+  const [selectionSet, setSelectionSet] = useState<Set<string>>(
+    () => new Set(initialSelectedDisciplinaIds)
+  );
+  const initialSelectionKey = useMemo(
+    () => [...(initialSelectedDisciplinaIds ?? [])].sort().join("|"),
+    [initialSelectedDisciplinaIds]
+  );
+  const appliedInitialSelectionKeyRef = useRef(initialSelectionKey);
+  const hasUserEditedSelectionRef = useRef(false);
+
+  useEffect(() => {
+    const suggestionsArrivedAfterMount =
+      appliedInitialSelectionKeyRef.current === "" && initialSelectionKey !== "";
+    if (suggestionsArrivedAfterMount && !hasUserEditedSelectionRef.current) {
+      setSelectionSet(new Set(initialSelectedDisciplinaIds));
+    }
+    appliedInitialSelectionKeyRef.current = initialSelectionKey;
+  }, [initialSelectedDisciplinaIds, initialSelectionKey]);
 
   const [exportMode, setExportMode] = useState<ExportMode>(null);
   const isExporting = exportMode !== null;
@@ -307,6 +327,7 @@ export function CurriculumGraph({
   );
 
   const handleToggleSelect = useCallback((disciplinaId: string) => {
+    hasUserEditedSelectionRef.current = true;
     setSelectionSet(prev => {
       const next = new Set(prev);
       if (next.has(disciplinaId)) {
@@ -341,6 +362,7 @@ export function CurriculumGraph({
       if (obrigatoriaIds.length === 0) {
         return;
       }
+      hasUserEditedSelectionRef.current = true;
       setSelectionSet(prev => {
         const next = new Set(prev);
         const allSelected = obrigatoriaIds.every(id => prev.has(id));

@@ -1,20 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {
-  BookOpen,
-  CalendarDays,
-  Activity,
-  GitBranch,
-  GraduationCap,
-  LogOut,
-  MapPinned,
-  Moon,
-  Settings,
-  Sun,
-  User,
-  type LucideIcon,
-} from "lucide-react";
+import { Bot, ExternalLink, LogOut, Moon, Settings, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
@@ -45,6 +32,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { Button } from "@/components/ui/button";
 import type { User as UserType } from "@/lib/client/api/usuarios";
+import { NAVIGATION_RESOURCES, type NavigationResource } from "./resource-links";
+import { SigaaMcpLink } from "./sigaa-mcp-link";
+import { SigaaMenuStatus } from "./sigaa-menu-status";
 
 const navLinkClass =
   "relative rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:text-aquario-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:text-white";
@@ -112,14 +102,6 @@ function NavLogo() {
 }
 
 // Resources Dropdown Content Component
-type Resource = {
-  href: string;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  external?: boolean;
-};
-
 const DROPDOWN_HIGHLIGHT_TRANSITION = {
   type: "spring" as const,
   stiffness: 400,
@@ -127,7 +109,7 @@ const DROPDOWN_HIGHLIGHT_TRANSITION = {
   mass: 0.5,
 };
 
-function ResourceItemContent({ resource }: { resource: Resource }) {
+function ResourceItemContent({ resource }: { resource: NavigationResource }) {
   return (
     <>
       <div className="relative z-10 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
@@ -144,46 +126,6 @@ function ResourceItemContent({ resource }: { resource: Resource }) {
 }
 
 function ResourcesDropdownContent() {
-  const resources: Resource[] = [
-    {
-      href: "/calendario",
-      title: "Minhas Disciplinas",
-      description: "Organize disciplinas, turmas e horários.",
-      icon: CalendarDays,
-    },
-    {
-      href: "/guias",
-      title: "Guias",
-      description: "Orientações para atravessar o curso.",
-      icon: BookOpen,
-    },
-    {
-      href: "/mapas",
-      title: "Mapas",
-      description: "Encontre salas e laboratórios do CI.",
-      icon: MapPinned,
-    },
-    {
-      href: "/grades-curriculares",
-      title: "Grades Curriculares",
-      description: "Veja requisitos, períodos e equivalências.",
-      icon: GitBranch,
-    },
-    {
-      href: "/calendario-academico",
-      title: "Calendário Acadêmico",
-      description: "Acompanhe datas importantes da UFPB.",
-      icon: GraduationCap,
-    },
-    {
-      href: "https://sigaacaiu.com",
-      title: "SIGAA Caiu?",
-      description: "Veja se o SIGAA UFPB está no ar.",
-      icon: Activity,
-      external: true,
-    },
-  ];
-
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const itemBaseClass =
     "relative flex gap-3 rounded-xl p-3 no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -208,7 +150,7 @@ function ResourcesDropdownContent() {
             }
           }}
         >
-          {resources.map((resource, index) => {
+          {NAVIGATION_RESOURCES.map((resource, index) => {
             const isHovered = hoveredIndex === index;
             const handleEnter = () => setHoveredIndex(index);
             const handleFocus = () => setHoveredIndex(index);
@@ -253,6 +195,26 @@ function ResourcesDropdownContent() {
           })}
         </ul>
       </LayoutGroup>
+      <SigaaMcpLink
+        location="desktop_resources"
+        className="mt-2 flex min-h-14 items-center gap-3 rounded-xl border border-sky-200/80 bg-sky-50 px-3 py-2.5 text-slate-900 outline-none transition-colors hover:border-sky-300 hover:bg-sky-100 focus-visible:ring-2 focus-visible:ring-ring dark:border-sky-900 dark:bg-sky-950/40 dark:text-white dark:hover:bg-sky-950/70"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-aquario-primary shadow-sm dark:bg-white/10 dark:text-sky-200">
+          <Bot className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2 text-sm font-semibold">
+            MCP para o SIGAA
+            <span className="rounded-full bg-aquario-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-300/10 dark:text-sky-200">
+              Novo
+            </span>
+          </span>
+          <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
+            Consulte o SIGAA pelo Claude, ChatGPT e outras IAs.
+          </span>
+        </span>
+        <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </SigaaMcpLink>
       <div className="mt-2 border-t pt-2 dark:border-white/10">
         <NavigationMenuLink asChild>
           <Link
@@ -323,6 +285,11 @@ function UserDropdownMenu({ user, isDark }: { user: UserType; isDark: boolean })
             <span>Perfil</span>
           </Link>
         </DropdownMenuItem>
+        {user.permissoes.includes("sigaa:beta") && (
+          <DropdownMenuItem asChild>
+            <SigaaMenuStatus location="desktop_user_menu" />
+          </DropdownMenuItem>
+        )}
         {user.papelPlataforma === "MASTER_ADMIN" && (
           <DropdownMenuItem asChild>
             <Link href="/admin" className="flex items-center cursor-pointer">

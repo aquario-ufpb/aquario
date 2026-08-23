@@ -96,6 +96,7 @@ type OnboardingEvent =
 
 export type SigaaFlowOperation = "connect" | "sync" | "course_change";
 export type SigaaConnectionState = "never_connected" | "pending" | "connected" | "disconnected";
+export type SigaaDiscoveryConnectionState = SigaaConnectionState | "error" | "unknown";
 export type SigaaSensitiveAction = "disconnect" | "delete";
 
 type SigaaEvent =
@@ -119,6 +120,16 @@ type SigaaEvent =
   | { name: "sigaa_course_change_confirmed" }
   | { name: "sigaa_academic_page_opened"; connection_state: SigaaConnectionState }
   | { name: "sigaa_sync_again_clicked"; connection_state: SigaaConnectionState }
+  | {
+      name: "sigaa_entrypoint_clicked";
+      location: "desktop_user_menu" | "mobile_user_menu" | "landing";
+      connection_state: SigaaDiscoveryConnectionState;
+    }
+  | { name: "sigaa_highlight_viewed" }
+  | {
+      name: "sigaa_mcp_clicked";
+      location: "desktop_resources" | "mobile_menu" | "resources_page" | "landing";
+    }
   | { name: "sigaa_sensitive_action_opened"; action: SigaaSensitiveAction }
   | { name: "sigaa_sensitive_action_started"; action: SigaaSensitiveAction }
   | { name: "sigaa_sensitive_action_succeeded"; action: SigaaSensitiveAction }
