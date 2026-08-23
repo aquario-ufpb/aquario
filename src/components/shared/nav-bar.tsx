@@ -35,6 +35,7 @@ import type { User as UserType } from "@/lib/client/api/usuarios";
 import { NAVIGATION_RESOURCES, type NavigationResource } from "./resource-links";
 import { SigaaMcpLink } from "./sigaa-mcp-link";
 import { SigaaMenuStatus } from "./sigaa-menu-status";
+import { shouldEmphasizeSigaa, type SigaaAccessState } from "@/lib/client/sigaa/access-state";
 
 const navLinkClass =
   "relative rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:text-aquario-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:text-slate-200 dark:hover:text-white";
@@ -193,28 +194,43 @@ function ResourcesDropdownContent() {
               </li>
             );
           })}
+          <li
+            onMouseEnter={() => setHoveredIndex(NAVIGATION_RESOURCES.length)}
+            onFocusCapture={() => setHoveredIndex(NAVIGATION_RESOURCES.length)}
+          >
+            <NavigationMenuLink asChild>
+              <SigaaMcpLink location="desktop_resources" className={itemBaseClass}>
+                {hoveredIndex === NAVIGATION_RESOURCES.length ? (
+                  <motion.span
+                    layoutId="resources-dropdown-highlight"
+                    className="pointer-events-none absolute inset-0 rounded-xl bg-slate-100 dark:bg-white/10"
+                    transition={DROPDOWN_HIGHLIGHT_TRANSITION}
+                    aria-hidden
+                  />
+                ) : null}
+                <span className="relative z-10 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-aquario-primary dark:bg-white/10 dark:text-sky-200">
+                  <Bot className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="relative z-10 min-w-0">
+                  <span className="flex items-center gap-2 text-sm font-medium leading-none text-slate-900 dark:text-white">
+                    MCP do SIGAA
+                    <span className="rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-950 dark:text-sky-200">
+                      Novo
+                    </span>
+                    <ExternalLink
+                      className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span className="mt-1 block text-xs leading-snug text-muted-foreground">
+                    Use o SIGAA em outras IAs.
+                  </span>
+                </span>
+              </SigaaMcpLink>
+            </NavigationMenuLink>
+          </li>
         </ul>
       </LayoutGroup>
-      <SigaaMcpLink
-        location="desktop_resources"
-        className="mt-2 flex min-h-14 items-center gap-3 rounded-xl border border-sky-200/80 bg-sky-50 px-3 py-2.5 text-slate-900 outline-none transition-colors hover:border-sky-300 hover:bg-sky-100 focus-visible:ring-2 focus-visible:ring-ring dark:border-sky-900 dark:bg-sky-950/40 dark:text-white dark:hover:bg-sky-950/70"
-      >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-aquario-primary shadow-sm dark:bg-white/10 dark:text-sky-200">
-          <Bot className="h-4 w-4" aria-hidden="true" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2 text-sm font-semibold">
-            MCP para o SIGAA
-            <span className="rounded-full bg-aquario-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-300/10 dark:text-sky-200">
-              Novo
-            </span>
-          </span>
-          <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
-            Consulte o SIGAA pelo Claude, ChatGPT e outras IAs.
-          </span>
-        </span>
-        <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-      </SigaaMcpLink>
       <div className="mt-2 border-t pt-2 dark:border-white/10">
         <NavigationMenuLink asChild>
           <Link
@@ -230,7 +246,13 @@ function ResourcesDropdownContent() {
 }
 
 // Resources Navigation Component
-function ResourcesNavigation({ isActive }: { isActive: boolean }) {
+function ResourcesNavigation({
+  isActive,
+  sigaaAccessState,
+}: {
+  isActive: boolean;
+  sigaaAccessState: SigaaAccessState;
+}) {
   return (
     <NavigationMenu>
       <NavigationMenuList>
@@ -239,7 +261,14 @@ function ResourcesNavigation({ isActive }: { isActive: boolean }) {
             className={`${navLinkClass} h-auto bg-transparent data-[state=open]:bg-transparent dark:data-[state=open]:bg-transparent`}
           >
             {isActive && <NavPill />}
-            <span className="relative z-10">Recursos</span>
+            <span className="relative z-10 flex items-center gap-2">
+              Recursos
+              {shouldEmphasizeSigaa(sigaaAccessState) && (
+                <span className="rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-300/10 dark:text-sky-200">
+                  Novo
+                </span>
+              )}
+            </span>
           </NavigationMenuTrigger>
           <NavigationMenuContent>
             <ResourcesDropdownContent />
@@ -251,7 +280,15 @@ function ResourcesNavigation({ isActive }: { isActive: boolean }) {
 }
 
 // User Dropdown Menu Component
-function UserDropdownMenu({ user, isDark }: { user: UserType; isDark: boolean }) {
+function UserDropdownMenu({
+  user,
+  isDark,
+  sigaaAccessState,
+}: {
+  user: UserType;
+  isDark: boolean;
+  sigaaAccessState: SigaaAccessState;
+}) {
   const { setTheme } = useTheme();
   const { logout } = useAuth();
 
@@ -285,11 +322,9 @@ function UserDropdownMenu({ user, isDark }: { user: UserType; isDark: boolean })
             <span>Perfil</span>
           </Link>
         </DropdownMenuItem>
-        {user.permissoes.includes("sigaa:beta") && (
-          <DropdownMenuItem asChild>
-            <SigaaMenuStatus location="desktop_user_menu" />
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem asChild>
+          <SigaaMenuStatus accessState={sigaaAccessState} location="desktop_user_menu" />
+        </DropdownMenuItem>
         {user.papelPlataforma === "MASTER_ADMIN" && (
           <DropdownMenuItem asChild>
             <Link href="/admin" className="flex items-center cursor-pointer">
@@ -329,7 +364,7 @@ function UserDropdownMenu({ user, isDark }: { user: UserType; isDark: boolean })
 }
 
 // Navigation Links Component
-function NavLinks() {
+function NavLinks({ sigaaAccessState }: { sigaaAccessState: SigaaAccessState }) {
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   const isResourcesActive = RESOURCES_PATHS.some(
@@ -343,7 +378,7 @@ function NavLinks() {
           {isActive("/sobre") && <NavPill />}
           <span className="relative z-10">Sobre</span>
         </Link>
-        <ResourcesNavigation isActive={isResourcesActive} />
+        <ResourcesNavigation isActive={isResourcesActive} sigaaAccessState={sigaaAccessState} />
         <Link href="/entidades" className={navLinkClass}>
           {isActive("/entidades") && <NavPill />}
           <span className="relative z-10">Entidades</span>
@@ -358,7 +393,7 @@ function NavLinks() {
 }
 
 // Auth Section Component
-function AuthSection() {
+function AuthSection({ sigaaAccessState }: { sigaaAccessState: SigaaAccessState }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const isLoading = authLoading || userLoading;
@@ -370,7 +405,7 @@ function AuthSection() {
   }
 
   if (isAuthenticated && user) {
-    return <UserDropdownMenu user={user} isDark={isDark} />;
+    return <UserDropdownMenu user={user} isDark={isDark} sigaaAccessState={sigaaAccessState} />;
   }
 
   return (
@@ -386,10 +421,11 @@ function AuthSection() {
 
 type NavBarProps = {
   staticPosition?: boolean;
+  sigaaAccessState: SigaaAccessState;
 };
 
 // Main NavBar Component
-export default function NavBar({ staticPosition = false }: NavBarProps) {
+export default function NavBar({ staticPosition = false, sigaaAccessState }: NavBarProps) {
   return (
     <nav
       className={`inset-x-0 top-0 z-50 bg-slate-50/90 backdrop-blur-xl dark:bg-slate-950/85 ${
@@ -399,8 +435,8 @@ export default function NavBar({ staticPosition = false }: NavBarProps) {
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
         <NavLogo />
         <div className="flex items-center justify-end gap-3">
-          <NavLinks />
-          <AuthSection />
+          <NavLinks sigaaAccessState={sigaaAccessState} />
+          <AuthSection sigaaAccessState={sigaaAccessState} />
           <SearchTrigger
             onClick={() => {
               window.dispatchEvent(

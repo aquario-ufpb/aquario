@@ -32,7 +32,7 @@ export function registerSigaaPaths(registry: OpenAPIRegistry, schemas: CommonSch
     tags: ["SIGAA"],
     summary: "Reautenticar para operações SIGAA",
     description:
-      "Confirma a senha da conta Aquário e emite uma prova separada, limitada ao SIGAA e válida por 15 minutos. proposalId vincula a prova a uma confirmação de curso específica quando informado. A conta precisa participar da beta SIGAA. A senha e a prova não são persistidas.",
+      "Confirma a senha da conta Aquário e emite uma prova separada, limitada ao SIGAA e válida por 15 minutos. proposalId vincula a prova a uma confirmação de curso específica quando informado. A senha e a prova não são persistidas.",
     security: [{ bearerAuth: [] }],
     request: {
       body: {
@@ -147,7 +147,7 @@ export function registerSigaaPaths(registry: OpenAPIRegistry, schemas: CommonSch
     tags: ["SIGAA"],
     summary: "Sincronizar os dados acadêmicos do dono da sessão",
     description:
-      "Exige participação na beta e uma prova recente no cabeçalho X-Sigaa-Reauth-Token. As credenciais SIGAA são usadas uma vez e não são persistidas nem repetidas automaticamente.",
+      "Exige uma prova recente no cabeçalho X-Sigaa-Reauth-Token. As credenciais SIGAA são usadas uma vez e não são persistidas nem repetidas automaticamente.",
     security: [{ bearerAuth: [] }],
     request: {
       headers: z.object({ "X-Sigaa-Reauth-Token": z.string().min(1) }),

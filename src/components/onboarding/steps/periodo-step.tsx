@@ -37,7 +37,7 @@ export function PeriodoStep({ onComplete, isMutating }: PeriodoStepProps) {
   const { token, userId } = useAuth();
   const queryClient = useQueryClient();
   const { data: user } = useCurrentUser();
-  const canUseSigaa = user?.permissoes.includes("sigaa:beta") ?? false;
+  const canUseSigaa = Boolean(user);
   const sigaaQuery = useOwnSigaaAcademicState(canUseSigaa);
   const [selected, setSelected] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);

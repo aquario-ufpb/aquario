@@ -128,7 +128,6 @@ export const useOnboarding = () => {
     const semesterMeta = semNome ? m.semesters?.[semNome] : undefined;
     const isEmptyMetadata = Object.keys(m).length === 0;
     const usesV2Flow = m.flowVersion === 2 || isEmptyMetadata;
-    const canUseSigaa = user?.permissoes?.includes("sigaa:beta") ?? false;
 
     // Build the full list of relevant steps (both completed and pending)
     const allSteps: OnboardingStep[] = [];
@@ -142,7 +141,7 @@ export const useOnboarding = () => {
 
     // Fresh accounts adopt V2. Existing unversioned flows keep their original
     // sequence so this rollout never inserts a new step mid-onboarding.
-    if (usesV2Flow && canUseSigaa) {
+    if (usesV2Flow) {
       allSteps.push({
         id: "sigaa",
         ...STEP_DEFINITIONS.sigaa,
@@ -214,7 +213,6 @@ export const useOnboarding = () => {
     isMetadataFetched,
     semestreAtivo,
     user?.periodoAtual,
-    user?.permissoes,
     paasAvailable,
     isInsideSemester,
   ]);

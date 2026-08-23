@@ -12,12 +12,14 @@ import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import MeusDadosAcademicosPage from "../page";
 
 const mockInvalidateQueries = jest.fn().mockResolvedValue(undefined);
+let mockSearchParams = new URLSearchParams();
 
 jest.mock("@tanstack/react-query", () => ({
   ...jest.requireActual("@tanstack/react-query"),
   useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
 }));
 jest.mock("@/analytics/posthog-client", () => ({ trackEvent: jest.fn() }));
+jest.mock("next/navigation", () => ({ useSearchParams: () => mockSearchParams }));
 jest.mock("@/lib/client/hooks/use-require-auth", () => ({ useRequireAuth: jest.fn() }));
 jest.mock("@/lib/client/hooks/use-usuarios", () => ({ useCurrentUser: jest.fn() }));
 jest.mock("@/lib/client/hooks/use-sigaa", () => ({ useOwnSigaaAcademicState: jest.fn() }));
@@ -44,7 +46,7 @@ const mockTrackEvent = jest.mocked(trackEvent);
 
 const currentUser = {
   id: "user-1",
-  permissoes: ["sigaa:beta"],
+  permissoes: [],
   curso: { id: "course-1" },
 };
 
@@ -186,6 +188,7 @@ const queryResult = (data: unknown) => ({
 describe("MeusDadosAcademicosPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSearchParams = new URLSearchParams();
     mockUseCurrentUser.mockReturnValue(queryResult(currentUser) as never);
     mockUseSigaaState.mockReturnValue(queryResult(importedState()) as never);
     mockUseGrade.mockReturnValue(queryResult({ disciplinas: [] }) as never);
@@ -193,7 +196,19 @@ describe("MeusDadosAcademicosPage", () => {
     mockUseEnrolled.mockReturnValue(queryResult({ disciplinas: [] }) as never);
   });
 
-  it("shows a retryable profile error instead of claiming the beta is unavailable", async () => {
+  it("opens the connection dialog from the safe deep link after state resolves", () => {
+    mockSearchParams = new URLSearchParams("connect=1");
+
+    render(<MeusDadosAcademicosPage />);
+
+    expect(screen.getByRole("dialog", { name: "Sincronizar SIGAA" })).toBeInTheDocument();
+    expect(mockTrackEvent).toHaveBeenCalledWith("sigaa_connect_opened", {
+      operation: "connect",
+      consent_required: true,
+    });
+  });
+
+  it("shows a retryable profile error", async () => {
     const user = userEvent.setup();
     const refetch = jest.fn();
     mockUseCurrentUser.mockReturnValue({
@@ -208,9 +223,6 @@ describe("MeusDadosAcademicosPage", () => {
     expect(
       screen.getByRole("heading", { name: "Não foi possível carregar seu perfil" })
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText("Esta funcionalidade está em beta restrita.")
-    ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Tentar novamente" }));
     expect(refetch).toHaveBeenCalledTimes(1);
   });

@@ -132,16 +132,16 @@ describe("useOnboarding", () => {
       expect(stepIds).not.toContain("turmas");
     });
 
-    it("inserts SIGAA after welcome for a fresh V2-eligible account", async () => {
+    it("inserts SIGAA after welcome for every fresh V2 account", async () => {
       mockUseCurrentUser.mockReturnValue({
         data: {
           id: "user-1",
           nome: "Test User",
           periodoAtual: null,
           centro: { sigla: "CI" },
-          permissoes: ["sigaa:beta"],
+          permissoes: [] as string[],
         },
-      } as ReturnType<typeof useCurrentUser>);
+      } as unknown as ReturnType<typeof useCurrentUser>);
       mockGetMetadata.mockResolvedValue(freshMetadata());
 
       const { result } = renderHookWithProviders(() => useOnboarding());
@@ -161,7 +161,7 @@ describe("useOnboarding", () => {
           nome: "Test User",
           periodoAtual: null,
           centro: { sigla: "CI" },
-          permissoes: ["sigaa:beta"],
+          permissoes: [] as string[],
         },
       } as ReturnType<typeof useCurrentUser>);
       mockGetMetadata.mockResolvedValue(freshMetadata({ welcome: { completedAt: "2025-01-01" } }));
@@ -180,7 +180,7 @@ describe("useOnboarding", () => {
           nome: "Test User",
           periodoAtual: null,
           centro: { sigla: "CI" },
-          permissoes: ["sigaa:beta"],
+          permissoes: [] as string[],
         },
       } as ReturnType<typeof useCurrentUser>);
       mockGetMetadata.mockResolvedValue(

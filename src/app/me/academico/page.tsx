@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   BookOpenCheck,
@@ -10,7 +11,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { trackEvent } from "@/analytics/posthog-client";
@@ -405,19 +406,31 @@ function GradeTable({
   );
 }
 
-export default function MeusDadosAcademicosPage() {
+function AcademicPageSkeleton() {
+  return (
+    <main className="container mx-auto max-w-5xl space-y-6 px-6 pb-24 pt-32">
+      <Skeleton className="h-10 w-72" />
+      <Skeleton className="h-48 w-full" />
+      <Skeleton className="h-80 w-full" />
+    </main>
+  );
+}
+
+function MeusDadosAcademicosPageContent() {
   useRequireAuth();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const deepLinkHandledRef = useRef(false);
   const [connectOpen, setConnectOpen] = useState(false);
   const [componentSearch, setComponentSearch] = useState("");
   const [componentScope, setComponentScope] = useState<ComponentScope>("trajectory");
   const [gradeFilter, setGradeFilter] = useState<GradeOutcome | "all">("all");
   const currentUser = useCurrentUser();
-  const hasBeta = currentUser.data?.permissoes.includes("sigaa:beta") ?? false;
-  const stateQuery = useOwnSigaaAcademicState(hasBeta);
-  const gradeQuery = useGradeCurricular(hasBeta ? (currentUser.data?.curso.id ?? null) : null);
-  const completedQuery = useDisciplinasConcluidas(hasBeta);
-  const enrolledQuery = useDisciplinasSemestreAtivo(hasBeta);
+  const hasAuthenticatedUser = Boolean(currentUser.data);
+  const stateQuery = useOwnSigaaAcademicState(hasAuthenticatedUser);
+  const gradeQuery = useGradeCurricular(currentUser.data?.curso.id ?? null);
+  const completedQuery = useDisciplinasConcluidas(hasAuthenticatedUser);
+  const enrolledQuery = useDisciplinasSemestreAtivo(hasAuthenticatedUser);
 
   const academicDisplay = useMemo(() => {
     const catalog =
@@ -482,6 +495,30 @@ export default function MeusDadosAcademicosPage() {
     }
   }, [integrationKind]);
 
+  useEffect(() => {
+    if (
+      deepLinkHandledRef.current ||
+      searchParams.get("connect") !== "1" ||
+      !stateQuery.data ||
+      integrationKind === "connected"
+    ) {
+      return;
+    }
+
+    deepLinkHandledRef.current = true;
+    trackEvent("sigaa_connect_opened", {
+      operation: connectAction.operation,
+      consent_required: connectAction.consentRequired,
+    });
+    setConnectOpen(true);
+  }, [
+    connectAction.consentRequired,
+    connectAction.operation,
+    integrationKind,
+    searchParams,
+    stateQuery.data,
+  ]);
+
   const refreshAfterSync = async (courseReplaced: boolean) => {
     await Promise.all([
       queryClient.invalidateQueries({
@@ -504,19 +541,13 @@ export default function MeusDadosAcademicosPage() {
 
   if (
     currentUser.isLoading ||
-    (hasBeta &&
+    (hasAuthenticatedUser &&
       (stateQuery.isLoading ||
         gradeQuery.isLoading ||
         completedQuery.isLoading ||
         enrolledQuery.isLoading))
   ) {
-    return (
-      <main className="container mx-auto max-w-5xl space-y-6 px-6 pb-24 pt-32">
-        <Skeleton className="h-10 w-72" />
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-80 w-full" />
-      </main>
-    );
+    return <AcademicPageSkeleton />;
   }
 
   if (currentUser.isError && !currentUser.data) {
@@ -534,18 +565,6 @@ export default function MeusDadosAcademicosPage() {
             <Link href="/perfil">Voltar ao perfil</Link>
           </Button>
         </div>
-      </main>
-    );
-  }
-
-  if (!hasBeta) {
-    return (
-      <main className="container mx-auto max-w-3xl px-6 pb-24 pt-32 text-center">
-        <h1 className="text-2xl font-semibold">Integração SIGAA indisponível</h1>
-        <p className="mt-3 text-muted-foreground">Esta funcionalidade está em beta restrita.</p>
-        <Button asChild variant="outline" className="mt-6">
-          <Link href="/perfil">Voltar ao perfil</Link>
-        </Button>
       </main>
     );
   }
@@ -1038,5 +1057,13 @@ export default function MeusDadosAcademicosPage() {
         onSynchronized={refreshAfterSync}
       />
     </main>
+  );
+}
+
+export default function MeusDadosAcademicosPage() {
+  return (
+    <Suspense fallback={<AcademicPageSkeleton />}>
+      <MeusDadosAcademicosPageContent />
+    </Suspense>
   );
 }

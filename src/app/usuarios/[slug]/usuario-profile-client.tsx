@@ -48,7 +48,7 @@ export default function UsuarioProfileClient({ slug, initialData }: UsuarioProfi
 
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser?.id === user?.id;
-  const canUseSigaa = Boolean(isOwnProfile && currentUser?.permissoes.includes("sigaa:beta"));
+  const canUseSigaa = Boolean(isOwnProfile && currentUser);
 
   const {
     data: projetos,

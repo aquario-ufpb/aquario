@@ -76,7 +76,7 @@ describe("private SIGAA route exports", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockWithAuth.mockImplementation((incomingRequest, handler) =>
-      handler(incomingRequest, { id: OWNER_ID, permissoes: ["sigaa:beta"] })
+      handler(incomingRequest, { id: OWNER_ID, permissoes: [] })
     );
   });
 

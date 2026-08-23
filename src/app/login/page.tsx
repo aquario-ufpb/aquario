@@ -12,6 +12,7 @@ import { AuthLayout } from "@/components/auth/auth-layout";
 import { PasswordInput } from "@/components/auth/password-input";
 import { trackEvent } from "@/analytics/posthog-client";
 import { isApiErrorInstance } from "@/lib/client/errors";
+import { resolveLoginDestination } from "./login-destination";
 
 function LoginForm() {
   const router = useRouter();
@@ -21,6 +22,7 @@ function LoginForm() {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
+  const destination = resolveLoginDestination(searchParams.get("next"));
   const { login, token, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   useEffect(() => {
@@ -39,9 +41,9 @@ function LoginForm() {
 
   useEffect(() => {
     if (!isAuthLoading && isAuthenticated) {
-      router.replace("/");
+      router.replace(destination);
     }
-  }, [isAuthenticated, isAuthLoading, router]);
+  }, [destination, isAuthenticated, isAuthLoading, router]);
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -53,7 +55,7 @@ function LoginForm() {
       const data = await authService.login(email, senha);
       login(data.token);
       trackEvent("login_succeeded");
-      router.replace("/");
+      router.replace(destination);
     } catch (err: unknown) {
       if (err instanceof Error) {
         const errorType = isApiErrorInstance(err) ? err.code : "unknown";

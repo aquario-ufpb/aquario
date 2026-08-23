@@ -18,7 +18,7 @@ import {
   SIGAA_REAUTH_PURPOSE,
   SIGAA_REAUTH_TTL_SECONDS,
   withRecentSigaaProof,
-  withSigaaBetaOwner,
+  withSigaaOwner,
   type ISigaaReauthAttemptLimiter,
 } from "../reauth";
 
@@ -40,7 +40,7 @@ function makeUsuario(overrides: Partial<UsuarioWithRelations> = {}): UsuarioWith
     matricula: null,
     matriculaOrigem: null,
     matriculaVerificadaPeloSigaaEm: null,
-    permissoes: ["sigaa:beta"],
+    permissoes: [],
     papelPlataforma: "USER",
     periodoAtual: null,
     onboardingMetadata: null,
@@ -265,12 +265,13 @@ describe("SIGAA reauthentication route handler", () => {
     expect(limiter.consumeReauthAttempt).not.toHaveBeenCalled();
   });
 
-  it("fails before the limiter for users outside the beta or without a password hash", async () => {
+  it("allows every authenticated user and rejects accounts without a password hash", async () => {
     const limiter = allowedLimiter();
-    const outsideBeta = createSigaaReauthPostHandler({
+    const withoutPermission = createSigaaReauthPostHandler({
       limiter,
       getProofService: () => proofService,
       authenticateRequest: authenticateAs(makeUsuario({ permissoes: [] })),
+      comparePassword: async () => true,
     });
     const facadeBeta = createSigaaReauthPostHandler({
       limiter,
@@ -278,14 +279,13 @@ describe("SIGAA reauthentication route handler", () => {
       authenticateRequest: authenticateAs(makeUsuario({ senhaHash: null })),
     });
 
-    const outsideBetaResponse = await outsideBeta(makeRequest({ password: "password" }));
+    const allowedResponse = await withoutPermission(makeRequest({ password: "password" }));
     const facadeResponse = await facadeBeta(makeRequest({ password: "password" }));
 
-    expect(outsideBetaResponse.status).toBe(403);
-    expect((await outsideBetaResponse.json()).code).toBe(ErrorCode.SIGAA_BETA_REQUIRED);
+    expect(allowedResponse.status).toBe(200);
     expect(facadeResponse.status).toBe(403);
     expect((await facadeResponse.json()).code).toBe(ErrorCode.SIGAA_REAUTH_FAILED);
-    expect(limiter.consumeReauthAttempt).not.toHaveBeenCalled();
+    expect(limiter.consumeReauthAttempt).toHaveBeenCalledTimes(1);
   });
 
   it("rejects malformed JSON and extra request fields", async () => {
@@ -389,12 +389,12 @@ describe("recent SIGAA proof wrapper", () => {
   });
 });
 
-describe("SIGAA beta wrapper", () => {
-  it("passes only the beta identity and does not expose the password hash", async () => {
-    const response = await withSigaaBetaOwner(
+describe("SIGAA owner wrapper", () => {
+  it("passes only the authenticated identity and does not expose the password hash", async () => {
+    const response = await withSigaaOwner(
       makeRequest({}),
       (_request, owner) => Promise.resolve(NextResponse.json(owner)),
-      authenticateAs(makeUsuario({ senhaHash: null }))
+      authenticateAs(makeUsuario({ senhaHash: null, permissoes: [] }))
     );
     const body = await response.json();
 

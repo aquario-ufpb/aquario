@@ -122,7 +122,12 @@ type SigaaEvent =
   | { name: "sigaa_sync_again_clicked"; connection_state: SigaaConnectionState }
   | {
       name: "sigaa_entrypoint_clicked";
-      location: "desktop_user_menu" | "mobile_user_menu" | "landing";
+      location:
+        | "desktop_user_menu"
+        | "mobile_user_menu"
+        | "desktop_resources"
+        | "mobile_resources"
+        | "landing";
       connection_state: SigaaDiscoveryConnectionState;
     }
   | { name: "sigaa_highlight_viewed" }

@@ -25,7 +25,7 @@ export function ConcluidasStep({ onComplete, isMutating }: ConcluidasStepProps) 
     suggestions,
     hasSnapshot,
     isLoading: suggestionsLoading,
-  } = useSigaaOnboardingSuggestions(grade, null, user?.permissoes.includes("sigaa:beta") ?? false);
+  } = useSigaaOnboardingSuggestions(grade, null, Boolean(user));
   const selectionMode = true;
 
   const completedIds = useMemo(() => {

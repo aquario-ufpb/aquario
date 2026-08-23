@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Login from "../page";
+import { resolveLoginDestination } from "../login-destination";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { OnboardingProvider } from "@/components/onboarding/onboarding-provider";
 import { queryKeys } from "@/lib/client/query-keys";
@@ -214,6 +215,29 @@ describe("Login Page", () => {
       expect(mockReplace).toHaveBeenCalledWith("/");
     });
   });
+
+  it("continues to a safe internal destination after login", async () => {
+    mockGet.mockImplementation((key: string) =>
+      key === "next" ? "/me/academico?connect=1" : null
+    );
+    mockLogin.mockResolvedValue({ token: "test-token" });
+
+    await renderLogin();
+    await userEvent.type(screen.getByLabelText(/email/i), "test@academico.ufpb.br");
+    await userEvent.type(screen.getByPlaceholderText(/sua senha/i), "password123");
+    await userEvent.click(screen.getByRole("button", { name: /entrar/i }));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/me/academico?connect=1");
+    });
+  });
+
+  it.each(["https://evil.example", "//evil.example", "/\\evil.example", "/bad\npath"])(
+    "rejects an unsafe post-login destination %s",
+    destination => {
+      expect(resolveLoginDestination(destination)).toBe("/");
+    }
+  );
 
   it("redirects a persisted authenticated session without rendering the login form", async () => {
     localStorage.setItem("token", "persisted-token");

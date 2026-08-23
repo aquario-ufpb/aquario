@@ -31,11 +31,7 @@ export function CursandoStep({ onComplete, isMutating, semestreNome }: CursandoS
     suggestions,
     hasSnapshot,
     isLoading: suggestionsLoading,
-  } = useSigaaOnboardingSuggestions(
-    grade,
-    semestreNome ?? null,
-    user?.permissoes.includes("sigaa:beta") ?? false
-  );
+  } = useSigaaOnboardingSuggestions(grade, semestreNome ?? null, Boolean(user));
   const selectionMode = true;
   const [page, setPage] = useState<1 | 2>(1);
 

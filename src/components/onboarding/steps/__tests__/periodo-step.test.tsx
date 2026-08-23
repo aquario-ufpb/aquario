@@ -10,7 +10,7 @@ jest.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: jest.fn() }),
 }));
 jest.mock("@/lib/client/hooks/use-usuarios", () => ({
-  useCurrentUser: () => ({ data: { permissoes: ["sigaa:beta"] } }),
+  useCurrentUser: () => ({ data: { permissoes: [] } }),
 }));
 jest.mock("@/lib/client/hooks/use-sigaa", () => ({
   useOwnSigaaAcademicState: () => ({

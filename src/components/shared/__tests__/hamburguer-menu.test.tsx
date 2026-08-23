@@ -14,6 +14,7 @@ jest.mock("@/lib/client/hooks/use-usuarios", () => ({ useCurrentUser: jest.fn() 
 
 const mockUseAuth = jest.mocked(useAuth);
 const mockUseCurrentUser = jest.mocked(useCurrentUser);
+const signedOutSigaaState = { availability: "sign_in_required" } as const;
 
 describe("HamburgerMenu", () => {
   beforeEach(() => {
@@ -33,7 +34,7 @@ describe("HamburgerMenu", () => {
 
   it("exposes the disclosure state and returns focus on Escape", async () => {
     const user = userEvent.setup();
-    render(<HamburgerMenu />);
+    render(<HamburgerMenu sigaaAccessState={signedOutSigaaState} />);
 
     const trigger = screen.getByRole("button", { name: "Abrir menu de navegação" });
     expect(trigger).toHaveAttribute("aria-controls", "mobile-navigation-menu");
@@ -52,10 +53,10 @@ describe("HamburgerMenu", () => {
   });
 
   it("presents MCP as supporting information for the user benefit", () => {
-    render(<HamburgerMenu />);
+    render(<HamburgerMenu sigaaAccessState={signedOutSigaaState} />);
 
-    expect(screen.getByText("SIGAA na sua IA")).toBeInTheDocument();
+    expect(screen.getByText("MCP do SIGAA")).toBeInTheDocument();
     expect(screen.getByText("MCP")).toBeInTheDocument();
-    expect(screen.getByText("Use com Claude, ChatGPT e apps compatíveis.")).toBeInTheDocument();
+    expect(screen.getByText("Use o SIGAA em outras IAs.")).toBeInTheDocument();
   });
 });

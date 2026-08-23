@@ -57,12 +57,11 @@ const currentUser = {
   email: "student@example.com",
   papelPlataforma: "USER" as const,
   eVerificado: true,
-  permissoes: ["sigaa:beta"],
+  permissoes: [],
 };
 
-function arrange(options?: { ownProfile?: boolean; beta?: boolean }) {
+function arrange(options?: { ownProfile?: boolean; permissions?: string[] }) {
   const ownProfile = options?.ownProfile ?? true;
-  const beta = options?.beta ?? true;
 
   mockUseUsuarioBySlug.mockReturnValue({
     data: profile,
@@ -73,7 +72,7 @@ function arrange(options?: { ownProfile?: boolean; beta?: boolean }) {
     data: {
       ...currentUser,
       id: ownProfile ? profile.id : "other-user",
-      permissoes: beta ? ["sigaa:beta"] : [],
+      permissoes: options?.permissions ?? [],
     },
     isLoading: false,
   } as ReturnType<typeof useCurrentUser>);
@@ -92,7 +91,7 @@ function arrange(options?: { ownProfile?: boolean; beta?: boolean }) {
 }
 
 describe("UsuarioProfileClient academic tab", () => {
-  it("coloca dados acadêmicos primeiro e selecionado no perfil próprio com beta", () => {
+  it("coloca dados acadêmicos primeiro e selecionado no perfil próprio", () => {
     arrange();
 
     render(<UsuarioProfileClient slug="ralf-ferreira" />);
@@ -110,17 +109,6 @@ describe("UsuarioProfileClient academic tab", () => {
       "true"
     );
     expect(screen.getByText("Hub acadêmico")).toBeVisible();
-  });
-
-  it("mantém as três abas e Projetos como padrão sem a permissão beta", () => {
-    arrange({ beta: false });
-
-    render(<UsuarioProfileClient slug="ralf-ferreira" />);
-
-    expect(screen.getAllByRole("tab")).toHaveLength(3);
-    expect(screen.queryByRole("tab", { name: "Dados acadêmicos" })).not.toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Projetos" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText("Meus Projetos")).toBeVisible();
   });
 
   it("não expõe dados acadêmicos ao visitar outro perfil", () => {

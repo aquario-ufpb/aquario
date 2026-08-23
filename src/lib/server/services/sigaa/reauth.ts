@@ -11,22 +11,21 @@ import { ApiError, fromZodError } from "@/lib/server/errors";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ErrorCode } from "@/lib/shared/errors";
 
-export const SIGAA_BETA_PERMISSION = "sigaa:beta";
 export const SIGAA_REAUTH_HEADER = "X-Sigaa-Reauth-Token";
 export const SIGAA_REAUTH_ISSUER = "aquario";
 export const SIGAA_REAUTH_AUDIENCE = "aquario:sigaa";
 export const SIGAA_REAUTH_PURPOSE = "sigaa:reauth";
 export const SIGAA_REAUTH_TTL_SECONDS = 15 * 60;
 
-const sigaaBetaOwnerBrand: unique symbol = Symbol("SigaaBetaOwner");
+const sigaaOwnerBrand: unique symbol = Symbol("SigaaOwner");
 const sigaaReauthOwnerBrand: unique symbol = Symbol("SigaaReauthOwner");
 const recentlyReauthenticatedOwnerBrand: unique symbol = Symbol(
   "RecentlyReauthenticatedSigaaOwner"
 );
 
-export type SigaaBetaOwner = Readonly<{
+export type SigaaOwner = Readonly<{
   usuarioId: string;
-  [sigaaBetaOwnerBrand]: true;
+  [sigaaOwnerBrand]: true;
 }>;
 
 export type SigaaReauthOwner = Readonly<{
@@ -183,15 +182,15 @@ export function createSigaaReauthProofServiceFromEnvironment(): SigaaReauthProof
   return createSigaaReauthProofService(jwtSecret);
 }
 
-function makeSigaaBetaOwner(usuario: UsuarioWithRelations): SigaaBetaOwner {
+function makeSigaaOwner(usuario: UsuarioWithRelations): SigaaOwner {
   return {
     usuarioId: usuario.id,
-    [sigaaBetaOwnerBrand]: true,
+    [sigaaOwnerBrand]: true,
   };
 }
 
 function makeSigaaReauthOwner(usuario: UsuarioWithRelations): SigaaReauthOwner | null {
-  if (!usuario.permissoes.includes(SIGAA_BETA_PERMISSION) || !usuario.senhaHash) {
+  if (!usuario.senhaHash) {
     return null;
   }
 
@@ -220,23 +219,14 @@ export function privateSigaaResponse(response: Response): Response {
   return response;
 }
 
-export async function withSigaaBetaOwner(
+export async function withSigaaOwner(
   request: Request,
-  handler: (request: Request, owner: SigaaBetaOwner) => Promise<Response>,
+  handler: (request: Request, owner: SigaaOwner) => Promise<Response>,
   authenticateRequest: AuthenticateRequest = withAuth
 ): Promise<Response> {
-  const response = await authenticateRequest(request, (authenticatedRequest, usuario) => {
-    if (!usuario.permissoes.includes(SIGAA_BETA_PERMISSION)) {
-      return Promise.resolve(
-        ApiError.forbidden(
-          "A integração SIGAA não está disponível para esta conta.",
-          ErrorCode.SIGAA_BETA_REQUIRED
-        )
-      );
-    }
-
-    return handler(authenticatedRequest, makeSigaaBetaOwner(usuario));
-  });
+  const response = await authenticateRequest(request, (authenticatedRequest, usuario) =>
+    handler(authenticatedRequest, makeSigaaOwner(usuario))
+  );
 
   return privateSigaaResponse(response);
 }
@@ -247,15 +237,6 @@ async function withSigaaReauthOwner(
   authenticateRequest: AuthenticateRequest = withAuth
 ): Promise<Response> {
   const response = await authenticateRequest(request, (authenticatedRequest, usuario) => {
-    if (!usuario.permissoes.includes(SIGAA_BETA_PERMISSION)) {
-      return Promise.resolve(
-        ApiError.forbidden(
-          "A integração SIGAA não está disponível para esta conta.",
-          ErrorCode.SIGAA_BETA_REQUIRED
-        )
-      );
-    }
-
     const owner = makeSigaaReauthOwner(usuario);
 
     if (!owner) {
@@ -279,7 +260,7 @@ export function withRecentSigaaProof(
   handler: (request: Request, owner: RecentlyReauthenticatedSigaaOwner) => Promise<Response>,
   authenticateRequest: AuthenticateRequest = withAuth
 ): Promise<Response> {
-  return withSigaaBetaOwner(
+  return withSigaaOwner(
     request,
     (authenticatedRequest, owner) => {
       const proofToken = authenticatedRequest.headers.get(SIGAA_REAUTH_HEADER)?.trim();

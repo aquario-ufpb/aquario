@@ -16,7 +16,11 @@ import { assertDisposableSigaaDatabase } from "./sigaa-test-database-guard";
 
 assertDisposableSigaaDatabase(process.env.DATABASE_URL);
 
-const database = new PrismaClient();
+const database = new PrismaClient({
+  transactionOptions: {
+    maxWait: 10_000,
+  },
+});
 const repository = new PrismaSigaaRepository(database);
 const testCourseNames = [
   "Ciência da Computação",

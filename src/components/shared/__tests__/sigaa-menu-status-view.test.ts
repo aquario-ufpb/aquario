@@ -1,19 +1,38 @@
 import { getSigaaMenuStatus } from "../sigaa-menu-status-view";
 
 describe("getSigaaMenuStatus", () => {
-  it.each([
-    ["loading", "unknown", "Consultando SIGAA", "neutral"],
-    ["error", "error", "Ver conexão do SIGAA", "neutral"],
-  ] as const)("maps %s without implying a connection", (input, state, label, tone) => {
-    expect(getSigaaMenuStatus(input)).toMatchObject({ connectionState: state, label, tone });
+  it("keeps authentication bootstrap neutral", () => {
+    expect(getSigaaMenuStatus({ availability: "checking" })).toMatchObject({
+      connectionState: "unknown",
+      label: "SIGAA",
+      pulseIcon: false,
+    });
+  });
+
+  it("keeps the visible label stable while checking", () => {
+    expect(
+      getSigaaMenuStatus({ availability: "available", connection: { status: "checking" } })
+    ).toMatchObject({ connectionState: "unknown", label: "SIGAA", tone: "neutral" });
+  });
+
+  it("maps a connection error without implying a connection", () => {
+    expect(
+      getSigaaMenuStatus({ availability: "available", connection: { status: "error" } })
+    ).toMatchObject({ connectionState: "error", label: "Ver conexão do SIGAA", tone: "neutral" });
   });
 
   it("uses green only for a fully connected snapshot", () => {
     expect(
       getSigaaMenuStatus({
-        kind: "connected",
-        synchronizedAt: "2026-08-23T12:00:00.000Z",
-        matricula: "redacted",
+        availability: "available",
+        connection: {
+          status: "ready",
+          view: {
+            kind: "connected",
+            synchronizedAt: "2026-08-23T12:00:00.000Z",
+            matricula: "redacted",
+          },
+        },
       })
     ).toMatchObject({
       connectionState: "connected",
@@ -30,7 +49,12 @@ describe("getSigaaMenuStatus", () => {
       "Reconectar ao SIGAA",
     ],
   ])("uses attention styling for an incomplete state", (input, state, label) => {
-    expect(getSigaaMenuStatus(input)).toMatchObject({
+    expect(
+      getSigaaMenuStatus({
+        availability: "available",
+        connection: { status: "ready", view: input },
+      })
+    ).toMatchObject({
       connectionState: state,
       label,
       tone: "attention",
@@ -38,7 +62,12 @@ describe("getSigaaMenuStatus", () => {
   });
 
   it("keeps a never-connected account neutral", () => {
-    expect(getSigaaMenuStatus({ kind: "never_connected" })).toMatchObject({
+    expect(
+      getSigaaMenuStatus({
+        availability: "available",
+        connection: { status: "ready", view: { kind: "never_connected" } },
+      })
+    ).toMatchObject({
       connectionState: "never_connected",
       label: "Conectar ao SIGAA",
       tone: "neutral",

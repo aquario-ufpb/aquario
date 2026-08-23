@@ -26,7 +26,7 @@ function makeUsuario(senhaHash: string): UsuarioWithRelations {
     matricula: null,
     matriculaOrigem: null,
     matriculaVerificadaPeloSigaaEm: null,
-    permissoes: ["sigaa:beta"],
+    permissoes: [],
     papelPlataforma: "USER",
     periodoAtual: null,
     onboardingMetadata: null,

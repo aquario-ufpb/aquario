@@ -11,6 +11,7 @@ import { getDefaultAvatarUrl } from "@/lib/client/utils";
 import { Bot, ExternalLink, User, LogOut, Settings, Search } from "lucide-react";
 import { SigaaMcpLink } from "@/components/shared/sigaa-mcp-link";
 import { SigaaMenuStatus } from "@/components/shared/sigaa-menu-status";
+import { shouldEmphasizeSigaa, type SigaaAccessState } from "@/lib/client/sigaa/access-state";
 
 // ============================================================================
 // Helper Functions
@@ -154,9 +155,10 @@ function ThemeToggle({ isDark, mounted, onToggle }: ThemeToggleProps) {
 
 type UserSectionProps = {
   onClose: () => void;
+  sigaaAccessState: SigaaAccessState;
 };
 
-function UserSection({ onClose }: UserSectionProps) {
+function UserSection({ onClose, sigaaAccessState }: UserSectionProps) {
   const { isAuthenticated, logout, isLoading: authLoading } = useAuth();
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const isLoading = authLoading || userLoading;
@@ -212,11 +214,14 @@ function UserSection({ onClose }: UserSectionProps) {
         </Link>
       </li>
 
-      {user.permissoes.includes("sigaa:beta") && (
-        <li>
-          <SigaaMenuStatus location="mobile_user_menu" onNavigate={onClose} variant="mobile" />
-        </li>
-      )}
+      <li>
+        <SigaaMenuStatus
+          accessState={sigaaAccessState}
+          location="mobile_user_menu"
+          onNavigate={onClose}
+          variant="mobile"
+        />
+      </li>
 
       {/* Admin Link */}
       {user.papelPlataforma === "MASTER_ADMIN" && (
@@ -268,7 +273,11 @@ const NAV_LINKS = [
 // Main Component
 // ============================================================================
 
-export default function HamburgerMenu() {
+export default function HamburgerMenu({
+  sigaaAccessState,
+}: {
+  sigaaAccessState: SigaaAccessState;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -337,6 +346,11 @@ export default function HamburgerMenu() {
               {NAV_LINKS.map(link => (
                 <MenuLink key={link.href} href={link.href} onClick={closeMenu}>
                   {link.label}
+                  {link.href === "/recursos" && shouldEmphasizeSigaa(sigaaAccessState) ? (
+                    <span className="ml-2 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-950 dark:text-sky-200">
+                      Novo
+                    </span>
+                  ) : null}
                 </MenuLink>
               ))}
 
@@ -348,13 +362,13 @@ export default function HamburgerMenu() {
                   <Bot className="h-4 w-4" aria-hidden="true" />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
-                      <span>SIGAA na sua IA</span>
+                      <span>MCP do SIGAA</span>
                       <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-950 dark:text-sky-200">
                         MCP
                       </span>
                     </span>
                     <span className="mt-0.5 block text-xs font-normal leading-snug text-muted-foreground">
-                      Use com Claude, ChatGPT e apps compatíveis.
+                      Use o SIGAA em outras IAs.
                     </span>
                   </span>
                   <ExternalLink
@@ -365,7 +379,7 @@ export default function HamburgerMenu() {
               </li>
 
               {/* User Section */}
-              <UserSection onClose={closeMenu} />
+              <UserSection onClose={closeMenu} sigaaAccessState={sigaaAccessState} />
 
               {/* Theme Toggle */}
               <ThemeToggle

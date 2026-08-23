@@ -11,7 +11,7 @@ jest.mock("@/components/pages/grades-curriculares/curriculum-graph", () => ({
 }));
 jest.mock("@/lib/client/hooks/use-usuarios", () => ({
   useCurrentUser: () => ({
-    data: { curso: { id: "curso-1" }, permissoes: ["sigaa:beta"] },
+    data: { curso: { id: "curso-1" }, permissoes: [] },
   }),
 }));
 jest.mock("@/lib/client/hooks/use-grade-curricular", () => ({
