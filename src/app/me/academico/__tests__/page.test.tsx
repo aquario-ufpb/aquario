@@ -88,7 +88,22 @@ const importedState = (options?: {
             maximumCompletionTerm: null,
             semesterWorkload: { minimum: null, maximum: null },
             cra: { value: "8.5", source: "academic_transcript" as const },
-            progress: [],
+            progress: [
+              {
+                description: "Total",
+                completedHours: 120,
+                totalHours: 240,
+                remainingHours: 120,
+                completedPercent: 50,
+              },
+              {
+                description: "Complementar Flex\uFFFDvel",
+                completedHours: 30,
+                totalHours: 60,
+                remainingHours: 30,
+                completedPercent: 50,
+              },
+            ],
             components: [
               {
                 code: "GDCO0001",
@@ -98,6 +113,17 @@ const importedState = (options?: {
                 workloadHours: 60,
                 required: true,
                 status: "completed" as const,
+                prerequisite: null,
+                corequisite: null,
+              },
+              {
+                code: "GDCO0002",
+                name: "Estruturas de Dados",
+                integrationType: "DISCIPLINA",
+                period: 1,
+                workloadHours: 60,
+                required: true,
+                status: "enrolled" as const,
                 prerequisite: null,
                 corequisite: null,
               },
@@ -114,8 +140,37 @@ const importedState = (options?: {
               absences: "2",
               status: "Aprovado",
             },
+            {
+              semester: "2025.2",
+              code: "GDCO0002",
+              discipline: "Estruturas de Dados",
+              units: ["4,9", "6,5"],
+              exam: "4,0",
+              result: "4,8",
+              absences: "2",
+              status: "REPROVADO",
+            },
+            {
+              semester: "2025.1",
+              code: "GDCO0003",
+              discipline: "Cálculo",
+              units: ["7,0"],
+              exam: null,
+              result: "7,0",
+              absences: "26",
+              status: "REP. FALTA",
+            },
           ],
-          classes: [],
+          classes: [
+            {
+              sourceKey: "class-1",
+              name: "Estruturas de Dados",
+              code: "GDCO0002",
+              room: "CI-101",
+              scheduleRaw: "2M12",
+              semester: "2026.1",
+            },
+          ],
         },
       }
     : null,
@@ -201,7 +256,8 @@ describe("MeusDadosAcademicosPage", () => {
     );
   });
 
-  it("renders accessible mobile grade cards and a labeled desktop table", () => {
+  it("keeps current classes open and reveals accessible grade views on demand", async () => {
+    const user = userEvent.setup();
     mockUseSigaaState.mockReturnValue(
       queryResult(
         importedState({
@@ -213,6 +269,16 @@ describe("MeusDadosAcademicosPage", () => {
     );
 
     render(<MeusDadosAcademicosPage />);
+
+    expect(screen.getByRole("button", { name: /Turmas atuais/ })).toHaveAttribute(
+      "aria-expanded",
+      "true"
+    );
+    expect(screen.getByText("Segunda - Manhã (12)")).toBeInTheDocument();
+
+    const gradesTrigger = screen.getByRole("button", { name: /Notas, resultados e faltas/ });
+    expect(gradesTrigger).toHaveAttribute("aria-expanded", "false");
+    await user.click(gradesTrigger);
 
     const mobileGrades = screen.getByRole("list", { name: "Notas do semestre 2026.1" });
     expect(mobileGrades).toHaveClass("sm:hidden");
@@ -220,7 +286,8 @@ describe("MeusDadosAcademicosPage", () => {
     expect(screen.getByRole("columnheader", { name: "Faltas" })).toHaveAttribute("scope", "col");
   });
 
-  it("groups period zero consistently and lets component badges wrap", () => {
+  it("defaults components to the trajectory and keeps no-period content closed", async () => {
+    const user = userEvent.setup();
     mockUseSigaaState.mockReturnValue(
       queryResult(
         importedState({
@@ -233,7 +300,78 @@ describe("MeusDadosAcademicosPage", () => {
 
     render(<MeusDadosAcademicosPage />);
 
-    expect(screen.getByRole("heading", { name: "0º período" })).toBeInTheDocument();
-    expect(screen.getByText("Obrigatória").parentElement).toHaveClass("flex-wrap");
+    await user.click(screen.getByRole("button", { name: /Componentes curriculares/ }));
+
+    expect(screen.getByRole("button", { name: /Minha trajetória 2/ })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    const withoutPeriod = screen.getByRole("button", { name: /Sem período 1 componente/ });
+    expect(withoutPeriod).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: /1º período 1 componente/ })).toHaveAttribute(
+      "aria-expanded",
+      "true"
+    );
+    await user.click(withoutPeriod);
+    expect(screen.getAllByText("Obrigatória")[0]?.parentElement).toHaveClass("flex-wrap");
+  });
+
+  it("does not promote a partial progress category to total", () => {
+    const state = importedState({
+      status: "CONNECTED",
+      consentVersion: SIGAA_CONSENT_VERSION,
+      withSnapshot: true,
+    });
+    if (!state.snapshot) {
+      throw new Error("Expected snapshot fixture");
+    }
+    state.snapshot.payload.curriculum.progress = [
+      {
+        description: "Complementar Obrigatoria",
+        completedHours: 30,
+        totalHours: 60,
+        remainingHours: 30,
+        completedPercent: 50,
+      },
+    ];
+    mockUseSigaaState.mockReturnValue(queryResult(state) as never);
+
+    render(<MeusDadosAcademicosPage />);
+
+    expect(screen.getByText("Complementar Obrigatória")).toBeInTheDocument();
+    expect(screen.queryByText("Total")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Progresso total/)).not.toBeInTheDocument();
+  });
+
+  it("shows repaired progress labels, outcome statistics, and counted grade filters", async () => {
+    const user = userEvent.setup();
+    mockUseSigaaState.mockReturnValue(
+      queryResult(
+        importedState({
+          status: "CONNECTED",
+          consentVersion: SIGAA_CONSENT_VERSION,
+          withSnapshot: true,
+        })
+      ) as never
+    );
+
+    render(<MeusDadosAcademicosPage />);
+
+    expect(screen.getByText("Complementar Flexível")).toBeInTheDocument();
+    expect(screen.queryByText("Complementar Flex\uFFFDvel")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Notas, resultados e faltas/ }));
+    expect(screen.getByText("33,3%")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Aprovadas 1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reprovadas por nota 1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reprovadas por falta 1" })).toBeInTheDocument();
+
+    const newestSemester = screen.getByRole("button", { name: /2026\.1 1 componente/ });
+    await user.click(newestSemester);
+    expect(newestSemester).toHaveAttribute("aria-expanded", "false");
+    await user.click(screen.getByRole("button", { name: "Aprovadas 1" }));
+    expect(screen.getByRole("button", { name: /2026\.1 1 componente/ })).toHaveAttribute(
+      "aria-expanded",
+      "true"
+    );
   });
 });

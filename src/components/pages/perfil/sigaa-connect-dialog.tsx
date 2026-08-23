@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Check, LoaderCircle } from "lucide-react";
 
 import { trackEvent } from "@/analytics/posthog-client";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,8 @@ type DialogState =
   | Readonly<{
       kind: "submitting";
       operation: "sync" | "course_change";
+      phase: "reauthenticating" | "synchronizing";
+      isSlow: boolean;
       mismatch?: SigaaCourseChangeMismatch;
     }>;
 
@@ -64,7 +67,10 @@ export function SigaaConnectDialog({
   const attemptRef = useRef<Attempt | null>(null);
   const [state, setState] = useState<DialogState>({ kind: "credentials", error: null });
   const [proposalExpired, setProposalExpired] = useState(false);
-  const isPending = state.kind === "submitting";
+  const submittingState = state.kind === "submitting" ? state : null;
+  const isPending = submittingState !== null;
+  const isSynchronizing = submittingState?.phase === "synchronizing";
+  const isSlow = submittingState?.isSlow ?? false;
   const mismatch = state.kind === "credentials" ? undefined : state.mismatch;
   const confirmingCourseChange = Boolean(mismatch);
   const error = state.kind === "submitting" ? null : state.error;
@@ -73,6 +79,18 @@ export function SigaaConnectDialog({
   const acknowledgmentError =
     state.kind === "course_change_confirmation" &&
     error === "Reconheça que a substituição do curso é irreversível para continuar.";
+
+  useEffect(() => {
+    if (!isSynchronizing || isSlow) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setState(current => (current.kind === "submitting" ? { ...current, isSlow: true } : current));
+    }, 60_000);
+
+    return () => window.clearTimeout(timeout);
+  }, [isSlow, isSynchronizing]);
 
   useEffect(() => {
     if (state.kind === "course_change_confirmation") {
@@ -162,14 +180,24 @@ export function SigaaConnectDialog({
       trackEvent("sigaa_course_change_confirmed");
     }
 
+    formData.delete("aquarioPassword");
+    formData.delete("sigaaUsername");
+    formData.delete("sigaaPassword");
+    clearSensitiveForm(form);
+
     setState({
       kind: "submitting",
       operation,
+      phase: "reauthenticating",
+      isSlow: false,
       ...(proposal ? { mismatch: proposal } : {}),
     });
     try {
       const proof = await reauthenticateForSigaa(aquarioPassword, proposal?.proposalId);
       proofToken = proof.proofToken;
+      setState(current =>
+        current.kind === "submitting" ? { ...current, phase: "synchronizing" } : current
+      );
       const proposalId = proposal?.proposalId ?? null;
       const previousAttempt = attemptRef.current;
       const attempt: Attempt =
@@ -288,7 +316,14 @@ export function SigaaConnectDialog({
         </DialogHeader>
 
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-          {mismatch && (
+          {submittingState && (
+            <SigaaSynchronizationProgress
+              state={submittingState}
+              onClose={() => handleOpenChange(false)}
+            />
+          )}
+
+          {!isPending && mismatch && (
             <div
               ref={courseChangeRef}
               tabIndex={-1}
@@ -360,7 +395,7 @@ export function SigaaConnectDialog({
             </div>
           )}
 
-          {!mismatch && requireConsent && (
+          {!isPending && !mismatch && requireConsent && (
             <div className="rounded-md border bg-muted/30 p-4">
               <label className="flex items-start gap-3 text-sm" htmlFor="sigaa-consent">
                 <input
@@ -397,7 +432,7 @@ export function SigaaConnectDialog({
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-2" hidden={isPending}>
             <Label htmlFor="sigaa-username">Usuário do SIGAA</Label>
             <Input
               id="sigaa-username"
@@ -409,7 +444,7 @@ export function SigaaConnectDialog({
               disabled={isPending}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2" hidden={isPending}>
             <Label htmlFor="sigaa-password">Senha do SIGAA</Label>
             <Input
               id="sigaa-password"
@@ -422,7 +457,7 @@ export function SigaaConnectDialog({
               disabled={isPending}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2" hidden={isPending}>
             <Label htmlFor="aquario-password">Senha do Aquário</Label>
             <Input
               id="aquario-password"
@@ -449,38 +484,117 @@ export function SigaaConnectDialog({
               {error}
             </p>
           )}
-          {isPending && (
-            <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
-              Consultando o SIGAA. Isso pode levar até três minutos. Parar de esperar não garante o
-              cancelamento do trabalho já aceito.
-            </p>
-          )}
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              disabled={false}
-            >
-              {isPending ? "Parar de esperar" : "Cancelar"}
-            </Button>
-            <Button
-              type="submit"
-              variant={confirmingCourseChange ? "destructive" : "default"}
-              disabled={isPending || proposalExpired}
-            >
-              {isPending
-                ? "Sincronizando…"
-                : confirmingCourseChange
+          {!isPending && (
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                variant={confirmingCourseChange ? "destructive" : "default"}
+                disabled={proposalExpired}
+              >
+                {confirmingCourseChange
                   ? "Substituir meu curso e sincronizar"
                   : requireConsent
                     ? "Conectar e sincronizar"
                     : "Sincronizar agora"}
-            </Button>
-          </DialogFooter>
+              </Button>
+            </DialogFooter>
+          )}
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SigaaSynchronizationProgress({
+  state,
+  onClose,
+}: Readonly<{
+  state: Extract<DialogState, { kind: "submitting" }>;
+  onClose: () => void;
+}>) {
+  const isSynchronizing = state.phase === "synchronizing";
+  const title = state.isSlow
+    ? "O SIGAA está demorando mais que o normal"
+    : isSynchronizing
+      ? "Consultando seus dados no SIGAA"
+      : "Autorizando a sincronização";
+  const description = state.isSlow
+    ? "A consulta continua em andamento. Você pode fechar esta janela e verificar seus dados acadêmicos depois."
+    : isSynchronizing
+      ? "O Aquário está importando seu snapshot acadêmico."
+      : "Estamos confirmando sua senha do Aquário antes de iniciar a consulta.";
+
+  return (
+    <section
+      aria-label="Progresso da sincronização"
+      className="space-y-5 rounded-xl border bg-muted/30 p-5 sm:p-6"
+    >
+      <div className="flex items-start gap-4">
+        <div
+          aria-hidden="true"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+        >
+          <LoaderCircle className="size-5 animate-spin motion-reduce:animate-none" />
+        </div>
+        <div className="min-w-0 space-y-1.5">
+          <p
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="font-medium text-foreground"
+          >
+            {title}
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+        </div>
+      </div>
+
+      <ol aria-label="Etapas da sincronização" className="grid gap-2 text-sm">
+        <li className="flex items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            className={`flex size-5 items-center justify-center rounded-full border text-[11px] font-semibold ${
+              isSynchronizing
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-primary text-primary"
+            }`}
+          >
+            {isSynchronizing ? <Check className="size-3" strokeWidth={3} /> : "1"}
+          </span>
+          <span className={isSynchronizing ? "text-muted-foreground" : "font-medium"}>
+            Autorizar acesso
+          </span>
+        </li>
+        <li className="flex items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            className={`flex size-5 items-center justify-center rounded-full border text-[11px] font-semibold ${
+              isSynchronizing
+                ? "border-primary text-primary"
+                : "border-border text-muted-foreground"
+            }`}
+          >
+            2
+          </span>
+          <span className={isSynchronizing ? "font-medium" : "text-muted-foreground"}>
+            Importar dados acadêmicos
+          </span>
+        </li>
+      </ol>
+
+      <div className="space-y-3 border-t pt-4">
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          O processo pode levar até 3 minutos. Suas credenciais já foram removidas desta tela.
+          Fechar a janela não cancela um trabalho que já tenha sido iniciado.
+        </p>
+        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={onClose}>
+          Fechar e verificar depois
+        </Button>
+      </div>
+    </section>
   );
 }

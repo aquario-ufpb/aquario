@@ -48,6 +48,7 @@ export default function UsuarioProfileClient({ slug, initialData }: UsuarioProfi
 
   // Check if this is the current user's own profile
   const isOwnProfile = currentUser?.id === user?.id;
+  const canUseSigaa = Boolean(isOwnProfile && currentUser?.permissoes.includes("sigaa:beta"));
 
   const {
     data: projetos,
@@ -317,39 +318,53 @@ export default function UsuarioProfileClient({ slug, initialData }: UsuarioProfi
         </div>
       )}
 
-      {isOwnProfile && currentUser?.permissoes.includes("sigaa:beta") && (
-        <div className="mt-6">
-          <MeusDadosAcademicosCard usuarioId={currentUser.id} />
-        </div>
-      )}
-
-      {/* Tabs for Projetos, Entidades and Timeline */}
-      <div className="mt-24">
-        <Tabs defaultValue="projetos" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="projetos">
-              Projetos
-              {(() => {
-                // For own profile, the listing reflects the active status tab — but
-                // the tab badge should show total publicados (the public-facing count).
-                const publicadoTotal = isOwnProfile
-                  ? projetoCounts.publicado
-                  : (projetos?.length ?? 0);
-                return publicadoTotal > 0 ? (
-                  <span className="ml-2 text-xs text-muted-foreground">{publicadoTotal}</span>
-                ) : null;
-              })()}
-            </TabsTrigger>
-            <TabsTrigger value="entidades">
-              Entidades
-              {memberships && memberships.length > 0 && (
-                <span className="ml-2 text-xs text-muted-foreground">{memberships.length}</span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="timeline">Linha do Tempo</TabsTrigger>
-          </TabsList>
+      {/* Profile sections */}
+      <div className="mt-12 md:mt-16">
+        <Tabs
+          key={canUseSigaa ? "profile-tabs-with-sigaa" : "profile-tabs-standard"}
+          defaultValue={canUseSigaa ? "academico" : "projetos"}
+          className="w-full"
+        >
+          <div>
+            <TabsList
+              aria-label="Seções do perfil"
+              className={
+                canUseSigaa
+                  ? "grid h-auto w-full grid-cols-2 md:grid-cols-4"
+                  : "grid h-auto w-full grid-cols-3"
+              }
+            >
+              {canUseSigaa && <TabsTrigger value="academico">Dados acadêmicos</TabsTrigger>}
+              <TabsTrigger value="projetos">
+                Projetos
+                {(() => {
+                  // For own profile, the listing reflects the active status tab — but
+                  // the tab badge should show total publicados (the public-facing count).
+                  const publicadoTotal = isOwnProfile
+                    ? projetoCounts.publicado
+                    : (projetos?.length ?? 0);
+                  return publicadoTotal > 0 ? (
+                    <span className="ml-2 text-xs text-muted-foreground">{publicadoTotal}</span>
+                  ) : null;
+                })()}
+              </TabsTrigger>
+              <TabsTrigger value="entidades">
+                Entidades
+                {memberships && memberships.length > 0 && (
+                  <span className="ml-2 text-xs text-muted-foreground">{memberships.length}</span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="timeline">Linha do Tempo</TabsTrigger>
+            </TabsList>
+          </div>
 
           <div className="border-b border-border/60 my-6" />
+
+          {canUseSigaa && currentUser && (
+            <TabsContent value="academico" className="mt-0">
+              <MeusDadosAcademicosCard usuarioId={currentUser.id} />
+            </TabsContent>
+          )}
 
           {/* Entidades */}
           <TabsContent value="entidades" className="mt-0">

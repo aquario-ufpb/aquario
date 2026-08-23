@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 
@@ -60,6 +60,10 @@ describe("SIGAA connect dialog", () => {
         finishedAt: "2026-08-21T12:00:00.000Z",
       },
     });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it("exposes labeled secret fields and requires explicit consent", async () => {
@@ -129,6 +133,119 @@ describe("SIGAA connect dialog", () => {
       operation: "connect",
       course_replaced: false,
     });
+  });
+
+  it("shows real authorization and synchronization phases after clearing the credential fields", async () => {
+    const user = userEvent.setup();
+    let resolveReauthentication!: (proof: { proofToken: string; expiresAt: string }) => void;
+    let resolveSynchronization!: () => void;
+    mockReauthenticate.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveReauthentication = resolve;
+      })
+    );
+    mockSynchronize.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveSynchronization = () =>
+          resolve({
+            status: "synchronized",
+            synchronizedAt: "2026-08-21T12:00:00.000Z",
+            run: {
+              id: "550e8400-e29b-41d4-a716-446655440000",
+              status: "SUCCEEDED",
+              failureCode: null,
+              connectorRequestId: "request-id",
+              startedAt: "2026-08-21T11:59:00.000Z",
+              finishedAt: "2026-08-21T12:00:00.000Z",
+            },
+          });
+      })
+    );
+
+    render(
+      <SigaaConnectDialog open requireConsent onOpenChange={jest.fn()} onSynchronized={jest.fn()} />
+    );
+
+    await user.click(screen.getByLabelText(/Autorizo o Aquário/));
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "student");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "sigaa-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "aquario-password");
+    await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent("Autorizando a sincronização");
+    expect(screen.getByLabelText("Usuário do SIGAA")).toHaveValue("");
+    expect(screen.getByLabelText("Usuário do SIGAA")).not.toBeVisible();
+    expect(screen.getByLabelText("Senha do SIGAA")).toHaveValue("");
+    expect(screen.getByLabelText("Senha do SIGAA")).not.toBeVisible();
+    expect(screen.getByLabelText("Senha do Aquário")).toHaveValue("");
+    expect(screen.getByLabelText("Senha do Aquário")).not.toBeVisible();
+    expect(screen.getByText(/pode levar até 3 minutos/)).toBeInTheDocument();
+
+    await act(async () => {
+      resolveReauthentication({
+        proofToken: "short-lived-proof",
+        expiresAt: "2026-08-21T12:15:00.000Z",
+      });
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("status")).toHaveTextContent("Consultando seus dados no SIGAA");
+    expect(screen.getByText("Importar dados acadêmicos")).toHaveClass("font-medium");
+
+    await act(async () => {
+      resolveSynchronization();
+      await Promise.resolve();
+    });
+  });
+
+  it("explains a slow SIGAA response without presenting fictional progress", async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const onOpenChange = jest.fn();
+    let resolveReauthentication!: (proof: { proofToken: string; expiresAt: string }) => void;
+    mockReauthenticate.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveReauthentication = resolve;
+      })
+    );
+    mockSynchronize.mockReturnValueOnce(new Promise(() => undefined));
+
+    render(
+      <SigaaConnectDialog
+        open
+        requireConsent
+        onOpenChange={onOpenChange}
+        onSynchronized={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByLabelText(/Autorizo o Aquário/));
+    await user.type(screen.getByLabelText("Usuário do SIGAA"), "student");
+    await user.type(screen.getByLabelText("Senha do SIGAA"), "sigaa-password");
+    await user.type(screen.getByLabelText("Senha do Aquário"), "aquario-password");
+    await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
+
+    await act(async () => {
+      resolveReauthentication({
+        proofToken: "short-lived-proof",
+        expiresAt: "2026-08-21T12:15:00.000Z",
+      });
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("status")).toHaveTextContent("Consultando seus dados no SIGAA");
+    act(() => jest.advanceTimersByTime(59_999));
+    expect(screen.getByRole("status")).toHaveTextContent("Consultando seus dados no SIGAA");
+
+    act(() => jest.advanceTimersByTime(1));
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "O SIGAA está demorando mais que o normal"
+    );
+    expect(screen.getByText(/Fechar a janela não cancela/)).toBeInTheDocument();
+    expect(screen.queryByText(/%/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Fechar e verificar depois" }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("reuses the idempotency key after an ambiguous network failure", async () => {
@@ -369,9 +486,10 @@ describe("SIGAA connect dialog", () => {
     await user.type(screen.getByLabelText("Senha do SIGAA"), "sigaa-password");
     await user.type(screen.getByLabelText("Senha do Aquário"), "aquario-password");
     await user.click(screen.getByRole("button", { name: "Conectar e sincronizar" }));
-    expect(await screen.findByRole("status")).toHaveTextContent("não garante o cancelamento");
+    expect(await screen.findByRole("status")).toHaveTextContent("Consultando seus dados no SIGAA");
+    expect(screen.getByText(/Fechar a janela não cancela/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Parar de esperar" }));
+    await user.click(screen.getByRole("button", { name: "Fechar e verificar depois" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     rejectSync(new Error("Falha segura ao sincronizar."));
     await waitFor(() =>
