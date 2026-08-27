@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.1] - 2026-08-27
+
+### Fixed
+- **Segurança – vazamento de e-mail e hash de senha via endpoint público de entidades**: `GET /api/entidades/slug/[slug]` (público, sem autenticação) retornava o resultado bruto do repositório, que inclui a linha completa de `Usuario` de cada membro via Prisma `include` — expondo `email` e `senhaHash` (bcrypt) de qualquer membro de qualquer entidade para qualquer pessoa. Nenhum componente do frontend lia esses campos. Adicionado `formatPublicEntidadeResponse()`, que reduz o `usuario` de cada membro apenas aos campos realmente renderizados pela página da entidade, mesmo padrão do `formatPublicUserResponse()` já usado desde o hardening do #235.
+
 ## [1.12.0] - 2026-08-27
 
 ### Added
