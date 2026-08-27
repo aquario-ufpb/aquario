@@ -211,6 +211,7 @@ export default function ProjetoDetailClient({ slug, initialData }: Props) {
                 src={projeto.imagem}
                 alt={projeto.nome}
                 fill
+                unoptimized
                 className="object-cover object-center"
               />
             ) : (

@@ -111,6 +111,7 @@ const ProjectCard = ({ projeto }: ProjectCardProps) => {
             src={projeto.imagem}
             alt={projeto.nome}
             fill
+            unoptimized
             className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           />
         ) : (
