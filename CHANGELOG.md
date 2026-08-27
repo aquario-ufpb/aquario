@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.1] - 2026-08-27
+
+### Fixed
+- **Segurança – vazamento de e-mail e hash de senha via endpoint público de entidades**: `GET /api/entidades/slug/[slug]` (público, sem autenticação) retornava o resultado bruto do repositório, que inclui a linha completa de `Usuario` de cada membro via Prisma `include` — expondo `email` e `senhaHash` (bcrypt) de qualquer membro de qualquer entidade para qualquer pessoa. Nenhum componente do frontend lia esses campos. Adicionado `formatPublicEntidadeResponse()`, que reduz o `usuario` de cada membro apenas aos campos realmente renderizados pela página da entidade, mesmo padrão do `formatPublicUserResponse()` já usado desde o hardening do #235.
+
+## [1.12.0] - 2026-08-27
+
 ### Added
 - **Grade curricular – seleção em lote por período**: No modo seleção, o cabeçalho de cada período vira um botão que marca de uma vez todas as obrigatórias daquele período e, num segundo clique, as tira da seleção (tooltip "Marcar/Desmarcar todas as obrigatórias" no desktop, botão equivalente na lista mobile). Vale tanto para `/grades-curriculares` quanto para os passos "Disciplinas Concluídas" e "Cursando" do onboarding.
 - **Admin Audit Logs**: Nova tabela `AuditLog`, API interna `GET /api/admin/audit-logs` e tela `/admin/audit-logs` para `MASTER_ADMIN` acompanhar ações administrativas sensíveis. Mutações administrativas de usuários agora registram criação/mescla de facade, alteração de role, edição de centro/curso/slug e deleção.
@@ -31,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Build com migrações**: `scripts/build-with-migrations.js` agora falha o build quando `prisma migrate deploy` falha.
 - **Imagens de entidades em produção**: Logos de entidades servidas por `/api/content-images` (lidas do submódulo `content/aquario-entidades` em tempo de execução) não apareciam em produção porque o Next.js não conseguia rastrear estaticamente o caminho dinâmico do arquivo e excluía os assets do bundle da função serverless. Adicionado `outputFileTracingIncludes` em `next.config.mjs` para incluir `content/**/*` explicitamente. Todos os usos de `next/image` para fotos de entidade/usuário (card de projeto, grupos/laboratórios da home, busca, seletores de coautor/entidade em projetos e vagas, membros de entidade, vínculos e timeline do perfil) passaram a usar `unoptimized`, já que são ícones pequenos e não precisam passar pelo otimizador de imagens da Vercel.
 - **Dependências**: Atualizadas versões de Scalar API Reference, PostHog e Vitest para remover vulnerabilidades críticas/altas reportadas pelo `npm audit`.
+- **Fotos de capa de projeto**: Duas causas distintas corrigidas. (1) A capa não usava `unoptimized` no `next/image`, diferente dos avatares/logos já corrigidos no PR #245 — sujeita à mesma falha transitória do otimizador de imagens da Vercel ao buscar um blob recém-enviado, sem fallback visível quando falha (a foto simplesmente não aparecia). (2) O botão de salvar em `/projetos/novo` e `/projetos/[id]/editar` não esperava o upload da capa terminar antes de permitir salvar, podendo gravar o projeto com `urlImagem: null` mesmo com uma foto selecionada (aparecia o ícone padrão do Aquário no lugar).
 
 ## [1.11.1] - 2026-07-06
 

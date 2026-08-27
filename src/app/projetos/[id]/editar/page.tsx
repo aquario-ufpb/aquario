@@ -688,7 +688,7 @@ export default function EditarProjetoPage() {
             <Button
               type="button"
               onClick={handleSave}
-              disabled={isSaving || isOverLimit || isPeriodoInvalid}
+              disabled={isSaving || isOverLimit || isPeriodoInvalid || isUploadingCover}
               className="bg-aquario-primary text-white hover:bg-aquario-primary/90"
             >
               {isSaving ? "Salvando..." : "Salvar alterações"}
