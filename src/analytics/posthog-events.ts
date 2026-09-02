@@ -127,8 +127,17 @@ type SigaaEvent =
         | "mobile_user_menu"
         | "desktop_resources"
         | "mobile_resources"
-        | "landing";
+        | "landing"
+        | "connect_nudge";
       connection_state: SigaaDiscoveryConnectionState;
+    }
+  | {
+      name: "sigaa_connect_nudge_viewed";
+      connection_state: "never_connected" | "disconnected";
+    }
+  | {
+      name: "sigaa_connect_nudge_dismissed";
+      connection_state: "never_connected" | "disconnected";
     }
   | { name: "sigaa_highlight_viewed" }
   | {

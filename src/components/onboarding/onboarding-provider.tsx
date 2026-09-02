@@ -1,16 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { AUTH_ROUTES } from "@/lib/client/auth-routes";
 import { useOnboarding } from "@/lib/client/hooks/use-onboarding";
 import { OnboardingModal } from "./onboarding-modal";
-
-const AUTH_ROUTES: ReadonlySet<string> = new Set([
-  "/login",
-  "/registro",
-  "/esqueci-senha",
-  "/resetar-senha",
-  "/verificar-email",
-]);
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
