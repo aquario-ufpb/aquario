@@ -118,6 +118,7 @@ export const useOnboarding = () => {
         isComplete: true,
         currentStep: null,
         steps: [],
+        allSteps: [],
         completedCount: 0,
         totalCount: 0,
       };
@@ -205,6 +206,7 @@ export const useOnboarding = () => {
       isComplete: pendingSteps.length === 0,
       currentStep: pendingSteps[0] ?? null,
       steps: pendingSteps,
+      allSteps,
       completedCount,
       totalCount: allSteps.length,
     };

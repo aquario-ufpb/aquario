@@ -24,6 +24,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         <OnboardingModal
           currentStep={onboarding.currentStep}
           steps={onboarding.steps}
+          allSteps={onboarding.allSteps}
           completedCount={onboarding.completedCount}
           totalCount={onboarding.totalCount}
           onComplete={onboarding.completeStep}

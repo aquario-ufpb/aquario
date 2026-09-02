@@ -19,9 +19,21 @@ import type { SemestreLetivo } from "@/lib/shared/types/calendario.types";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { trackEvent } from "@/analytics/posthog-client";
 
+const STEP_SHORT_LABELS: Record<OnboardingStepId, string> = {
+  welcome: "Introdução",
+  sigaa: "SIGAA",
+  periodo: "Período",
+  concluidas: "Concluídas",
+  cursando: "Cursando",
+  turmas: "Turmas",
+  entidades: "Entidades",
+  done: "Pronto",
+};
+
 type OnboardingModalProps = {
   currentStep: OnboardingStep;
   steps: OnboardingStep[];
+  allSteps: OnboardingStep[];
   completedCount: number;
   totalCount: number;
   onComplete: (stepId: OnboardingStepId) => Promise<void>;
@@ -34,6 +46,7 @@ type OnboardingModalProps = {
 export function OnboardingModal({
   currentStep,
   steps,
+  allSteps,
   completedCount,
   totalCount,
   onComplete,
@@ -42,7 +55,7 @@ export function OnboardingModal({
   semestreAtivo,
   paasAvailable,
 }: OnboardingModalProps) {
-  const [history, setHistory] = useState<OnboardingStepId[]>([]);
+  const [sessionHistory, setSessionHistory] = useState<OnboardingStepId[]>([]);
   const [viewingPastStep, setViewingPastStep] = useState<OnboardingStepId | null>(null);
   const [welcomePage, setWelcomePage] = useState<1 | 2>(1);
   const [sigaaFlowPending, setSigaaFlowPending] = useState(false);
@@ -50,11 +63,45 @@ export function OnboardingModal({
 
   const stepDefsRef = useRef<Map<OnboardingStepId, OnboardingStep>>(new Map());
   const stepContentRef = useRef<HTMLDivElement>(null);
+  allSteps.forEach(s => stepDefsRef.current.set(s.id, s));
   steps.forEach(s => stepDefsRef.current.set(s.id, s));
 
   const activeStepId = viewingPastStep ?? currentStep.id;
   const isRevisiting = viewingPastStep !== null;
   const activeStepDef = stepDefsRef.current.get(activeStepId) ?? currentStep;
+
+  // Persisted completions before the live step — survives reload (session history does not).
+  const persistedBackStack = (() => {
+    const currentIndex = allSteps.findIndex(step => step.id === currentStep.id);
+    if (currentIndex <= 0) {
+      return [] as OnboardingStepId[];
+    }
+    return allSteps
+      .slice(0, currentIndex)
+      .filter(step => step.isCompleted)
+      .map(step => step.id);
+  })();
+
+  const history = (() => {
+    const seen = new Set<OnboardingStepId>();
+    const merged: OnboardingStepId[] = [];
+    for (const id of [...persistedBackStack, ...sessionHistory]) {
+      if (seen.has(id)) {
+        continue;
+      }
+      seen.add(id);
+      merged.push(id);
+    }
+    return merged;
+  })();
+
+  const progressStepNumber = (() => {
+    const activeIndex = allSteps.findIndex(step => step.id === activeStepId);
+    if (activeIndex >= 0) {
+      return activeIndex + 1;
+    }
+    return Math.min(completedCount + 1, totalCount);
+  })();
 
   // Track whenever the visible step changes
   useEffect(() => {
@@ -79,7 +126,7 @@ export function OnboardingModal({
         return;
       }
       trackEvent("onboarding_step_completed", { step_id: stepId });
-      setHistory(prev => [...prev, stepId]);
+      setSessionHistory(prev => [...prev, stepId]);
       await onComplete(stepId);
     },
     [isRevisiting, onComplete]
@@ -92,7 +139,7 @@ export function OnboardingModal({
         return;
       }
       trackEvent("onboarding_step_skipped", { step_id: stepId });
-      setHistory(prev => [...prev, stepId]);
+      setSessionHistory(prev => [...prev, stepId]);
       await onSkip(stepId);
     },
     [isRevisiting, onSkip]
@@ -107,14 +154,22 @@ export function OnboardingModal({
     if (isRevisiting) {
       const idx = viewingPastStep ? history.indexOf(viewingPastStep) : -1;
       if (idx > 0) {
-        setViewingPastStep(history[idx - 1]);
+        const previousId = history[idx - 1];
+        if (previousId === "welcome") {
+          setWelcomePage(1);
+        }
+        setViewingPastStep(previousId);
       } else {
         setViewingPastStep(null);
       }
       return;
     }
     if (history.length > 0) {
-      setViewingPastStep(history[history.length - 1]);
+      const previousId = history[history.length - 1];
+      if (previousId === "welcome") {
+        setWelcomePage(1);
+      }
+      setViewingPastStep(previousId);
     }
   }, [activeStepId, welcomePage, isRevisiting, viewingPastStep, history]);
 
@@ -212,7 +267,14 @@ export function OnboardingModal({
 
           {/* Header — progress bar */}
           <div className="shrink-0 p-4 pb-0 sm:p-6 sm:pb-0">
-            <OnboardingProgress currentStep={completedCount + 1} totalSteps={totalCount} />
+            <OnboardingProgress
+              currentStep={progressStepNumber}
+              totalSteps={totalCount}
+              stepTitle={STEP_SHORT_LABELS[activeStepId]}
+              subStep={
+                activeStepId === "welcome" ? { current: welcomePage, total: 2 } : undefined
+              }
+            />
           </div>
 
           {/* Scrollable step content */}
@@ -247,7 +309,7 @@ export function OnboardingModal({
             <div className="flex items-center gap-2">
               {activeStepId === "entidades" && !isRevisiting && (
                 <Button
-                  variant={memberships.length > 0 ? "default" : "ghost"}
+                  variant={memberships.length > 0 ? "default" : "secondary"}
                   size="sm"
                   className="min-h-11"
                   onClick={() =>
@@ -266,7 +328,7 @@ export function OnboardingModal({
                   ) : memberships.length > 0 ? (
                     "Continuar"
                   ) : (
-                    "Pular"
+                    "Pular esta etapa"
                   )}
                 </Button>
               )}

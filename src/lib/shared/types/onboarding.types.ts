@@ -46,7 +46,10 @@ export type OnboardingStep = {
 export type OnboardingStatus = {
   isComplete: boolean;
   currentStep: OnboardingStep | null;
+  /** Pending steps only (forward path). */
   steps: OnboardingStep[];
+  /** Full ordered flow, including completed steps — used for progress + Voltar after reload. */
+  allSteps: OnboardingStep[];
   completedCount: number;
   totalCount: number;
 };

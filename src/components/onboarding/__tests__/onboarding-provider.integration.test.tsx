@@ -28,6 +28,7 @@ describe("OnboardingProvider", () => {
         isCompleted: false,
       },
       steps: [],
+      allSteps: [],
       completedCount: 0,
       totalCount: 1,
       completeStep: vi.fn(),
