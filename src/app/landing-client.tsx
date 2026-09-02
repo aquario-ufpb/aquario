@@ -4,12 +4,25 @@ import { FeatureCard } from "@/components/pages/landing/features/feature-card";
 import { landingFeatures } from "@/components/pages/landing/features/feature-data";
 import { TopProjetosCarousel } from "@/components/pages/landing/top-projetos-carousel";
 import { WaterTransitionSection } from "@/components/pages/landing/water-transition-section";
+import { SigaaMcpLink } from "@/components/shared/sigaa-mcp-link";
 import { Button } from "@/components/ui/button";
 import { useEntidades } from "@/lib/client/hooks";
+import { useOwnSigaaAcademicState } from "@/lib/client/hooks/use-sigaa";
+import { useAuth } from "@/contexts/auth-context";
+import { resolveSigaaAccessState, shouldEmphasizeSigaa } from "@/lib/client/sigaa/access-state";
+import { getSigaaMenuStatus } from "@/components/shared/sigaa-menu-status-view";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, GitBranch, Github, MapIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  ExternalLink,
+  GitBranch,
+  Github,
+  MapIcon,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 type LandingStats = {
   totalUsuarios: number;
@@ -17,7 +30,28 @@ type LandingStats = {
 };
 
 export default function LandingClient() {
+  const sigaaHighlightRef = useRef<HTMLElement>(null);
+  const sigaaHighlightTrackedRef = useRef(false);
   const { data: entidades = [] } = useEntidades();
+  const auth = useAuth();
+  const sigaaQuery = useOwnSigaaAcademicState(auth.isAuthenticated);
+  const sigaaAccessState = resolveSigaaAccessState({
+    isAuthenticated: auth.isAuthenticated,
+    isAuthLoading: auth.isLoading,
+    isConnectionLoading: sigaaQuery.isLoading,
+    isConnectionError: sigaaQuery.isError,
+    importedState: sigaaQuery.data,
+  });
+  const sigaaStatus = getSigaaMenuStatus(sigaaAccessState);
+  const sigaaCta =
+    sigaaAccessState.availability === "checking"
+      ? "Conhecer o SIGAA"
+      : sigaaAccessState.availability === "sign_in_required"
+        ? "Entrar para consultar"
+        : sigaaAccessState.connection.status === "ready" &&
+            sigaaAccessState.connection.view.kind === "connected"
+          ? "Ver dados acadêmicos"
+          : "Consultar SIGAA";
   const { data: landingStats } = useQuery({
     queryKey: ["landing-stats"],
     queryFn: async (): Promise<LandingStats> => {
@@ -85,6 +119,38 @@ export default function LandingClient() {
     }
   }, []);
 
+  useEffect(() => {
+    const highlight = sigaaHighlightRef.current;
+    if (!highlight || sigaaHighlightTrackedRef.current) {
+      return;
+    }
+
+    const markViewed = () => {
+      if (sigaaHighlightTrackedRef.current) {
+        return;
+      }
+      sigaaHighlightTrackedRef.current = true;
+      trackEvent("sigaa_highlight_viewed");
+    };
+
+    if (!("IntersectionObserver" in window)) {
+      markViewed();
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries.some(entry => entry.isIntersecting)) {
+          markViewed();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 }
+    );
+    observer.observe(highlight);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
       <div className="container relative z-20 mx-auto px-4 pt-20 md:pt-8">
@@ -142,8 +208,69 @@ export default function LandingClient() {
       </div>
 
       <WaterTransitionSection>
-        <TopProjetosCarousel />
         <div className="mx-auto max-w-6xl">
+          <p className="mb-5 text-sm font-semibold uppercase tracking-[0.2em] text-sky-200">
+            Em destaque
+          </p>
+          <section
+            ref={sigaaHighlightRef}
+            aria-labelledby="sigaa-highlight-title"
+            className="mb-16 overflow-hidden rounded-[2rem] border border-sky-200/70 bg-sky-50 p-6 shadow-sm md:p-9"
+          >
+            <div className="grid gap-7 md:grid-cols-[auto_1fr_auto] md:items-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100 text-aquario-primary shadow-sm">
+                <ShieldCheck
+                  className={`h-7 w-7 ${shouldEmphasizeSigaa(sigaaAccessState) ? "motion-safe:animate-sigaa-icon-pulse" : ""}`}
+                  aria-hidden="true"
+                />
+              </div>
+              <div>
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-sky-200/60 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-aquario-primary">
+                    Novidade
+                  </span>
+                </div>
+                <h2
+                  id="sigaa-highlight-title"
+                  className="font-display text-3xl font-bold leading-tight text-aquario-primary md:text-4xl"
+                >
+                  Consulte seus dados do SIGAA no Aquário
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-slate-600 md:text-base">
+                  Importe disciplinas, notas e progresso. Sua senha é usada somente durante a
+                  consulta e não fica salva.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
+                <Button
+                  asChild
+                  className="min-h-11 rounded-full bg-aquario-primary px-5 font-semibold text-white hover:bg-aquario-primary/90"
+                >
+                  <Link
+                    href={sigaaStatus.href}
+                    onClick={() =>
+                      trackEvent("sigaa_entrypoint_clicked", {
+                        location: "landing",
+                        connection_state: sigaaStatus.connectionState,
+                      })
+                    }
+                  >
+                    {sigaaCta}
+                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+                <SigaaMcpLink
+                  location="landing"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-sky-200 px-5 text-sm font-semibold text-aquario-primary transition-colors hover:bg-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Bot className="h-4 w-4" aria-hidden="true" />
+                  MCP para IA
+                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                </SigaaMcpLink>
+              </div>
+            </div>
+          </section>
+          <TopProjetosCarousel />
           <div className="mb-10 grid gap-6 md:grid-cols-[1fr_0.75fr] md:items-end">
             <div>
               <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-sky-200">

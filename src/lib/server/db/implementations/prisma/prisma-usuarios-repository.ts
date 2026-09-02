@@ -6,7 +6,18 @@ import type {
   PapelPlataforma,
 } from "@/lib/server/db/interfaces/types";
 import { Prisma } from "@prisma/client";
+import { sigaaMatriculaLockKey } from "@/lib/server/services/sigaa/storage.types";
 import type { OnboardingMetadata } from "@/lib/shared/types";
+
+const isMatriculaUniqueViolation = (error: unknown): boolean => {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
+    return false;
+  }
+  const target = error.meta?.target;
+  return Array.isArray(target)
+    ? target.some(field => field === "matricula")
+    : typeof target === "string" && target.toLowerCase().includes("matricula");
+};
 
 export class PrismaUsuariosRepository implements IUsuariosRepository {
   /**
@@ -73,28 +84,51 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     const baseSlug = data.eFacade ? null : this.emailToSlug(data.email ?? null);
     const slug = baseSlug ? await this.ensureUniqueSlug(baseSlug) : null;
 
-    const usuario = await prisma.usuario.create({
-      data: {
-        nome: data.nome,
-        email: data.email ? data.email.toLowerCase().trim() : null,
-        senhaHash: data.senhaHash ?? null,
-        centroId: data.centroId,
-        cursoId: data.cursoId,
-        permissoes: data.permissoes ?? [],
-        papelPlataforma: data.papelPlataforma ?? "USER",
-        eVerificado: data.eVerificado ?? false,
-        eFacade: data.eFacade ?? false,
-        urlFotoPerfil: data.urlFotoPerfil,
-        matricula: data.matricula,
-        slug,
-      },
-      include: {
-        centro: true,
-        curso: true,
-      },
-    });
+    try {
+      return await prisma.$transaction(async transaction => {
+        if (data.matricula) {
+          await transaction.$executeRaw`
+            SELECT pg_advisory_xact_lock(
+              hashtextextended(${sigaaMatriculaLockKey(data.matricula)}, 0)
+            )
+          `;
+          const existingOwner = await transaction.usuario.findFirst({
+            where: { matricula: data.matricula },
+            select: { id: true },
+          });
+          if (existingOwner) {
+            throw new Error("MATRICULA_ALREADY_IN_USE");
+          }
+        }
 
-    return usuario;
+        return transaction.usuario.create({
+          data: {
+            nome: data.nome,
+            email: data.email ? data.email.toLowerCase().trim() : null,
+            senhaHash: data.senhaHash ?? null,
+            centroId: data.centroId,
+            cursoId: data.cursoId,
+            permissoes: data.permissoes ?? [],
+            papelPlataforma: data.papelPlataforma ?? "USER",
+            eVerificado: data.eVerificado ?? false,
+            eFacade: data.eFacade ?? false,
+            urlFotoPerfil: data.urlFotoPerfil,
+            matricula: data.matricula ?? null,
+            matriculaOrigem: data.matricula ? "MANUAL" : null,
+            slug,
+          },
+          include: {
+            centro: true,
+            curso: true,
+          },
+        });
+      });
+    } catch (error) {
+      if (isMatriculaUniqueViolation(error)) {
+        throw new Error("MATRICULA_ALREADY_IN_USE");
+      }
+      throw error;
+    }
   }
 
   async findById(id: string): Promise<UsuarioWithRelations | null> {

@@ -11,18 +11,18 @@ import type {
 /**
  * Fetch the current user's enrolled disciplines for the active semester.
  */
-export const useDisciplinasSemestreAtivo = () => {
-  const { token } = useAuth();
+export const useDisciplinasSemestreAtivo = (enabled = true) => {
+  const { token, userId } = useAuth();
 
   return useQuery({
-    queryKey: queryKeys.disciplinasSemestre.ativo,
+    queryKey: queryKeys.disciplinasSemestre.ativo(userId),
     queryFn: () => {
       if (!token) {
         throw new Error("No token available");
       }
       return disciplinaSemestreService.getByActiveSemestre(token);
     },
-    enabled: !!token,
+    enabled: enabled && !!token && !!userId,
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -32,7 +32,7 @@ export const useDisciplinasSemestreAtivo = () => {
  * Invalidates both concluidas and semestre caches on success.
  */
 export const useMarcarDisciplinas = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -43,8 +43,8 @@ export const useMarcarDisciplinas = () => {
       return disciplinaSemestreService.marcarDisciplinas(data, token);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.disciplinasConcluidas.me });
-      queryClient.invalidateQueries({ queryKey: queryKeys.disciplinasSemestre.ativo });
+      queryClient.invalidateQueries({ queryKey: queryKeys.disciplinasConcluidas.me(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.disciplinasSemestre.ativo(userId) });
     },
   });
 };
@@ -53,7 +53,7 @@ export const useMarcarDisciplinas = () => {
  * Patch turma details on a single DisciplinaSemestre record.
  */
 export const usePatchDisciplinaSemestre = () => {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -75,7 +75,7 @@ export const usePatchDisciplinaSemestre = () => {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.disciplinasSemestre.ativo });
+      queryClient.invalidateQueries({ queryKey: queryKeys.disciplinasSemestre.ativo(userId) });
     },
   });
 };

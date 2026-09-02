@@ -261,9 +261,18 @@ export function EntidadesStep() {
     <div className="space-y-4">
       <div className="space-y-2">
         <h2 className="text-pretty text-xl font-bold">Entidades</h2>
-        <p className="text-sm text-muted-foreground">
-          Informe de quais entidades você faz ou já fez parte, e quando entrou e saiu.
-        </p>
+        {entidadesLoading ? (
+          <p className="text-sm text-muted-foreground">Carregando entidades do CI…</p>
+        ) : entidades.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Esta etapa é opcional. Quando houver entidades cadastradas, você poderá marcar
+            participação por aqui.
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Informe de quais entidades você faz ou já fez parte, e quando entrou e saiu.
+          </p>
+        )}
       </div>
 
       {entidadesLoading ? (
@@ -275,9 +284,19 @@ export function EntidadesStep() {
           <span className="sr-only">Carregando entidades…</span>
         </div>
       ) : entidades.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <Users aria-hidden="true" className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Nenhuma entidade disponível no momento.</p>
+        <div
+          role="status"
+          className="flex flex-col items-center gap-3 rounded-xl border border-dashed bg-muted/30 px-6 py-10 text-center"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Users aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">Nenhuma entidade por aqui ainda</p>
+            <p className="mx-auto max-w-sm text-sm text-muted-foreground">
+              Não dá para escolher participação sem uma lista. Pule esta etapa e siga o onboarding.
+            </p>
+          </div>
         </div>
       ) : (
         <div className="space-y-6">

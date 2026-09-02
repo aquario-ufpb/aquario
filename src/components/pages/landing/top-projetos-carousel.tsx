@@ -50,9 +50,6 @@ export function TopProjetosCarousel() {
     <div className="mx-auto mb-24 max-w-6xl md:mb-32">
       <div className="mb-8 flex items-end justify-between gap-4 md:mb-10">
         <div>
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-sky-200">
-            Em destaque
-          </p>
           <h2 className="font-display text-3xl font-bold leading-tight text-white md:text-4xl">
             Projetos destaque
           </h2>

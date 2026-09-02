@@ -3,16 +3,22 @@ name: Staging Deployment
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
 
+concurrency:
+  group: staging-deployment
+  cancel-in-progress: false
+
 jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
+    environment: staging
 
     steps:
       - name: Checkout code
@@ -136,56 +142,103 @@ jobs:
         env:
           DATABASE_URL: ${{ steps.db-url.outputs.url }}
 
+      - name: Purge inherited SIGAA data
+        run: npx prisma db execute --file scripts/sql/clear-sigaa-staging.sql
+        env:
+          DATABASE_URL: ${{ steps.db-url.outputs.url }}
+
       - name: Install Vercel CLI
         run: npm install -g vercel
 
+      - name: Validate isolated SIGAA staging secrets
+        env:
+          STAGING_SIGAA_REAUTH_JWT_SECRET: ${{ secrets.STAGING_SIGAA_REAUTH_JWT_SECRET }}
+          STAGING_SIGAA_CONNECTOR_URL: ${{ secrets.STAGING_SIGAA_CONNECTOR_URL }}
+          STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS: ${{ secrets.STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS }}
+          STAGING_SIGAA_CONNECTOR_API_SECRET: ${{ secrets.STAGING_SIGAA_CONNECTOR_API_SECRET }}
+        run: |
+          for name in \
+            STAGING_SIGAA_REAUTH_JWT_SECRET \
+            STAGING_SIGAA_CONNECTOR_URL \
+            STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS \
+            STAGING_SIGAA_CONNECTOR_API_SECRET
+          do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::$name is required for isolated SIGAA staging"
+              exit 1
+            fi
+          done
+
       - name: Deploy to Vercel (Staging)
         id: deploy
+        env:
+          STAGING_SIGAA_REAUTH_JWT_SECRET: ${{ secrets.STAGING_SIGAA_REAUTH_JWT_SECRET }}
+          STAGING_SIGAA_CONNECTOR_URL: ${{ secrets.STAGING_SIGAA_CONNECTOR_URL }}
+          STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS: ${{ secrets.STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS }}
+          STAGING_SIGAA_CONNECTOR_API_SECRET: ${{ secrets.STAGING_SIGAA_CONNECTOR_API_SECRET }}
         run: |
           URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} \
             --env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
             --env NEXT_PUBLIC_IS_STAGING="true" \
+            --env SIGAA_REAUTH_JWT_SECRET="$STAGING_SIGAA_REAUTH_JWT_SECRET" \
+            --env SIGAA_CONNECTOR_URL="$STAGING_SIGAA_CONNECTOR_URL" \
+            --env SIGAA_CONNECTOR_ALLOWED_ORIGINS="$STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS" \
+            --env SIGAA_CONNECTOR_API_SECRET="$STAGING_SIGAA_CONNECTOR_API_SECRET" \
             --build-env DATABASE_URL="${{ steps.db-url.outputs.url }}" \
             --build-env NEXT_PUBLIC_IS_STAGING="true")
 
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Alias to staging domain
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         run: |
+          set -euo pipefail
+
           DEPLOY_URL="${{ steps.deploy.outputs.url }}"
           DEPLOY_HOST="${DEPLOY_URL#https://}"
+          ALIAS_NAME="staging.aquarioufpb.com"
 
           echo "Getting deployment ID for: $DEPLOY_HOST"
 
-          # Get deployment by URL
-          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
-            "https://api.vercel.com/v13/deployments/get?url=${DEPLOY_HOST}&teamId=${{ secrets.VERCEL_ORG_ID }}")
+          RESPONSE=$(curl --fail-with-body -sS -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v13/deployments/${DEPLOY_HOST}?teamId=${VERCEL_ORG_ID}")
 
           DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id')
 
           if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" == "null" ]; then
-            echo "::warning::Could not get deployment ID, trying alternative method..."
-            # Fallback: list recent deployments and find by URL
-            DEPLOYMENTS=$(curl -s -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
-              "https://api.vercel.com/v6/deployments?teamId=${{ secrets.VERCEL_ORG_ID }}&limit=5")
-            DEPLOY_ID=$(echo "$DEPLOYMENTS" | jq -r --arg url "$DEPLOY_HOST" '.deployments[] | select(.url == $url) | .uid' | head -1)
+            echo "::error::Could not resolve the deployment ID for $DEPLOY_HOST"
+            exit 1
           fi
 
           echo "Deployment ID: $DEPLOY_ID"
 
-          # Assign alias using REST API
-          ALIAS_RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/${DEPLOY_ID}/aliases?teamId=${{ secrets.VERCEL_ORG_ID }}" \
-            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+          ALIAS_RESULT=$(curl -sS -w '\n%{http_code}' -X POST \
+            "https://api.vercel.com/v2/deployments/${DEPLOY_ID}/aliases?teamId=${VERCEL_ORG_ID}" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"alias": "staging.aquarioufpb.com"}')
+            -d "{\"alias\": \"${ALIAS_NAME}\"}")
+          ALIAS_STATUS=$(echo "$ALIAS_RESULT" | tail -n 1)
+          ALIAS_RESPONSE=$(echo "$ALIAS_RESULT" | sed '$d')
 
           echo "Alias response: $ALIAS_RESPONSE"
 
-          if echo "$ALIAS_RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
-            echo "::warning::Alias failed: $(echo $ALIAS_RESPONSE | jq -r '.error.message')"
-          else
-            echo "✅ Alias set successfully"
+          if [ "$ALIAS_STATUS" != "200" ] && [ "$ALIAS_STATUS" != "409" ]; then
+            echo "::error::Alias request failed with HTTP $ALIAS_STATUS: $(echo "$ALIAS_RESPONSE" | jq -r '.error.message // "unknown error"')"
+            exit 1
           fi
+
+          VERIFIED_ALIAS=$(curl --fail-with-body -sS \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v4/aliases/${ALIAS_NAME}?teamId=${VERCEL_ORG_ID}")
+          VERIFIED_DEPLOY_ID=$(echo "$VERIFIED_ALIAS" | jq -r '.deploymentId')
+          if [ "$VERIFIED_DEPLOY_ID" != "$DEPLOY_ID" ]; then
+            echo "::error::Staging alias points to $VERIFIED_DEPLOY_ID instead of $DEPLOY_ID"
+            exit 1
+          fi
+
+          echo "✅ Alias set successfully"
 
       - name: Summary
         run: |

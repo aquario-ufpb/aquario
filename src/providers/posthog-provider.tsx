@@ -14,6 +14,10 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         ui_host: "https://us.posthog.com",
         defaults: "2025-05-24",
         capture_exceptions: true, // This enables capturing exceptions using Error Tracking
+        session_recording: {
+          blockSelector: ".ph-no-capture, [data-ph-no-capture='true']",
+          maskAllInputs: true,
+        },
         debug: false,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         loaded: (client: any) => {

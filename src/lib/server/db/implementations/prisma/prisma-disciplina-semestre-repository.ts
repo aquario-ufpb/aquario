@@ -105,9 +105,46 @@ export class PrismaDisciplinaSemestreRepository implements IDisciplinaSemestreRe
     usuarioId: string,
     disciplinaIds: string[],
     status: MarcarStatus,
-    semestreLetivoId: string | null
+    semestreLetivoId: string | null,
+    expectedCursoId?: string,
+    expectedCurriculoId?: string
   ): Promise<void> {
     await prisma.$transaction(async tx => {
+      if (expectedCursoId) {
+        const [lockedUser] = await tx.$queryRaw<Array<{ cursoId: string }>>`
+          SELECT "cursoId" FROM "Usuario" WHERE "id" = ${usuarioId} FOR UPDATE
+        `;
+        if (!lockedUser || lockedUser.cursoId !== expectedCursoId) {
+          throw new Error("COURSE_CHANGED_DURING_DISCIPLINE_CONFIRMATION");
+        }
+
+        if (status !== "none") {
+          const [lockedCurriculum] = await tx.$queryRaw<
+            Array<{ id: string; cursoId: string; ativo: boolean }>
+          >`
+            SELECT "id", "cursoId", "ativo" FROM "Curriculo"
+            WHERE "id" = ${expectedCurriculoId ?? ""} FOR UPDATE
+          `;
+          if (
+            !lockedCurriculum ||
+            lockedCurriculum.cursoId !== expectedCursoId ||
+            !lockedCurriculum.ativo
+          ) {
+            throw new Error("DISCIPLINE_OUTSIDE_ACTIVE_CURRICULUM");
+          }
+
+          const matchingDisciplines = await tx.curriculoDisciplina.count({
+            where: {
+              disciplinaId: { in: disciplinaIds },
+              curriculoId: lockedCurriculum.id,
+            },
+          });
+          if (matchingDisciplines !== new Set(disciplinaIds).size) {
+            throw new Error("DISCIPLINE_OUTSIDE_ACTIVE_CURRICULUM");
+          }
+        }
+      }
+
       // Build the disciplinaSemestre delete filter — scoped to semester if available,
       // otherwise removes across all semesters to prevent inconsistent state
       const semestreFilter = semestreLetivoId
