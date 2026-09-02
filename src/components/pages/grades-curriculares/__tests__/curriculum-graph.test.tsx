@@ -339,6 +339,20 @@ describe("CurriculumGraph — seleção por período", () => {
     // Texto visível é prefixo do nome acessível (WCAG 2.5.3)
     expect(botoes[0]).toHaveTextContent("Marcar obrigatórias");
   });
+
+  it("marca concluídas em verde na lista mobile e orienta quando nada está selecionado", () => {
+    renderGraph({
+      mobileLayout: "list",
+      completedDisciplinaIds: new Set(["disc-calculo"]),
+    });
+
+    expect(screen.getByText("Toque nas disciplinas abaixo para selecionar.")).toBeInTheDocument();
+
+    const mobileList = within(screen.getByTestId("mobile-curriculum-list"));
+    const concluida = mobileList.getByRole("button", { name: /Cálculo I/ });
+    expect(concluida.className).toMatch(/emerald/);
+    expect(within(concluida).getByText("Concluída")).toBeInTheDocument();
+  });
 });
 
 describe("CurriculumGraph — ações de salvar conforme a seleção", () => {
