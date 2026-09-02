@@ -271,9 +271,7 @@ export function OnboardingModal({
               currentStep={progressStepNumber}
               totalSteps={totalCount}
               stepTitle={STEP_SHORT_LABELS[activeStepId]}
-              subStep={
-                activeStepId === "welcome" ? { current: welcomePage, total: 2 } : undefined
-              }
+              subStep={activeStepId === "welcome" ? { current: welcomePage, total: 2 } : undefined}
             />
           </div>
 
