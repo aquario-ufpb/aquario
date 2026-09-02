@@ -139,9 +139,8 @@ describe("SIGAA connector V1 contract", () => {
   it("keeps the fixture literal and sanitized instead of replacing placeholders at runtime", () => {
     const fixture = fixtureValue();
 
-    expect(fixture.source.upstream_repository).toBe(
-      "https://github.com/PucaVaz/sigaa-for-ai-agents.git"
-    );
+    expect(fixture.source.upstream_repository).toBe("https://github.com/PucaVaz/sigaa-tools.git");
+    expect(fixture.source.adapter).toBe("sigaa-tools");
     expect(fixture.source.upstream_commit).toBe("0123456789abcdef0123456789abcdef01234567");
     expect(fixture.student.name).toBe("Pessoa de Teste");
     expect(fixture.student.email).toBe("pessoa@example.test");

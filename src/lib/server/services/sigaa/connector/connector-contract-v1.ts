@@ -10,7 +10,7 @@ import type {
 } from "./sigaa-connector.port";
 import { SigaaConnectorError, type SigaaConnectorFailureCode } from "./sigaa-connector.error";
 
-const UPSTREAM_REPOSITORY = "https://github.com/PucaVaz/sigaa-for-ai-agents.git";
+const UPSTREAM_REPOSITORY = "https://github.com/PucaVaz/sigaa-tools.git";
 
 const usernameSchema = z
   .string()
@@ -46,7 +46,7 @@ const syncRequestSchema = z
 const sourceSchema = z
   .object({
     system: z.literal("SIGAA_UFPB"),
-    adapter: z.literal("sigaa-for-ai-agents"),
+    adapter: z.literal("sigaa-tools"),
     upstream_repository: z.literal(UPSTREAM_REPOSITORY),
     upstream_commit: z.string().regex(/^[0-9a-f]{40}$/),
   })

@@ -3,8 +3,8 @@
   "observed_at": "2026-08-21T12:00:00Z",
   "source": {
     "system": "SIGAA_UFPB",
-    "adapter": "sigaa-for-ai-agents",
-    "upstream_repository": "https://github.com/PucaVaz/sigaa-for-ai-agents.git",
+    "adapter": "sigaa-tools",
+    "upstream_repository": "https://github.com/PucaVaz/sigaa-tools.git",
     "upstream_commit": "0123456789abcdef0123456789abcdef01234567"
   },
   "student": {
