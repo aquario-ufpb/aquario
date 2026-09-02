@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Check, LoaderCircle } from "lucide-react";
 
 import { trackEvent } from "@/analytics/posthog-client";
+import { PasswordInput } from "@/components/auth/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -568,10 +569,9 @@ export function useSigaaConnectFlowContent({
           </div>
           <div className="space-y-2" hidden={isPending}>
             <Label htmlFor={sigaaPasswordId}>Senha do SIGAA</Label>
-            <Input
+            <PasswordInput
               id={sigaaPasswordId}
               name="sigaaPassword"
-              type="password"
               autoComplete="current-password"
               data-1p-ignore="true"
               required
@@ -581,10 +581,9 @@ export function useSigaaConnectFlowContent({
           </div>
           <div className="space-y-2" hidden={isPending}>
             <Label htmlFor={aquarioPasswordId}>Senha do Aquário</Label>
-            <Input
+            <PasswordInput
               id={aquarioPasswordId}
               name="aquarioPassword"
-              type="password"
               autoComplete="current-password"
               data-1p-ignore="true"
               required
