@@ -109,9 +109,7 @@ export function writeSigaaConnectNudgeDismissed(
   try {
     const value: SigaaConnectNudgeDismissal = { dismissedAt };
     storage.setItem(sigaaConnectNudgeStorageKey(userId), JSON.stringify(value));
-  } catch {
-    return;
-  }
+  } catch {}
 }
 
 type SigaaNudgeEligibility =

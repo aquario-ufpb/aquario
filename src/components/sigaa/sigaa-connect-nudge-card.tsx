@@ -79,8 +79,8 @@ export function SigaaConnectNudgeCard({ onConnect, onDismiss }: SigaaConnectNudg
             id="sigaa-connect-nudge-description"
             className="mt-2 text-left text-sm leading-relaxed text-slate-500 dark:text-slate-400"
           >
-            Sua conta já tá pronta. Falta só puxar os dados acadêmicos. Dá pra fazer agora, e a senha
-            não fica salva.
+            Sua conta já tá pronta. Falta só puxar os dados acadêmicos. Dá pra fazer agora, e a
+            senha não fica salva.
           </DialogDescription>
 
           <div className="mt-5 flex flex-col gap-2">

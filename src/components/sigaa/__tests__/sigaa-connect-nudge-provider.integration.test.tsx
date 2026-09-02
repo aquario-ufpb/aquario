@@ -67,9 +67,7 @@ describe("SigaaConnectNudgeProvider", () => {
   it("mounts the modal when every gate passes", async () => {
     render(<SigaaConnectNudgeProvider />);
 
-    expect(
-      await screen.findByRole("dialog", { name: "Conecte com o SIGAA" })
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Conecte com o SIGAA" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Conectar agora" })).toHaveAttribute(
       "href",
       "/me/academico?connect=1"

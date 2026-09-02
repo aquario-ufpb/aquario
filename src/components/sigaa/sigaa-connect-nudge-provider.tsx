@@ -58,8 +58,7 @@ export function SigaaConnectNudgeProvider() {
   });
   const show = forcePreview || (decision.show && dismissed !== null);
   const connectionState =
-    getSigaaConnectNudgeConnectionState(accessState) ??
-    (forcePreview ? "never_connected" : null);
+    getSigaaConnectNudgeConnectionState(accessState) ?? (forcePreview ? "never_connected" : null);
 
   useEffect(() => {
     if (!show || !connectionState || !auth.userId) {
