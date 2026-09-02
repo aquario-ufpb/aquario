@@ -113,6 +113,82 @@ beforeAll(() => {
 });
 
 describe("CurriculumGraph — seleção por período", () => {
+  it("aplica a preseleção inicial recebida", () => {
+    renderGraph({ initialSelectedDisciplinaIds: ["disc-calculo"] });
+
+    expect(selectionStateOf("Cálculo I")).toBe("true");
+    expect(selectionStateOf("Introdução à Programação")).toBe("false");
+  });
+
+  it("não reaplica a preseleção após interação e refetch das props", () => {
+    const { rerender } = renderGraph({
+      initialSelectedDisciplinaIds: ["disc-calculo"],
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Cálculo I" }));
+    expect(selectionStateOf("Cálculo I")).toBe("false");
+
+    rerender(
+      <CurriculumGraph
+        disciplinas={[...DISCIPLINAS]}
+        cursoNome="Ciência da Computação"
+        curriculoCodigo="001.112023"
+        completedDisciplinaIds={new Set()}
+        cursandoDisciplinaIds={new Set()}
+        selectionMode
+        isLoggedIn
+        onSaveWithStatus={jest.fn()}
+        initialSelectedDisciplinaIds={["disc-calculo", "disc-programacao"]}
+      />
+    );
+
+    expect(selectionStateOf("Cálculo I")).toBe("false");
+    expect(selectionStateOf("Introdução à Programação")).toBe("false");
+  });
+
+  it("aplica sugestões que chegam depois do mount quando a pessoa ainda não editou", () => {
+    const { rerender } = renderGraph({ initialSelectedDisciplinaIds: undefined });
+
+    rerender(
+      <CurriculumGraph
+        disciplinas={DISCIPLINAS}
+        cursoNome="Ciência da Computação"
+        curriculoCodigo="001.112023"
+        completedDisciplinaIds={new Set()}
+        cursandoDisciplinaIds={new Set()}
+        selectionMode
+        isLoggedIn
+        onSaveWithStatus={jest.fn()}
+        initialSelectedDisciplinaIds={["disc-calculo", "disc-programacao"]}
+      />
+    );
+
+    expect(selectionStateOf("Cálculo I")).toBe("true");
+    expect(selectionStateOf("Introdução à Programação")).toBe("true");
+  });
+
+  it("não aplica sugestões tardias depois de uma edição manual", () => {
+    const { rerender } = renderGraph({ initialSelectedDisciplinaIds: undefined });
+    fireEvent.click(screen.getByRole("button", { name: "Cálculo I" }));
+
+    rerender(
+      <CurriculumGraph
+        disciplinas={DISCIPLINAS}
+        cursoNome="Ciência da Computação"
+        curriculoCodigo="001.112023"
+        completedDisciplinaIds={new Set()}
+        cursandoDisciplinaIds={new Set()}
+        selectionMode
+        isLoggedIn
+        onSaveWithStatus={jest.fn()}
+        initialSelectedDisciplinaIds={["disc-programacao"]}
+      />
+    );
+
+    expect(selectionStateOf("Cálculo I")).toBe("true");
+    expect(selectionStateOf("Introdução à Programação")).toBe("false");
+  });
+
   it("seleciona todas as obrigatórias do período, sem tocar nas optativas", () => {
     renderGraph();
 

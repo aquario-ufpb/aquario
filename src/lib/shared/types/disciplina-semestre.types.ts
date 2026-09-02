@@ -30,6 +30,8 @@ export type DisciplinasSemestreListResponse = {
 export type MarcarDisciplinasRequest = {
   disciplinaIds: string[];
   status: "concluida" | "cursando" | "none";
+  expectedCursoId?: string;
+  expectedCurriculoId?: string;
 };
 
 export type PatchDisciplinaSemestreRequest = {

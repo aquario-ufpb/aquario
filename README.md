@@ -35,6 +35,10 @@ Interactive maps of campus buildings and rooms.
 
 Job listings, internships, research positions, and volunteer opportunities.
 
+### 🎓 SIGAA
+
+Connect to SIGAA to sync your academic data — curriculum, grades, and classes.
+
 ## Tech Stack
 
 - **Framework**: Next.js 15 

@@ -12,6 +12,7 @@ import { registerEntidadesPaths } from "./entidades";
 import { registerGuiasPaths } from "./guias";
 import { registerMiscPaths } from "./misc";
 import { registerSearchPaths } from "./search";
+import { registerSigaaPaths } from "./sigaa";
 import { registerUsuariosPaths } from "./usuarios";
 import { registerVagasPaths } from "./vagas";
 
@@ -39,5 +40,6 @@ export function registerAllPaths(registry: OpenAPIRegistry, schemas: CommonSchem
   registerCurriculosPaths(registry, schemas);
   registerCalendarioPaths(registry, schemas);
   registerSearchPaths(registry, schemas);
+  registerSigaaPaths(registry, schemas);
   registerMiscPaths(registry, schemas);
 }

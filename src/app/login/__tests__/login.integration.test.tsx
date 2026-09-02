@@ -4,14 +4,20 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useRouter, useSearchParams } from "next/navigation";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Login from "../page";
-import { AuthProvider } from "@/contexts/auth-context";
+import { resolveLoginDestination } from "../login-destination";
+import { AuthProvider, useAuth } from "@/contexts/auth-context";
+import { OnboardingProvider } from "@/components/onboarding/onboarding-provider";
+import { queryKeys } from "@/lib/client/query-keys";
+import type { OnboardingMetadata } from "@/lib/shared/types";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
+  usePathname: vi.fn(),
   useRouter: vi.fn(),
   useSearchParams: vi.fn(),
 }));
@@ -32,22 +38,111 @@ vi.mock("@/lib/client/api/auth", () => ({
   },
 }));
 
+vi.mock("@/lib/client/api/usuarios", () => ({
+  usuariosService: {
+    getCurrentUser: vi.fn(),
+    getOnboardingMetadata: vi.fn(),
+    updateOnboardingMetadata: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/client/api/calendario-academico", () => ({
+  calendarioAcademicoService: {
+    getSemestreAtivo: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/client/api", () => ({
+  paasService: {
+    getCenter: vi.fn(),
+  },
+}));
+
+vi.mock("@/components/onboarding/onboarding-modal", () => ({
+  OnboardingModal: () => <div role="dialog" aria-label="Configuração inicial" />,
+}));
+
 // Import after mocking
 import { authService } from "@/lib/client/api/auth";
+import { usuariosService } from "@/lib/client/api/usuarios";
+import { calendarioAcademicoService } from "@/lib/client/api/calendario-academico";
+import { paasService } from "@/lib/client/api";
 
 const mockLogin = vi.mocked(authService.login);
+const mockGetCurrentUser = vi.mocked(usuariosService.getCurrentUser);
+const mockGetOnboardingMetadata = vi.mocked(usuariosService.getOnboardingMetadata);
+const mockGetSemestreAtivo = vi.mocked(calendarioAcademicoService.getSemestreAtivo);
+const mockGetPaasCenter = vi.mocked(paasService.getCenter);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockRouter = useRouter as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockSearchParams = useSearchParams as any;
+const mockUsePathname = vi.mocked(usePathname);
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(resolvePromise => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
+}
+
+function SessionSwitchHarness() {
+  const { login } = useAuth();
+  return <button onClick={() => login("fresh-token")}>Switch session</button>;
+}
 
 describe("Login Page", () => {
   const mockPush = vi.fn();
   const mockReplace = vi.fn();
   const mockGet = vi.fn();
+  let currentPathname = "/login";
+  const authenticatedUser = {
+    id: "user-1",
+    nome: "Test User",
+    email: "test@academico.ufpb.br",
+    papelPlataforma: "USER" as const,
+    eVerificado: true,
+    urlFotoPerfil: null,
+    centro: { id: "centro-1", nome: "Centro de Informática", sigla: "CI" },
+    curso: { id: "curso-1", nome: "Ciência da Computação" },
+    permissoes: [],
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+    mockGetCurrentUser.mockResolvedValue(authenticatedUser);
+    mockGetOnboardingMetadata.mockResolvedValue({});
+    mockGetSemestreAtivo.mockResolvedValue({
+      id: "semester-1",
+      nome: "2026.2",
+      dataInicio: "2000-01-01T00:00:00.000Z",
+      dataFim: "2100-12-31T23:59:59.999Z",
+      criadoEm: "2026-01-01T00:00:00.000Z",
+      atualizadoEm: "2026-01-01T00:00:00.000Z",
+    });
+    mockGetPaasCenter.mockResolvedValue({
+      id: 1,
+      centro: "Centro de Informática",
+      date: "2026-08-23",
+      description: "2026.2",
+      hash: "test",
+      status: "ready",
+      userId: null,
+      sigla: "CI",
+      paasPublicSolutions: [],
+      solution: {
+        id: 1,
+        status: "ready",
+        error: "",
+        paasPlanId: null,
+        date: "2026-08-23",
+        solution: [],
+      },
+    });
+    currentPathname = "/login";
+    mockUsePathname.mockImplementation(() => currentPathname);
     mockRouter.mockReturnValue({
       push: mockPush,
       replace: mockReplace,
@@ -58,16 +153,22 @@ describe("Login Page", () => {
     });
   });
 
-  const renderLogin = async () => {
-    const result = render(
-      <AuthProvider>
-        <Login />
-      </AuthProvider>
-    );
-    // Wait for Suspense to resolve and form to be ready
-    await waitFor(() => {
-      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+  const renderLogin = async ({ waitForForm = true }: { waitForForm?: boolean } = {}) => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
     });
+    const result = render(
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Login />
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+    if (waitForForm) {
+      await waitFor(() => {
+        expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      });
+    }
     return result;
   };
 
@@ -97,7 +198,7 @@ describe("Login Page", () => {
     });
   });
 
-  it("should redirect to home on successful login", async () => {
+  it("should replace login with home on successful login", async () => {
     mockLogin.mockResolvedValue({ token: "test-token" });
 
     await renderLogin();
@@ -111,8 +212,147 @@ describe("Login Page", () => {
     await userEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/");
+      expect(mockReplace).toHaveBeenCalledWith("/");
     });
+  });
+
+  it("continues to a safe internal destination after login", async () => {
+    mockGet.mockImplementation((key: string) =>
+      key === "next" ? "/me/academico?connect=1" : null
+    );
+    mockLogin.mockResolvedValue({ token: "test-token" });
+
+    await renderLogin();
+    await userEvent.type(screen.getByLabelText(/email/i), "test@academico.ufpb.br");
+    await userEvent.type(screen.getByPlaceholderText(/sua senha/i), "password123");
+    await userEvent.click(screen.getByRole("button", { name: /entrar/i }));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/me/academico?connect=1");
+    });
+  });
+
+  it.each(["https://evil.example", "//evil.example", "/\\evil.example", "/bad\npath"])(
+    "rejects an unsafe post-login destination %s",
+    destination => {
+      expect(resolveLoginDestination(destination)).toBe("/");
+    }
+  );
+
+  it("redirects a persisted authenticated session without rendering the login form", async () => {
+    localStorage.setItem("token", "persisted-token");
+
+    await renderLogin({ waitForForm: false });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/");
+    });
+    expect(screen.queryByRole("heading", { name: /bem-vindo de volta/i })).not.toBeInTheDocument();
+    expect(mockGetCurrentUser).toHaveBeenCalledWith("persisted-token");
+  });
+
+  it("keeps the login form hidden while the persisted session is being restored", async () => {
+    localStorage.setItem("token", "persisted-token");
+    mockGetCurrentUser.mockReturnValue(new Promise(() => undefined));
+
+    await renderLogin({ waitForForm: false });
+
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/verificando sua sessão/i)).toBeInTheDocument();
+  });
+
+  it("ignores an older identity after leaving login and never mounts its onboarding", async () => {
+    const staleUserResponse = createDeferred<typeof authenticatedUser>();
+    const freshUserResponse = createDeferred<typeof authenticatedUser>();
+    const freshOnboardingResponse = createDeferred<OnboardingMetadata>();
+    const staleUser = {
+      ...authenticatedUser,
+      id: "stale-user",
+      email: "stale@academico.ufpb.br",
+    };
+    const freshUser = {
+      ...authenticatedUser,
+      id: "fresh-user",
+      email: "fresh@academico.ufpb.br",
+    };
+    const completedAt = "2026-08-23T00:00:00.000Z";
+    const completedOnboarding: OnboardingMetadata = {
+      welcome: { completedAt },
+      periodo: { completedAt },
+      concluidas: { completedAt },
+      entidades: { completedAt },
+      done: { completedAt },
+      semesters: {
+        "2026.2": {
+          cursando: { completedAt },
+          turmas: { completedAt },
+        },
+      },
+    };
+    localStorage.setItem("token", "stale-token");
+    mockGetCurrentUser.mockImplementation(token =>
+      token === "stale-token" ? staleUserResponse.promise : freshUserResponse.promise
+    );
+    mockGetOnboardingMetadata.mockImplementation(token =>
+      token === "fresh-token" ? freshOnboardingResponse.promise : Promise.resolve({})
+    );
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const application = () => (
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <OnboardingProvider>
+            <SessionSwitchHarness />
+            <Login />
+          </OnboardingProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+
+    const view = render(application());
+
+    expect(screen.queryByRole("dialog", { name: "Configuração inicial" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    expect(mockUsePathname()).toBe("/login");
+
+    await userEvent.click(screen.getByRole("button", { name: "Switch session" }));
+
+    await act(async () => {
+      freshUserResponse.resolve(freshUser);
+      await freshUserResponse.promise;
+    });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/");
+      expect(mockGetOnboardingMetadata).toHaveBeenCalledWith("fresh-token");
+    });
+    expect(screen.queryByRole("dialog", { name: "Configuração inicial" })).not.toBeInTheDocument();
+
+    currentPathname = "/";
+    view.rerender(application());
+
+    await act(async () => {
+      freshOnboardingResponse.resolve(completedOnboarding);
+      await freshOnboardingResponse.promise;
+    });
+
+    await waitFor(() => {
+      expect(queryClient.isFetching()).toBe(0);
+      expect(
+        screen.queryByRole("dialog", { name: "Configuração inicial" })
+      ).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      staleUserResponse.resolve(staleUser);
+      await staleUserResponse.promise;
+    });
+
+    expect(queryClient.getQueryData(queryKeys.usuarios.current("fresh-user"))).toEqual(freshUser);
+    expect(queryClient.getQueryData(queryKeys.usuarios.current("stale-user"))).toBeUndefined();
+    expect(mockGetOnboardingMetadata).not.toHaveBeenCalledWith("stale-token");
+    expect(screen.queryByRole("dialog", { name: "Configuração inicial" })).not.toBeInTheDocument();
   });
 
   it("should show link to forgot password", async () => {

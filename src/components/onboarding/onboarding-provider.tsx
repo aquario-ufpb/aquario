@@ -1,18 +1,30 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useOnboarding } from "@/lib/client/hooks/use-onboarding";
 import { OnboardingModal } from "./onboarding-modal";
 
+const AUTH_ROUTES: ReadonlySet<string> = new Set([
+  "/login",
+  "/registro",
+  "/esqueci-senha",
+  "/resetar-senha",
+  "/verificar-email",
+]);
+
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const onboarding = useOnboarding();
+  const canShowOnboarding = !AUTH_ROUTES.has(pathname);
 
   return (
     <>
       {children}
-      {onboarding.shouldShow && onboarding.currentStep && (
+      {canShowOnboarding && onboarding.shouldShow && onboarding.currentStep && (
         <OnboardingModal
           currentStep={onboarding.currentStep}
           steps={onboarding.steps}
+          allSteps={onboarding.allSteps}
           completedCount={onboarding.completedCount}
           totalCount={onboarding.totalCount}
           onComplete={onboarding.completeStep}

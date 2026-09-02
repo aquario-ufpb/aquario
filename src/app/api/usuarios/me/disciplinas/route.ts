@@ -8,15 +8,16 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/usuarios/me/disciplinas
- * Returns the list of disciplinaIds the authenticated user has completed
+ * Returns completed disciplines with stable identity independent of the current curriculum.
  */
 export function GET(request: Request) {
   return withAuth(request, async (_req, usuario) => {
     try {
       const container = getContainer();
-      const disciplinaIds = await container.disciplinaConcluidaRepository.findByUsuario(usuario.id);
+      const disciplinas = await container.disciplinaConcluidaRepository.findByUsuario(usuario.id);
+      const disciplinaIds = disciplinas.map(item => item.disciplinaId);
 
-      return NextResponse.json({ disciplinaIds });
+      return NextResponse.json({ disciplinaIds, disciplinas });
     } catch {
       return ApiError.internal("Erro ao buscar disciplinas concluídas");
     }
