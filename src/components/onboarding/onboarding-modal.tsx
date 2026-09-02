@@ -253,9 +253,12 @@ export function OnboardingModal({
           onEscapeKeyDown={e => e.preventDefault()}
           onInteractOutside={e => e.preventDefault()}
           className={cn(
-            "fixed bottom-[max(0.5rem,env(safe-area-inset-bottom))] left-[max(0.5rem,env(safe-area-inset-left))] right-[max(0.5rem,env(safe-area-inset-right))] top-[max(0.5rem,env(safe-area-inset-top))] z-50",
+            // Mobile uses svh so the sticky footer stays above Safari's toolbar.
+            // top+bottom insets against the layout viewport put "Pular" under the chrome.
+            "fixed left-[max(0.5rem,env(safe-area-inset-left))] right-[max(0.5rem,env(safe-area-inset-right))] top-[max(0.5rem,env(safe-area-inset-top))] z-50",
+            "h-[calc(100svh-1rem)] max-h-[calc(100dvh-1rem)]",
             "flex min-h-0 w-auto max-w-6xl flex-col overflow-x-hidden overscroll-none rounded-lg border bg-background shadow-lg duration-200",
-            "sm:bottom-auto sm:left-[50%] sm:right-auto sm:top-[50%] sm:h-[min(94dvh,56rem)] sm:max-h-[calc(100dvh-2rem)] sm:w-full sm:-translate-x-1/2 sm:-translate-y-1/2",
+            "sm:left-[50%] sm:right-auto sm:top-[50%] sm:h-[min(94dvh,56rem)] sm:max-h-[calc(100dvh-2rem)] sm:w-full sm:-translate-x-1/2 sm:-translate-y-1/2",
             "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
             "motion-reduce:animate-none motion-reduce:transition-none"
           )}
@@ -288,8 +291,7 @@ export function OnboardingModal({
             </div>
           </div>
 
-          {/* Sticky footer — always visible */}
-          <div className="flex shrink-0 items-center justify-between gap-2 rounded-b-lg border-t bg-background p-3 sm:p-4">
+          <div className="flex shrink-0 items-center justify-between gap-2 rounded-b-lg border-t bg-background p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 sm:pb-4">
             <div>
               {canGoBack && (
                 <Button

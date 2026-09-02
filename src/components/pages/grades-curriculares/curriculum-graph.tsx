@@ -544,7 +544,7 @@ export function CurriculumGraph({
         <Button
           size="sm"
           disabled={isSaving || !hasSelection || noActionAvailable}
-          className="min-h-11 gap-1.5 md:min-h-9"
+          className="min-h-11 w-full gap-1.5 sm:w-auto md:min-h-9"
           onClick={() => singleStatus && void handleSaveAs(singleStatus)}
         >
           <DirectIcon aria-hidden="true" className="w-3.5 h-3.5" />
@@ -559,7 +559,7 @@ export function CurriculumGraph({
           <Button
             size="sm"
             disabled={isSaving || !hasSelection}
-            className="min-h-11 gap-1.5 md:min-h-9"
+            className="min-h-11 w-full gap-1.5 sm:w-auto md:min-h-9"
           >
             <Save aria-hidden="true" className="w-3.5 h-3.5" />
             {isSaving ? "Salvando…" : "Salvar"}
@@ -717,13 +717,18 @@ export function CurriculumGraph({
 
         {/* Progress bar + Selection action */}
         {selectionMode && progressStats && (
-          <div className="mb-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10">
-            <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-              <div className="flex flex-wrap items-center gap-4 text-sm">
+          <div className="mb-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-slate-800/50">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <strong>{progressStats.completedObrigatorias}</strong>/
-                  {progressStats.obrigatorias} obrigatórias ({progressStats.percentObrigatorias}%)
+                  <CheckCircle2
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400"
+                  />
+                  <span>
+                    <strong>{progressStats.completedObrigatorias}</strong>/
+                    {progressStats.obrigatorias} obrigatórias ({progressStats.percentObrigatorias}%)
+                  </span>
                 </span>
                 <span className="text-muted-foreground">
                   {progressStats.totalHorasCompleted}h / {progressStats.totalHoras}h
@@ -735,9 +740,22 @@ export function CurriculumGraph({
                   </span>
                 )}
               </div>
-              {onSaveWithStatus && <SaveActions />}
+              {onSaveWithStatus && (
+                <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:items-end">
+                  <SaveActions />
+                  {!hasSelection && (
+                    <p className="text-xs text-muted-foreground sm:text-right">
+                      Toque nas disciplinas abaixo para selecionar.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-            <Progress value={progressStats.percentObrigatorias} className="h-2" />
+            <Progress
+              value={progressStats.percentObrigatorias}
+              className="h-1.5 bg-slate-200 dark:bg-slate-700"
+              indicatorClassName="bg-emerald-500 dark:bg-emerald-400"
+            />
           </div>
         )}
 
@@ -833,10 +851,18 @@ export function CurriculumGraph({
                           }}
                           className={cn(
                             "min-h-11 w-full rounded-md border bg-card px-3 py-2 text-left",
-                            "touch-manipulation transition-[border-color,background-color,box-shadow]",
+                            "touch-manipulation transition-[border-color,background-color,box-shadow,transform]",
                             "hover:border-aquario-primary/50 hover:bg-accent/50",
+                            "active:scale-[0.98]",
                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                            "motion-reduce:transition-none",
+                            "motion-reduce:transition-none motion-reduce:active:scale-100",
+                            isCompleted &&
+                              !isSelected &&
+                              "border-emerald-500/35 bg-emerald-50/80 dark:border-emerald-400/30 dark:bg-emerald-950/30",
+                            isCursando &&
+                              !isSelected &&
+                              !isCompleted &&
+                              "border-purple-500/35 bg-purple-50/80 dark:border-purple-400/30 dark:bg-purple-950/30",
                             isSelected &&
                               "border-aquario-primary bg-aquario-primary/10 ring-2 ring-aquario-primary/30"
                           )}
@@ -851,7 +877,16 @@ export function CurriculumGraph({
                               </span>
                             </span>
                             {(isCompleted || isCursando || isSelected) && (
-                              <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                              <span
+                                className={cn(
+                                  "shrink-0 text-xs font-medium",
+                                  isSelected
+                                    ? "text-aquario-primary"
+                                    : isCompleted
+                                      ? "text-emerald-700 dark:text-emerald-300"
+                                      : "text-purple-700 dark:text-purple-300"
+                                )}
+                              >
                                 {isSelected
                                   ? "Selecionada"
                                   : isCompleted
