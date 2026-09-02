@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Nudge de conexão SIGAA**: Depois do onboarding, contas autenticadas sem SIGAA veem um modal leve pedindo para conectar. "Deixar pra depois", o X e o clique fora gravam o dismiss por usuário.
+
 ## [1.12.1] - 2026-08-27
 
 ### Fixed
