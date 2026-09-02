@@ -143,7 +143,7 @@ jobs:
           DATABASE_URL: ${{ steps.db-url.outputs.url }}
 
       - name: Purge inherited SIGAA data
-        run: npx prisma db execute --file scripts/sql/clear-sigaa-staging.sql
+        run: npx prisma db execute --schema prisma/schema.prisma --file scripts/sql/clear-sigaa-staging.sql
         env:
           DATABASE_URL: ${{ steps.db-url.outputs.url }}
 
