@@ -792,7 +792,7 @@ describe("PrismaSigaaRepository on PostgreSQL", () => {
       usuarioId: ownerId,
       expectedMatricula: "20260000020",
       state: "PENDING",
-      aliasVersion: "ufpb-2026-08-22",
+      aliasVersion: "ufpb-2026-09-02",
     });
 
     const replay = await repository.reserveAttempt({
