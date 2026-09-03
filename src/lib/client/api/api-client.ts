@@ -1,27 +1,18 @@
 import { API_URL, ENDPOINTS } from "@/lib/shared/config/constants";
-import { tokenManager } from "./token-manager";
+import { tokenManager, type TokenRefreshCallback } from "./token-manager";
 
-/**
- * Global state for token refresh
- * Prevents multiple simultaneous refresh requests
- */
-let refreshPromise: Promise<string> | null = null;
-let refreshCallbacks: Array<{ resolve: (token: string) => void; reject: (error: Error) => void }> =
-  [];
+const refreshPromises = new Map<string, Promise<string>>();
 
 /**
  * Refresh the authentication token
  */
 function refreshToken(currentToken: string): Promise<string> {
-  // If a refresh is already in progress, wait for it
-  if (refreshPromise) {
-    return new Promise((resolve, reject) => {
-      refreshCallbacks.push({ resolve, reject });
-    });
+  const existingRefresh = refreshPromises.get(currentToken);
+  if (existingRefresh) {
+    return existingRefresh;
   }
 
-  // Start new refresh
-  refreshPromise = (async (): Promise<string> => {
+  const refreshPromise = (async (): Promise<string> => {
     try {
       const response = await fetch(`${API_URL}${ENDPOINTS.REFRESH}`, {
         method: "POST",
@@ -37,24 +28,16 @@ function refreshToken(currentToken: string): Promise<string> {
       }
 
       const data = await response.json();
-      const newToken = data.token;
-
-      // Resolve all waiting callbacks
-      refreshCallbacks.forEach(({ resolve }) => resolve(newToken));
-      refreshCallbacks = [];
-      refreshPromise = null;
-
-      return newToken;
+      return data.token;
     } catch (error) {
-      // Reject all waiting callbacks
       const err = error instanceof Error ? error : new Error("Erro desconhecido ao renovar token");
-      refreshCallbacks.forEach(({ reject }) => reject(err));
-      refreshCallbacks = [];
-      refreshPromise = null;
       throw err;
+    } finally {
+      refreshPromises.delete(currentToken);
     }
   })();
 
+  refreshPromises.set(currentToken, refreshPromise);
   return refreshPromise;
 }
 
@@ -67,7 +50,7 @@ function refreshToken(currentToken: string): Promise<string> {
  */
 export async function apiClient(
   endpoint: string,
-  options: RequestInit & { token?: string | null; onTokenRefresh?: (token: string) => void } = {}
+  options: RequestInit & { token?: string | null; onTokenRefresh?: TokenRefreshCallback } = {}
 ): Promise<Response> {
   // Use token from options, or fall back to tokenManager, or null
   const token = options.token ?? tokenManager.getToken();
@@ -92,7 +75,7 @@ export async function apiClient(
 
       // Notify about token refresh
       if (onTokenRefresh) {
-        onTokenRefresh(newToken);
+        onTokenRefresh(newToken, token);
       }
 
       // Retry original request with new token

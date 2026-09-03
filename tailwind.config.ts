@@ -130,6 +130,10 @@ const config = {
             transform: "translateX(-50%)",
           },
         },
+        "sigaa-icon-pulse": {
+          "0%, 18%, 100%": { opacity: "1", transform: "scale(1)" },
+          "7%": { opacity: "0.72", transform: "scale(1.07)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -141,6 +145,7 @@ const config = {
         fifth: "fifth 70s linear infinite",
         "wave-drift": "wave-drift 12s linear infinite",
         "group-marquee": "group-marquee 34s linear infinite",
+        "sigaa-icon-pulse": "sigaa-icon-pulse 6s ease-in-out infinite",
       },
     },
   },

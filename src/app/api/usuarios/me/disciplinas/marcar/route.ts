@@ -25,7 +25,11 @@ export function POST(request: Request) {
         return ApiError.badRequest("disciplinaIds deve ser um array de UUIDs e status válido");
       }
 
-      const { disciplinaIds, status } = parsed.data;
+      const { disciplinaIds, status, expectedCursoId, expectedCurriculoId } = parsed.data;
+
+      if (Boolean(expectedCursoId) !== Boolean(expectedCurriculoId)) {
+        return ApiError.badRequest("Curso e currículo esperados devem ser informados juntos");
+      }
 
       const container = getContainer();
       const ativo = await container.calendarioRepository.findSemestreAtivo();
@@ -34,13 +38,28 @@ export function POST(request: Request) {
         usuario.id,
         disciplinaIds,
         status,
-        ativo?.id ?? null
+        ativo?.id ?? null,
+        expectedCursoId,
+        expectedCurriculoId
       );
 
       return NextResponse.json({ ok: true });
     } catch (error) {
       if (error instanceof Error && error.message === "NO_ACTIVE_SEMESTER") {
         return ApiError.badRequest("Não há semestre letivo ativo configurado");
+      }
+      if (
+        error instanceof Error &&
+        error.message === "COURSE_CHANGED_DURING_DISCIPLINE_CONFIRMATION"
+      ) {
+        return ApiError.badRequest(
+          "Seu curso mudou durante esta confirmação. Recarregue a grade e confira novamente"
+        );
+      }
+      if (error instanceof Error && error.message === "DISCIPLINE_OUTSIDE_ACTIVE_CURRICULUM") {
+        return ApiError.badRequest(
+          "Uma ou mais disciplinas não pertencem à grade ativa do seu curso"
+        );
       }
       return ApiError.internal("Erro ao marcar disciplinas");
     }

@@ -67,6 +67,10 @@ export const OPENAPI_TAGS = [
   { name: "Currículos", description: "Grades curriculares e árvores de disciplinas" },
   { name: "Calendário Acadêmico", description: "Semestres letivos e eventos do calendário" },
   { name: "Busca", description: "Busca unificada em todas as categorias" },
+  {
+    name: "SIGAA",
+    description: "Autorização privada para integração acadêmica com o SIGAA",
+  },
   { name: "Health", description: "Health check do serviço" },
   { name: "Upload", description: "Endpoints de upload de arquivos" },
   {

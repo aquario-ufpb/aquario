@@ -4,7 +4,17 @@ import type { FeatureIllustrationVariant } from "@/components/pages/landing/feat
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { PAGE_HEADER_TEXT } from "@/lib/shared/constants/page-header-text";
-import { Activity, BookOpen, Calendar, CalendarDays, GitBranch, MapIcon } from "lucide-react";
+import { SigaaMcpLink } from "@/components/shared/sigaa-mcp-link";
+import {
+  Activity,
+  Bot,
+  BookOpen,
+  Calendar,
+  CalendarDays,
+  ExternalLink,
+  GitBranch,
+  MapIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -95,6 +105,38 @@ export default function RecursosPage() {
         title={PAGE_HEADER_TEXT.recursos.title}
         subtitle={PAGE_HEADER_TEXT.recursos.subtitle}
       />
+
+      <section aria-labelledby="sigaa-mcp-title" className="mb-8">
+        <SigaaMcpLink
+          location="resources_page"
+          className="group flex min-h-28 flex-col gap-5 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm transition-colors hover:border-sky-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-sky-900 dark:from-sky-950/60 dark:to-card sm:flex-row sm:items-center sm:p-6"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-aquario-primary text-white shadow-sm">
+            <Bot className="h-6 w-6" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="mb-2 flex flex-wrap items-center gap-2">
+              <span
+                id="sigaa-mcp-title"
+                className="text-lg font-semibold text-slate-950 dark:text-white"
+              >
+                Leve o SIGAA para sua IA
+              </span>
+              <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-900 dark:text-sky-100">
+                Novo
+              </span>
+            </span>
+            <span className="block max-w-3xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              O MCP aberto do sigaa-for-ai-agents permite consultar informações do SIGAA no Claude,
+              ChatGPT e outras ferramentas compatíveis. A configuração acontece fora do Aquário.
+            </span>
+          </span>
+          <span className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-full border border-sky-200 bg-white px-4 text-sm font-semibold text-aquario-primary transition-colors group-hover:bg-sky-50 dark:border-sky-800 dark:bg-white/5 dark:text-sky-100 dark:group-hover:bg-white/10 sm:self-auto">
+            Ver projeto
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          </span>
+        </SigaaMcpLink>
+      </section>
 
       {/* Recursos Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

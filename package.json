@@ -1,6 +1,6 @@
 {
   "name": "aquario",
-  "version": "1.11.1",
+  "version": "1.12.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -19,6 +19,8 @@
     "test:integration": "vitest",
     "test:integration:ui": "vitest --ui",
     "test:integration:watch": "vitest --watch",
+    "test:sigaa-db": "node scripts/run-sigaa-db-tests.mjs",
+    "verify:sigaa-boundary": "node scripts/verify-sigaa-boundary.mjs",
     "test:all": "npm run test && npm run test:integration",
     "db:generate": "prisma generate",
     "db:migrate": "dotenv -e .env -- prisma migrate dev",
@@ -97,6 +99,7 @@
     "remark-gfm": "^4.0.1",
     "resend": "^4.0.0",
     "sass": "^1.81.0",
+    "server-only": "^0.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",

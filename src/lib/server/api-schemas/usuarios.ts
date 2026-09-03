@@ -81,6 +81,8 @@ export const updateCompletedDisciplinasSchema = z.object({
 export const marcarDisciplinasSchema = z.object({
   disciplinaIds: z.array(z.string().uuid()).min(1),
   status: z.enum(["concluida", "cursando", "none"]),
+  expectedCursoId: z.string().uuid().optional(),
+  expectedCurriculoId: z.string().uuid().optional(),
 });
 
 /**
@@ -110,7 +112,9 @@ export const updateOwnMembershipSchema = z.object({
  */
 export const onboardingPatchSchema = z
   .object({
+    flowVersion: z.literal(2).optional(),
     welcome: z.object({ completedAt: z.string() }).strict().optional(),
+    sigaa: stepStateSchema.optional(),
     periodo: stepStateSchema.optional(),
     concluidas: stepStateSchema.optional(),
     entidades: stepStateSchema.optional(),

@@ -55,6 +55,8 @@ export type IDisciplinaSemestreRepository = {
     usuarioId: string,
     disciplinaIds: string[],
     status: MarcarStatus,
-    semestreLetivoId: string | null
+    semestreLetivoId: string | null,
+    expectedCursoId?: string,
+    expectedCurriculoId?: string
   ): Promise<void>;
 };

@@ -15,7 +15,7 @@ import { toast } from "sonner";
 export function DevToolsPanel() {
   const [open, setOpen] = useState(false);
   const [selectedEntidadeId, setSelectedEntidadeId] = useState<string>("");
-  const { token, isAuthenticated } = useAuth();
+  const { token, userId, isAuthenticated } = useAuth();
   const { data: user } = useCurrentUser();
   const { data: entidades } = useEntidades();
   const { data: memberships } = useMyMemberships();
@@ -41,11 +41,11 @@ export function DevToolsPanel() {
       ]);
     },
     onSuccess: () => {
-      queryClient.setQueryData(queryKeys.usuarios.onboarding, {});
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.onboarding });
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
-      queryClient.invalidateQueries({ queryKey: queryKeys.disciplinasConcluidas.me });
-      queryClient.invalidateQueries({ queryKey: queryKeys.disciplinasSemestre.ativo });
+      queryClient.setQueryData(queryKeys.usuarios.onboarding(userId), {});
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.onboarding(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.disciplinasConcluidas.me(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.disciplinasSemestre.ativo(userId) });
       toast.success("Onboarding resetado!");
     },
     onError: () => {
@@ -62,7 +62,7 @@ export function DevToolsPanel() {
       await usuariosService.toggleRole(targetRole, token);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.current(userId) });
       toast.success(isAdmin ? "Agora você é USER!" : "Agora você é MASTER_ADMIN!");
     },
     onError: () => {
@@ -78,7 +78,7 @@ export function DevToolsPanel() {
       return usuariosService.toggleEntidadeAdmin(selectedEntidadeId, token);
     },
     onSuccess: result => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.currentMemberships(userId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.entidades.all });
       const entidadeNome = entidades?.find(e => e.id === selectedEntidadeId)?.name ?? "entidade";
       const messages = {

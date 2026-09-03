@@ -52,6 +52,9 @@ const STATUS_DESCRIPTIONS: Record<number, string> = {
   409: "Conflito",
   429: "Limite de requisições excedido",
   500: "Erro interno do servidor",
+  502: "Resposta inválida de serviço externo",
+  503: "Serviço indisponível",
+  504: "Tempo limite excedido",
 };
 
 /**

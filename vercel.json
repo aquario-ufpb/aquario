@@ -1,4 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "public": true
+  "public": true,
+  "regions": ["iad1"],
+  "functions": {
+    "src/app/api/usuarios/me/sigaa/sync/route.ts": {
+      "maxDuration": 180
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/internal/sigaa/retention",
+      "schedule": "17 3 * * *"
+    }
+  ]
 }
