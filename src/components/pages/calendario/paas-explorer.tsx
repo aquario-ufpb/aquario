@@ -26,6 +26,7 @@ export function PaasExplorer() {
   const [showCalendar, setShowCalendar] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
   const hasRestoredRef = useRef(false);
+  const isCheckingPrereqRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -146,22 +147,16 @@ export function PaasExplorer() {
   }, [selectedClassIds]);
 
   const toggleClassSelection = async (classId: number) => {
-    const newSet = new Set(selectedClassIds);
-
-    if (newSet.has(classId)) {
-      newSet.delete(classId);
-      setSelectedClassIds(newSet);
+    if (isCheckingPrereqRef.current) {
       return;
     }
 
     const disciplinaBuscada = allClasses.find(c => c.id === classId);
-
     if (!disciplinaBuscada) {
       return;
     }
 
     const isCurrentlySelected = selectedClassIds.has(classId);
-
     if (isCurrentlySelected) {
       setSelectedClassIds(prev => {
         const newSet = new Set(prev);
@@ -171,6 +166,8 @@ export function PaasExplorer() {
       return;
     }
 
+    isCheckingPrereqRef.current = true;
+
     try {
       const response = await fetch(`/api/disciplinas/${disciplinaBuscada.codigo}/relacoes`);
       if (!response.ok) {
@@ -179,7 +176,6 @@ export function PaasExplorer() {
 
       const relacoes = await response.json();
 
-      // vê quais disciplinas já estão marcadas
       const currentSelectedClasses = allClasses.filter(c => selectedClassIds.has(c.id));
       const codigosCursando = currentSelectedClasses.map(c => c.codigo);
 
@@ -194,7 +190,7 @@ export function PaasExplorer() {
           .join(", ");
 
         toast.error(`A disciplina ${nomesDireto} é pré-requisito para ${disciplinaBuscada.nome}.`);
-        return; // interrompe pra não marcar o chackbox
+        return;
       }
 
       const conflitoInverso = relacoes.dependentes.filter((dep: string) =>
@@ -207,10 +203,9 @@ export function PaasExplorer() {
           .join(", ");
 
         toast.error(`A disciplina ${disciplinaBuscada.nome} é pré-requisito para ${nomesInverso}.`);
-        return; // Interrompe e não marca o checkbox
+        return;
       }
 
-      newSet.add(classId);
       setSelectedClassIds(prev => {
         const newSet = new Set(prev);
         newSet.add(classId);
@@ -219,6 +214,8 @@ export function PaasExplorer() {
     } catch (error) {
       console.error(error);
       toast.error("Erro ao verificar relações da disciplina. Tente novamente.");
+    } finally {
+      isCheckingPrereqRef.current = false;
     }
   };
 
