@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0",
+  "observed_at": "2026-08-21T12:00:00Z",
+  "source": {
+    "system": "SIGAA_UFPB",
+    "adapter": "sigaa-tools",
+    "upstream_repository": "https://github.com/PucaVaz/sigaa-tools.git",
+    "upstream_commit": "0123456789abcdef0123456789abcdef01234567"
+  },
+  "student": {
+    "matricula": "20260000001",
+    "name": "Pessoa de Teste",
+    "course": "COMPUTACAO - GRADUACAO",
+    "email": "pessoa@example.test",
+    "semester": "2026.1"
+  },
+  "curriculum": {
+    "curriculum": "2026",
+    "maximum_completion_term": "2030.2",
+    "semester_workload_hours": {
+      "minimum": 240,
+      "maximum": 480
+    },
+    "cra": {
+      "value": "8.42",
+      "source": "academic_transcript"
+    },
+    "progress": [
+      {
+        "description": "Obrigatoria",
+        "completed_hours": 1200,
+        "total_hours": 2400,
+        "remaining_hours": 1200,
+        "completed_percent": 50.0
+      }
+    ],
+    "counts": {
+      "total": 4,
+      "completed": 1,
+      "enrolled": 1,
+      "pending": 1,
+      "unknown": 1,
+      "pending_required": 1,
+      "pending_optional": 0
+    },
+    "components": [
+      {
+        "code": "DCC101",
+        "name": "Programacao",
+        "integration_type": "OB",
+        "period": 1,
+        "period_raw": 1,
+        "workload_hours": 60,
+        "required": true,
+        "status": "completed",
+        "status_raw": "CUMPRIU",
+        "prerequisite": null,
+        "corequisite": null
+      },
+      {
+        "code": "DCC102",
+        "name": "Estruturas de Dados",
+        "integration_type": "OB",
+        "period": 2,
+        "period_raw": 2,
+        "workload_hours": 60,
+        "required": true,
+        "status": "enrolled",
+        "status_raw": "MATRICULADO",
+        "prerequisite": "DCC101",
+        "corequisite": null
+      },
+      {
+        "code": "DCC103",
+        "name": "Redes",
+        "integration_type": "OB",
+        "period": 3,
+        "period_raw": "3.0",
+        "workload_hours": 60,
+        "required": true,
+        "status": "pending",
+        "status_raw": "A CURSAR",
+        "prerequisite": null,
+        "corequisite": null
+      },
+      {
+        "code": "OPT001",
+        "name": "Topicos Especiais",
+        "integration_type": "OP",
+        "period": null,
+        "period_raw": "SEM NIVEL",
+        "workload_hours": 60,
+        "required": false,
+        "status": "unknown",
+        "status_raw": "NAO CLASSIFICADO",
+        "prerequisite": null,
+        "corequisite": null
+      }
+    ]
+  },
+  "grades": [
+    {
+      "semester": "2026.1",
+      "code": "DCC102",
+      "discipline": "Estruturas de Dados",
+      "units": ["8.0", "9.0"],
+      "exam": null,
+      "result": "8.5",
+      "absences": "0",
+      "status": "MATRICULADO"
+    }
+  ],
+  "classes": [
+    {
+      "source_key": "123",
+      "name": "Estruturas de Dados",
+      "code": "DCC102",
+      "room": "CI 101",
+      "schedule_raw": "246M12",
+      "semester": "2026.1"
+    }
+  ]
+}

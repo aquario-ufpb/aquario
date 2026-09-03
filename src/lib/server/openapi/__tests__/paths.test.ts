@@ -98,6 +98,22 @@ describe("paths registry sanity checks", () => {
     });
   });
 
+  describe("sigaa", () => {
+    it("registers the private SIGAA lifecycle", () => {
+      const expected: OperationKey[] = [
+        "post /usuarios/me/sigaa/reauth",
+        "post /usuarios/me/sigaa/sync",
+        "post /usuarios/me/sigaa/course-change/confirm",
+        "get /usuarios/me/academico",
+        "post /usuarios/me/sigaa/disconnect",
+        "delete /usuarios/me/sigaa/data",
+      ];
+      for (const operation of expected) {
+        expect(operations.has(operation)).toBe(true);
+      }
+    });
+  });
+
   describe("entidades", () => {
     it("registers the core entidades operations", () => {
       const expected: OperationKey[] = [

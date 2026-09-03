@@ -10,11 +10,12 @@ on:
       - "tsconfig.json"
       - ".github/workflows/code-quality.yml"
   pull_request:
-    branches: [main, develop]
     paths:
       - "src/**"
       - "prisma/**"
+      - "scripts/verify-sigaa-boundary.mjs"
       - "package.json"
+      - "package-lock.json"
       - "tsconfig.json"
       - ".github/workflows/code-quality.yml"
 
@@ -40,6 +41,9 @@ jobs:
 
       - name: Generate Prisma Client
         run: npm run db:generate
+
+      - name: Verify SIGAA persistence boundary
+        run: npm run verify:sigaa-boundary
 
       - name: Check code formatting
         run: npm run format:check

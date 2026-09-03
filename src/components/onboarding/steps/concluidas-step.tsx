@@ -7,6 +7,7 @@ import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { useGradeCurricular } from "@/lib/client/hooks/use-grade-curricular";
 import { useDisciplinasConcluidas } from "@/lib/client/hooks/use-disciplinas-concluidas";
 import { useMarcarDisciplinas } from "@/lib/client/hooks/use-disciplinas-semestre";
+import { useSigaaOnboardingSuggestions } from "@/lib/client/hooks/use-sigaa-onboarding-suggestions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
@@ -20,6 +21,11 @@ export function ConcluidasStep({ onComplete, isMutating }: ConcluidasStepProps) 
   const { data: grade, isLoading: gradeLoading } = useGradeCurricular(user?.curso?.id ?? null);
   const { data: concluidasData } = useDisciplinasConcluidas();
   const marcarMutation = useMarcarDisciplinas();
+  const {
+    suggestions,
+    hasSnapshot,
+    isLoading: suggestionsLoading,
+  } = useSigaaOnboardingSuggestions(grade, null, Boolean(user));
   const selectionMode = true;
 
   const completedIds = useMemo(() => {
@@ -35,17 +41,26 @@ export function ConcluidasStep({ onComplete, isMutating }: ConcluidasStepProps) 
         return;
       }
       try {
-        await marcarMutation.mutateAsync({ disciplinaIds, status });
-        toast.success(`${disciplinaIds.length} disciplina(s) marcada(s) como concluída(s)!`);
+        await marcarMutation.mutateAsync({
+          disciplinaIds,
+          status,
+          expectedCursoId: user?.curso.id,
+          expectedCurriculoId: grade?.curriculoId,
+        });
+        toast.success(
+          disciplinaIds.length === 1
+            ? "1 disciplina marcada como concluída!"
+            : `${disciplinaIds.length} disciplinas marcadas como concluídas!`
+        );
         await onComplete();
       } catch {
         toast.error("Erro ao salvar. Tente novamente.");
       }
     },
-    [marcarMutation, onComplete]
+    [grade?.curriculoId, marcarMutation, onComplete, user?.curso.id]
   );
 
-  if (gradeLoading) {
+  if (gradeLoading || suggestionsLoading) {
     return (
       <div className="space-y-4">
         <div className="space-y-2">
@@ -86,30 +101,81 @@ export function ConcluidasStep({ onComplete, isMutating }: ConcluidasStepProps) 
     );
   }
 
+  const everythingAlreadyConfirmed =
+    Boolean(suggestions) &&
+    suggestions?.completed.suggestedDisciplineIds.length === 0 &&
+    suggestions.completed.alreadySavedDisciplineIds.length > 0;
+  const curriculumGraph = (
+    <CurriculumGraph
+      disciplinas={grade.disciplinas}
+      cursoNome={grade.cursoNome}
+      curriculoCodigo={grade.curriculoCodigo}
+      completedDisciplinaIds={completedIds}
+      selectionMode={selectionMode}
+      onSaveWithStatus={handleSaveWithStatus}
+      isSaving={marcarMutation.isPending}
+      isLoggedIn={true}
+      allowedSaveStatuses={["concluida"]}
+      mobileLayout="list"
+      initialSelectedDisciplinaIds={suggestions?.completed.suggestedDisciplineIds}
+    />
+  );
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <h2 className="text-pretty text-xl font-bold">Disciplinas Concluídas</h2>
         <p className="text-sm text-muted-foreground">
-          Selecione na grade abaixo todas as disciplinas que você <strong>já concluiu</strong> e
-          clique em &quot;Salvar como Concluídas&quot;.
+          {suggestions?.completed.suggestedDisciplineIds.length ? (
+            <>
+              As sugestões seguras do SIGAA já estão marcadas. Revise, ajuste se necessário e clique
+              em &quot;Salvar como Concluídas&quot;.
+            </>
+          ) : (
+            <>
+              Selecione na grade abaixo todas as disciplinas que você <strong>já concluiu</strong> e
+              clique em &quot;Salvar como Concluídas&quot;.
+            </>
+          )}
         </p>
       </div>
 
-      <div className="min-w-0">
-        <CurriculumGraph
-          disciplinas={grade.disciplinas}
-          cursoNome={grade.cursoNome}
-          curriculoCodigo={grade.curriculoCodigo}
-          completedDisciplinaIds={completedIds}
-          selectionMode={selectionMode}
-          onSaveWithStatus={handleSaveWithStatus}
-          isSaving={marcarMutation.isPending}
-          isLoggedIn={true}
-          allowedSaveStatuses={["concluida"]}
-          mobileLayout="list"
-        />
-      </div>
+      {hasSnapshot && suggestions && (
+        <div className="rounded-lg border border-aquario-primary/20 bg-aquario-primary/5 p-3 text-sm">
+          <p className="font-medium">
+            Sugestões encontradas: {suggestions.completed.suggestedDisciplineIds.length}.
+          </p>
+          {(suggestions.completed.alreadySavedDisciplineIds.length > 0 ||
+            suggestions.completed.conflicts.length > 0 ||
+            suggestions.completed.unmatchedCodes.length > 0) && (
+            <p className="mt-1 text-muted-foreground">
+              {suggestions.completed.alreadySavedDisciplineIds.length > 0 &&
+                `${suggestions.completed.alreadySavedDisciplineIds.length} já estavam salvas. `}
+              {suggestions.completed.conflicts.length +
+                suggestions.completed.unmatchedCodes.length >
+                0 &&
+                `${suggestions.completed.conflicts.length + suggestions.completed.unmatchedCodes.length} ficaram fora da seleção por divergência ou falta de correspondência na grade.`}
+            </p>
+          )}
+        </div>
+      )}
+
+      {everythingAlreadyConfirmed ? (
+        <details className="rounded-lg border bg-muted/20 text-sm">
+          <summary className="min-h-11 cursor-pointer px-4 py-3 font-medium">Revisar grade</summary>
+          <div className="min-w-0 border-t p-3">{curriculumGraph}</div>
+        </details>
+      ) : (
+        <div className="min-w-0">{curriculumGraph}</div>
+      )}
+
+      {everythingAlreadyConfirmed && (
+        <div className="flex justify-end">
+          <Button onClick={onComplete} disabled={isMutating} className="min-h-11">
+            Tudo certo, continuar
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

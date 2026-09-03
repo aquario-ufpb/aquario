@@ -79,6 +79,52 @@ enum StatusProjeto {
   ARQUIVADO
 }
 
+enum MatriculaOrigem {
+  LEGACY
+  MANUAL
+  SIGAA
+}
+
+enum SigaaConnectionStatus {
+  PENDING
+  CONNECTED
+  DISCONNECTED
+}
+
+enum SigaaSyncRunStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+  SUPERSEDED
+}
+
+enum SigaaSyncFailureCode {
+  SIGAA_AUTH_FAILED
+  SIGAA_IDENTITY_INVALID
+  SIGAA_IDENTITY_MISMATCH
+  SIGAA_TIMEOUT
+  SIGAA_UNAVAILABLE
+  SIGAA_RESPONSE_INVALID
+  CONNECTOR_UNAVAILABLE
+  CONNECTOR_MISCONFIGURED
+  COURSE_MISMATCH
+  LEASE_LOST
+  INTERNAL_ERROR
+}
+
+enum SigaaCourseChangeProposalState {
+  PENDING
+  CONSUMED
+  SUPERSEDED
+}
+
+enum SigaaRateLimitOperation {
+  REAUTH
+  SYNC
+  DISCONNECT
+  DELETE_IMPORTED_DATA
+}
+
 // ============================================================================
 // CAMPUS & CENTRO & CURSO (Core organizational structure)
 // ============================================================================
@@ -112,6 +158,7 @@ model Curso {
   usuarios   Usuario[]
   guias      Guia[]
   curriculos Curriculo[]
+  sigaaCourseChangeProposals SigaaCourseChangeProposal[]
 }
 
 // ============================================================================
@@ -123,6 +170,8 @@ model Usuario {
   nome              String
   email             String?          @unique
   matricula         String?          @unique
+  matriculaOrigem   MatriculaOrigem?
+  matriculaVerificadaPeloSigaaEm DateTime?
   slug              String?          @unique
   senhaHash         String?
   permissoes        String[]         @default([])
@@ -148,11 +197,128 @@ model Usuario {
   vagasCriadas           Vaga[]
   projetosAutor          ProjetoAutor[]
   auditLogs              AuditLog[] @relation("AuditLogActor")
+  sigaaConnection       SigaaConnection?
+  sigaaCourseChangeProposals SigaaCourseChangeProposal[]
+  sigaaRateLimitBuckets SigaaRateLimitBucket[]
 
   @@index([email])
   @@index([matricula])
   @@index([eFacade])
   @@index([slug])
+}
+
+model SigaaConnection {
+  usuarioId        String                @id
+  status           SigaaConnectionStatus @default(PENDING)
+  consentVersion   String?               @db.VarChar(64)
+  consentedAt      DateTime?
+  connectedAt      DateTime?
+  disconnectedAt   DateTime?
+  leaseGeneration  BigInt                @default(0)
+  leaseRunId       String?
+  leaseTokenDigest String?               @db.Char(64)
+  leaseExpiresAt   DateTime?
+  criadoEm         DateTime              @default(now())
+  atualizadoEm     DateTime              @updatedAt
+
+  usuario        Usuario                @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  snapshot       SigaaAcademicSnapshot?
+  runs           SigaaSyncRun[]         @relation("ConnectionRuns")
+  activeLeaseRun SigaaSyncRun?          @relation("ActiveLease", fields: [usuarioId, leaseRunId], references: [usuarioId, id], onDelete: NoAction)
+
+  @@unique([usuarioId, leaseRunId])
+}
+
+model SigaaAcademicSnapshot {
+  usuarioId           String   @id
+  contractVersion     String   @db.VarChar(16)
+  connectorObservedAt DateTime
+  synchronizedAt      DateTime @default(now())
+  upstreamCommit      String   @db.Char(40)
+  installedByRunId    String?
+  payload             Json
+
+  connection     SigaaConnection @relation(fields: [usuarioId], references: [usuarioId], onDelete: Cascade)
+  installedByRun SigaaSyncRun?   @relation(fields: [usuarioId, installedByRunId], references: [usuarioId, id], onDelete: NoAction)
+
+  @@unique([usuarioId, installedByRunId])
+}
+
+model SigaaSyncRun {
+  id                  String                @id @default(uuid())
+  usuarioId           String
+  idempotencyKey      String                @db.VarChar(64)
+  status              SigaaSyncRunStatus    @default(RUNNING)
+  leaseGeneration     BigInt
+  leaseExpiresAt      DateTime
+  courseIdentityToken String                @db.Char(64)
+  consentVersion      String                @db.VarChar(64)
+  failureCode         SigaaSyncFailureCode?
+  connectorRequestId  String?               @db.VarChar(64)
+  contractVersion     String?               @db.VarChar(16)
+  upstreamCommit      String?               @db.Char(40)
+  componentCount      Int?
+  gradeCount          Int?
+  classCount          Int?
+  iniciadoEm          DateTime              @default(now())
+  finalizadoEm        DateTime?
+  retentionExpiresAt  DateTime?
+  confirmationProposalId String?
+
+  connection        SigaaConnection        @relation("ConnectionRuns", fields: [usuarioId], references: [usuarioId], onDelete: Cascade)
+  activeFor         SigaaConnection?       @relation("ActiveLease")
+  installedSnapshot SigaaAcademicSnapshot?
+  detectedCourseChangeProposal SigaaCourseChangeProposal? @relation("CourseChangeInitiatingRun")
+  confirmationProposal         SigaaCourseChangeProposal? @relation("CourseChangeConfirmationRuns", fields: [confirmationProposalId], references: [id], onDelete: SetNull)
+
+  @@unique([usuarioId, idempotencyKey])
+  @@unique([usuarioId, id])
+  @@index([usuarioId, iniciadoEm])
+  @@index([status, leaseExpiresAt])
+  @@index([status, retentionExpiresAt])
+  @@index([confirmationProposalId])
+}
+
+model SigaaCourseChangeProposal {
+  id                           String                         @id @default(uuid())
+  usuarioId                    String
+  initiatingRunId              String                         @unique
+  profileAcademicIdentityToken String                         @db.Char(64)
+  targetCourseId               String
+  targetCatalogToken           String                         @db.Char(64)
+  sourceCourseLabel            String                         @db.VarChar(255)
+  profileMatricula             String?                        @db.VarChar(11)
+  expectedMatricula            String                         @db.VarChar(11)
+  aliasVersion                 String                         @db.VarChar(64)
+  consentVersion               String                         @db.VarChar(64)
+  expiresAt                    DateTime
+  state                        SigaaCourseChangeProposalState @default(PENDING)
+  consumedAt                   DateTime?
+  criadoEm                     DateTime                       @default(now())
+  atualizadoEm                 DateTime                       @updatedAt
+
+  usuario          Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  initiatingRun    SigaaSyncRun   @relation("CourseChangeInitiatingRun", fields: [initiatingRunId], references: [id], onDelete: Cascade)
+  targetCourse     Curso          @relation(fields: [targetCourseId], references: [id], onDelete: Cascade)
+  confirmationRuns SigaaSyncRun[] @relation("CourseChangeConfirmationRuns")
+
+  @@index([usuarioId, state, expiresAt])
+  @@index([targetCourseId])
+}
+
+model SigaaRateLimitBucket {
+  usuarioId       String
+  operation       SigaaRateLimitOperation
+  count           Int
+  windowStartedAt DateTime
+  resetAt         DateTime
+  criadoEm        DateTime                @default(now())
+  atualizadoEm    DateTime                @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, operation])
+  @@index([resetAt])
 }
 
 model AuditLog {

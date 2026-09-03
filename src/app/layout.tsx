@@ -9,6 +9,7 @@ import { ReactQueryProvider } from "@/providers/react-query-provider";
 import { PostHogProvider } from "@/providers/posthog-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { OnboardingProvider } from "@/components/onboarding/onboarding-provider";
+import { SigaaConnectNudgeProvider } from "@/components/sigaa/sigaa-connect-nudge-provider";
 import { DevToolsPanel } from "@/components/dev/dev-tools-panel";
 
 const outfit = Outfit({
@@ -61,6 +62,7 @@ export default function RootLayout({
                     <NavWrapper />
                     <div className="pt-0">{children}</div>
                   </div>
+                  <SigaaConnectNudgeProvider />
                 </OnboardingProvider>
                 <Toaster />
                 <DevToolsPanel />

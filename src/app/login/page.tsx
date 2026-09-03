@@ -12,6 +12,7 @@ import { AuthLayout } from "@/components/auth/auth-layout";
 import { PasswordInput } from "@/components/auth/password-input";
 import { trackEvent } from "@/analytics/posthog-client";
 import { isApiErrorInstance } from "@/lib/client/errors";
+import { resolveLoginDestination } from "./login-destination";
 
 function LoginForm() {
   const router = useRouter();
@@ -21,7 +22,8 @@ function LoginForm() {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
-  const { login } = useAuth();
+  const destination = resolveLoginDestination(searchParams.get("next"));
+  const { login, token, isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   useEffect(() => {
     const registered = searchParams.get("registered");
@@ -37,6 +39,12 @@ function LoginForm() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated) {
+      router.replace(destination);
+    }
+  }, [destination, isAuthenticated, isAuthLoading, router]);
+
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -47,7 +55,7 @@ function LoginForm() {
       const data = await authService.login(email, senha);
       login(data.token);
       trackEvent("login_succeeded");
-      router.push("/");
+      router.replace(destination);
     } catch (err: unknown) {
       if (err instanceof Error) {
         const errorType = isApiErrorInstance(err) ? err.code : "unknown";
@@ -67,6 +75,20 @@ function LoginForm() {
       setIsLoading(false);
     }
   };
+
+  if (isAuthLoading || token || isAuthenticated) {
+    return (
+      <AuthLayout>
+        <div className="text-center" role="status" aria-live="polite">
+          <div
+            className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-aquario-primary"
+            aria-hidden="true"
+          />
+          <p className="mt-4 text-muted-foreground">Verificando sua sessão...</p>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>

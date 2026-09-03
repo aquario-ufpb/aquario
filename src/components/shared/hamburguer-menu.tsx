@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, type RefObject } from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -8,7 +8,10 @@ import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getDefaultAvatarUrl } from "@/lib/client/utils";
-import { User, LogOut, Settings, Search } from "lucide-react";
+import { Bot, ExternalLink, User, LogOut, Settings, Search } from "lucide-react";
+import { SigaaMcpLink } from "@/components/shared/sigaa-mcp-link";
+import { SigaaMenuStatus } from "@/components/shared/sigaa-menu-status";
+import { shouldEmphasizeSigaa, type SigaaAccessState } from "@/lib/client/sigaa/access-state";
 
 // ============================================================================
 // Helper Functions
@@ -51,16 +54,21 @@ function NavLogo() {
 type HamburgerIconProps = {
   isOpen: boolean;
   onClick: () => void;
+  triggerRef: RefObject<HTMLButtonElement>;
 };
 
-function HamburgerIcon({ isOpen, onClick }: HamburgerIconProps) {
+function HamburgerIcon({ isOpen, onClick, triggerRef }: HamburgerIconProps) {
   const lineClass = "block w-6 h-0.5 bg-neutral-800 dark:bg-neutral-50";
 
   return (
     <button
-      className="flex flex-col space-y-2 focus:outline-none p-2"
+      ref={triggerRef}
+      className="flex min-h-11 min-w-11 flex-col items-center justify-center space-y-2 rounded-md p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       onClick={onClick}
-      aria-label="Toggle menu"
+      aria-controls="mobile-navigation-menu"
+      aria-expanded={isOpen}
+      aria-haspopup="true"
+      aria-label={isOpen ? "Fechar menu de navegação" : "Abrir menu de navegação"}
     >
       <span
         className={`${lineClass} transition-transform duration-300 ease-in-out ${
@@ -94,7 +102,7 @@ function MenuLink({ href, onClick, children, className = "" }: MenuLinkProps) {
       <Link
         href={href}
         onClick={onClick}
-        className={`text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-500 dark:hover:text-blue-400 transition-colors block py-2 ${className}`}
+        className={`flex min-h-11 items-center text-sm font-medium text-neutral-800 transition-colors hover:text-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-neutral-200 dark:hover:text-blue-400 ${className}`}
       >
         {children}
       </Link>
@@ -112,7 +120,7 @@ function ThemeToggle({ isDark, mounted, onToggle }: ThemeToggleProps) {
   if (!mounted) {
     return (
       <li className="pt-2 border-t border-border/50">
-        <div className="flex items-center justify-between w-full text-sm font-medium text-neutral-800 dark:text-neutral-200 py-2">
+        <div className="flex min-h-11 w-full items-center justify-between text-sm font-medium text-neutral-800 dark:text-neutral-200">
           <span>Tema</span>
           <div className="w-12 h-6 rounded-full bg-neutral-300 animate-pulse" />
         </div>
@@ -124,7 +132,7 @@ function ThemeToggle({ isDark, mounted, onToggle }: ThemeToggleProps) {
     <li className="pt-2 border-t border-border/50">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between w-full text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-500 dark:hover:text-blue-400 transition-colors py-2"
+        className="flex min-h-11 w-full items-center justify-between text-sm font-medium text-neutral-800 transition-colors hover:text-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-neutral-200 dark:hover:text-blue-400"
       >
         <span>Tema</span>
         <div className="relative">
@@ -147,9 +155,10 @@ function ThemeToggle({ isDark, mounted, onToggle }: ThemeToggleProps) {
 
 type UserSectionProps = {
   onClose: () => void;
+  sigaaAccessState: SigaaAccessState;
 };
 
-function UserSection({ onClose }: UserSectionProps) {
+function UserSection({ onClose, sigaaAccessState }: UserSectionProps) {
   const { isAuthenticated, logout, isLoading: authLoading } = useAuth();
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const isLoading = authLoading || userLoading;
@@ -198,11 +207,20 @@ function UserSection({ onClose }: UserSectionProps) {
         <Link
           href="/perfil"
           onClick={onClose}
-          className="flex items-center gap-2 text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-500 dark:hover:text-blue-400 transition-colors py-2"
+          className="flex min-h-11 items-center gap-2 text-sm font-medium text-neutral-800 transition-colors hover:text-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-neutral-200 dark:hover:text-blue-400"
         >
           <User className="h-4 w-4" />
           <span>Perfil</span>
         </Link>
+      </li>
+
+      <li>
+        <SigaaMenuStatus
+          accessState={sigaaAccessState}
+          location="mobile_user_menu"
+          onNavigate={onClose}
+          variant="mobile"
+        />
       </li>
 
       {/* Admin Link */}
@@ -211,7 +229,7 @@ function UserSection({ onClose }: UserSectionProps) {
           <Link
             href="/admin"
             onClick={onClose}
-            className="flex items-center gap-2 text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-blue-500 dark:hover:text-blue-400 transition-colors py-2"
+            className="flex min-h-11 items-center gap-2 text-sm font-medium text-neutral-800 transition-colors hover:text-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-neutral-200 dark:hover:text-blue-400"
           >
             <Settings className="h-4 w-4" />
             <span>Administração</span>
@@ -226,7 +244,7 @@ function UserSection({ onClose }: UserSectionProps) {
             logout();
             onClose();
           }}
-          className="flex items-center gap-2 w-full text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors py-2"
+          className="flex min-h-11 w-full items-center gap-2 text-sm font-medium text-red-600 transition-colors hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-red-400 dark:hover:text-red-300"
         >
           <LogOut className="h-4 w-4" />
           <span>Sair</span>
@@ -242,6 +260,7 @@ function UserSection({ onClose }: UserSectionProps) {
 
 const NAV_LINKS = [
   { href: "/sobre", label: "SOBRE" },
+  { href: "/recursos", label: "RECURSOS" },
   { href: "/calendario", label: "DISCIPLINAS" },
   { href: "/grades-curriculares", label: "GRADES" },
   { href: "/mapas", label: "MAPAS" },
@@ -254,14 +273,37 @@ const NAV_LINKS = [
 // Main Component
 // ============================================================================
 
-export default function HamburgerMenu() {
+export default function HamburgerMenu({
+  sigaaAccessState,
+}: {
+  sigaaAccessState: SigaaAccessState;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const { setTheme, theme, resolvedTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+      event.preventDefault();
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen]);
 
   const closeMenu = () => setIsOpen(false);
   const toggleMenu = () => setIsOpen(prev => !prev);
@@ -284,17 +326,18 @@ export default function HamburgerMenu() {
                   })
                 );
               }}
-              className="p-2 text-neutral-800 dark:text-neutral-50"
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-neutral-50"
               aria-label="Pesquisar"
             >
               <Search className="w-5 h-5" />
             </button>
-            <HamburgerIcon isOpen={isOpen} onClick={toggleMenu} />
+            <HamburgerIcon isOpen={isOpen} onClick={toggleMenu} triggerRef={triggerRef} />
           </div>
 
           {/* Dropdown Menu */}
           <div
-            className={`absolute top-full right-0 mt-2 bg-white dark:bg-neutral-800 border border-border/50 shadow-lg rounded-lg transition-all duration-300 ease-in-out min-w-[200px] ${
+            id="mobile-navigation-menu"
+            className={`absolute right-0 top-full mt-2 max-h-[calc(100dvh-5rem)] min-w-[min(22rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-lg border border-border/50 bg-white shadow-lg transition-opacity duration-200 ease-out motion-reduce:transition-none dark:bg-neutral-800 ${
               isOpen ? "opacity-100 visible z-50" : "opacity-0 invisible pointer-events-none"
             }`}
           >
@@ -303,11 +346,40 @@ export default function HamburgerMenu() {
               {NAV_LINKS.map(link => (
                 <MenuLink key={link.href} href={link.href} onClick={closeMenu}>
                   {link.label}
+                  {link.href === "/recursos" && shouldEmphasizeSigaa(sigaaAccessState) ? (
+                    <span className="ml-2 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-950 dark:text-sky-200">
+                      Novo
+                    </span>
+                  ) : null}
                 </MenuLink>
               ))}
 
+              <li>
+                <SigaaMcpLink
+                  location="mobile_menu"
+                  className="flex min-h-11 items-center gap-2 rounded-md py-2 text-sm font-medium text-neutral-800 transition-colors hover:text-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-neutral-200 dark:hover:text-blue-400"
+                >
+                  <Bot className="h-4 w-4" aria-hidden="true" />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span>MCP do SIGAA</span>
+                      <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-950 dark:text-sky-200">
+                        MCP
+                      </span>
+                    </span>
+                    <span className="mt-0.5 block text-xs font-normal leading-snug text-muted-foreground">
+                      Use o SIGAA em outras IAs.
+                    </span>
+                  </span>
+                  <ExternalLink
+                    className="ml-auto h-4 w-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                </SigaaMcpLink>
+              </li>
+
               {/* User Section */}
-              <UserSection onClose={closeMenu} />
+              <UserSection onClose={closeMenu} sigaaAccessState={sigaaAccessState} />
 
               {/* Theme Toggle */}
               <ThemeToggle

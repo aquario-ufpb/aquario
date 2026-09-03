@@ -55,11 +55,29 @@ beforeAll(() => {
 
 describe("onboarding accessibility", () => {
   it("announces the current onboarding progress", () => {
-    render(<OnboardingProgress currentStep={2} totalSteps={7} />);
+    render(<OnboardingProgress currentStep={2} totalSteps={7} stepTitle="SIGAA" />);
 
     expect(screen.getByRole("progressbar", { name: "Progresso da configuração" })).toHaveAttribute(
       "aria-valuetext",
-      "Passo 2 de 7"
+      "Etapa 2 de 7 · SIGAA"
+    );
+    expect(screen.getByText("Etapa 2 de 7")).toBeInTheDocument();
+    expect(screen.getByText("SIGAA")).toBeInTheDocument();
+  });
+
+  it("exposes welcome page progress without changing the etapa count", () => {
+    render(
+      <OnboardingProgress
+        currentStep={1}
+        totalSteps={7}
+        stepTitle="Introdução"
+        subStep={{ current: 2, total: 2 }}
+      />
+    );
+
+    expect(screen.getByRole("progressbar", { name: "Progresso da configuração" })).toHaveAttribute(
+      "aria-valuetext",
+      "Etapa 1 de 7 · Introdução (2 de 2)"
     );
   });
 

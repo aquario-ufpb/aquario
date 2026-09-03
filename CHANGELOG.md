@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Nudge de conexão SIGAA**: Depois do onboarding, contas autenticadas sem SIGAA veem um modal leve pedindo para conectar. "Deixar pra depois", o X e o clique fora gravam o dismiss por usuário.
+
 ## [1.12.1] - 2026-08-27
 
 ### Fixed
@@ -15,10 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.12.0] - 2026-08-27
 
 ### Added
+- **Onboarding assistido pelo SIGAA**: Novas contas podem importar um snapshot no primeiro passo, revisar sugestões preselecionadas de disciplinas concluídas e cursando e manter todo o fluxo manual ao ignorar a integração. A landing, os menus e Recursos também apresentam o status da conexão e o MCP aberto do projeto sigaa-for-ai-agents.
+- **Substituição segura de curso pelo SIGAA.** Divergências reconhecidas agora geram uma proposta curta e idempotente sem alterar perfil ou snapshot. Uma rota separada exige novas credenciais, reautenticação vinculada à proposta e confirmação irreversível antes de trocar curso e centro e instalar o snapshot em uma única transação.
+- **Sincronização privada SIGAA V1**: Novas rotas privadas reservam tentativas idempotentes antes da rede, usam credenciais efêmeras em uma única chamada sem retry, instalam apenas o snapshot do lease atual e persistem somente códigos de falha seguros. Leitura, desconexão e exclusão derivam o dono da sessão; desconectar preserva o snapshot e excluir remove apenas os dados importados.
+- **Experiência SIGAA V1**: Contas autenticadas ganharam card privado no perfil, consentimento, reautenticação, sincronização sem retry de credenciais, leitura acadêmica, desconexão e exclusão separadas. A projeção efetiva preserva fontes manuais, mantém componentes SIGAA sem catálogo visíveis e dá precedência ao SIGAA somente na apresentação. Um cron diário remove tentativas vencidas, previews falham fechados sem conector e staging elimina dados SIGAA herdados antes do acesso.
+- **Reautenticação SIGAA V1**: Novo endpoint autenticado para confirmar a senha do Aquário e emitir uma prova HS256 isolada, de uso específico e validade de 15 minutos. A operação aplica limite distribuído antes do bcrypt, nunca persiste nem repete a senha no cliente e usa configuração server-only com allowlist explícita para o conector.
+- **Persistência SIGAA V1**: Novo agregado transacional com conexão por usuário, snapshot acadêmico JSON validado, tentativas idempotentes com lease por geração, proveniência da matrícula, limite distribuído por operação e retenção segura. A suíte agora aplica as migrações versionadas, testa as invariantes e prova a reversão exata do write-set SIGAA sem alterar identidades preexistentes em PostgreSQL descartável.
 - **Grade curricular – seleção em lote por período**: No modo seleção, o cabeçalho de cada período vira um botão que marca de uma vez todas as obrigatórias daquele período e, num segundo clique, as tira da seleção (tooltip "Marcar/Desmarcar todas as obrigatórias" no desktop, botão equivalente na lista mobile). Vale tanto para `/grades-curriculares` quanto para os passos "Disciplinas Concluídas" e "Cursando" do onboarding.
 - **Admin Audit Logs**: Nova tabela `AuditLog`, API interna `GET /api/admin/audit-logs` e tela `/admin/audit-logs` para `MASTER_ADMIN` acompanhar ações administrativas sensíveis. Mutações administrativas de usuários agora registram criação/mescla de facade, alteração de role, edição de centro/curso/slug e deleção.
 
 ### Changed
+- **Confirmação acadêmica no onboarding**: O snapshot SIGAA apenas sugere correspondências únicas da grade. Período, turmas, conflitos e itens não reconhecidos continuam manuais, e nenhuma disciplina é persistida antes da confirmação do usuário.
+- **Experiência e privacidade SIGAA**: Dados acadêmicos agora são a primeira aba privada do perfil próprio, com resumo ou conexão orientada e créditos ao projeto de PucaVaz e ao conector do Aquário. A sincronização oculta as credenciais e comunica as etapas reais da espera. O painel destaca CRA e progresso, compacta turmas e organiza notas, estatísticas e componentes em filtros e seções recolhíveis. Disciplinas manuais continuam preservadas, eventos analíticos usam apenas propriedades limitadas e todas as superfícies seguem bloqueadas em autocaptura e replay.
+- **Integração SIGAA**: Botão de conexão agora usa o ícone SIGAA em SVG vetorial leve.
 - **Perfis públicos**: `/usuarios/[slug]`, `/entidade/[slug]` e `/projetos/[id]` agora deduplicam leituras server-side entre metadata e página; perfis de usuário e entidade também hidratam o React Query com `initialData`.
 - **Onboarding**: O modal agora usa altura dinâmica com safe areas e rolagem contida; o fluxo móvel ganhou alvos de toque de 44 px, foco e estados acessíveis, animações reduzidas e uma lista curricular vertical sem rolagem horizontal aninhada.
 
@@ -26,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Copa do Mundo 2026**: Removida a página `/copa-do-mundo` e todo o código relacionado — dataset compartilhado (`src/lib/shared/copa/`), componentes (`src/components/pages/copa/`), ilustração `worldcup` da landing, entradas no dropdown "Recursos" da navbar e no hub `/recursos`, snapshot `content/copa-resultados/`, script `scripts/update-copa-results.ts`, a action `Update Copa Results`, a variável `FOOTBALL_DATA_API_KEY` e o host de imagens `flagcdn.com`.
 
 ### Fixed
+- **Espera da sincronização SIGAA**: O diálogo permanece aberto durante reautenticação, sincronização e recarga local, sem saída antecipada por botão, X, Escape ou interação externa. As credenciais são removidas e não são salvas; após falha ou timeout, fechar e tentar novamente volta a funcionar.
+- **Confirmação de grade após troca de curso**: O curso esperado e a grade ativa agora são validados sob bloqueio na mesma transação que salva disciplinas. Se apenas a atualização local falhar após uma sincronização concluída, o fluxo recarrega os dados sem pedir credenciais ou repetir a troca irreversível.
+- **Restauração de sessão nas rotas de autenticação**: O login agora oculta o formulário enquanto restaura a sessão, redireciona sessões autenticadas com substituição de histórico e impede que o onboarding global seja montado sobre páginas de autenticação.
+- **Isolamento dos testes PostgreSQL do SIGAA**: A suíte destrutiva do repositório agora recusa execução sem uma URL PostgreSQL de loopback apontando para `aquario_sigaa_test` ou uma variante com sufixo, antes de qualquer `TRUNCATE`.
+- **Fluxo acadêmico SIGAA**: Estados de conexão e eventos do PostHog agora são derivados uma única vez, confirmações expiradas não podem ser enviadas e recebem uma saída segura. A leitura acadêmica ganhou notas em cards no mobile, período zero consistente e preservação do nome de disciplinas manuais de cursos anteriores. O gate PostgreSQL também reverte e reaplica, em ordem explícita, as duas migrações SIGAA do stack.
+- **Acesso amplo ao SIGAA**: A integração deixou de exigir permissão beta e agora está disponível para toda conta autenticada, mantendo isolamento por dono, reautenticação, provas temporárias e limites de tentativa. A landing ganhou um destaque leve antes dos projetos, os menus carregam o estado ao abrir a página e oferecem conexão direta sem exibir estados transitórios como texto.
+- **Conector SIGAA local**: A configuração e o cliente HTTP agora compartilham a mesma política explícita de loopback para `localhost`, `127.0.0.1` e `::1` em desenvolvimento.
+- **Isolamento do cache privado**: Queries do usuário atual, onboarding, membresias e disciplinas agora incluem o ID da identidade autenticada e são removidas no logout ou na troca de conta. Respostas e renovações de token de uma sessão anterior também deixam de alterar a sessão ativa.
 - **Grade curricular – ações de salvar sem efeito**: O menu de salvar deixou de oferecer "Marcar como Concluídas" quando toda a seleção já está concluída e "Marcar como Cursando" quando toda a seleção já está cursando. Sobrando uma única ação, ela vira botão direto em vez de dropdown de um item só.
 - **Grade curricular – seleção em lote rebaixava concluídas**: No passo "Cursando" do onboarding, onde a única ação possível remove o registro de disciplina concluída antes de vincular ao semestre, o atalho por período deixou de arrastar as cadeiras já concluídas para a seleção. Períodos sem obrigatória elegível não exibem mais o atalho.
 - **Grade curricular – transição de concluída para cursando**: "Marcar como Cursando" voltou a aparecer para seleções compostas só por disciplinas concluídas, caso de quem vai pagar a cadeira de novo. Antes a ação era escondida e exigia desmarcar e salvar duas vezes.

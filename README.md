@@ -1,6 +1,6 @@
 # Aquário
 
-[![Version](https://img.shields.io/badge/version-1.11.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.12.1-blue.svg)](CHANGELOG.md)
 [![Changelog](https://img.shields.io/badge/changelog-view-blueviolet)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://github.com/aquario-ufpb/aquario/actions/workflows/tests.yml/badge.svg)](https://github.com/aquario-ufpb/aquario/actions/workflows/tests.yml)
@@ -34,6 +34,10 @@ Interactive maps of campus buildings and rooms.
 ### 💼 Opportunities (Vagas)
 
 Job listings, internships, research positions, and volunteer opportunities.
+
+### 🎓 SIGAA
+
+Connect to SIGAA to sync your academic data — curriculum, grades, and classes.
 
 ## Tech Stack
 
