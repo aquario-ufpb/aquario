@@ -18,15 +18,24 @@ export class PrismaDisciplinaSemestreRepository implements IDisciplinaSemestreRe
     });
   }
 
-  findByUsuarioAndSemestreWithDisciplina(
+  async findByUsuarioAndSemestreWithDisciplina(
     usuarioId: string,
     semestreLetivoId: string
   ): Promise<DisciplinaSemestreWithDisciplina[]> {
-    return prisma.disciplinaSemestre.findMany({
+    const records = await prisma.disciplinaSemestre.findMany({
       where: { usuarioId, semestreLetivoId },
-      include: { disciplina: { select: { codigo: true, nome: true } } },
+      include: {
+        disciplina: {
+          select: {
+            codigo: true,
+            nome: true,
+          },
+        },
+      },
       orderBy: { criadoEm: "asc" },
     });
+
+    return records as DisciplinaSemestreWithDisciplina[];
   }
 
   async findOneOwned(
@@ -45,7 +54,7 @@ export class PrismaDisciplinaSemestreRepository implements IDisciplinaSemestreRe
     return record;
   }
 
-  updateFields(
+  async updateFields(
     id: string,
     data: UpdateDisciplinaSemestreFields
   ): Promise<DisciplinaSemestreWithDisciplina> {
@@ -63,11 +72,13 @@ export class PrismaDisciplinaSemestreRepository implements IDisciplinaSemestreRe
       updateData.codigoPaas = data.codigoPaas ?? null;
     }
 
-    return prisma.disciplinaSemestre.update({
+    const record = await prisma.disciplinaSemestre.update({
       where: { id },
       data: updateData,
       include: { disciplina: { select: { codigo: true, nome: true } } },
     });
+
+    return record as DisciplinaSemestreWithDisciplina;
   }
 
   async replaceForUsuarioAndSemestre(
