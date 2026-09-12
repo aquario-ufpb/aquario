@@ -27,6 +27,7 @@ export function PaasExplorer() {
   const calendarRef = useRef<HTMLDivElement>(null);
   const hasRestoredRef = useRef(false);
   const isCheckingPrereqRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -167,9 +168,12 @@ export function PaasExplorer() {
     }
 
     isCheckingPrereqRef.current = true;
+    abortControllerRef.current = new AbortController();
 
     try {
-      const response = await fetch(`/api/disciplinas/${disciplinaBuscada.codigo}/relacoes`);
+      const response = await fetch(`/api/disciplinas/${disciplinaBuscada.codigo}/relacoes`, {
+        signal: abortControllerRef.current.signal,
+      });
       if (!response.ok) {
         throw new Error(`Erro ao buscar relações: ${response.statusText}`);
       }
@@ -212,6 +216,10 @@ export function PaasExplorer() {
         return newSet;
       }); //adiciona disciplina se não houver conflito
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        // erro gerado pelo abort
+        return; // evita aviso de erro quando a requisição é abortada
+      }
       console.error(error);
       toast.error("Erro ao verificar relações da disciplina. Tente novamente.");
     } finally {
@@ -220,6 +228,11 @@ export function PaasExplorer() {
   };
 
   const clearSelection = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    isCheckingPrereqRef.current = false;
+
     setSelectedClassIds(new Set());
     setShowCalendar(false);
     removeStorage("calendario_selected_classes");
