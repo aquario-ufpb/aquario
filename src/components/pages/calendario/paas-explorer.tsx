@@ -11,6 +11,7 @@ import CalendarioHeader from "@/components/pages/calendario/header";
 import SearchSection from "@/components/pages/calendario/search-section";
 import CalendarGrid from "@/components/pages/calendario/calendar-grid";
 import type { ClassWithRoom } from "@/components/pages/calendario/types";
+import { toast } from "sonner";
 
 function removeDiacritics(str: string): string {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -25,6 +26,8 @@ export function PaasExplorer() {
   const [showCalendar, setShowCalendar] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
   const hasRestoredRef = useRef(false);
+  const isCheckingPrereqRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -144,17 +147,92 @@ export function PaasExplorer() {
     setStorage("calendario_selected_classes", classIdsArray);
   }, [selectedClassIds]);
 
-  const toggleClassSelection = (classId: number) => {
-    const newSet = new Set(selectedClassIds);
-    if (newSet.has(classId)) {
-      newSet.delete(classId);
-    } else {
-      newSet.add(classId);
+  const toggleClassSelection = async (classId: number) => {
+    if (isCheckingPrereqRef.current) {
+      return;
     }
-    setSelectedClassIds(newSet);
+
+    const disciplinaBuscada = allClasses.find(c => c.id === classId);
+    if (!disciplinaBuscada) {
+      return;
+    }
+
+    const isCurrentlySelected = selectedClassIds.has(classId);
+    if (isCurrentlySelected) {
+      setSelectedClassIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(classId);
+        return newSet;
+      });
+      return;
+    }
+
+    isCheckingPrereqRef.current = true;
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const response = await fetch(`/api/disciplinas/${disciplinaBuscada.codigo}/relacoes`, {
+        signal: abortControllerRef.current.signal,
+      });
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar relações: ${response.statusText}`);
+      }
+
+      const relacoes = await response.json();
+
+      const currentSelectedClasses = allClasses.filter(c => selectedClassIds.has(c.id));
+      const codigosCursando = currentSelectedClasses.map(c => c.codigo);
+
+      const conflitoDireto = relacoes.preRequisitos.filter((pr: string) =>
+        codigosCursando.includes(pr)
+      );
+
+      if (conflitoDireto.length > 0) {
+        const nomesDireto = selectedClasses
+          .filter(c => conflitoDireto.includes(c.codigo))
+          .map(c => c.nome)
+          .join(", ");
+
+        toast.error(`A disciplina ${nomesDireto} é pré-requisito para ${disciplinaBuscada.nome}.`);
+        return;
+      }
+
+      const conflitoInverso = relacoes.dependentes.filter((dep: string) =>
+        codigosCursando.includes(dep)
+      );
+      if (conflitoInverso.length > 0) {
+        const nomesInverso = selectedClasses
+          .filter(c => conflitoInverso.includes(c.codigo))
+          .map(c => c.nome)
+          .join(", ");
+
+        toast.error(`A disciplina ${disciplinaBuscada.nome} é pré-requisito para ${nomesInverso}.`);
+        return;
+      }
+
+      setSelectedClassIds(prev => {
+        const newSet = new Set(prev);
+        newSet.add(classId);
+        return newSet;
+      }); //adiciona disciplina se não houver conflito
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        // erro gerado pelo abort
+        return; // evita aviso de erro quando a requisição é abortada
+      }
+      console.error(error);
+      toast.error("Erro ao verificar relações da disciplina. Tente novamente.");
+    } finally {
+      isCheckingPrereqRef.current = false;
+    }
   };
 
   const clearSelection = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    isCheckingPrereqRef.current = false;
+
     setSelectedClassIds(new Set());
     setShowCalendar(false);
     removeStorage("calendario_selected_classes");
