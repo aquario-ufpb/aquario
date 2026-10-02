@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.2] - 2026-10-02
+
+### Added
+- **Entidades – SAIL Lab**: Novo laboratório do Centro de Informática, o SAIL Lab (Social Artificial Intelligence Lab), dedicado à aplicação de IA em domínios de alto impacto social (Educação, Saúde e Governo). Descrição, Instagram e logo vêm da página oficial de laboratórios do CI. Sem e-mail de contato, já que o laboratório não divulga nenhum.
+
+### Changed
+- **Deploy de produção**: O workflow `Production Release` passou a fazer checkout da tag da release em vez da `main`, permitindo releases de hotfix a partir de uma branch `release/*` sem levar junto o que ainda não foi lançado na `main`. O PR automático do badge de versão continua sendo montado a partir da `main`, num worktree separado.
+
 ## [1.12.1] - 2026-08-27
 
 ### Fixed
