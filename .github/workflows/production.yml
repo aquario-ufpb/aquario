@@ -22,12 +22,20 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-          ref: main
+          # Deploy exactly what was tagged, so a hotfix release cut from a
+          # release/* branch doesn't also ship whatever is unreleased on main.
+          ref: ${{ github.event.release.tag_name }}
 
       - name: Update version badge in README
         run: |
           VERSION="${{ github.event.release.tag_name }}"
           VERSION_NUM="${VERSION#v}"
+
+          # The badge PR targets main, so build it from main in a separate
+          # worktree — leaving the tagged checkout above untouched for deploy.
+          git fetch --no-tags --depth=1 origin main
+          git worktree add ../main-badge FETCH_HEAD
+          cd ../main-badge
 
           # Update the version badge
           sed -i "s/version-[0-9]*\.[0-9]*\.[0-9]*-blue/version-${VERSION_NUM}-blue/g" README.md
@@ -47,6 +55,7 @@ jobs:
           VERSION="${{ github.event.release.tag_name }}"
           BRANCH="chore/update-version-badge-${VERSION}"
 
+          cd ../main-badge
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
