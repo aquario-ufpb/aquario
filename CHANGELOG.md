@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Nudge de conexão SIGAA**: Depois do onboarding, contas autenticadas sem SIGAA veem um modal leve pedindo para conectar. "Deixar pra depois", o X e o clique fora gravam o dismiss por usuário.
+- **Import de entidade única em produção**: Novo workflow manual `Import Entidade (Production, create-only)` e script `scripts/import-entidade.ts`, que criam **uma** entidade no banco de produção a partir do seu JSON no submódulo `aquario-entidades`, só se ela ainda não existir. Nunca altera nem apaga nada e roda em dry run por padrão. Substitui o `npm run db:import-prod` para esse caso, já que ele sobrescreve todas as entidades (apagando edições feitas em produção) e reconstrói os currículos.
 
 ## [1.12.2] - 2026-10-02
 

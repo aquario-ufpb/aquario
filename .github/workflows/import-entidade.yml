@@ -1,0 +1,93 @@
+name: Import Entidade (Production, create-only)
+
+# Creates ONE entidade in the production database from its JSON in the
+# content/aquario-entidades submodule, only if it doesn't exist yet. Never
+# updates or deletes. Defaults to a dry run; set apply=true to write.
+#
+# Use this instead of `npm run db:import-prod`, which upserts every entidade
+# (wiping edits made in production) and rebuilds curriculos.
+
+on:
+  workflow_dispatch:
+    inputs:
+      file:
+        description: "JSON path inside aquario-entidades (e.g. centro-de-informatica/sail.json)"
+        required: true
+        type: string
+      apply:
+        description: "Actually create it (unchecked = dry run)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: import-entidade
+  cancel-in-progress: false
+
+jobs:
+  import:
+    name: Import entidade
+    runs-on: ubuntu-latest
+
+    env:
+      ENTIDADE_FILE: ${{ inputs.file }}
+      APPLY: ${{ inputs.apply }}
+
+    steps:
+      - name: Validate input
+        run: |
+          if ! [[ "$ENTIDADE_FILE" =~ ^[a-z0-9-]+/[a-z0-9-]+\.json$ ]]; then
+            echo "::error::Invalid file '$ENTIDADE_FILE' — expected <centro-folder>/<file>.json"
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The production connection URI is resolved and used within this single
+      # step, so it never leaves the step as an output or env var.
+      - name: Import entidade
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          API="https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID"
+          AUTH="Authorization: Bearer $NEON_API_KEY"
+
+          MAIN_ID=$(curl -sf -H "$AUTH" "$API/branches" | jq -r '.branches[] | select(.name == "main") | .id')
+          if [ -z "$MAIN_ID" ] || [ "$MAIN_ID" == "null" ]; then
+            echo "::error::Neon branch 'main' (production) not found"
+            exit 1
+          fi
+
+          DB_NAME=$(curl -sf -H "$AUTH" "$API/branches/$MAIN_ID/databases" | jq -r '.databases[0].name')
+          ROLE_NAME=$(curl -sf -H "$AUTH" "$API/branches/$MAIN_ID/roles" | jq -r '.roles[] | select(.protected == false) | .name' | head -1)
+          DATABASE_URL=$(curl -sf -H "$AUTH" "$API/connection_uri?branch_id=$MAIN_ID&role_name=$ROLE_NAME&database_name=$DB_NAME" | jq -r '.uri')
+
+          if [ -z "$DATABASE_URL" ] || [ "$DATABASE_URL" == "null" ]; then
+            echo "::error::Failed to get production connection URI"
+            exit 1
+          fi
+          echo "::add-mask::$DATABASE_URL"
+          export DATABASE_URL
+
+          if [ "$APPLY" == "true" ]; then
+            npx tsx scripts/import-entidade.ts "$ENTIDADE_FILE" --apply
+          else
+            npx tsx scripts/import-entidade.ts "$ENTIDADE_FILE"
+          fi
