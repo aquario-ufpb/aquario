@@ -436,6 +436,7 @@ describe("CurriculumGraph — navegação por períodos", () => {
   it("preserva seleções ocultas ao buscar e salva somente as escolhidas", async () => {
     const onSaveWithStatus = jest.fn();
     renderGraph({ browsable: true, allowedSaveStatuses: ["concluida"], onSaveWithStatus });
+    fireEvent.click(screen.getByRole("button", { name: "Por período" }));
     const firstPeriod = () => screen.getByRole("region", { name: "1º período" });
     fireEvent.click(within(firstPeriod()).getByRole("button", { name: /Cálculo I/ }));
     fireEvent.change(screen.getByRole("textbox", { name: "Buscar disciplina na grade" }), {

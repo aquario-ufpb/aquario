@@ -141,10 +141,11 @@ export function CurriculumGraph({
   browsable = false,
   initialSelectedDisciplinaIds,
 }: CurriculumGraphProps) {
-  const [view, setView] = useState<"periods" | "map">("periods");
+  const [view, setView] = useState<"periods" | "map">("map");
   const [search, setSearch] = useState("");
   const [periodFilter, setPeriodFilter] = useState("all");
   const [fitMap, setFitMap] = useState(true);
+  const [showAllUnassigned, setShowAllUnassigned] = useState(false);
   const [showOptativas, setShowOptativas] = useState(true);
   const [clickedCode, setClickedCode] = useState<string | null>(null);
   const [hoveredCode, setHoveredCode] = useState<string | null>(null);
@@ -279,7 +280,7 @@ export function CurriculumGraph({
   // biome-ignore lint/correctness/useExhaustiveDependencies: visibleDisciplinas triggers re-measurement when disciplines change
   useLayoutEffect(() => {
     measureNodes();
-  }, [displayedDisciplinas, view, fitMap, measureNodes]);
+  }, [displayedDisciplinas, view, fitMap, showAllUnassigned, measureNodes]);
 
   useLayoutEffect(() => {
     const handler = () => measureNodes();
@@ -833,7 +834,7 @@ export function CurriculumGraph({
             <p className="text-xs text-muted-foreground">
               {view === "periods"
                 ? "Abra um período e uma disciplina para ver pré-requisitos, equivalências e o que depende dela."
-                : "Passe o mouse para destacar o caminho. No celular, toque para destacar e novamente para abrir. Disciplinas sem período ficam agrupadas acima do mapa."}
+                : "Passe o mouse para destacar o caminho. No celular, toque para destacar e novamente para abrir. As disciplinas sem período definido aparecem na coluna 0."}
             </p>
           </div>
         )}
@@ -1047,10 +1048,10 @@ export function CurriculumGraph({
             </Button>
           </div>
         )}
-        {browsable && !isExporting && (
+        {browsable && view === "periods" && !isExporting && (
           <CurriculumPeriods
             expandMatches={!!search.trim() || periodFilter !== "all"}
-            periods={view === "periods" ? periods : periods.filter(([period]) => period === 0)}
+            periods={periods}
             completedIds={completedDisciplinaIds}
             cursandoIds={cursandoDisciplinaIds}
             selectionMode={!!selectionMode}
@@ -1072,10 +1073,7 @@ export function CurriculumGraph({
           className={cn(
             "relative overflow-auto rounded-lg border border-slate-200 dark:border-white/10",
             usesMobileList && "hidden md:block",
-            browsable &&
-              !isExporting &&
-              (view === "periods" || periods.every(([period]) => period === 0)) &&
-              "hidden"
+            browsable && view === "periods" && !isExporting && "hidden"
           )}
           style={{ maxHeight: browsable ? undefined : "70dvh" }}
           onScroll={measureNodes}
@@ -1175,104 +1173,116 @@ export function CurriculumGraph({
             />
 
             {/* Period columns */}
-            {periods
-              .filter(([period]) => !browsable || isExporting || period !== 0)
-              .map(([periodo, discs]) => {
-                const canBulkSelect =
-                  !isExporting && selectionMode && getBulkObrigatoriaIds(discs).length > 0;
-                const allObrigatoriasSelected = areAllObrigatoriasSelected(discs);
-                const bulkActionLabel = allObrigatoriasSelected
-                  ? "Desmarcar todas as obrigatórias"
-                  : "Marcar todas as obrigatórias";
+            {periods.map(([periodo, discs]) => {
+              const foldUnassigned =
+                browsable &&
+                periodo === 0 &&
+                !isExporting &&
+                !search.trim() &&
+                periodFilter === "all";
+              const shownDiscs = foldUnassigned && !showAllUnassigned ? discs.slice(0, 6) : discs;
+              const canBulkSelect =
+                !isExporting && selectionMode && getBulkObrigatoriaIds(discs).length > 0;
+              const allObrigatoriasSelected = areAllObrigatoriasSelected(discs);
+              const bulkActionLabel = allObrigatoriasSelected
+                ? "Desmarcar todas as obrigatórias"
+                : "Marcar todas as obrigatórias";
 
-                return (
-                  <div
-                    key={periodo}
-                    className={cn(
-                      "relative z-[1] flex flex-col gap-4",
-                      browsable && fitMap && !isExporting ? "min-w-0 flex-1" : "w-[105px] shrink-0"
-                    )}
-                  >
-                    {canBulkSelect ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            aria-pressed={allObrigatoriasSelected}
-                            aria-label={`${bulkActionLabel} do ${periodo}º período`}
-                            onClick={e => {
-                              e.stopPropagation();
-                              handleTogglePeriodoObrigatorias(discs);
-                            }}
-                            className={cn(
-                              "w-full text-center text-xs font-semibold text-muted-foreground py-2 rounded-md",
-                              "bg-slate-100 dark:bg-slate-800/50 cursor-pointer",
-                              "transition-colors hover:bg-slate-200 dark:hover:bg-slate-700/60",
-                              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                              "motion-reduce:transition-none"
-                            )}
-                          >
-                            {browsable
-                              ? periodo === 0
-                                ? "Sem período"
-                                : `${periodo}º Período`
-                              : `${periodo}° Período`}
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipPortal>
-                          <TooltipContent side="top" className="text-xs">
-                            {bulkActionLabel}
-                          </TooltipContent>
-                        </TooltipPortal>
-                      </Tooltip>
-                    ) : (
-                      <div className="text-center text-xs font-semibold text-muted-foreground py-2 bg-slate-100 dark:bg-slate-800/50 rounded-md">
-                        {browsable
-                          ? periodo === 0
-                            ? "Sem período"
-                            : `${periodo}º Período`
-                          : `${periodo}° Período`}
-                      </div>
-                    )}
-                    {discs.map(disc => (
-                      <DisciplineNode
-                        key={disc.id}
-                        ref={el => setNodeRef(disc.codigo, el)}
-                        discipline={disc}
-                        isHighlighted={
-                          !isExporting &&
-                          activeHighlightedCodes !== null &&
-                          activeHighlightedCodes.has(disc.codigo)
+              return (
+                <div
+                  key={periodo}
+                  className={cn(
+                    "relative z-[1] flex flex-col gap-4",
+                    browsable && fitMap && !isExporting ? "min-w-0 flex-1" : "w-[105px] shrink-0"
+                  )}
+                >
+                  {canBulkSelect ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          aria-pressed={allObrigatoriasSelected}
+                          aria-label={`${bulkActionLabel} do ${periodo}º período`}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleTogglePeriodoObrigatorias(discs);
+                          }}
+                          className={cn(
+                            "w-full text-center text-xs font-semibold text-muted-foreground py-2 rounded-md",
+                            "bg-slate-100 dark:bg-slate-800/50 cursor-pointer",
+                            "transition-colors hover:bg-slate-200 dark:hover:bg-slate-700/60",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            "motion-reduce:transition-none"
+                          )}
+                        >
+                          {browsable ? `${periodo}º Período` : `${periodo}° Período`}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipPortal>
+                        <TooltipContent side="top" className="text-xs">
+                          {bulkActionLabel}
+                        </TooltipContent>
+                      </TooltipPortal>
+                    </Tooltip>
+                  ) : (
+                    <div className="text-center text-xs font-semibold text-muted-foreground py-2 bg-slate-100 dark:bg-slate-800/50 rounded-md">
+                      {browsable ? `${periodo}º Período` : `${periodo}° Período`}
+                    </div>
+                  )}
+                  {shownDiscs.map(disc => (
+                    <DisciplineNode
+                      key={disc.id}
+                      ref={el => setNodeRef(disc.codigo, el)}
+                      discipline={disc}
+                      isHighlighted={
+                        !isExporting &&
+                        activeHighlightedCodes !== null &&
+                        activeHighlightedCodes.has(disc.codigo)
+                      }
+                      isFaded={
+                        !isExporting &&
+                        activeHighlightedCodes !== null &&
+                        !activeHighlightedCodes.has(disc.codigo)
+                      }
+                      isClicked={!isExporting && clickedCode === disc.codigo}
+                      isHovered={!isExporting && canHover && hoveredCode === disc.codigo}
+                      isCompleted={showStatus && !!completedDisciplinaIds?.has(disc.disciplinaId)}
+                      isCursando={showStatus && !!cursandoDisciplinaIds?.has(disc.disciplinaId)}
+                      isLocked={showStatus && lockedCodes.has(disc.codigo)}
+                      selectionMode={!isExporting && selectionMode}
+                      isSelected={!isExporting && selectionSet.has(disc.disciplinaId)}
+                      onClick={e => handleNodeClick(disc, e)}
+                      onMouseEnter={() => {
+                        if (canHover) {
+                          setHoveredCode(disc.codigo);
                         }
-                        isFaded={
-                          !isExporting &&
-                          activeHighlightedCodes !== null &&
-                          !activeHighlightedCodes.has(disc.codigo)
+                      }}
+                      onMouseLeave={() => {
+                        if (canHover) {
+                          setHoveredCode(null);
                         }
-                        isClicked={!isExporting && clickedCode === disc.codigo}
-                        isHovered={!isExporting && canHover && hoveredCode === disc.codigo}
-                        isCompleted={showStatus && !!completedDisciplinaIds?.has(disc.disciplinaId)}
-                        isCursando={showStatus && !!cursandoDisciplinaIds?.has(disc.disciplinaId)}
-                        isLocked={showStatus && lockedCodes.has(disc.codigo)}
-                        selectionMode={!isExporting && selectionMode}
-                        isSelected={!isExporting && selectionSet.has(disc.disciplinaId)}
-                        onClick={e => handleNodeClick(disc, e)}
-                        onMouseEnter={() => {
-                          if (canHover) {
-                            setHoveredCode(disc.codigo);
-                          }
-                        }}
-                        onMouseLeave={() => {
-                          if (canHover) {
-                            setHoveredCode(null);
-                          }
-                        }}
-                        onToggleComplete={() => handleToggleSelect(disc.disciplinaId)}
-                      />
-                    ))}
-                  </div>
-                );
-              })}
+                      }}
+                      onToggleComplete={() => handleToggleSelect(disc.disciplinaId)}
+                    />
+                  ))}
+                  {foldUnassigned && discs.length > 6 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto whitespace-normal px-1 py-2 text-xs"
+                      onClick={event => {
+                        event.stopPropagation();
+                        setShowAllUnassigned(value => !value);
+                      }}
+                    >
+                      {showAllUnassigned
+                        ? "Mostrar menos"
+                        : `Ver mais ${discs.length - 6} disciplinas`}
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

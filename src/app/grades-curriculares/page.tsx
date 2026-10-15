@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/contexts/auth-context";
 import { trackEvent } from "@/analytics/posthog-client";
 import { CurriculumGraph } from "@/components/pages/grades-curriculares/curriculum-graph";
 import { CursoSelector } from "@/components/pages/grades-curriculares/curso-selector";
@@ -27,7 +28,8 @@ export default function GradesCurricularesPage() {
   const [selectionMode, setSelectionMode] = useState(false);
 
   const { data: cursos = [], isLoading: cursosLoading } = useAllCursos();
-  const { data: user } = useCurrentUser();
+  const { isLoading: authLoading, token } = useAuth();
+  const { data: user, isPending: userPending } = useCurrentUser();
   const {
     data: grade,
     isLoading: gradeLoading,
@@ -44,7 +46,13 @@ export default function GradesCurricularesPage() {
 
   // Auto-select: user's course if logged in, otherwise first available
   useEffect(() => {
-    if (autoSelected || selectedCursoId || cursos.length === 0) {
+    if (
+      authLoading ||
+      (token && userPending) ||
+      autoSelected ||
+      selectedCursoId ||
+      cursos.length === 0
+    ) {
       return;
     }
 
@@ -55,7 +63,7 @@ export default function GradesCurricularesPage() {
       setSelectedCursoId(cursos[0].id);
     }
     setAutoSelected(true);
-  }, [cursos, user, autoSelected, selectedCursoId]);
+  }, [cursos, user, autoSelected, selectedCursoId, authLoading, token, userPending]);
 
   const handleSelectionModeChange = useCallback((enabled: boolean) => {
     setSelectionMode(enabled);
