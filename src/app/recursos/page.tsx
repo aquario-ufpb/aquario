@@ -41,15 +41,6 @@ const recursos: Array<{
   external?: boolean;
 }> = [
   {
-    id: "planejador",
-    title: "Planejador de Matrícula",
-    description:
-      "Encontre combinações de turmas do SIGAA por disponibilidade, prioridades e reservas para seu curso. Compare cenários e planeje seus deslocamentos.",
-    href: "/planejador",
-    icon: CalendarDays,
-    illustration: "disciplines",
-  },
-  {
     id: "calendario",
     title: "Minhas Disciplinas",
     description:
@@ -103,6 +94,15 @@ const recursos: Array<{
     icon: Activity,
     illustration: "status",
     external: true,
+  },
+  {
+    id: "planejador",
+    title: "Planejador de Matrícula",
+    description:
+      "Encontre combinações de turmas do SIGAA por disponibilidade, prioridades e reservas para seu curso. Compare cenários e planeje seus deslocamentos.",
+    href: "/planejador",
+    icon: CalendarDays,
+    illustration: "disciplines",
   },
 ];
 

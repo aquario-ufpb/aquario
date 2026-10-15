@@ -262,12 +262,12 @@ const NAV_LINKS = [
   { href: "/sobre", label: "SOBRE" },
   { href: "/recursos", label: "RECURSOS" },
   { href: "/calendario", label: "DISCIPLINAS" },
-  { href: "/planejador", label: "PLANEJADOR" },
   { href: "/grades-curriculares", label: "GRADES" },
   { href: "/mapas", label: "MAPAS" },
   { href: "/guias", label: "GUIAS" },
   { href: "/entidades", label: "ENTIDADES" },
   { href: "/projetos", label: "PROJETOS" },
+  { href: "/planejador", label: "PLANEJADOR" },
 ] as const;
 
 // ============================================================================

@@ -19,13 +19,6 @@ export type NavigationResource = Readonly<{
 
 export const NAVIGATION_RESOURCES: readonly NavigationResource[] = [
   {
-    href: "/planejador",
-    isNew: true,
-    title: "Planejador de Matrícula",
-    description: "Compare turmas por horários, prioridades e reservas.",
-    icon: CalendarDays,
-  },
-  {
     href: "/calendario",
     title: "Minhas Disciplinas",
     description: "Organize disciplinas, turmas e horários.",
@@ -61,6 +54,13 @@ export const NAVIGATION_RESOURCES: readonly NavigationResource[] = [
     description: "Veja se o SIGAA UFPB está no ar.",
     icon: Activity,
     external: true,
+  },
+  {
+    href: "/planejador",
+    isNew: true,
+    title: "Planejador de Matrícula",
+    description: "Compare turmas por horários, prioridades e reservas.",
+    icon: CalendarDays,
   },
 ] as const;
 
