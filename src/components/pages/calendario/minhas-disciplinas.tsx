@@ -9,6 +9,10 @@ import {
   usePatchDisciplinaSemestre,
   useSearchDisciplinas,
 } from "@/lib/client/hooks/use-disciplinas-semestre";
+import { useOwnSigaaAcademicState } from "@/lib/client/hooks/use-sigaa";
+import { normalizeAcademicCode } from "@/lib/shared/sigaa/combine-academic-display";
+import { projectSigaaEnrollments } from "@/lib/client/calendario/project-sigaa-enrollments";
+import { SigaaEnrollments } from "./sigaa-enrollments";
 import CalendarGrid from "./calendar-grid";
 import { ManualScheduleForm } from "./manual-schedule-form";
 import type { ClassWithRoom } from "./types";
@@ -50,6 +54,9 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
   const isDark = mounted ? (resolvedTheme || theme) === "dark" : false;
 
   const { data: semestreData, isLoading: semestreLoading } = useDisciplinasSemestreAtivo();
+  const sigaa = useOwnSigaaAcademicState();
+  const snapshot = sigaa.data?.snapshot?.payload ?? null;
+  const calendarSemester = semestreNome ?? snapshot?.identity.sourceSemester ?? undefined;
   const { data: paasData } = usePaasCalendar(centroSigla);
   const marcarMutation = useMarcarDisciplinas();
   const patchMutation = usePatchDisciplinaSemestre();
@@ -78,11 +85,33 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
     return classes;
   }, [paasData]);
 
-  const calendarResolution = useMemo(
-    () => resolveEnrolledClasses(semestreData?.disciplinas ?? [], allPaasClasses, paasMatchesDb),
-    [semestreData, allPaasClasses, paasMatchesDb]
+  const imported = useMemo(
+    () =>
+      projectSigaaEnrollments(
+        snapshot,
+        calendarSemester,
+        semestreData?.disciplinas ?? [],
+        allPaasClasses,
+        paasSemestreNome
+      ),
+    [snapshot, calendarSemester, semestreData, allPaasClasses, paasSemestreNome]
   );
+  const manualDisciplines = useMemo(
+    () =>
+      (semestreData?.disciplinas ?? []).filter(
+        item => !imported.codes.has(normalizeAcademicCode(item.disciplinaCodigo))
+      ),
+    [semestreData, imported.codes]
+  );
+  const calendarResolution = useMemo(() => {
+    const manual = resolveEnrolledClasses(manualDisciplines, allPaasClasses, paasMatchesDb);
+    return {
+      classes: [...imported.classes, ...manual.classes],
+      pending: [...imported.pending, ...manual.pending],
+    };
+  }, [manualDisciplines, allPaasClasses, paasMatchesDb, imported]);
   const selectedCalendarClasses = calendarResolution.classes;
+  const enrollmentCount = manualDisciplines.length + imported.enrollments.length;
 
   // Calendar colors
   const classColors = useMemo(() => {
@@ -253,14 +282,16 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
     if (!searchResults?.disciplinas) {
       return [];
     }
-    return searchResults.disciplinas.filter(d => !existingDisciplinaIds.has(d.id));
-  }, [searchResults, existingDisciplinaIds]);
+    return searchResults.disciplinas.filter(
+      d => !existingDisciplinaIds.has(d.id) && !imported.codes.has(normalizeAcademicCode(d.codigo))
+    );
+  }, [searchResults, existingDisciplinaIds, imported.codes]);
 
   if (!mounted) {
     return null;
   }
 
-  if (semestreLoading) {
+  if (semestreLoading || sigaa.isLoading) {
     return (
       <div className="text-center py-20">
         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-muted-foreground" />
@@ -270,7 +301,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
   }
 
   return (
-    <div className="space-y-6">
+    <div className="ph-no-capture space-y-6" data-ph-no-capture>
       {/* Left panel: Discipline list */}
       <div className="w-full min-w-0 space-y-4">
         <Card>
@@ -279,9 +310,9 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
               <BookOpen className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-semibold">
                 Disciplinas Cursando
-                {disciplinas.length > 0 && (
+                {enrollmentCount > 0 && (
                   <span className="font-normal text-muted-foreground ml-1">
-                    ({disciplinas.length})
+                    ({enrollmentCount})
                   </span>
                 )}
               </span>
@@ -295,6 +326,26 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
               </div>
             )}
 
+            {sigaa.isError && (
+              <p role="alert" className="text-xs text-amber-700 dark:text-amber-300">
+                Não foi possível carregar as turmas importadas do SIGAA.{" "}
+                <button className="underline" onClick={() => void sigaa.refetch()}>
+                  Tentar novamente
+                </button>
+              </p>
+            )}
+            {imported.outdated && (
+              <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
+                A importação SIGAA é de {snapshot?.identity.sourceSemester}. Atualize a conexão para
+                conferir as turmas de {calendarSemester}.
+              </p>
+            )}
+            {imported.enrollments.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Turmas SIGAA exibidas da última sincronização, sem precisar adicioná-las
+                manualmente. Horários e salas ausentes ficam a confirmar.
+              </p>
+            )}
             {/* PAAS mismatch warning */}
             <p className="text-xs text-muted-foreground">
               Oferta de salas e turmas:{" "}
@@ -321,9 +372,10 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
               </div>
             )}
 
-            {disciplinas.length === 0 && (
+            {enrollmentCount === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhuma disciplina cursando. Adicione abaixo ou pela{" "}
+                Nenhuma disciplina cursando neste semestre. Atualize a conexão SIGAA ou adicione
+                abaixo ou pela{" "}
                 <a href="/grades-curriculares" className="underline hover:text-foreground">
                   Grade Curricular
                 </a>
@@ -332,7 +384,8 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
             )}
 
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {disciplinas.map(disc => {
+              <SigaaEnrollments enrollments={imported.enrollments} />
+              {manualDisciplines.map(disc => {
                 const paasOptions = allPaasClasses.filter(item =>
                   matchesDisciplineCode(item.codigo, disc.disciplinaCodigo)
                 );
@@ -495,7 +548,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
             conflicts={conflicts}
             isDark={isDark}
             calendarRef={calendarRef}
-            semesterName={dbSemestreNome}
+            semesterName={calendarSemester}
           />
         ) : (
           <Card>
@@ -504,7 +557,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
               <p className="text-muted-foreground">
                 {!turmaSelectionAvailable
                   ? "Nenhum horário salvo para exibir. Confira as pendências acima."
-                  : disciplinas.length === 0
+                  : enrollmentCount === 0
                     ? "Adicione disciplinas para visualizar seu calendário."
                     : "Selecione turmas para visualizar seu calendário."}
               </p>

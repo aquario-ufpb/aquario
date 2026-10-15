@@ -4,6 +4,7 @@ Análise em 14/10/2026. O plano abaixo cobre a evolução completa; a primeira e
 
 ## Primeira entrega implementada
 
+- Turmas da última importação SIGAA entram na lista e no calendário por projeção de leitura, sem criar matrículas manuais; somente do semestre correspondente. Códigos já importados não se repetem na lista manual. Horários ausentes/inválidos e salas sem conferência ficam como pendências.
 - Calendário pessoal em largura total, sem a antiga coluna lateral comprimindo a semana.
 - Semana com largura fixa ao espaço disponível, cabeçalhos fixos e linhas sem aulas ocultas; opção de mostrar o dia inteiro.
 - Alternância Semana/Lista no desktop e lista de aulas no celular; sábado aparece quando há aula.
@@ -30,7 +31,7 @@ inclusive quando o local informado no SIGAA estiver desatualizado.
 1. Exigir número, centro e horário da turma extraordinária para confirmar correspondência; sem isso, não atribuir sala CI à turma externa.
 2. Definir como persistir sala manual e preferências por encontro; a primeira entrega mantém “Sala a confirmar”.
 3. Validar quais outros centros possuem oferta pública no SACI e permitir busca entre centros com vínculo explícito de semestre/turma.
-4. Concluir projeção de turmas SIGAA no calendário e resumo das mudanças. A sincronização de status existente foi preservada; essa extensão não foi implementada nesta entrega.
+4. A projeção de turmas SIGAA no calendário já está implementada. Falta concluir associação automática segura com salas SACI e o resumo das mudanças entre sincronizações; o contrato atual importa um ID interno de turma, não seu número. SACI só complementa uma associação manual já salva quando código, semestre e horário concordam.
 5. Revisar fuso e limites da recorrência nos exportadores existentes antes de considerar a etapa de calendário concluída.
 6. Decidir entre assinatura privada e OAuth para atualização automática externa. ICS e links continuam sendo exportações pontuais.
 7. Confirmar repositório, licença e condições de uso do SACI/UFPB. A API pública responde e já é usada pelo Aquário, mas a pesquisa não confirmou que seu código seja open source. O SACI de comunicação da UFPR é outro projeto.
