@@ -9,6 +9,7 @@ import {
   usePatchDisciplinaSemestre,
   useSearchDisciplinas,
 } from "@/lib/client/hooks/use-disciplinas-semestre";
+import { useCalendarRoomBindings } from "@/lib/client/hooks/use-calendar-room-bindings";
 import { useOwnSigaaAcademicState } from "@/lib/client/hooks/use-sigaa";
 import { normalizeAcademicCode } from "@/lib/shared/sigaa/combine-academic-display";
 import { projectSigaaEnrollments } from "@/lib/client/calendario/project-sigaa-enrollments";
@@ -57,6 +58,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
   const sigaa = useOwnSigaaAcademicState();
   const snapshot = sigaa.data?.snapshot?.payload ?? null;
   const calendarSemester = semestreNome ?? snapshot?.identity.sourceSemester ?? undefined;
+  const roomBindings = useCalendarRoomBindings(calendarSemester, !!snapshot);
   const { data: paasData } = usePaasCalendar(centroSigla);
   const marcarMutation = useMarcarDisciplinas();
   const patchMutation = usePatchDisciplinaSemestre();
@@ -92,9 +94,19 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
         calendarSemester,
         semestreData?.disciplinas ?? [],
         allPaasClasses,
-        paasSemestreNome
+        paasSemestreNome,
+        roomBindings.data?.bindings ?? [],
+        centroSigla.trim().toUpperCase()
       ),
-    [snapshot, calendarSemester, semestreData, allPaasClasses, paasSemestreNome]
+    [
+      snapshot,
+      calendarSemester,
+      semestreData,
+      allPaasClasses,
+      paasSemestreNome,
+      roomBindings.data,
+      centroSigla,
+    ]
   );
   const manualDisciplines = useMemo(
     () =>
@@ -125,7 +137,12 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
   // Calendar conflicts
   const conflicts = useMemo(() => {
     const list: Array<{ day: number; timeSlot: number; classes: ClassWithRoom[] }> = [];
-    DAY_NUMBERS.forEach(day => {
+    const days = selectedCalendarClasses.some(item =>
+      parseHorarioToSlots(item.horario).some(slot => slot.day === 1)
+    )
+      ? [1, ...DAY_NUMBERS]
+      : DAY_NUMBERS;
+    days.forEach(day => {
       CALENDAR_TIME_SLOTS.forEach(timeSlot => {
         const slotClasses = selectedCalendarClasses.filter(c => {
           const slots = parseHorarioToSlots(c.horario);
@@ -334,6 +351,14 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
                 </button>
               </p>
             )}
+            {roomBindings.isError && (
+              <p role="alert" className="text-xs text-amber-700 dark:text-amber-300">
+                Não foi possível carregar suas escolhas de sala.{" "}
+                <button className="underline" onClick={() => void roomBindings.refetch()}>
+                  Tentar novamente
+                </button>
+              </p>
+            )}
             {imported.outdated && (
               <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
                 A importação SIGAA é de {snapshot?.identity.sourceSemester}. Atualize a conexão para
@@ -384,7 +409,29 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
             )}
 
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              <SigaaEnrollments enrollments={imported.enrollments} />
+              <SigaaEnrollments
+                enrollments={imported.enrollments}
+                allocations={allPaasClasses}
+                sameSemester={paasSemestreNome === calendarSemester}
+                centerId={centroSigla}
+                busy={
+                  roomBindings.mutation.isPending || roomBindings.isFetching || roomBindings.isError
+                }
+                onSave={async (sourceKey, allocationId) => {
+                  try {
+                    await roomBindings.mutation.mutateAsync({ sourceKey, allocationId });
+                    toast.success(
+                      allocationId === null
+                        ? "Escolha de sala removida."
+                        : "Sala SACI vinculada ao calendário."
+                    );
+                  } catch (error) {
+                    toast.error(
+                      error instanceof Error ? error.message : "Não foi possível salvar a sala."
+                    );
+                  }
+                }}
+              />
               {manualDisciplines.map(disc => {
                 const paasOptions = allPaasClasses.filter(item =>
                   matchesDisciplineCode(item.codigo, disc.disciplinaCodigo)

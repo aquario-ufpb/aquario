@@ -123,9 +123,27 @@ export function solvePlanner(
     goal =>
       !goal.completed && !satisfied.has(normalizeCode(goal.code)) && goal.priority !== "exclude"
   );
-  if (goals.length > 80 || input.offers.length > 1500) {
+  if (input.offers.length > 1500) {
     return { ...result, message: "Reduza para até 80 disciplinas e 1500 turmas por cálculo." };
   }
+  const academicByCode = new Map(simulation.goals.map(goal => [normalizeCode(goal.code), goal]));
+  const rulesFor = (selection: Pick<Selection, "goal" | "offer">) => {
+    const code = normalizeCode(selection.offer.code);
+    if (code === normalizeCode(selection.goal.code)) {
+      return [selection.goal];
+    }
+    const offered = academicByCode.get(code);
+    return [
+      selection.goal,
+      offered ?? {
+        ...selection.goal,
+        code,
+        requirementsKnown: false,
+        prerequisite: null,
+        corequisite: null,
+      },
+    ];
+  };
   const namesByCode = new Map(
     [...input.offers, ...input.goals].map(item => [normalizeCode(item.code), item.name])
   );
@@ -134,11 +152,9 @@ export function solvePlanner(
     return name && normalizeCode(name) !== normalizeCode(code) ? `${name} (${code})` : code;
   };
   const meetings = new Map(input.offers.map(offer => [offer.id, meetingsFor(offer.schedule)]));
-  const groups = goals
+  const allGroups = goals
     .map(goal => {
       const reasons = new Set<string>();
-      const prerequisite = checkRequirement(goal.prerequisite, satisfied);
-      const uncertain = !goal.requirementsKnown || prerequisite === "unknown";
       const goalFixed = input.offers.filter(
         offer =>
           fixed.has(offer.id) &&
@@ -155,6 +171,19 @@ export function solvePlanner(
           continue;
         }
         const fail = (reason: string) => reasons.add(reason);
+        // Credit equivalence does not waive enrollment rules of the offered component.
+        const rules = rulesFor({ goal, offer });
+        const unmet = rules.find(
+          rule => checkRequirement(rule.prerequisite, satisfied) === "unmet"
+        );
+        const uncertain = rules.some(
+          rule =>
+            !rule.requirementsKnown || checkRequirement(rule.prerequisite, satisfied) === "unknown"
+        );
+        const selectionGoal =
+          code === normalizeCode(goal.code)
+            ? goal
+            : { ...goal, workload: academicByCode.get(code)?.workload ?? null };
         if (settings.includeOptional === false && goal.curricularRequired === false) {
           fail("Optativas desativadas nesta simulação");
           continue;
@@ -176,9 +205,9 @@ export function solvePlanner(
         if (goalFixed.length && !goalFixed.some(item => item.id === offer.id)) {
           continue;
         }
-        if (prerequisite === "unmet") {
+        if (unmet) {
           fail(
-            `Pré-requisito não atendido: ${describeRequirement(goal.prerequisite, requirementLabel)}`
+            `Pré-requisito não atendido: ${describeRequirement(unmet.prerequisite, requirementLabel)}`
           );
           continue;
         }
@@ -221,20 +250,26 @@ export function solvePlanner(
         if (uncertain) {
           conditional.push(`${goal.code}: requisitos a verificar`);
         }
-        if (checkRequirement(goal.prerequisite, completed) !== "met" && prerequisite === "met") {
+        if (
+          rules.some(
+            rule =>
+              checkRequirement(rule.prerequisite, completed) !== "met" &&
+              checkRequirement(rule.prerequisite, satisfied) === "met"
+          )
+        ) {
           conditional.push(`${goal.code}: depende da aprovação simulada em disciplinas atuais`);
         }
-        if (goal.workload === null) {
+        if (selectionGoal.workload === null) {
           conditional.push(`${goal.code}: carga horária a verificar`);
         }
-        if (goal.workload === null && !settings.includeConditional) {
+        if (selectionGoal.workload === null && !settings.includeConditional) {
           fail("Carga horária a verificar");
           continue;
         }
         if (offer.source === "MANUAL") {
           conditional.push(`${goal.code}: oferta informada manualmente`);
         }
-        options.push({ goal, offer, conditional });
+        options.push({ goal: selectionGoal, offer, conditional });
       }
       if (!options.length && !reasons.size) {
         reasons.add(
@@ -265,6 +300,7 @@ export function solvePlanner(
         a.goal.code.localeCompare(b.goal.code)
     );
 
+  const groups = allGroups.filter(group => group.options.length > 0 || group.required);
   const fixedChoices: PlannerBlockingChoice[] = [...fixed].map(id => {
     const offer = offersById.get(id);
     return {
@@ -298,6 +334,10 @@ export function solvePlanner(
       blockingChoices: blocked,
       message: `Há uma turma fixada ou disciplina exigida sem opção viável: ${blocked.map(item => `${item.name} (${item.code})${item.section ? ` · turma ${item.section}` : ""}`).join("; ")} nos filtros atuais. Desfixe a turma ou retire a exigência abaixo para tentar novamente.`,
     };
+  }
+
+  if (groups.length > 80) {
+    return { ...result, message: "Reduza para até 80 disciplinas e 1500 turmas por cálculo." };
   }
 
   const eligibleCount = groups.filter(group => group.options.length > 0).length;
@@ -421,10 +461,12 @@ export function solvePlanner(
         ...kept.flatMap(other => [other.goal.code, normalizeCode(other.offer.code)]),
       ]);
       if (
-        kept.some(other => {
-          const state = checkRequirement(other.goal.corequisite, keptCodes);
-          return state === "unmet" || (state === "unknown" && !settings.includeConditional);
-        })
+        kept.some(other =>
+          rulesFor(other).some(rule => {
+            const state = checkRequirement(rule.corequisite, keptCodes);
+            return state === "unmet" || (state === "unknown" && !settings.includeConditional);
+          })
+        )
       ) {
         continue;
       }
@@ -440,13 +482,22 @@ export function solvePlanner(
       ...selected.flatMap(item => [item.goal.code, normalizeCode(item.offer.code)]),
     ]);
     const extra: string[] = [];
+    const withoutAssumptions = new Set([
+      ...completed,
+      ...selected.flatMap(item => [item.goal.code, normalizeCode(item.offer.code)]),
+    ]);
     for (const item of selected) {
-      const co = checkRequirement(item.goal.corequisite, codes);
-      if (co === "unmet" || (co === "unknown" && !settings.includeConditional)) {
-        return;
-      }
-      if (co === "unknown") {
-        extra.push(`${item.goal.code}: correquisito a verificar`);
+      for (const rule of rulesFor(item)) {
+        const co = checkRequirement(rule.corequisite, codes);
+        if (co === "unmet" || (co === "unknown" && !settings.includeConditional)) {
+          return;
+        }
+        if (co === "unknown") {
+          extra.push(`${rule.code}: correquisito a verificar`);
+        }
+        if (co === "met" && checkRequirement(rule.corequisite, withoutAssumptions) !== "met") {
+          extra.push(`${rule.code}: depende da aprovação simulada em disciplinas atuais`);
+        }
       }
     }
     const stats = metrics(true);
@@ -525,7 +576,7 @@ export function solvePlanner(
       maxDistanceMeters: stats.distance,
       travelUnknown: stats.unknown,
       conditional,
-      omitted: groups
+      omitted: allGroups
         .filter(group => !selected.some(item => item.goal.code === group.goal.code))
         .map(group => ({
           code: group.goal.code,

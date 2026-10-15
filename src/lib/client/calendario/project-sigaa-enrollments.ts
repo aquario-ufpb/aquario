@@ -1,12 +1,19 @@
+import {
+  calendarScheduleKey,
+  resolveRoomBinding,
+  type CalendarRoomBinding,
+} from "@/lib/shared/calendario/room-binding";
 import type { SigaaAcademicSnapshotPayload } from "@/lib/shared/types/sigaa-academic";
 import type { DisciplinaSemestreResponse } from "@/lib/shared/types/disciplina-semestre.types";
 import type { ClassWithRoom } from "@/components/pages/calendario/types";
 import { normalizeAcademicCode } from "@/lib/shared/sigaa/combine-academic-display";
-import { parseHorarioToSlots } from "./utils";
 import { resolveEnrolledClasses, type CalendarPendingItem } from "./resolve-enrolled-classes";
 
 export type ImportedEnrollment = {
   id: string;
+  sourceKey: string | null;
+  hasRoomBinding: boolean;
+  bindingOutdated: boolean;
   code: string | null;
   name: string;
   schedule: string | null;
@@ -14,11 +21,7 @@ export type ImportedEnrollment = {
   roomSource: "SIGAA" | "SACI" | null;
   section: string | null;
 };
-const scheduleKey = (value: string | null) =>
-  parseHorarioToSlots(value ?? "")
-    .map(slot => `${slot.day}:${slot.timeSlot}`)
-    .sort()
-    .join(",");
+const scheduleKey = calendarScheduleKey;
 
 /** Read-only projection: imported classes never become manual enrollment records. */
 export function projectSigaaEnrollments(
@@ -26,7 +29,9 @@ export function projectSigaaEnrollments(
   semester: string | undefined,
   manual: readonly DisciplinaSemestreResponse[],
   allocations: readonly ClassWithRoom[],
-  allocationSemester: string | undefined
+  allocationSemester: string | undefined,
+  bindings: readonly CalendarRoomBinding[] = [],
+  centerId = "CI"
 ): {
   enrollments: ImportedEnrollment[];
   classes: ClassWithRoom[];
@@ -51,6 +56,7 @@ export function projectSigaaEnrollments(
   );
   const entries = currentClasses.map(item => ({
     id: `sigaa:${item.sourceKey}`,
+    sourceKey: item.sourceKey as string | null,
     code: item.code,
     name: item.name,
     schedule: item.scheduleRaw,
@@ -68,6 +74,7 @@ export function projectSigaaEnrollments(
       ) {
         entries.push({
           id: `sigaa:component:${component.code}`,
+          sourceKey: null as string | null,
           code: component.code,
           name: component.name,
           schedule: null,
@@ -84,6 +91,8 @@ export function projectSigaaEnrollments(
     const row: ImportedEnrollment = {
       ...item,
       code,
+      hasRoomBinding: false,
+      bindingOutdated: false,
       section: null,
       roomSource: item.room ? "SIGAA" : null,
     };
@@ -111,6 +120,26 @@ export function projectSigaaEnrollments(
         row.roomSource = row.room ? "SACI" : null;
       }
     }
+    const binding = bindings.find(
+      binding => binding.sourceKey === item.sourceKey && binding.semester === semester
+    );
+    if (binding) {
+      row.hasRoomBinding = true;
+      const selected =
+        allocationSemester === semester
+          ? resolveRoomBinding(binding, code, item.schedule, semester, centerId, allocations)
+          : null;
+      if (selected && selected.room.nome.trim()) {
+        row.section = selected.turma;
+        row.room = [selected.room.bloco, selected.room.nome].filter(Boolean).join(" ");
+        row.roomSource = "SACI";
+      } else {
+        row.section = null;
+        row.room = item.room;
+        row.roomSource = item.room ? "SIGAA" : null;
+        row.bindingOutdated = true;
+      }
+    }
     result.enrollments.push(row);
     if (key) {
       result.classes.push({
@@ -135,6 +164,9 @@ export function projectSigaaEnrollments(
       });
     }
     const reasons = [
+      row.bindingOutdated
+        ? "A escolha de sala anterior não corresponde à oferta ou horário atual; confira no SACI."
+        : null,
       !key ? "Horário não informado ou não reconhecido no SIGAA." : null,
       row.roomSource !== "SACI"
         ? row.room

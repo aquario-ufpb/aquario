@@ -441,6 +441,7 @@ function PlannerWorkspace() {
     },
     onError: error => toast.error(message(error)),
   });
+  const persistencePending = save.isPending || load.isPending || remove.isPending;
   const addCustom = (offer: PlannerOffer, goal: PlannerGoal) =>
     update(previous => {
       if (previous.customGoals.length >= 30 || previous.offers.length >= 1500) {
@@ -653,6 +654,7 @@ function PlannerWorkspace() {
                 id="planner-semester"
                 className={selectClass}
                 value={draft.semester}
+                disabled={persistencePending}
                 onChange={e => {
                   const semester = e.target.value;
                   update(previous => ({ ...previous, semester, offers: [], fixedOfferIds: [] }));
@@ -1277,7 +1279,7 @@ function PlannerWorkspace() {
               />
             </div>
             <Button
-              disabled={!token || save.isPending || !name.trim()}
+              disabled={!token || persistencePending || !name.trim()}
               onClick={() => {
                 if (!draftSchema.safeParse(draft).success) {
                   toast.error("Revise os dados do cenário.");
@@ -1289,7 +1291,11 @@ function PlannerWorkspace() {
               {save.isPending ? "Salvando…" : existing ? "Atualizar cenário" : "Salvar cenário"}
             </Button>
             {existing && (
-              <Button variant="outline" disabled={save.isPending} onClick={() => save.mutate(true)}>
+              <Button
+                variant="outline"
+                disabled={persistencePending}
+                onClick={() => save.mutate(true)}
+              >
                 Salvar como novo
               </Button>
             )}
@@ -1318,7 +1324,7 @@ function PlannerWorkspace() {
                   <Button
                     size="sm"
                     variant="outline"
-                    disabled={load.isPending}
+                    disabled={persistencePending}
                     onClick={() => load.mutate(plan.id)}
                   >
                     Carregar
@@ -1326,7 +1332,7 @@ function PlannerWorkspace() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    disabled={remove.isPending}
+                    disabled={persistencePending}
                     onClick={() => {
                       if (existing?.id === plan.id) {
                         setExisting(null);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { DAYS, DAY_NUMBERS, CALENDAR_TIME_SLOTS } from "@/lib/client/calendario/constants";
+import { DAY_NAMES, DAY_NUMBERS, CALENDAR_TIME_SLOTS } from "@/lib/client/calendario/constants";
 import type { ClassWithRoom } from "./types";
 import { processDaySlots, type MergedSlot } from "./calendar-utils";
 import { AlertTriangle } from "lucide-react";
@@ -287,7 +287,6 @@ function DayContent({
 
 type DayCardProps = {
   day: number;
-  dayIndex: number;
   dayData: Map<number, MergedSlot> | undefined;
   borderColor: string;
   textColor: string;
@@ -304,7 +303,6 @@ type DayCardProps = {
 
 function DayCard({
   day,
-  dayIndex,
   dayData,
   borderColor,
   textColor,
@@ -313,7 +311,7 @@ function DayCard({
   classColors,
   onCellClick,
 }: DayCardProps) {
-  const dayName = DAYS[dayIndex];
+  const dayName = DAY_NAMES[day];
   const hasClasses = hasClassesForDay(dayData);
 
   return (
@@ -353,7 +351,7 @@ export function CalendarMobileView({
   // Pre-process all days to identify merged slots
   const daySlotData = useMemo(() => {
     const data = new Map<number, ReturnType<typeof processDaySlots>>();
-    DAY_NUMBERS.forEach(day => {
+    [1, ...DAY_NUMBERS].forEach(day => {
       data.set(day, processDaySlots(day, classes));
     });
     return data;
@@ -365,7 +363,7 @@ export function CalendarMobileView({
 
   return (
     <div className="space-y-4 w-full">
-      {DAY_NUMBERS.map((day, dayIndex) => {
+      {[1, ...DAY_NUMBERS].map(day => {
         const dayData = daySlotData.get(day);
         if (!hasClassesForDay(dayData)) {
           return null;
@@ -375,7 +373,6 @@ export function CalendarMobileView({
           <DayCard
             key={day}
             day={day}
-            dayIndex={dayIndex}
             dayData={dayData}
             borderColor={borderColor}
             textColor={textColor}

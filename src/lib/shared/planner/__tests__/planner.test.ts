@@ -58,6 +58,121 @@ const input = (
 });
 
 describe("academic rules", () => {
+  it("checks the offered equivalent's prerequisites even when its target has none", () => {
+    const data = input(
+      [goal("A1", { equivalents: ["X1"] }), goal("X1", { prerequisite: parseRequirement("Z1") })],
+      [offer("X1")]
+    );
+    expect(solvePlanner(data).solutions).toHaveLength(0);
+    const satisfied = solvePlanner({ ...data, completedCodes: ["Z1"] });
+    expect(
+      satisfied.solutions.some(solution =>
+        solution.selections.some(item => item.goal.code === "A1")
+      )
+    ).toBe(true);
+  });
+  it("requires conditional mode when the equivalent's academic rules are missing", () => {
+    const data = input([goal("A1", { equivalents: ["X1"] })], [offer("X1")]);
+    expect(solvePlanner(data).solutions).toHaveLength(0);
+    const result = solvePlanner({
+      ...data,
+      settings: { ...data.settings, includeConditional: true },
+    });
+    expect(result.solutions[0].conditional.join()).toContain("requisitos a verificar");
+    expect(result.solutions[0].conditional.join()).toContain("carga horária a verificar");
+  });
+  it("checks equivalent corequisites and uses the offered workload", () => {
+    const data = input(
+      [
+        goal("A1", { priority: "required", equivalents: ["X1"] }),
+        goal("X1", {
+          priority: "exclude",
+          workload: 90,
+          corequisite: parseRequirement("B2 OU C3"),
+        }),
+        goal("B2"),
+      ],
+      [offer("X1"), offer("B2", "3M12")]
+    );
+    const result = solvePlanner(data);
+    expect(result.solutions[0].selections).toHaveLength(2);
+    expect(result.solutions[0].workload).toBe(150);
+    expect(solvePlanner({ ...data, offers: [offer("X1")] }).solutions).toHaveLength(0);
+    expect(
+      solvePlanner({ ...data, settings: { ...data.settings, maxWorkload: 120 } }).solutions
+    ).toHaveLength(0);
+  });
+  it("marks approval assumptions used only by corequisites as conditional", () => {
+    const data = input(
+      [goal("A1", { corequisite: parseRequirement("B2 OU C3") }), goal("B2")],
+      [offer("A1")],
+      { assumedPassedCodes: ["B2"] }
+    );
+    expect(solvePlanner(data).solutions[0].conditional.join()).toContain("aprovação simulada");
+    expect(solvePlanner({ ...data, completedCodes: ["C3"] }).solutions[0].conditional).toEqual([]);
+  });
+  it.each([
+    {
+      targetHours: 30,
+      offeredHours: 90,
+      minimum: 120,
+      expectedCodes: ["A1", "B2"],
+      expectedHours: 150,
+    },
+    { targetHours: 90, offeredHours: 30, minimum: 60, expectedCodes: ["B2"], expectedHours: 60 },
+  ])(
+    "prunes optional equivalents using the offered workload ($offeredHours h)",
+    ({ targetHours, offeredHours, minimum, expectedCodes, expectedHours }) => {
+      const data = input(
+        [
+          goal("A1", {
+            priority: "optional",
+            curricularRequired: false,
+            equivalents: ["X1"],
+            workload: targetHours,
+          }),
+          goal("X1", { priority: "exclude", workload: offeredHours }),
+          goal("B2", { priority: "required" }),
+        ],
+        [offer("X1"), offer("B2", "3M12")],
+        { settings: { ...defaultSettings, minWorkload: minimum } }
+      );
+      const result = solvePlanner(data);
+      expect(result.solutions[0].selections.map(item => item.goal.code).sort()).toEqual(
+        expectedCodes
+      );
+      expect(result.solutions[0].workload).toBe(expectedHours);
+    }
+  );
+  it("does not count disabled optatives or unavailable goals against the search group limit", () => {
+    const goals = [
+      goal("A1", { curricularRequired: true }),
+      ...Array.from({ length: 110 }, (_, i) => goal(`X${i}`, { curricularRequired: false })),
+    ];
+    const data = input(goals, [offer("A1"), offer("X0", "3M12")], {
+      settings: { ...defaultSettings, includeOptional: false },
+    });
+    const result = solvePlanner(data);
+    expect(result.solutions[0].selections.map(item => item.goal.code)).toEqual(["A1"]);
+    expect(result.exclusions.find(item => item.code === "X0")?.reasons).toContain(
+      "Optativas desativadas nesta simulação"
+    );
+    expect(result.exclusions.find(item => item.code === "X1")?.reasons.join()).toContain(
+      "Nenhuma turma localizada"
+    );
+  });
+  it("preserves the limit of 80 viable search groups", () => {
+    const goals = Array.from({ length: 81 }, (_, i) => goal(`A${i}`));
+    const result = solvePlanner(
+      input(
+        goals,
+        goals.map(item => offer(item.code))
+      )
+    );
+    expect(result.solutions).toHaveLength(0);
+    expect(result.explored).toBe(0);
+    expect(result.message).toContain("até 80 disciplinas");
+  });
   it("supports AND/OR parentheses and preserves unknown institutional rules", () => {
     const rule = parseRequirement("(A1 OU B2) E C3");
     expect(checkRequirement(rule, new Set(["B2", "C3"]))).toBe("met");
@@ -178,17 +293,19 @@ describe("availability and optimization", () => {
       [
         goal("A1", { equivalents: ["C3"], priority: "required" }),
         goal("B2", { equivalents: ["C3"], priority: "required" }),
+        goal("C3", { priority: "exclude" }),
       ],
       [offer("C3")]
     );
     expect(solvePlanner(base).solutions).toHaveLength(0);
     expect(
-      solvePlanner({ ...base, goals: base.goals.slice(0, 1) }).solutions[0].selections[0].offer.code
+      solvePlanner({ ...base, goals: [base.goals[0], base.goals[2]] }).solutions[0].selections[0]
+        .offer.code
     ).toBe("C3");
     expect(
       solvePlanner({
         ...base,
-        goals: base.goals.slice(0, 1),
+        goals: [base.goals[0], base.goals[2]],
         settings: { ...base.settings, allowEquivalents: false },
       }).solutions
     ).toHaveLength(0);

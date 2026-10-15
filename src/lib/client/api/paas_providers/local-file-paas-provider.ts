@@ -42,6 +42,9 @@ export class LocalFilePaasProvider implements PaasDataProvider {
     if (this.paasData.sigla.trim().toUpperCase() !== centerId.trim().toUpperCase()) {
       throw new Error("Local PAAS data is not available for the requested center");
     }
+    if (this.paasData.status !== "published" || !Array.isArray(this.paasData.solution?.solution)) {
+      throw new Error("Local PAAS allocation is not published");
+    }
     return Promise.resolve(this.paasData);
   }
 }

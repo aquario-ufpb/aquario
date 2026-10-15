@@ -201,6 +201,7 @@ model Usuario {
   sigaaCourseChangeProposals SigaaCourseChangeProposal[]
   sigaaRateLimitBuckets SigaaRateLimitBucket[]
   enrollmentPlans EnrollmentPlan[]
+  calendarRoomBindings CalendarRoomBinding[]
 
   @@index([email])
   @@index([matricula])
@@ -740,4 +741,21 @@ model PublicSigaaOfferingCache {
 
   @@id([courseId, semester])
   @@index([semester, observedAt])
+}
+
+// Private room choices, separate from imported academic data and manual enrollments.
+model CalendarRoomBinding {
+  usuarioId String
+  profileCourseId String
+  semester String
+  sourceKey String
+  code String
+  scheduleKey String
+  centerId String
+  section String
+  allocationId Int
+  updatedAt DateTime @updatedAt
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, semester, sourceKey])
 }

@@ -6,9 +6,10 @@ Análise em 14/10/2026. O plano abaixo cobre a evolução completa; a primeira e
 
 - A grade curricular usa a mesma combinação de status de Dados acadêmicos (SIGAA prevalece sobre manual), associando códigos aos IDs da grade apenas no curso do aluno. Divergência de currículo e disciplinas importadas ausentes ficam explícitas, sem copiar o histórico para tabelas manuais.
 - Turmas da última importação SIGAA entram na lista e no calendário por projeção de leitura, sem criar matrículas manuais; somente do semestre correspondente. Códigos já importados não se repetem na lista manual. Horários ausentes/inválidos e salas sem conferência ficam como pendências.
+- Salas SACI de turmas importadas: escolha explícita entre candidatos de mesmo código e horário na oferta publicada do centro/semestre. Preferência privada separada da matrícula e do snapshot, revalidada a cada projeção; alteração de contexto deixa a sala pendente.
 - Calendário pessoal em largura total, sem a antiga coluna lateral comprimindo a semana.
 - Semana com largura fixa ao espaço disponível, cabeçalhos fixos e linhas sem aulas ocultas; opção de mostrar o dia inteiro.
-- Alternância Semana/Lista no desktop e lista de aulas no celular; sábado aparece quando há aula.
+- Alternância Semana/Lista no desktop e lista de aulas no celular; sábado e domingo aparecem quando há aula.
 - Busca de ofertas sem caixa de rolagem interna: carregamento visual em grupos de 12; busca de disciplinas pessoais limitada a 8 resultados com orientação para refinar.
 - Pendências visíveis por disciplina, com resumo “A definir ou conferir”; distingue falta de oferta, falta de turma e horário não reconhecido.
 - Recuperação de ID PAAS antigo apenas quando código e número da turma salva têm um candidato único na oferta do mesmo semestre.
@@ -32,7 +33,7 @@ inclusive quando o local informado no SIGAA estiver desatualizado.
 1. Exigir número, centro e horário da turma extraordinária para confirmar correspondência; sem isso, não atribuir sala CI à turma externa.
 2. Definir como persistir sala manual e preferências por encontro; a primeira entrega mantém “Sala a confirmar”.
 3. Validar quais outros centros possuem oferta pública no SACI e permitir busca entre centros com vínculo explícito de semestre/turma.
-4. A projeção de turmas SIGAA no calendário já está implementada. Falta concluir associação automática segura com salas SACI e o resumo das mudanças entre sincronizações; o contrato atual importa um ID interno de turma, não seu número. SACI só complementa uma associação manual já salva quando código, semestre e horário concordam.
+4. A projeção de turmas SIGAA e a confirmação explícita de sala SACI estão implementadas. O contrato importa um ID interno, não o número da turma: não há associação automática desse ID. O resumo das mudanças entre sincronizações continua pendente.
 5. Revisar fuso e limites da recorrência nos exportadores existentes antes de considerar a etapa de calendário concluída.
 6. Decidir entre assinatura privada e OAuth para atualização automática externa. ICS e links continuam sendo exportações pontuais.
 7. Confirmar repositório, licença e condições de uso do SACI/UFPB. A API pública responde e já é usada pelo Aquário, mas a pesquisa não confirmou que seu código seja open source. O SACI de comunicação da UFPR é outro projeto.
@@ -47,7 +48,7 @@ inclusive quando o local informado no SIGAA estiver desatualizado.
 - Não há branches remotas `dev` ou `prod`. `main` alimenta staging; produção publica a tag de uma GitHub Release. `release/1.12.x` recebe manutenção da série lançada. Para esta feature, usar `main`.
 - Lidos `CONTRIBUTING.md`, `README-DEV.md`, `.claude/CLAUDE.md`, `.cursor/rules.md` e `docs/sigaa-v1-environments.md`. Não foram encontrados arquivos de regras do Cline nem `AGENTS.md` geral do projeto; os `AGENTS.md` encontrados pertencem a skills específicas em `.agents/skills`.
 - Manter repositories pelo container, validação Zod, React Query e `apiClient`, separação server/client/shared, nomes de arquivos em kebab-case e texto de interface em português.
-- Atualização, implementação e branch são locais; não houve push, migração nem deploy.
+- A branch foi publicada no fork para revisão; as migrations foram verificadas em PostgreSQL descartável e aplicadas somente no ambiente local. O envio upstream não executa deploy.
 
 ## O que já existe
 
@@ -122,7 +123,7 @@ IDs do PAAS não devem virar requisito para renderizar ou exportar. A sincroniza
 Não é necessária migration para a primeira entrega de leitura. Para salvar escolhas de candidatos/salas,
 propor uma tabela própria de overrides por usuário/semestre/chave SIGAA, com vínculo ao candidato e versão da solução PAAS.
 Preferências são revalidadas quando a oferta muda; não reaproveitar IDs PAAS de outro semestre.
-Essa segunda entrega deve incluir repository, ownership, exclusão junto dos dados importados e atualização da limpeza de staging.
+A entrega de preferências inclui repository e ownership. As preferências são escolhas privadas separadas: sem snapshot não são projetadas e podem ser removidas individualmente; a exclusão da conta remove-as em cascata. Não são copiadas para tabelas acadêmicas manuais.
 
 ## Parser e calendário recorrente
 
@@ -191,3 +192,12 @@ O fluxo de matrícula extraordinária também foi conferido no navegador com usu
 salvar turma/horário atualiza a grade pessoal e mantém a largura do documento dentro de 1280/390 pixels.
 Isso não substitui um teste de persistência com conta real e banco configurado.
 A extração real autenticada e as exportações em aplicativos continuam como verificações das próximas etapas.
+
+## Associação de salas entregue nesta branch
+
+- Migration: `20261016000000_add_calendar_room_bindings`; aplicar com `prisma migrate deploy` antes de usar o recurso.
+- API privada `/api/usuarios/me/calendario/salas`: GET com `semestre`, POST com `semester/sourceKey/allocationId`, DELETE com `semester/sourceKey`. Usuário e curso vêm da sessão; código, horário, centro e turma são derivados no servidor, nunca confiados ao cliente.
+- A confirmação consulta a API pública SACI no servidor, com timeout e cache de cinco minutos. Somente solução publicada do centro e semestre correspondentes é aceita. Havendo duas alocações com o mesmo ID, o servidor rejeita a ambiguidade.
+- Até 64 preferências por usuário/semestre, com lock por usuário para quota e validação de curso. Respostas privadas não são armazenadas em cache HTTP; o cache cliente inclui usuário, curso e semestre.
+- A seleção fica nos detalhes de cada turma importada. Sem correspondência, mantém o local SIGAA ou sala a confirmar. Mudança de horário/curso/semestre invalida o uso da preferência antiga. Um ID SACI substituído só é recuperado quando a turma confirmada continua inequívoca.
+- Testes cobrem ownership, quotas, isolamento por curso/semestre, ausência de escrita em matrícula/histórico, revalidação, remoção e ciclo de confirmação/reload no navegador. Credenciais reais não são necessárias para os testes com fixtures.

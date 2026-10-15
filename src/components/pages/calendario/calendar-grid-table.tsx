@@ -30,7 +30,9 @@ export function CalendarGridTable({
   showFullDay = false,
 }: CalendarGridTableProps) {
   const slots = classes.flatMap(item => parseHorarioToSlots(item.horario));
-  const days = DAY_NUMBERS.filter(day => day !== 7 || slots.some(slot => slot.day === 7));
+  const days = [1, ...DAY_NUMBERS].filter(
+    day => (day !== 1 && day !== 7) || slots.some(slot => slot.day === day)
+  );
   const occupiedSlots = slots.map(slot => slot.timeSlot);
   const visibleTimeSlots =
     showFullDay || slots.length === 0
@@ -42,7 +44,7 @@ export function CalendarGridTable({
   // Pre-process all days to identify merged slots
   const daySlotData = useMemo(() => {
     const data = new Map<number, ReturnType<typeof processDaySlots>>();
-    DAY_NUMBERS.forEach(day => {
+    [1, ...DAY_NUMBERS].forEach(day => {
       data.set(day, processDaySlots(day, classes));
     });
     return data;

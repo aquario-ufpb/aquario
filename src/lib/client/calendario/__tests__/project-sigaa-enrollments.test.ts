@@ -1,3 +1,4 @@
+import { calendarScheduleKey } from "@/lib/shared/calendario/room-binding";
 import type { SigaaAcademicSnapshotPayload } from "@/lib/shared/types/sigaa-academic";
 import type { DisciplinaSemestreResponse } from "@/lib/shared/types/disciplina-semestre.types";
 import type { ClassWithRoom } from "@/components/pages/calendario/types";
@@ -145,4 +146,43 @@ it("keeps multiple sections of the same code distinct, including an extraordinar
   expect(result.enrollments).toHaveLength(2);
   expect(new Set(result.classes.map(item => item.id)).size).toBe(2);
   expect(result.classes.map(item => item.horario)).toEqual(["35T12", "2N12"]);
+});
+it("applies an explicit room preference without creating a manual enrollment and drops it if the timetable changes", () => {
+  const binding = {
+    semester: "2026.2",
+    sourceKey: "123456",
+    allocationId: 12,
+    code: "EDO1",
+    scheduleKey: calendarScheduleKey("35T12"),
+    centerId: "CI",
+    section: "07",
+  };
+  const chosen = projectSigaaEnrollments(
+    snapshot,
+    "2026.2",
+    [],
+    [allocation],
+    "2026.2",
+    [binding],
+    "CI"
+  );
+  expect(chosen.enrollments[0]).toMatchObject({
+    room: "CI 106",
+    roomSource: "SACI",
+    hasRoomBinding: true,
+  });
+  const changed = projectSigaaEnrollments(
+    { ...snapshot, classes: [{ ...snapshot.classes[0], scheduleRaw: "2T34" }] },
+    "2026.2",
+    [],
+    [allocation],
+    "2026.2",
+    [binding],
+    "CI"
+  );
+  expect(changed.enrollments[0]).toMatchObject({
+    room: "Outro centro / 201",
+    roomSource: "SIGAA",
+    bindingOutdated: true,
+  });
 });

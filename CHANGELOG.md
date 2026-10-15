@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Sala SACI para turmas importadas**: Cada turma SIGAA permite confirmar explicitamente uma turma/sala compatível na oferta publicada do centro. A escolha privada sobrevive ao reload, pode ser removida e é revalidada por código, horário, semestre e centro. Não cria matrícula manual nem altera o histórico; requer a migration `20261016000000_add_calendar_room_bindings`.
 - **Planos pelo grafo de pré-requisitos**: No avançado, permite favorecer abertura de caminho no currículo ou uma disciplina alvo pesquisável. A classificação respeita prioridades manuais e requisitos atuais, considera dependências indiretas, E/OU e aprovações simuladas; opções mostram caminhos, pendências e pré-requisitos atendidos após aprovação. Regras incompletas/cíclicas não viram liberações garantidas. Cenários antigos recebem a estratégia equilibrada.
 - **Cadastro local**: Seed mínimo `db:seed:registration`, repetível, para cadastrar campus, centros e cursos necessários à criação de conta.
 - **Planejador de matrícula**: Nova página `/planejador` com consulta pública real da oferta SIGAA por curso/semestre, reservas para o curso, disponibilidade/bloqueios, prioridades, equivalentes, requisitos por currículo, personalizadas e comparação de até três grades em Web Worker. Inclui cenários privados com controle de versão, distâncias por coordenadas informadas e exportação da grade em imagem PNG. Requer a migration `20261014000000_add_enrollment_plans` para salvar cenários.
@@ -18,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Status acadêmicos na grade curricular**: Concluídas e cursando combinam marcações manuais e snapshot SIGAA usando a mesma precedência de Dados acadêmicos, com associação por código exato aos IDs locais. Status pendente/desconhecido importado prevalece sobre marcação manual antiga; outras grades não recebem os status do aluno. A página informa erro de consulta, diferença de currículo e disciplinas importadas ausentes da grade exibida.
-- **Turmas SIGAA no calendário pessoal**: A lista de disciplinas cursando e a grade semanal passam a incluir turmas da importação acadêmica, mesmo sem registros manuais. Projeção somente de leitura, restrita ao semestre, sem duplicar códigos locais; componentes cursando sem horários aparecem como pendências. Salas SIGAA são identificadas e permanecem a confirmar; SACI só complementa uma associação manual explícita com código, semestre e horário compatíveis.
+- **Turmas SIGAA no calendário pessoal**: A lista de disciplinas cursando e a grade semanal passam a incluir turmas da importação acadêmica, mesmo sem registros manuais. Projeção somente de leitura, restrita ao semestre, sem duplicar códigos locais; componentes cursando sem horários aparecem como pendências. Salas SIGAA são identificadas e permanecem a confirmar; SACI complementa uma associação explícita com código, semestre e horário compatíveis, inclusive para turmas importadas sem matrícula manual.
 - **Curso inicial da grade**: Aguarda autenticação e carregamento do perfil antes de selecionar o curso do aluno, preservando escolhas manuais feitas durante a consulta. Visitantes continuam vendo o primeiro curso disponível.
 - **Descoberta do planejador**: Identificação “Novo” nos menus desktop/celular e no cartão da página de recursos, ao final das respectivas listas.
 - **Navegação das grades curriculares**: Nova visão responsiva por períodos, busca por nome/código e filtro de período. Visão por período como alternativa à direita do mapa, com todas as disciplinas visíveis, status/carga e sem limite de itens por período. Mapa padrão ajustável à largura, sem limite de altura na página; coluna 0 com expansão das listas longas. Exportação preserva a grade completa, filtros não removem seleções e troca de curso reinicia a seleção. Corrigida hidratação da transição de páginas para quem prefere movimento reduzido.
@@ -41,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Planejador: curso identificado pelo SIGAA/perfil quando há correspondência única; disponibilidade visual com dias SIGAA 2–7 e blocos M/T/N agrupados, com atalhos por turno, em uma única grade, prioridades ordenáveis por arrastar e teclado, meta inicial de 180h substituída pelos limites importados e opções avançadas recolhidas.
 - **Grade semanal**: Calendário em largura total, alternância entre semana e lista, faixa de horários reduzida às aulas, sábado quando necessário e buscas sem caixas internas de rolagem.
 - **SACI/PAAS**: Consulta externa com cancelamento por timeout e conferência do centro/publicação; backup local não é reutilizado para outro centro. Parser de horários aceita múltiplos blocos e rejeita horários parcialmente inválidos.
+
+### Fixed
+- **Elegibilidade de equivalentes**: Requisitos, correquisitos e carga da oferta equivalente são verificados; dados ausentes não viram aprovação garantida.
+- **Limite da busca**: O teto de disciplinas incide após filtros e identificação das opções viáveis, evitando bloquear currículos grandes com poucas ofertas aproveitáveis.
+- **Simulação e cenários**: Correquisitos atendidos por aprovação simulada tornam a combinação condicional. Operações de salvar/carregar/excluir cenários são mutuamente bloqueadas para preservar a identidade do rascunho.
+- **Aulas aos domingos**: Grades semanal/mobile e conflitos incluem domingo quando há aula, sem omitir encontros aceitos pelo parser.
 
 ## [1.12.2] - 2026-10-02
 

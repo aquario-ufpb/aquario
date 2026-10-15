@@ -1,3 +1,4 @@
+import type { ICalendarRoomBindingRepository } from "@/lib/server/db/interfaces/calendar-room-binding-repository.interface";
 import type { IPublicOfferingCacheRepository } from "@/lib/server/db/interfaces/public-offering-cache-repository.interface";
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
 import type { ICampusRepository } from "@/lib/server/db/interfaces/campus-repository.interface";
@@ -57,6 +58,7 @@ export type Container = {
   sigaaRepository: ISigaaRepository;
   publicOfferingCacheRepository: IPublicOfferingCacheRepository;
   enrollmentPlanRepository: IEnrollmentPlanRepository;
+  calendarRoomBindingRepository: ICalendarRoomBindingRepository;
 
   // Services
   emailService: IEmailService;
