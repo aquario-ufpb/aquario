@@ -110,6 +110,8 @@ jobs:
           SIGAA_TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/aquario_sigaa_test
 
       - name: Run integration tests
+        env:
+          PLANNER_TEST_DATABASE_URL: postgresql://postgres:password@localhost:5432/aquario_sigaa_test
         run: npm run test:integration -- --run --reporter=verbose --exclude src/lib/server/db/implementations/prisma/__tests__/prisma-sigaa-repository.integration.test.ts
 
       - name: Upload integration test results

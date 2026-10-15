@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SACI/PAAS**: Consulta externa com cancelamento por timeout e conferência do centro/publicação; backup local não é reutilizado para outro centro. Parser de horários aceita múltiplos blocos e rejeita horários parcialmente inválidos.
 
 ### Fixed
+- **CI**: Workflow de qualidade alinhado ao Node 22 já usado no guia e nos outros workflows; suíte de integração habilita os testes de persistência do planejador e das escolhas de sala.
 - **Elegibilidade de equivalentes**: Requisitos, correquisitos e carga da oferta equivalente são verificados; dados ausentes não viram aprovação garantida.
 - **Limite da busca**: O teto de disciplinas incide após filtros e identificação das opções viáveis, evitando bloquear currículos grandes com poucas ofertas aproveitáveis.
 - **Simulação e cenários**: Correquisitos atendidos por aprovação simulada tornam a combinação condicional. Operações de salvar/carregar/excluir cenários são mutuamente bloqueadas para preservar a identidade do rascunho.
