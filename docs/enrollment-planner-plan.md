@@ -315,4 +315,4 @@ A comparação usa três cartões compactos, com carga, disciplinas, dias e jane
 
 Busca de prioridades pode ser limpa por um botão; metadados com zero dependências não ocupam espaço. Limites mínimos maiores que os máximos geram um aviso imediato. Fixar uma turma, inclusive uma grade inteira, retira a mesma turma das exclusões para evitar escolhas contraditórias. A paleta do planejador e do PNG preserva contraste de pelo menos 4,5:1 para texto branco.
 
-Na página de grades curriculares, o mapa de dependências é a visualização inicial; a coluna 0 reúne as disciplinas sem período, com “Ver mais” quando há muitas. A seleção inicial aguarda autenticação e perfil para usar o curso do aluno, preservando eventual escolha manual.
+Na página de grades curriculares, o mapa de dependências é a visualização inicial, à esquerda; “Por período” fica à direita e mostra todas as disciplinas sem limite de itens ou recolhimento; a coluna 0 reúne as disciplinas sem período, com “Ver mais” quando há muitas. A seleção inicial aguarda autenticação e perfil para usar o curso do aluno, preservando eventual escolha manual.

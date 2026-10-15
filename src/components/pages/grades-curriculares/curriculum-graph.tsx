@@ -762,8 +762,8 @@ export function CurriculumGraph({
               >
                 {(
                   [
-                    ["periods", "Por período", LayoutGrid],
                     ["map", "Mapa de dependências", Network],
+                    ["periods", "Por período", LayoutGrid],
                   ] as const
                 ).map(([value, label, Icon]) => (
                   <Button
@@ -833,7 +833,7 @@ export function CurriculumGraph({
             </div>
             <p className="text-xs text-muted-foreground">
               {view === "periods"
-                ? "Abra um período e uma disciplina para ver pré-requisitos, equivalências e o que depende dela."
+                ? "Abra uma disciplina para ver pré-requisitos, equivalências e o que depende dela."
                 : "Passe o mouse para destacar o caminho. No celular, toque para destacar e novamente para abrir. As disciplinas sem período definido aparecem na coluna 0."}
             </p>
           </div>
@@ -1050,7 +1050,6 @@ export function CurriculumGraph({
         )}
         {browsable && view === "periods" && !isExporting && (
           <CurriculumPeriods
-            expandMatches={!!search.trim() || periodFilter !== "all"}
             periods={periods}
             completedIds={completedDisciplinaIds}
             cursandoIds={cursandoDisciplinaIds}
