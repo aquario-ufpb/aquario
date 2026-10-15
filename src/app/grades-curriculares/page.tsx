@@ -1,5 +1,8 @@
 "use client";
 
+import { useOwnSigaaAcademicState } from "@/lib/client/hooks/use-sigaa";
+import { curriculumStatus } from "@/lib/shared/sigaa/curriculum-status";
+import { normalizeCurriculumCode } from "@/lib/shared/sigaa/curriculum-code";
 import { useAuth } from "@/contexts/auth-context";
 import { trackEvent } from "@/analytics/posthog-client";
 import { CurriculumGraph } from "@/components/pages/grades-curriculares/curriculum-graph";
@@ -43,6 +46,8 @@ export default function GradesCurricularesPage() {
 
   const isLoggedIn = !!user;
   const isOwnCourse = isLoggedIn && selectedCursoId === user?.curso?.id;
+  const sigaa = useOwnSigaaAcademicState(isOwnCourse);
+  const imported = sigaa.data?.snapshot;
 
   // Auto-select: user's course if logged in, otherwise first available
   useEffect(() => {
@@ -69,21 +74,25 @@ export default function GradesCurricularesPage() {
     setSelectionMode(enabled);
   }, []);
 
-  // Completed IDs directly from server data
-  const completedIds = useMemo(() => {
-    if (!isOwnCourse || !concluidasData) {
-      return undefined;
+  const academicStatus = useMemo(() => {
+    if (!isOwnCourse || !grade) {
+      return null;
     }
-    return new Set(concluidasData.disciplinaIds);
-  }, [isOwnCourse, concluidasData]);
-
-  // Cursando IDs from active semester
-  const cursandoIds = useMemo(() => {
-    if (!isOwnCourse || !semestreData?.disciplinas?.length) {
-      return undefined;
-    }
-    return new Set(semestreData.disciplinas.map(d => d.disciplinaId));
-  }, [isOwnCourse, semestreData]);
+    return curriculumStatus(
+      grade.disciplinas,
+      concluidasData?.disciplinaIds ?? [],
+      semestreData?.disciplinas?.map(item => item.disciplinaId) ?? [],
+      imported?.payload.curriculum.components ?? []
+    );
+  }, [isOwnCourse, grade, concluidasData, semestreData, imported]);
+  const completedIds = academicStatus?.completedIds;
+  const cursandoIds = academicStatus?.enrolledIds;
+  const curriculumMismatch =
+    isOwnCourse &&
+    imported &&
+    grade &&
+    normalizeCurriculumCode(imported.payload.curriculum.code) !==
+      normalizeCurriculumCode(grade.curriculoCodigo);
 
   // Handler for marking disciplines (bulk or single)
   const handleMarcarDisciplinas = useCallback(
@@ -136,6 +145,54 @@ export default function GradesCurricularesPage() {
         }}
         isLoading={cursosLoading}
       />
+
+      {isOwnCourse && sigaa.isLoading && (
+        <p role="status" className="mb-4 text-sm text-muted-foreground">
+          Carregando status acadêmicos do SIGAA…
+        </p>
+      )}
+      {isOwnCourse && sigaa.isError && (
+        <p role="alert" className="mb-4 rounded-lg border p-3 text-sm">
+          Não foi possível carregar os status SIGAA; somente marcações manuais estão disponíveis.{" "}
+          <button className="underline" onClick={() => void sigaa.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {isOwnCourse && imported && (
+        <div className="mb-4 space-y-2 rounded-lg border bg-card p-3 text-xs text-muted-foreground">
+          <p>
+            Status SIGAA têm prioridade sobre marcações manuais, como em Dados acadêmicos.{" "}
+            <Link href="/me/academico" className="underline">
+              Ver conexão e dados importados
+            </Link>
+          </p>
+          {curriculumMismatch && (
+            <p>
+              A importação usa o currículo {imported.payload.curriculum.code}; esta grade é do
+              currículo {grade?.curriculoCodigo}. Os status são associados apenas por código exato
+              da disciplina.
+            </p>
+          )}
+          {!!academicStatus?.missing.length && (
+            <details>
+              <summary className="cursor-pointer">
+                {academicStatus.missing.length}{" "}
+                {academicStatus.missing.length === 1
+                  ? "disciplina concluída ou cursando não consta nesta grade"
+                  : "disciplinas concluídas ou cursando não constam nesta grade"}
+              </summary>
+              <ul className="mt-2 space-y-1">
+                {academicStatus.missing.map(item => (
+                  <li key={item.code}>
+                    {item.name} · {item.code}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
 
       {/* Nudge banner: cursando disciplines without turma */}
       {cursandoWithoutTurma > 0 && (

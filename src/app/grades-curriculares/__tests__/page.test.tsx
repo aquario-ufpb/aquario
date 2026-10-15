@@ -1,9 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { useOwnSigaaAcademicState } from "@/lib/client/hooks/use-sigaa";
+import { CurriculumGraph } from "@/components/pages/grades-curriculares/curriculum-graph";
 import GradesCurricularesPage from "../page";
 import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { useGradeCurricular } from "@/lib/client/hooks/use-grade-curricular";
 
+jest.mock("@/lib/client/hooks/use-sigaa", () => ({ useOwnSigaaAcademicState: jest.fn() }));
 jest.mock("@/contexts/auth-context", () => ({ useAuth: jest.fn() }));
 jest.mock("@/lib/client/hooks/use-usuarios", () => ({ useCurrentUser: jest.fn() }));
 jest.mock("@/lib/client/hooks/use-grade-curricular", () => ({ useGradeCurricular: jest.fn() }));
@@ -25,7 +28,7 @@ jest.mock("@/lib/client/hooks/use-disciplinas-semestre", () => ({
 }));
 jest.mock("@/analytics/posthog-client", () => ({ trackEvent: jest.fn() }));
 jest.mock("@/components/pages/grades-curriculares/curriculum-graph", () => ({
-  CurriculumGraph: () => null,
+  CurriculumGraph: jest.fn(() => null),
 }));
 jest.mock("@/components/pages/grades-curriculares/curso-selector", () => ({
   CursoSelector: ({ onSelect }: { onSelect: (id: string) => void }) => (
@@ -35,6 +38,7 @@ jest.mock("@/components/pages/grades-curriculares/curso-selector", () => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (useOwnSigaaAcademicState as jest.Mock).mockReturnValue({});
   (useGradeCurricular as jest.Mock).mockReturnValue({});
 });
 
@@ -91,4 +95,51 @@ it("preserva uma escolha manual enquanto o perfil está carregando", () => {
   });
   rerender(<GradesCurricularesPage />);
   expect(useGradeCurricular).toHaveBeenLastCalledWith("cc");
+});
+
+it("updates grade colors from an arriving SIGAA snapshot and never applies them to another course", () => {
+  (useAuth as jest.Mock).mockReturnValue({ token: "session", isLoading: false });
+  (useCurrentUser as jest.Mock).mockReturnValue({
+    data: { curso: { id: "ec" } },
+    isPending: false,
+  });
+  (useGradeCurricular as jest.Mock).mockReturnValue({
+    data: {
+      curriculoId: "grade",
+      curriculoCodigo: "492016",
+      cursoNome: "Engenharia da Computação",
+      disciplinas: [
+        {
+          id: "node",
+          disciplinaId: "local-A1",
+          codigo: "A1",
+          nome: "Cálculo",
+          periodo: 1,
+          natureza: "OBRIGATORIA",
+          preRequisitos: [],
+          equivalencias: [],
+        },
+      ],
+    },
+  });
+  const { rerender } = render(<GradesCurricularesPage />);
+  const graphProps = () => (CurriculumGraph as jest.Mock).mock.calls.at(-1)?.[0];
+  expect(graphProps().completedDisciplinaIds.size).toBe(0);
+  (useOwnSigaaAcademicState as jest.Mock).mockReturnValue({
+    data: {
+      snapshot: {
+        payload: {
+          curriculum: {
+            code: "492016",
+            components: [{ code: "A1", name: "Cálculo", status: "completed" }],
+          },
+        },
+      },
+    },
+  });
+  rerender(<GradesCurricularesPage />);
+  expect(graphProps().completedDisciplinaIds.has("local-A1")).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Escolher CC" }));
+  expect(graphProps().completedDisciplinaIds).toBeUndefined();
+  expect(graphProps().cursandoDisciplinaIds).toBeUndefined();
 });

@@ -4,6 +4,7 @@ Análise em 14/10/2026. O plano abaixo cobre a evolução completa; a primeira e
 
 ## Primeira entrega implementada
 
+- A grade curricular usa a mesma combinação de status de Dados acadêmicos (SIGAA prevalece sobre manual), associando códigos aos IDs da grade apenas no curso do aluno. Divergência de currículo e disciplinas importadas ausentes ficam explícitas, sem copiar o histórico para tabelas manuais.
 - Turmas da última importação SIGAA entram na lista e no calendário por projeção de leitura, sem criar matrículas manuais; somente do semestre correspondente. Códigos já importados não se repetem na lista manual. Horários ausentes/inválidos e salas sem conferência ficam como pendências.
 - Calendário pessoal em largura total, sem a antiga coluna lateral comprimindo a semana.
 - Semana com largura fixa ao espaço disponível, cabeçalhos fixos e linhas sem aulas ocultas; opção de mostrar o dia inteiro.
