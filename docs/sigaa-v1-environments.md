@@ -31,3 +31,43 @@ entre esses segredos.
 O backend do Aquário fixa suas funções em `iad1`. Antes do smoke real, os resumos dos deployments do
 Aquário e do conector devem confirmar `iad1`, além dos limites de 180 e 150 segundos. O timeout do
 cliente server-only permanece em 165 segundos.
+
+## Desenvolvimento local (Linux)
+
+O Aquário e o conector são dois processos separados. O seed de cursos não inicia o conector.
+
+Clone `https://github.com/aquario-ufpb/aquario-sigaa-connector.git` ao lado do Aquário e instale o serviço com Python 3.12:
+
+```bash
+cd ../aquario-sigaa-connector
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+```
+
+No `.env` privado do conector, defina `CONNECTOR_API_SECRET` com uma chave aleatória de pelo menos 32 caracteres. No `.env` do Aquário, configure:
+
+```dotenv
+SIGAA_CONNECTOR_URL="http://127.0.0.1:8000/v1/sync"
+SIGAA_CONNECTOR_ALLOWED_ORIGINS="http://127.0.0.1:8000"
+SIGAA_CONNECTOR_ALLOW_LOCAL_HTTP="true"
+SIGAA_CONNECTOR_API_SECRET="mesmo-valor-de-CONNECTOR_API_SECRET"
+```
+
+Mantenha `JWT_SECRET` e `SIGAA_REAUTH_JWT_SECRET` distintos entre si e da chave do conector. Nenhum desses valores usa prefixo `NEXT_PUBLIC_`.
+
+Inicie o conector em um terminal:
+
+```bash
+cd ../aquario-sigaa-connector
+.venv/bin/python -m uvicorn api.index:app --env-file .env --host 127.0.0.1 --port 8000 --no-access-log
+```
+
+Em outro terminal, inicie o Aquário na pasta do aplicativo:
+
+```bash
+npm run dev -- --port 3031
+```
+
+`GET http://127.0.0.1:8000/health` deve retornar `status: "ok"` e `schema_version: "1.0"`. Esse teste confirma a inicialização; a importação real precisa ser feita pela tela `/me/academico`, com reautenticação da conta Aquário, consentimento e credenciais SIGAA informadas diretamente pelo usuário. Não coloque credenciais SIGAA em arquivos `.env` ou comandos de terminal.
+
+O HTTP local é aceito somente com `NODE_ENV=development`. `npm start` executa em produção e exige conector HTTPS.

@@ -5,6 +5,7 @@ import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
 import { useSemestreAtivo } from "@/lib/client/hooks/use-calendario-academico";
 import { MinhasDisciplinas } from "@/components/pages/calendario/minhas-disciplinas";
 import { PaasExplorer } from "@/components/pages/calendario/paas-explorer";
+import Link from "next/link";
 
 function MinhasDisciplinasView() {
   const { data: user } = useCurrentUser();
@@ -25,6 +26,9 @@ function MinhasDisciplinasView() {
         <p className="text-muted-foreground">
           Gerencie suas disciplinas e visualize seu calendário
         </p>
+        <Link href="/planejador" className="mt-3 inline-block text-sm underline">
+          Planejar a matrícula e comparar combinações de turmas
+        </Link>
       </div>
       <MinhasDisciplinas centroSigla={centroSigla} semestreNome={semestreAtivo?.nome} />
     </div>

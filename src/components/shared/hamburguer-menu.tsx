@@ -262,6 +262,7 @@ const NAV_LINKS = [
   { href: "/sobre", label: "SOBRE" },
   { href: "/recursos", label: "RECURSOS" },
   { href: "/calendario", label: "DISCIPLINAS" },
+  { href: "/planejador", label: "PLANEJADOR" },
   { href: "/grades-curriculares", label: "GRADES" },
   { href: "/mapas", label: "MAPAS" },
   { href: "/guias", label: "GUIAS" },
@@ -346,7 +347,8 @@ export default function HamburgerMenu({
               {NAV_LINKS.map(link => (
                 <MenuLink key={link.href} href={link.href} onClick={closeMenu}>
                   {link.label}
-                  {link.href === "/recursos" && shouldEmphasizeSigaa(sigaaAccessState) ? (
+                  {link.href === "/planejador" ||
+                  (link.href === "/recursos" && shouldEmphasizeSigaa(sigaaAccessState)) ? (
                     <span className="ml-2 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-950 dark:text-sky-200">
                       Novo
                     </span>

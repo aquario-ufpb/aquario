@@ -200,6 +200,7 @@ model Usuario {
   sigaaConnection       SigaaConnection?
   sigaaCourseChangeProposals SigaaCourseChangeProposal[]
   sigaaRateLimitBuckets SigaaRateLimitBucket[]
+  enrollmentPlans EnrollmentPlan[]
 
   @@index([email])
   @@index([matricula])
@@ -667,6 +668,21 @@ model DisciplinaSemestre {
   @@index([usuarioId, semestreLetivoId])
 }
 
+// Private simulations; never enrollment records or imported academic snapshots.
+model EnrollmentPlan {
+  id String @id @default(uuid())
+  usuarioId String
+  name String
+  semester String
+  profileCourseId String
+  draft Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, updatedAt])
+}
+
 // ============================================================================
 // PROJETOS E AUTORES
 // ============================================================================
@@ -713,4 +729,15 @@ model ProjetoAutor {
   @@index([usuarioId])
   @@index([entidadeId])
   @@index([autorPrincipal])
+}
+
+// Shared public offers; never imported academic history or enrollment preferences.
+model PublicSigaaOfferingCache {
+  courseId String
+  semester String
+  payload Json
+  observedAt DateTime
+
+  @@id([courseId, semester])
+  @@index([semester, observedAt])
 }

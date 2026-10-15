@@ -10,7 +10,12 @@ type CalendarMobileViewProps = {
   classes: ClassWithRoom[];
   classColors: Map<number, string>;
   isDark: boolean;
-  onCellClick?: (classes: ClassWithRoom[], day: number, timeSlotIndex: number) => void;
+  onCellClick?: (
+    classes: ClassWithRoom[],
+    day: number,
+    timeSlotIndex: number,
+    anchor?: HTMLElement
+  ) => void;
 };
 
 // Helper functions
@@ -100,7 +105,7 @@ function TimeSlotLabel({ label, isDark }: TimeSlotLabelProps) {
       className="text-xs font-medium flex-shrink-0"
       style={{
         color: isDark ? "#C8E6FA" : "#0e3a6c",
-        width: "50px",
+        width: "88px",
       }}
     >
       {label}
@@ -124,8 +129,9 @@ function ClassItem({
   onClick,
 }: ClassItemProps) {
   return (
-    <div
-      className={`p-2 rounded text-xs w-full ${hasConflict ? "ring-1 ring-red-400/50" : ""}`}
+    <button
+      type="button"
+      className={`p-3 rounded text-sm text-left w-full ${hasConflict ? "ring-1 ring-red-400/50" : ""}`}
       style={{
         backgroundColor: classColor,
         color: "#fff",
@@ -140,10 +146,13 @@ function ClassItem({
         </div>
       )}
       <p className="font-semibold break-words">{classItem.nome.trim()}</p>
+      <p className="text-xs opacity-90">
+        {classItem.codigo} · Turma {classItem.turma}
+      </p>
       <p className="text-xs opacity-90 break-words">
         {classItem.room.bloco} {classItem.room.nome}
       </p>
-    </div>
+    </button>
   );
 }
 
@@ -154,7 +163,12 @@ type TimeSlotRowProps = {
   day: number;
   isDark: boolean;
   classColors: Map<number, string>;
-  onCellClick?: (classes: ClassWithRoom[], day: number, timeSlotIndex: number) => void;
+  onCellClick?: (
+    classes: ClassWithRoom[],
+    day: number,
+    timeSlotIndex: number,
+    anchor?: HTMLElement
+  ) => void;
 };
 
 function TimeSlotRow({
@@ -169,16 +183,16 @@ function TimeSlotRow({
   const hasConflict = cellClasses.length > 1;
   const timeRangeLabel = calculateTimeRangeLabel(timeSlot, slotData);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (onCellClick && cellClasses.length > 0) {
-      onCellClick(cellClasses, day, timeSlot.index);
+      onCellClick(cellClasses, day, timeSlot.index, e.currentTarget as HTMLElement);
     }
   };
 
   const handleClassClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onCellClick) {
-      onCellClick(cellClasses, day, timeSlot.index);
+      onCellClick(cellClasses, day, timeSlot.index, e.currentTarget as HTMLElement);
     }
   };
 
@@ -217,7 +231,12 @@ type DayContentProps = {
   borderColor: string;
   isDark: boolean;
   classColors: Map<number, string>;
-  onCellClick?: (classes: ClassWithRoom[], day: number, timeSlotIndex: number) => void;
+  onCellClick?: (
+    classes: ClassWithRoom[],
+    day: number,
+    timeSlotIndex: number,
+    anchor?: HTMLElement
+  ) => void;
 };
 
 function DayContent({
@@ -275,7 +294,12 @@ type DayCardProps = {
   headerBg: string;
   isDark: boolean;
   classColors: Map<number, string>;
-  onCellClick?: (classes: ClassWithRoom[], day: number, timeSlotIndex: number) => void;
+  onCellClick?: (
+    classes: ClassWithRoom[],
+    day: number,
+    timeSlotIndex: number,
+    anchor?: HTMLElement
+  ) => void;
 };
 
 function DayCard({
@@ -343,6 +367,9 @@ export function CalendarMobileView({
     <div className="space-y-4 w-full">
       {DAY_NUMBERS.map((day, dayIndex) => {
         const dayData = daySlotData.get(day);
+        if (!hasClassesForDay(dayData)) {
+          return null;
+        }
 
         return (
           <DayCard

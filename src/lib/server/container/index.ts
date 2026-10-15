@@ -129,6 +129,10 @@ function createPrismaContainer(): Container {
   } = require("@/lib/server/db/implementations/prisma/prisma-sigaa-repository");
 
   return {
+    publicOfferingCacheRepository:
+      new (require("@/lib/server/db/implementations/prisma/prisma-public-offering-cache-repository").PrismaPublicOfferingCacheRepository)(),
+    enrollmentPlanRepository:
+      new (require("@/lib/server/db/implementations/prisma/prisma-enrollment-plan-repository").PrismaEnrollmentPlanRepository)(),
     usuariosRepository: new PrismaUsuariosRepository(),
     campusRepository: new PrismaCampusRepository(),
     centrosRepository: new PrismaCentrosRepository(),

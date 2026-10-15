@@ -3,9 +3,12 @@ import type { ICurriculosRepository } from "@/lib/server/db/interfaces/curriculo
 import type { GradeCurricularResponse, GradeDisciplinaNode } from "@/lib/shared/types";
 
 export class PrismaCurriculosRepository implements ICurriculosRepository {
-  async findActiveGradeByCursoId(cursoId: string): Promise<GradeCurricularResponse | null> {
+  async findActiveGradeByCursoId(
+    cursoId: string,
+    codigo?: string
+  ): Promise<GradeCurricularResponse | null> {
     const curriculo = await prisma.curriculo.findFirst({
-      where: { cursoId, ativo: true },
+      where: { cursoId, ...(codigo ? { codigo } : { ativo: true }) },
       include: {
         curso: { select: { nome: true } },
         disciplinas: {

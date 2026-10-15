@@ -7,7 +7,7 @@ type CalendarCellProps = {
   isDark: boolean;
   rowSpan?: number;
   isStartOfMerge?: boolean;
-  onCellClick?: () => void;
+  onCellClick?: (anchor: HTMLElement) => void;
 };
 
 export default function CalendarCell({
@@ -28,8 +28,8 @@ export default function CalendarCell({
   return (
     <td
       rowSpan={rowSpan > 1 ? rowSpan : undefined}
-      className={`p-1 align-top relative ${classes.length > 0 && onCellClick ? "cursor-pointer" : ""}`}
-      onClick={classes.length > 0 ? onCellClick : undefined}
+      className={`p-1 align-top relative h-px ${classes.length > 0 && onCellClick ? "cursor-pointer" : ""}`}
+      onClick={classes.length > 0 && onCellClick ? e => onCellClick(e.currentTarget) : undefined}
       style={{
         backgroundColor: isDark ? "rgba(255,255,255,0.02)" : "#fff",
         border: `1px solid ${
@@ -41,7 +41,6 @@ export default function CalendarCell({
               ? "rgba(255,255,255,0.1)"
               : "#e2e8f0"
         }`,
-        minHeight: rowSpan > 1 ? `${rowSpan * 60}px` : "60px",
         verticalAlign: "top",
       }}
     >
@@ -61,33 +60,34 @@ export default function CalendarCell({
           key={classItem.id}
           className={`p-2 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity ${
             hasConflict ? "ring-1 ring-red-400/50" : ""
-          } ${rowSpan > 1 ? "h-full flex flex-col justify-center" : ""} ${
+          } ${!hasConflict ? "h-full min-h-20 flex flex-col justify-center" : ""} ${
             index < classes.length - 1 ? "mb-1" : ""
           }`}
           style={{
             backgroundColor: classColors.get(classItem.id) || "#3b82f6",
             color: "#fff",
-            ...(rowSpan > 1
-              ? {
-                  position: "absolute",
-                  top: "4px",
-                  left: "4px",
-                  right: "4px",
-                  bottom: "4px",
-                  margin: 0,
-                }
-              : {}),
           }}
           title={`${classItem.nome.trim()} - ${classItem.codigo} - ${classItem.room.bloco} ${classItem.room.nome}${hasConflict ? " (Conflito de horário)" : rowSpan > 1 ? ` (${rowSpan} períodos)` : ""}`}
+          role={onCellClick ? "button" : undefined}
+          tabIndex={onCellClick ? 0 : undefined}
+          onKeyDown={e => {
+            if (onCellClick && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              onCellClick(e.currentTarget);
+            }
+          }}
           onClick={e => {
             e.stopPropagation();
             if (onCellClick) {
-              onCellClick();
+              onCellClick(e.currentTarget);
             }
           }}
         >
-          <p className="font-semibold truncate">{classItem.nome.trim()}</p>
-          <p className="text-xs opacity-90 truncate">
+          <p className="font-semibold break-words">{classItem.nome.trim()}</p>
+          <p className="text-xs opacity-90 break-words">
+            {classItem.codigo} · Turma {classItem.turma}
+          </p>
+          <p className="text-xs opacity-90 break-words">
             {classItem.room.bloco} {classItem.room.nome}
           </p>
         </div>

@@ -41,6 +41,15 @@ const recursos: Array<{
   external?: boolean;
 }> = [
   {
+    id: "planejador",
+    title: "Planejador de Matrícula",
+    description:
+      "Encontre combinações de turmas do SIGAA por disponibilidade, prioridades e reservas para seu curso. Compare cenários e planeje seus deslocamentos.",
+    href: "/planejador",
+    icon: CalendarDays,
+    illustration: "disciplines",
+  },
+  {
     id: "calendario",
     title: "Minhas Disciplinas",
     description:
@@ -148,6 +157,11 @@ export default function RecursosPage() {
                 <CardTitle className="flex items-center gap-3 text-[#0e3a6c] dark:text-[#C8E6FA]">
                   <Icon className="w-6 h-6" />
                   {recurso.title}
+                  {recurso.id === "planejador" && (
+                    <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-950 dark:text-sky-200">
+                      Novo
+                    </span>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">

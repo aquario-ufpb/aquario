@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ClassCard from "./class-card";
 import type { ClassWithRoom } from "./types";
+import { useEffect, useState } from "react";
 
 type SearchSectionProps = {
   searchQuery: string;
@@ -40,6 +41,8 @@ export default function SearchSection({
   onSaveToServer,
   onResetToSaved,
 }: SearchSectionProps) {
+  const [visibleCount, setVisibleCount] = useState(12);
+  useEffect(() => setVisibleCount(12), [searchQuery]);
   return (
     <Card className={`mb-8 ${isDark ? "bg-white/5 border-white/20" : "bg-white border-slate-200"}`}>
       <CardHeader>
@@ -141,10 +144,11 @@ export default function SearchSection({
         )}
 
         {/* Search Results / All Classes */}
-        <div className="max-h-96 overflow-y-auto space-y-2">
+        <div className="space-y-2">
           {!searchQuery && filteredClasses.length > 0 && (
             <p className="text-xs mb-2" style={{ color: isDark ? "#E5F6FF/60" : "#0e3a6c/60" }}>
-              Mostrando todas as disciplinas ({filteredClasses.length})
+              {filteredClasses.length} turmas disponíveis. Busque uma disciplina para encontrar sua
+              turma.
             </p>
           )}
           {filteredClasses.length === 0 ? (
@@ -155,15 +159,26 @@ export default function SearchSection({
               {searchQuery ? "Nenhuma disciplina encontrada" : "Nenhuma disciplina disponível"}
             </p>
           ) : (
-            filteredClasses.map(classItem => (
-              <ClassCard
-                key={classItem.id}
-                classItem={classItem}
-                isSelected={selectedClassIds.has(classItem.id)}
-                isDark={isDark}
-                onToggle={() => onToggleClass(classItem.id)}
-              />
-            ))
+            filteredClasses
+              .slice(0, visibleCount)
+              .map(classItem => (
+                <ClassCard
+                  key={classItem.id}
+                  classItem={classItem}
+                  isSelected={selectedClassIds.has(classItem.id)}
+                  isDark={isDark}
+                  onToggle={() => onToggleClass(classItem.id)}
+                />
+              ))
+          )}
+          {filteredClasses.length > visibleCount && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setVisibleCount(count => count + 12)}
+            >
+              Mostrar mais turmas ({filteredClasses.length - visibleCount} restantes)
+            </Button>
           )}
         </div>
       </CardContent>

@@ -10,9 +10,14 @@ import {
   useSearchDisciplinas,
 } from "@/lib/client/hooks/use-disciplinas-semestre";
 import CalendarGrid from "./calendar-grid";
+import { ManualScheduleForm } from "./manual-schedule-form";
 import type { ClassWithRoom } from "./types";
 import { DAY_NUMBERS, CALENDAR_TIME_SLOTS, CLASS_COLORS } from "@/lib/client/calendario/constants";
-import { parseHorarioToSlots } from "@/lib/client/calendario/utils";
+import { formatHorario, parseHorarioToSlots } from "@/lib/client/calendario/utils";
+import {
+  matchesDisciplineCode,
+  resolveEnrolledClasses,
+} from "@/lib/client/calendario/resolve-enrolled-classes";
 import type { PaasRoom } from "@/lib/shared/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,27 +78,11 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
     return classes;
   }, [paasData]);
 
-  // Group PAAS classes by discipline code for turma picker
-  const paasClassesByCodigo = useMemo(() => {
-    const map = new Map<string, ClassWithRoom[]>();
-    allPaasClasses.forEach(c => {
-      const existing = map.get(c.codigo) || [];
-      existing.push(c);
-      map.set(c.codigo, existing);
-    });
-    return map;
-  }, [allPaasClasses]);
-
-  // Derive calendar classes from semester data where turma is assigned (codigoPaas set)
-  const selectedCalendarClasses = useMemo(() => {
-    if (!semestreData?.disciplinas?.length) {
-      return [];
-    }
-    return semestreData.disciplinas
-      .filter(d => d.codigoPaas !== null)
-      .map(d => allPaasClasses.find(c => c.id === d.codigoPaas))
-      .filter((c): c is ClassWithRoom => c !== undefined);
-  }, [semestreData, allPaasClasses]);
+  const calendarResolution = useMemo(
+    () => resolveEnrolledClasses(semestreData?.disciplinas ?? [], allPaasClasses, paasMatchesDb),
+    [semestreData, allPaasClasses, paasMatchesDb]
+  );
+  const selectedCalendarClasses = calendarResolution.classes;
 
   // Calendar colors
   const classColors = useMemo(() => {
@@ -281,9 +270,9 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
+    <div className="space-y-6">
       {/* Left panel: Discipline list */}
-      <div className="lg:w-[420px] flex-shrink-0 space-y-4">
+      <div className="w-full min-w-0 space-y-4">
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 mb-1">
@@ -307,13 +296,27 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
             )}
 
             {/* PAAS mismatch warning */}
+            <p className="text-xs text-muted-foreground">
+              Oferta de salas e turmas:{" "}
+              <a
+                className="underline"
+                href="https://sa.ci.ufpb.br/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                SACI
+              </a>
+              {paasSemestreNome ? ` · ${centroSigla} · ${paasSemestreNome}` : " · aguardando dados"}
+              . Turmas da matrícula extraordinária podem não constar nesta oferta; informe o horário
+              manualmente nesses casos.
+            </p>
             {dbSemestreNome && !paasMatchesDb && (
               <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 flex items-start gap-2 text-xs text-amber-800 dark:text-amber-200">
                 <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                 <span>
                   Dados de alocação ainda não disponíveis para {dbSemestreNome}. Você pode
-                  adicionar/remover disciplinas, mas a seleção de turmas e calendário estarão
-                  disponíveis quando o SACI for atualizado.
+                  adicionar/remover disciplinas. Horários já salvos continuam visíveis; novas
+                  alocações dependem da atualização do SACI.
                 </span>
               </div>
             )}
@@ -328,68 +331,90 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
               </p>
             )}
 
-            {disciplinas.map(disc => {
-              const paasOptions = paasClassesByCodigo.get(disc.disciplinaCodigo) ?? [];
-              return (
-                <div key={disc.id} className="p-3 rounded-lg border bg-card flex flex-col gap-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium leading-tight">{disc.disciplinaNome}</p>
-                      <p className="text-xs text-muted-foreground font-mono">
-                        {disc.disciplinaCodigo}
-                      </p>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {disciplinas.map(disc => {
+                const paasOptions = allPaasClasses.filter(item =>
+                  matchesDisciplineCode(item.codigo, disc.disciplinaCodigo)
+                );
+                const pending = calendarResolution.pending.find(
+                  item => item.disciplineId === disc.id
+                );
+                const selectedOption =
+                  paasOptions.find(item => item.id === disc.codigoPaas) ??
+                  (disc.codigoPaas !== null &&
+                  disc.turma &&
+                  paasOptions.filter(item => item.turma.trim() === disc.turma?.trim()).length === 1
+                    ? paasOptions.find(item => item.turma.trim() === disc.turma?.trim())
+                    : undefined);
+                return (
+                  <div key={disc.id} className="p-3 rounded-lg border bg-card flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium leading-tight">{disc.disciplinaNome}</p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {disc.disciplinaCodigo}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                        disabled={marcarMutation.isPending}
+                        onClick={() => handleRemoveDisciplina(disc.disciplinaId)}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                      disabled={marcarMutation.isPending}
-                      onClick={() => handleRemoveDisciplina(disc.disciplinaId)}
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
 
-                  {/* Turma selector */}
-                  {!turmaSelectionAvailable ? (
-                    <p className="text-xs text-muted-foreground italic">
-                      Seleção de turmas indisponível
-                    </p>
-                  ) : paasOptions.length > 0 ? (
-                    <Select
-                      value={disc.codigoPaas !== null ? String(disc.codigoPaas) : ""}
-                      onValueChange={val => {
-                        if (val === "__clear__") {
-                          handleClearTurma(disc.id);
-                        } else {
-                          handleSelectTurma(disc.id, Number(val));
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Selecionar turma..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {disc.codigoPaas !== null && (
-                          <SelectItem value="__clear__" className="text-xs text-muted-foreground">
-                            Remover turma
-                          </SelectItem>
-                        )}
-                        {paasOptions.map(opt => (
-                          <SelectItem key={opt.id} value={String(opt.id)} className="text-xs">
-                            T{opt.turma} — {opt.docente?.trim() || "Sem docente"} — {opt.horario}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <p className="text-xs text-muted-foreground italic">
-                      Sem turmas disponíveis no PAAS
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+                    {/* Turma selector */}
+                    {!turmaSelectionAvailable ? (
+                      <p className="text-xs text-muted-foreground italic">
+                        Seleção de turmas indisponível
+                      </p>
+                    ) : paasOptions.length > 0 ? (
+                      <Select
+                        value={selectedOption ? String(selectedOption.id) : ""}
+                        onValueChange={val => {
+                          if (val === "__clear__") {
+                            handleClearTurma(disc.id);
+                          } else {
+                            handleSelectTurma(disc.id, Number(val));
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Selecionar turma..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {disc.codigoPaas !== null && (
+                            <SelectItem value="__clear__" className="text-xs text-muted-foreground">
+                              Remover turma
+                            </SelectItem>
+                          )}
+                          {paasOptions.map(opt => (
+                            <SelectItem key={opt.id} value={String(opt.id)} className="text-xs">
+                              T{opt.turma} — {opt.docente?.trim() || "Sem docente"} —{" "}
+                              {formatHorario(opt.horario)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">
+                        Sem turmas disponíveis no SACI
+                      </p>
+                    )}
+                    {pending && (
+                      <p className="text-xs text-amber-700 dark:text-amber-300">{pending.reason}</p>
+                    )}
+                    <ManualScheduleForm
+                      key={`${disc.id}:${disc.turma}:${disc.horario}:${disc.docente}`}
+                      discipline={disc}
+                    />
+                  </div>
+                );
+              })}
+            </div>
 
             {/* Add discipline section */}
             <div className="pt-3 border-t">
@@ -405,7 +430,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
                 />
               </div>
               {searchQuery.length >= 2 && (
-                <div className="mt-2 max-h-48 overflow-y-auto space-y-1">
+                <div className="mt-2 space-y-1">
                   {searchLoading && (
                     <p className="text-xs text-muted-foreground text-center py-2">Buscando...</p>
                   )}
@@ -414,7 +439,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
                       Nenhuma disciplina encontrada
                     </p>
                   )}
-                  {filteredSearchResults.map(result => (
+                  {filteredSearchResults.slice(0, 8).map(result => (
                     <button
                       key={result.id}
                       onClick={() => handleAddDisciplina(result)}
@@ -430,6 +455,12 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
                       <Plus className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                     </button>
                   ))}
+                  {filteredSearchResults.length > 8 && (
+                    <p className="text-xs text-muted-foreground">
+                      Mostrando 8 de {filteredSearchResults.length} resultados. Refine a busca pelo
+                      nome ou código.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -437,9 +468,27 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
         </Card>
       </div>
 
-      {/* Right panel: Calendar */}
+      {calendarResolution.pending.length > 0 && (
+        <section
+          className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20"
+          aria-label="Pendências do calendário"
+        >
+          <h2 className="font-semibold text-sm">
+            A definir ou conferir ({calendarResolution.pending.length})
+          </h2>
+          <ul className="mt-2 space-y-2 text-sm">
+            {calendarResolution.pending.map(item => (
+              <li key={item.disciplineId}>
+                <span className="font-medium">{item.name}</span> — {item.reason}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Calendar uses the full width instead of sharing it with a wide sidebar. */}
       <div className="flex-1 min-w-0">
-        {selectedCalendarClasses.length > 0 && turmaSelectionAvailable ? (
+        {selectedCalendarClasses.length > 0 ? (
           <CalendarGrid
             selectedClasses={selectedCalendarClasses}
             classColors={classColors}
@@ -454,7 +503,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
               <Calendar className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
               <p className="text-muted-foreground">
                 {!turmaSelectionAvailable
-                  ? "Calendário disponível quando os dados de alocação forem atualizados."
+                  ? "Nenhum horário salvo para exibir. Confira as pendências acima."
                   : disciplinas.length === 0
                     ? "Adicione disciplinas para visualizar seu calendário."
                     : "Selecione turmas para visualizar seu calendário."}

@@ -5,6 +5,7 @@ import { CurriculumGraph } from "@/components/pages/grades-curriculares/curricul
 import { CursoSelector } from "@/components/pages/grades-curriculares/curso-selector";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useAllCursos } from "@/lib/client/hooks/use-admin-cursos";
 import { useSemestreAtivo } from "@/lib/client/hooks/use-calendario-academico";
 import { useDisciplinasConcluidas } from "@/lib/client/hooks/use-disciplinas-concluidas";
@@ -27,7 +28,12 @@ export default function GradesCurricularesPage() {
 
   const { data: cursos = [], isLoading: cursosLoading } = useAllCursos();
   const { data: user } = useCurrentUser();
-  const { data: grade, isLoading: gradeLoading } = useGradeCurricular(selectedCursoId);
+  const {
+    data: grade,
+    isLoading: gradeLoading,
+    isError: gradeError,
+    refetch: retryGrade,
+  } = useGradeCurricular(selectedCursoId);
   const { data: concluidasData } = useDisciplinasConcluidas();
   const { data: semestreData } = useDisciplinasSemestreAtivo();
   const { data: semestreAtivo } = useSemestreAtivo();
@@ -103,7 +109,7 @@ export default function GradesCurricularesPage() {
   }, [isOwnCourse, semestreData]);
 
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
+    <div className="mx-auto max-w-[1600px] px-3 pb-10 pt-6 sm:px-6 md:px-8 mt-20">
       <PageHeader
         title={PAGE_HEADER_TEXT.gradesCurriculares.title}
         subtitle={PAGE_HEADER_TEXT.gradesCurriculares.subtitle}
@@ -114,6 +120,7 @@ export default function GradesCurricularesPage() {
         selectedCursoId={selectedCursoId}
         onSelect={id => {
           setSelectedCursoId(id);
+          setSelectionMode(false);
           const nome = cursos.find(c => c.id === id)?.nome;
           if (nome) {
             trackEvent("grade_curricular_curso_selected", { curso_nome: nome });
@@ -124,7 +131,7 @@ export default function GradesCurricularesPage() {
 
       {/* Nudge banner: cursando disciplines without turma */}
       {cursandoWithoutTurma > 0 && (
-        <div className="mb-4 p-3 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/50 flex items-center justify-between gap-4">
+        <div className="mb-4 p-3 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/50 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-purple-800 dark:text-purple-200">
             <BookOpen className="w-4 h-4 flex-shrink-0" />
             <span>
@@ -144,11 +151,11 @@ export default function GradesCurricularesPage() {
 
       {/* Loading state */}
       {gradeLoading && selectedCursoId && (
-        <div className="flex gap-3 overflow-hidden">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex flex-col gap-2 min-w-[150px]">
               <Skeleton className="h-8 w-full" />
-              {Array.from({ length: 4 + Math.floor(Math.random() * 3) }).map((_, j) => (
+              {Array.from({ length: 5 }).map((_, j) => (
                 <Skeleton key={j} className="h-20 w-full" />
               ))}
             </div>
@@ -157,7 +164,18 @@ export default function GradesCurricularesPage() {
       )}
 
       {/* No data state */}
-      {selectedCursoId && !gradeLoading && !grade && (
+      {gradeError && (
+        <div
+          role="alert"
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-sm"
+        >
+          <p>Não foi possível atualizar a grade curricular. Tente novamente.</p>
+          <Button variant="outline" size="sm" onClick={() => void retryGrade()}>
+            Tentar novamente
+          </Button>
+        </div>
+      )}
+      {selectedCursoId && !gradeLoading && !gradeError && !grade && (
         <div className="text-center py-20 text-muted-foreground">
           <p className="text-lg">Nenhuma grade curricular encontrada para este curso</p>
         </div>
@@ -166,6 +184,8 @@ export default function GradesCurricularesPage() {
       {/* Graph */}
       {grade && (
         <CurriculumGraph
+          key={grade.curriculoId}
+          browsable
           disciplinas={grade.disciplinas}
           cursoNome={grade.cursoNome}
           curriculoCodigo={grade.curriculoCodigo}

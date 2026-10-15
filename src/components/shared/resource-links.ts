@@ -14,9 +14,17 @@ export type NavigationResource = Readonly<{
   description: string;
   icon: LucideIcon;
   external?: boolean;
+  isNew?: boolean;
 }>;
 
 export const NAVIGATION_RESOURCES: readonly NavigationResource[] = [
+  {
+    href: "/planejador",
+    isNew: true,
+    title: "Planejador de Matrícula",
+    description: "Compare turmas por horários, prioridades e reservas.",
+    icon: CalendarDays,
+  },
   {
     href: "/calendario",
     title: "Minhas Disciplinas",

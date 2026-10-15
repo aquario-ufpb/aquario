@@ -286,7 +286,7 @@ describe("MeusDadosAcademicosPage", () => {
       "aria-expanded",
       "true"
     );
-    expect(screen.getByText("Segunda - Manhã (12)")).toBeInTheDocument();
+    expect(screen.getByText("Segunda 07:00–09:00")).toBeInTheDocument();
 
     const gradesTrigger = screen.getByRole("button", { name: /Notas, resultados e faltas/ });
     expect(gradesTrigger).toHaveAttribute("aria-expanded", "false");
