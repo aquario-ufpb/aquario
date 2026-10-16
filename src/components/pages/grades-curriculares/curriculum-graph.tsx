@@ -2,6 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
 import type { GradeDisciplinaNode } from "@/lib/shared/types";
+import { CurriculumPeriods } from "./curriculum-periods";
+import { Input } from "@/components/ui/input";
 import { DisciplineNode } from "./discipline-node";
 import { GraphEdges } from "./graph-edges";
 import { DisciplineDetailDialog } from "./discipline-detail-dialog";
@@ -34,6 +36,9 @@ import {
   ChevronDown,
   CircleDot,
   Download,
+  Search,
+  Network,
+  LayoutGrid,
 } from "lucide-react";
 import { exportGradeAsImage } from "@/lib/client/grades-curriculares/export";
 import { trackEvent } from "@/analytics/posthog-client";
@@ -112,6 +117,8 @@ type CurriculumGraphProps = {
   allowedSaveStatuses?: SaveStatus[];
   /** Use a period-by-period list on small screens while preserving the full graph on desktop. */
   mobileLayout?: "graph" | "list";
+  /** Responsive browsing controls for the standalone curriculum page. */
+  browsable?: boolean;
   /** Initial bulk selection. Read once on mount so refetches never undo user edits. */
   initialSelectedDisciplinaIds?: readonly string[];
 };
@@ -131,8 +138,14 @@ export function CurriculumGraph({
   activeSemestreNome,
   allowedSaveStatuses,
   mobileLayout = "graph",
+  browsable = false,
   initialSelectedDisciplinaIds,
 }: CurriculumGraphProps) {
+  const [view, setView] = useState<"periods" | "map">("map");
+  const [search, setSearch] = useState("");
+  const [periodFilter, setPeriodFilter] = useState("all");
+  const [fitMap, setFitMap] = useState(true);
+  const [showAllUnassigned, setShowAllUnassigned] = useState(false);
   const [showOptativas, setShowOptativas] = useState(true);
   const [clickedCode, setClickedCode] = useState<string | null>(null);
   const [hoveredCode, setHoveredCode] = useState<string | null>(null);
@@ -192,16 +205,41 @@ export function CurriculumGraph({
     return disciplinas.filter(d => d.natureza === "OBRIGATORIA");
   }, [disciplinas, showOptativas]);
 
+  const periodOptions = useMemo(
+    () => [...new Set(visibleDisciplinas.map(d => d.periodo))].sort((a, b) => a - b),
+    [visibleDisciplinas]
+  );
+  const displayedDisciplinas = useMemo(() => {
+    if (!browsable || isExporting) {
+      return visibleDisciplinas;
+    }
+    const query = search
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("pt-BR");
+    return visibleDisciplinas.filter(
+      d =>
+        (periodFilter === "all" || String(d.periodo) === periodFilter) &&
+        (!query ||
+          `${d.nome} ${d.codigo}`
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLocaleLowerCase("pt-BR")
+            .includes(query))
+    );
+  }, [browsable, isExporting, visibleDisciplinas, periodFilter, search]);
+
   // Group by period
   const periods = useMemo(() => {
     const map = new Map<number, GradeDisciplinaNode[]>();
-    for (const d of visibleDisciplinas) {
+    for (const d of displayedDisciplinas) {
       const list = map.get(d.periodo) ?? [];
       list.push(d);
       map.set(d.periodo, list);
     }
     return Array.from(map.entries()).sort(([a], [b]) => a - b);
-  }, [visibleDisciplinas]);
+  }, [displayedDisciplinas]);
 
   // Compute highlighted codes on click (mobile)
   const clickHighlightedCodes = useMemo(() => {
@@ -242,7 +280,7 @@ export function CurriculumGraph({
   // biome-ignore lint/correctness/useExhaustiveDependencies: visibleDisciplinas triggers re-measurement when disciplines change
   useLayoutEffect(() => {
     measureNodes();
-  }, [visibleDisciplinas, measureNodes]);
+  }, [displayedDisciplinas, view, fitMap, showAllUnassigned, measureNodes]);
 
   useLayoutEffect(() => {
     const handler = () => measureNodes();
@@ -535,7 +573,7 @@ export function CurriculumGraph({
   const noActionAvailable = hasSelection && visibleStatuses.length === 0;
   const directStatus = singleStatus ?? statuses[0] ?? "concluida";
 
-  const usesMobileList = mobileLayout === "list";
+  const usesMobileList = !browsable && mobileLayout === "list";
 
   const SaveActions = () => {
     if (singleStatus || noActionAvailable) {
@@ -714,6 +752,92 @@ export function CurriculumGraph({
             </div>
           </div>
         </div>
+
+        {browsable && (
+          <div className="mb-5 space-y-3 rounded-xl border bg-card p-3 sm:p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div
+                className="inline-flex rounded-lg bg-muted p-1"
+                aria-label="Visualização da grade"
+              >
+                {(
+                  [
+                    ["map", "Mapa de dependências", Network],
+                    ["periods", "Por período", LayoutGrid],
+                  ] as const
+                ).map(([value, label, Icon]) => (
+                  <Button
+                    key={value}
+                    size="sm"
+                    variant={view === value ? "default" : "ghost"}
+                    aria-pressed={view === value}
+                    className="gap-1.5 text-xs"
+                    onClick={() => setView(value)}
+                  >
+                    <Icon size={14} />
+                    {label}
+                  </Button>
+                ))}
+              </div>
+              <span role="status" className="text-xs text-muted-foreground">
+                {displayedDisciplinas.length} de {visibleDisciplinas.length} disciplinas
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative min-w-0 flex-1 basis-48">
+                <Search
+                  size={15}
+                  className="pointer-events-none absolute left-3 top-3 text-muted-foreground"
+                />
+                <Input
+                  aria-label="Buscar disciplina na grade"
+                  placeholder="Nome ou código da disciplina"
+                  value={search}
+                  onChange={event => setSearch(event.target.value)}
+                  className="pl-9 pr-10"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    aria-label="Limpar busca na grade"
+                    onClick={() => setSearch("")}
+                    className="absolute right-1 top-1 rounded-md p-2 hover:bg-muted"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+              </div>
+              <select
+                aria-label="Filtrar por período"
+                value={periodFilter}
+                onChange={event => setPeriodFilter(event.target.value)}
+                className="h-10 max-w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="all">Todos os períodos</option>
+                {periodOptions.map(period => (
+                  <option key={period} value={period}>
+                    {period === 0 ? "Sem período definido" : `${period}º período`}
+                  </option>
+                ))}
+              </select>
+              {view === "map" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  aria-pressed={fitMap}
+                  onClick={() => setFitMap(value => !value)}
+                >
+                  {fitMap ? "Tamanho original" : "Ajustar à largura"}
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {view === "periods"
+                ? "Abra uma disciplina para ver pré-requisitos, equivalências e o que depende dela."
+                : "Passe o mouse para destacar o caminho. No celular, toque para destacar e novamente para abrir. As disciplinas sem período definido aparecem na coluna 0."}
+            </p>
+          </div>
+        )}
 
         {/* Progress bar + Selection action */}
         {selectionMode && progressStats && (
@@ -905,20 +1029,63 @@ export function CurriculumGraph({
           </div>
         )}
 
-        {/* Graph container — fixed height, scrollable both axes */}
+        {browsable && !isExporting && displayedDisciplinas.length === 0 && (
+          <div role="status" className="rounded-xl border border-dashed p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Nenhuma disciplina encontrada com estes filtros.
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2"
+              onClick={() => {
+                setSearch("");
+                setPeriodFilter("all");
+                setShowOptativas(true);
+              }}
+            >
+              Limpar filtros
+            </Button>
+          </div>
+        )}
+        {browsable && view === "periods" && !isExporting && (
+          <CurriculumPeriods
+            periods={periods}
+            completedIds={completedDisciplinaIds}
+            cursandoIds={cursandoDisciplinaIds}
+            selectionMode={!!selectionMode}
+            selectedIds={selectionSet}
+            onSelect={handleToggleSelect}
+            onOpen={disc => {
+              setSelectedDisc(disc);
+              setDialogOpen(true);
+            }}
+            onTogglePeriod={handleTogglePeriodoObrigatorias}
+            canTogglePeriod={discs => getBulkObrigatoriaIds(discs).length > 0}
+            isPeriodSelected={areAllObrigatoriasSelected}
+          />
+        )}
+
+        {/* Full-height map on the curriculum page; bounded graph in embedded flows. */}
         <div
           ref={scrollWrapperRef}
           className={cn(
             "relative overflow-auto rounded-lg border border-slate-200 dark:border-white/10",
-            usesMobileList && "hidden md:block"
+            usesMobileList && "hidden md:block",
+            browsable && view === "periods" && !isExporting && "hidden"
           )}
-          style={{ maxHeight: "70dvh" }}
+          style={{ maxHeight: browsable ? undefined : "70dvh" }}
           onScroll={measureNodes}
         >
           {isExporting && <div className="absolute inset-0 z-50 cursor-wait" />}
           <div
             ref={containerRef}
-            className={`relative flex gap-8 min-w-max p-3 ${exportMode === "progress" && progressStats ? "pt-16" : isExporting ? "pt-12" : ""}`}
+            className={`relative flex ${browsable && fitMap && !isExporting ? "gap-4" : "gap-8 min-w-max"} p-3 ${exportMode === "progress" && progressStats ? "pt-16" : isExporting ? "pt-12" : ""}`}
+            style={
+              browsable && fitMap && !isExporting
+                ? { minWidth: Math.max(640, periods.length * 80) }
+                : undefined
+            }
             onClick={handleContainerClick}
           >
             {/* Export-only header: course name + stats + legend (visible only during capture) */}
@@ -997,7 +1164,7 @@ export function CurriculumGraph({
 
             {/* SVG edge overlay */}
             <GraphEdges
-              disciplines={visibleDisciplinas}
+              disciplines={displayedDisciplinas}
               nodeRefs={nodeRects}
               containerRect={containerRect}
               highlightedCodes={isExporting ? null : activeHighlightedCodes}
@@ -1006,6 +1173,13 @@ export function CurriculumGraph({
 
             {/* Period columns */}
             {periods.map(([periodo, discs]) => {
+              const foldUnassigned =
+                browsable &&
+                periodo === 0 &&
+                !isExporting &&
+                !search.trim() &&
+                periodFilter === "all";
+              const shownDiscs = foldUnassigned && !showAllUnassigned ? discs.slice(0, 6) : discs;
               const canBulkSelect =
                 !isExporting && selectionMode && getBulkObrigatoriaIds(discs).length > 0;
               const allObrigatoriasSelected = areAllObrigatoriasSelected(discs);
@@ -1014,7 +1188,13 @@ export function CurriculumGraph({
                 : "Marcar todas as obrigatórias";
 
               return (
-                <div key={periodo} className="relative z-[1] flex flex-col gap-4 w-[105px]">
+                <div
+                  key={periodo}
+                  className={cn(
+                    "relative z-[1] flex flex-col gap-4",
+                    browsable && fitMap && !isExporting ? "min-w-0 flex-1" : "w-[105px] shrink-0"
+                  )}
+                >
                   {canBulkSelect ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -1034,7 +1214,7 @@ export function CurriculumGraph({
                             "motion-reduce:transition-none"
                           )}
                         >
-                          {periodo}° Período
+                          {browsable ? `${periodo}º Período` : `${periodo}° Período`}
                         </button>
                       </TooltipTrigger>
                       <TooltipPortal>
@@ -1045,10 +1225,10 @@ export function CurriculumGraph({
                     </Tooltip>
                   ) : (
                     <div className="text-center text-xs font-semibold text-muted-foreground py-2 bg-slate-100 dark:bg-slate-800/50 rounded-md">
-                      {periodo}° Período
+                      {browsable ? `${periodo}º Período` : `${periodo}° Período`}
                     </div>
                   )}
-                  {discs.map(disc => (
+                  {shownDiscs.map(disc => (
                     <DisciplineNode
                       key={disc.id}
                       ref={el => setNodeRef(disc.codigo, el)}
@@ -1084,6 +1264,21 @@ export function CurriculumGraph({
                       onToggleComplete={() => handleToggleSelect(disc.disciplinaId)}
                     />
                   ))}
+                  {foldUnassigned && discs.length > 6 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto whitespace-normal px-1 py-2 text-xs"
+                      onClick={event => {
+                        event.stopPropagation();
+                        setShowAllUnassigned(value => !value);
+                      }}
+                    >
+                      {showAllUnassigned
+                        ? "Mostrar menos"
+                        : `Ver mais ${discs.length - 6} disciplinas`}
+                    </Button>
+                  )}
                 </div>
               );
             })}

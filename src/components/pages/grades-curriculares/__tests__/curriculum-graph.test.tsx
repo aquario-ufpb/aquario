@@ -431,3 +431,30 @@ describe("CurriculumGraph — ações de salvar conforme a seleção", () => {
     expect(screen.getByRole("button", { name: /Salvar como Concluídas \(2\)/ })).toBeDisabled();
   });
 });
+
+describe("CurriculumGraph — navegação por períodos", () => {
+  it("preserva seleções ocultas ao buscar e salva somente as escolhidas", async () => {
+    const onSaveWithStatus = jest.fn();
+    renderGraph({ browsable: true, allowedSaveStatuses: ["concluida"], onSaveWithStatus });
+    fireEvent.click(screen.getByRole("button", { name: "Por período" }));
+    const firstPeriod = () => screen.getByRole("region", { name: "1º período" });
+    fireEvent.click(within(firstPeriod()).getByRole("button", { name: /Cálculo I/ }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Buscar disciplina na grade" }), {
+      target: { value: "programacao" },
+    });
+    expect(
+      within(firstPeriod()).queryByRole("button", { name: /Cálculo I/ })
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      within(firstPeriod()).getByRole("button", { name: "Marcar obrigatórias do 1º período" })
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Salvar como Concluídas (2)" }));
+      await Promise.resolve();
+    });
+    expect(onSaveWithStatus).toHaveBeenCalledWith(
+      ["disc-calculo", "disc-programacao"],
+      "concluida"
+    );
+  });
+});

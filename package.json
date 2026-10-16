@@ -37,7 +37,8 @@
     "release:minor:push": "node scripts/release.js minor",
     "release:major:push": "node scripts/release.js major",
     "postinstall": "prisma generate",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:seed:registration": "dotenv -e .env -- tsx prisma/seed-registration.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.4",
@@ -78,6 +79,7 @@
     "@tiptap/starter-kit": "^2.9.1",
     "@vercel/blob": "^2.0.0",
     "bcryptjs": "^2.4.3",
+    "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

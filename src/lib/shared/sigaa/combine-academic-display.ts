@@ -95,7 +95,7 @@ export function combineAcademicDisplay({
     const manualItem = manualByCode.get(code) ?? null;
     const sigaaItem = sigaaByCode.get(code) ?? null;
 
-    if (sigaaItem) {
+    if (sigaaItem && (sigaaItem.status !== "unknown" || !manualItem)) {
       return {
         code,
         catalog: catalogItem,
@@ -110,7 +110,7 @@ export function combineAcademicDisplay({
         code,
         catalog: catalogItem,
         manual: manualItem,
-        sigaa: null,
+        sigaa: sigaaItem,
         presentation: {
           origin: "MANUAL",
           state: manualItem.state,

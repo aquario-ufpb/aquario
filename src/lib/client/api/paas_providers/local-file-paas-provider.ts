@@ -34,13 +34,17 @@ export class LocalFilePaasProvider implements PaasDataProvider {
     }
   }
 
-  getCenter(_centerId: string = "CI"): Promise<PaasCenterResponse> {
+  getCenter(centerId: string = "CI"): Promise<PaasCenterResponse> {
     if (!this.paasData) {
       throw new Error("Local PAAS data file not available");
     }
 
-    // For now, we assume the local file contains data for the requested center
-    // If you have multiple centers, you can extend this to filter by centerId
+    if (this.paasData.sigla.trim().toUpperCase() !== centerId.trim().toUpperCase()) {
+      throw new Error("Local PAAS data is not available for the requested center");
+    }
+    if (this.paasData.status !== "published" || !Array.isArray(this.paasData.solution?.solution)) {
+      throw new Error("Local PAAS allocation is not published");
+    }
     return Promise.resolve(this.paasData);
   }
 }

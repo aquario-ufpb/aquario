@@ -43,6 +43,7 @@ const navLinkClass =
 const RESOURCES_PATHS = [
   "/recursos",
   "/calendario",
+  "/planejador",
   "/guias",
   "/mapas",
   "/grades-curriculares",
@@ -119,6 +120,11 @@ function ResourceItemContent({ resource }: { resource: NavigationResource }) {
       <div className="relative z-10">
         <div className="text-sm font-medium leading-none text-slate-900 dark:text-white">
           {resource.title}
+          {resource.isNew && (
+            <span className="ml-2 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-aquario-primary dark:bg-sky-950 dark:text-sky-200">
+              Novo
+            </span>
+          )}
         </div>
         <p className="mt-1 text-xs leading-snug text-muted-foreground">{resource.description}</p>
       </div>

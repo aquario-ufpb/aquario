@@ -8,6 +8,10 @@ type CalendarioHeaderProps = {
 };
 
 export default function CalendarioHeader({ data, isDark }: CalendarioHeaderProps) {
+  const solutionDate = new Date(data.solution.date);
+  const updatedAt = Number.isNaN(solutionDate.getTime())
+    ? null
+    : solutionDate.toLocaleDateString("pt-BR", { timeZone: "America/Recife" });
   return (
     <div className="mb-8">
       <PageHeader title="Calendário de Alocação" subtitle={data.centro} />
@@ -18,7 +22,7 @@ export default function CalendarioHeader({ data, isDark }: CalendarioHeaderProps
         >
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            <span>{data.date}</span>
+            <span>{updatedAt ? `Alocação de ${updatedAt}` : "Data da alocação não informada"}</span>
           </div>
           {data.description && (
             <p style={{ color: isDark ? "#E5F6FF" : "#0e3a6c" }}>{data.description}</p>
@@ -31,7 +35,7 @@ export default function CalendarioHeader({ data, isDark }: CalendarioHeaderProps
               rel="noopener noreferrer"
               style={{ textDecoration: "underline", color: isDark ? "#A1E5FF" : "#2286c3" }}
             >
-              SACII
+              SACI
             </a>
           </p>
         </div>

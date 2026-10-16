@@ -200,6 +200,8 @@ model Usuario {
   sigaaConnection       SigaaConnection?
   sigaaCourseChangeProposals SigaaCourseChangeProposal[]
   sigaaRateLimitBuckets SigaaRateLimitBucket[]
+  enrollmentPlans EnrollmentPlan[]
+  calendarRoomBindings CalendarRoomBinding[]
 
   @@index([email])
   @@index([matricula])
@@ -667,6 +669,21 @@ model DisciplinaSemestre {
   @@index([usuarioId, semestreLetivoId])
 }
 
+// Private simulations; never enrollment records or imported academic snapshots.
+model EnrollmentPlan {
+  id String @id @default(uuid())
+  usuarioId String
+  name String
+  semester String
+  profileCourseId String
+  draft Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, updatedAt])
+}
+
 // ============================================================================
 // PROJETOS E AUTORES
 // ============================================================================
@@ -713,4 +730,40 @@ model ProjetoAutor {
   @@index([usuarioId])
   @@index([entidadeId])
   @@index([autorPrincipal])
+}
+
+// Shared public offers; never imported academic history or enrollment preferences.
+model PublicSigaaOfferingCache {
+  courseId String
+  semester String
+  payload Json
+  observedAt DateTime
+
+  @@id([courseId, semester])
+  @@index([semester, observedAt])
+}
+
+// Private room choices, separate from imported academic data and manual enrollments.
+model CalendarRoomBinding {
+  usuarioId String
+  profileCourseId String
+  semester String
+  sourceKey String
+  code String
+  scheduleKey String
+  centerId String
+  section String
+  allocationId Int
+  updatedAt DateTime @updatedAt
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, semester, sourceKey])
+}
+
+// Distributed request budget shared by public offering routes and all instances.
+model PublicOfferingRequestLimit {
+  key String @id
+  count Int
+  expiresAt DateTime
+  @@index([expiresAt])
 }

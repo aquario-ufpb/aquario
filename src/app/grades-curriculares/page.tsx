@@ -1,10 +1,15 @@
 "use client";
 
+import { useOwnSigaaAcademicState } from "@/lib/client/hooks/use-sigaa";
+import { curriculumStatus } from "@/lib/shared/sigaa/curriculum-status";
+import { normalizeCurriculumCode } from "@/lib/shared/sigaa/curriculum-code";
+import { useAuth } from "@/contexts/auth-context";
 import { trackEvent } from "@/analytics/posthog-client";
 import { CurriculumGraph } from "@/components/pages/grades-curriculares/curriculum-graph";
 import { CursoSelector } from "@/components/pages/grades-curriculares/curso-selector";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useAllCursos } from "@/lib/client/hooks/use-admin-cursos";
 import { useSemestreAtivo } from "@/lib/client/hooks/use-calendario-academico";
 import { useDisciplinasConcluidas } from "@/lib/client/hooks/use-disciplinas-concluidas";
@@ -26,8 +31,14 @@ export default function GradesCurricularesPage() {
   const [selectionMode, setSelectionMode] = useState(false);
 
   const { data: cursos = [], isLoading: cursosLoading } = useAllCursos();
-  const { data: user } = useCurrentUser();
-  const { data: grade, isLoading: gradeLoading } = useGradeCurricular(selectedCursoId);
+  const { isLoading: authLoading, token } = useAuth();
+  const { data: user, isPending: userPending } = useCurrentUser();
+  const {
+    data: grade,
+    isLoading: gradeLoading,
+    isError: gradeError,
+    refetch: retryGrade,
+  } = useGradeCurricular(selectedCursoId);
   const { data: concluidasData } = useDisciplinasConcluidas();
   const { data: semestreData } = useDisciplinasSemestreAtivo();
   const { data: semestreAtivo } = useSemestreAtivo();
@@ -35,10 +46,18 @@ export default function GradesCurricularesPage() {
 
   const isLoggedIn = !!user;
   const isOwnCourse = isLoggedIn && selectedCursoId === user?.curso?.id;
+  const sigaa = useOwnSigaaAcademicState(isOwnCourse);
+  const imported = sigaa.data?.snapshot;
 
   // Auto-select: user's course if logged in, otherwise first available
   useEffect(() => {
-    if (autoSelected || selectedCursoId || cursos.length === 0) {
+    if (
+      authLoading ||
+      (token && userPending) ||
+      autoSelected ||
+      selectedCursoId ||
+      cursos.length === 0
+    ) {
       return;
     }
 
@@ -49,27 +68,31 @@ export default function GradesCurricularesPage() {
       setSelectedCursoId(cursos[0].id);
     }
     setAutoSelected(true);
-  }, [cursos, user, autoSelected, selectedCursoId]);
+  }, [cursos, user, autoSelected, selectedCursoId, authLoading, token, userPending]);
 
   const handleSelectionModeChange = useCallback((enabled: boolean) => {
     setSelectionMode(enabled);
   }, []);
 
-  // Completed IDs directly from server data
-  const completedIds = useMemo(() => {
-    if (!isOwnCourse || !concluidasData) {
-      return undefined;
+  const academicStatus = useMemo(() => {
+    if (!isOwnCourse || !grade) {
+      return null;
     }
-    return new Set(concluidasData.disciplinaIds);
-  }, [isOwnCourse, concluidasData]);
-
-  // Cursando IDs from active semester
-  const cursandoIds = useMemo(() => {
-    if (!isOwnCourse || !semestreData?.disciplinas?.length) {
-      return undefined;
-    }
-    return new Set(semestreData.disciplinas.map(d => d.disciplinaId));
-  }, [isOwnCourse, semestreData]);
+    return curriculumStatus(
+      grade.disciplinas,
+      concluidasData?.disciplinaIds ?? [],
+      semestreData?.disciplinas?.map(item => item.disciplinaId) ?? [],
+      imported?.payload.curriculum.components ?? []
+    );
+  }, [isOwnCourse, grade, concluidasData, semestreData, imported]);
+  const completedIds = academicStatus?.completedIds;
+  const cursandoIds = academicStatus?.enrolledIds;
+  const curriculumMismatch =
+    isOwnCourse &&
+    imported &&
+    grade &&
+    normalizeCurriculumCode(imported.payload.curriculum.code) !==
+      normalizeCurriculumCode(grade.curriculoCodigo);
 
   // Handler for marking disciplines (bulk or single)
   const handleMarcarDisciplinas = useCallback(
@@ -103,7 +126,7 @@ export default function GradesCurricularesPage() {
   }, [isOwnCourse, semestreData]);
 
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-7xl mt-20">
+    <div className="mx-auto max-w-[1600px] px-3 pb-10 pt-6 sm:px-6 md:px-8 mt-20">
       <PageHeader
         title={PAGE_HEADER_TEXT.gradesCurriculares.title}
         subtitle={PAGE_HEADER_TEXT.gradesCurriculares.subtitle}
@@ -114,6 +137,7 @@ export default function GradesCurricularesPage() {
         selectedCursoId={selectedCursoId}
         onSelect={id => {
           setSelectedCursoId(id);
+          setSelectionMode(false);
           const nome = cursos.find(c => c.id === id)?.nome;
           if (nome) {
             trackEvent("grade_curricular_curso_selected", { curso_nome: nome });
@@ -122,9 +146,57 @@ export default function GradesCurricularesPage() {
         isLoading={cursosLoading}
       />
 
+      {isOwnCourse && sigaa.isLoading && (
+        <p role="status" className="mb-4 text-sm text-muted-foreground">
+          Carregando status acadêmicos do SIGAA…
+        </p>
+      )}
+      {isOwnCourse && sigaa.isError && (
+        <p role="alert" className="mb-4 rounded-lg border p-3 text-sm">
+          Não foi possível carregar os status SIGAA; somente marcações manuais estão disponíveis.{" "}
+          <button className="underline" onClick={() => void sigaa.refetch()}>
+            Tentar novamente
+          </button>
+        </p>
+      )}
+      {isOwnCourse && imported && (
+        <div className="mb-4 space-y-2 rounded-lg border bg-card p-3 text-xs text-muted-foreground">
+          <p>
+            Status SIGAA têm prioridade sobre marcações manuais, como em Dados acadêmicos.{" "}
+            <Link href="/me/academico" className="underline">
+              Ver conexão e dados importados
+            </Link>
+          </p>
+          {curriculumMismatch && (
+            <p>
+              A importação usa o currículo {imported.payload.curriculum.code}; esta grade é do
+              currículo {grade?.curriculoCodigo}. Os status são associados apenas por código exato
+              da disciplina.
+            </p>
+          )}
+          {!!academicStatus?.missing.length && (
+            <details>
+              <summary className="cursor-pointer">
+                {academicStatus.missing.length}{" "}
+                {academicStatus.missing.length === 1
+                  ? "disciplina concluída ou cursando não consta nesta grade"
+                  : "disciplinas concluídas ou cursando não constam nesta grade"}
+              </summary>
+              <ul className="mt-2 space-y-1">
+                {academicStatus.missing.map(item => (
+                  <li key={item.code}>
+                    {item.name} · {item.code}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
+
       {/* Nudge banner: cursando disciplines without turma */}
       {cursandoWithoutTurma > 0 && (
-        <div className="mb-4 p-3 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/50 flex items-center justify-between gap-4">
+        <div className="mb-4 p-3 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/50 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-purple-800 dark:text-purple-200">
             <BookOpen className="w-4 h-4 flex-shrink-0" />
             <span>
@@ -144,11 +216,11 @@ export default function GradesCurricularesPage() {
 
       {/* Loading state */}
       {gradeLoading && selectedCursoId && (
-        <div className="flex gap-3 overflow-hidden">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex flex-col gap-2 min-w-[150px]">
               <Skeleton className="h-8 w-full" />
-              {Array.from({ length: 4 + Math.floor(Math.random() * 3) }).map((_, j) => (
+              {Array.from({ length: 5 }).map((_, j) => (
                 <Skeleton key={j} className="h-20 w-full" />
               ))}
             </div>
@@ -157,7 +229,18 @@ export default function GradesCurricularesPage() {
       )}
 
       {/* No data state */}
-      {selectedCursoId && !gradeLoading && !grade && (
+      {gradeError && (
+        <div
+          role="alert"
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-sm"
+        >
+          <p>Não foi possível atualizar a grade curricular. Tente novamente.</p>
+          <Button variant="outline" size="sm" onClick={() => void retryGrade()}>
+            Tentar novamente
+          </Button>
+        </div>
+      )}
+      {selectedCursoId && !gradeLoading && !gradeError && !grade && (
         <div className="text-center py-20 text-muted-foreground">
           <p className="text-lg">Nenhuma grade curricular encontrada para este curso</p>
         </div>
@@ -166,6 +249,8 @@ export default function GradesCurricularesPage() {
       {/* Graph */}
       {grade && (
         <CurriculumGraph
+          key={grade.curriculoId}
+          browsable
           disciplinas={grade.disciplinas}
           cursoNome={grade.cursoNome}
           curriculoCodigo={grade.curriculoCodigo}

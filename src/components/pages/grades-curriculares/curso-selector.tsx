@@ -23,7 +23,10 @@ export function CursoSelector({
   return (
     <div className="mb-6">
       <Select value={selectedCursoId ?? undefined} onValueChange={onSelect} disabled={isLoading}>
-        <SelectTrigger className="w-full max-w-sm bg-white dark:bg-white/5 border-slate-200 dark:border-white/20">
+        <SelectTrigger
+          aria-label="Curso da grade curricular"
+          className="w-full max-w-sm bg-white dark:bg-white/5 border-slate-200 dark:border-white/20"
+        >
           <SelectValue placeholder={isLoading ? "Carregando cursos..." : "Selecione um curso"} />
         </SelectTrigger>
         <SelectContent>

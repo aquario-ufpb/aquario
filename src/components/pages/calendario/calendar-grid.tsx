@@ -38,6 +38,8 @@ export default function CalendarGrid({
   semesterName,
 }: CalendarGridProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [view, setView] = useState<"week" | "list">("week");
+  const [showFullDay, setShowFullDay] = useState(false);
   const [selectedCellData, setSelectedCellData] = useState<{
     classes: ClassWithRoom[];
     day: string;
@@ -137,7 +139,7 @@ export default function CalendarGrid({
         className={`mb-8 ${isDark ? "bg-white/5 border-white/20" : "bg-white border-slate-200"}`}
       >
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle
               className="flex items-center gap-2"
               style={{ color: isDark ? "#C8E6FA" : "#0e3a6c" }}
@@ -160,11 +162,49 @@ export default function CalendarGrid({
               </div>
             )}
           </div>
+          <div className="flex flex-wrap items-center gap-2 pt-3">
+            <div
+              className="hidden md:flex gap-1"
+              role="group"
+              aria-label="Visualização do calendário"
+            >
+              <Button
+                size="sm"
+                variant={view === "week" ? "default" : "outline"}
+                aria-pressed={view === "week"}
+                onClick={() => setView("week")}
+              >
+                Semana
+              </Button>
+              <Button
+                size="sm"
+                variant={view === "list" ? "default" : "outline"}
+                aria-pressed={view === "list"}
+                onClick={() => setView("list")}
+              >
+                Lista de aulas
+              </Button>
+            </div>
+            {view === "week" && (
+              <Button
+                className="hidden md:inline-flex"
+                size="sm"
+                variant="ghost"
+                aria-pressed={showFullDay}
+                onClick={() => setShowFullDay(value => !value)}
+              >
+                {showFullDay ? "Ocultar horários sem aulas" : "Mostrar dia inteiro"}
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Clique em uma aula para ver turma, sala e opções de calendário.
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <div ref={contentRef} className="w-full" data-export-target>
             {/* Mobile view - vertical day-by-day layout */}
-            <div className="md:hidden">
+            <div className={view === "list" ? "" : "md:hidden"}>
               <CalendarMobileView
                 classes={selectedClasses}
                 classColors={classColors}
@@ -174,12 +214,13 @@ export default function CalendarGrid({
             </div>
 
             {/* Desktop view - table layout */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className={view === "week" ? "hidden md:block" : "hidden"}>
               <CalendarGridTable
                 classes={selectedClasses}
                 classColors={classColors}
                 isDark={isDark}
                 onCellClick={handleCellClick}
+                showFullDay={showFullDay}
               />
             </div>
 

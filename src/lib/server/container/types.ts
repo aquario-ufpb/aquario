@@ -1,3 +1,5 @@
+import type { ICalendarRoomBindingRepository } from "@/lib/server/db/interfaces/calendar-room-binding-repository.interface";
+import type { IPublicOfferingCacheRepository } from "@/lib/server/db/interfaces/public-offering-cache-repository.interface";
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
 import type { ICampusRepository } from "@/lib/server/db/interfaces/campus-repository.interface";
 import type { ICentrosRepository } from "@/lib/server/db/interfaces/centros-repository.interface";
@@ -22,6 +24,7 @@ import type { ISearchRepository } from "@/lib/server/db/interfaces/search-reposi
 import type { IAuditLogsRepository } from "@/lib/server/db/interfaces/audit-logs-repository.interface";
 import type { ISigaaRepository } from "@/lib/server/db/interfaces/sigaa-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
+import type { IEnrollmentPlanRepository } from "@/lib/server/db/interfaces/enrollment-plan-repository.interface";
 import type { IBlobStorage } from "@/lib/server/services/blob/blob-storage.interface";
 
 /**
@@ -53,6 +56,9 @@ export type Container = {
   searchRepository: ISearchRepository;
   auditLogsRepository: IAuditLogsRepository;
   sigaaRepository: ISigaaRepository;
+  publicOfferingCacheRepository: IPublicOfferingCacheRepository;
+  enrollmentPlanRepository: IEnrollmentPlanRepository;
+  calendarRoomBindingRepository: ICalendarRoomBindingRepository;
 
   // Services
   emailService: IEmailService;

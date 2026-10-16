@@ -19,7 +19,7 @@ const sigaaComponent = (
 });
 
 describe("combineAcademicDisplay", () => {
-  it.each(["completed", "enrolled", "pending", "unknown"] as const)(
+  it.each(["completed", "enrolled", "pending"] as const)(
     "uses SIGAA presentation for %s while retaining a conflicting manual value",
     status => {
       const manual = [
@@ -39,6 +39,22 @@ describe("combineAcademicDisplay", () => {
       expect(manual).toEqual([
         { disciplinaId: "disc-1", code: "gdco0001", name: "Manual", state: "completed" },
       ]);
+    }
+  );
+
+  it.each(["completed", "enrolled"] as const)(
+    "preserves manual %s presentation and imported evidence when SIGAA status is unknown",
+    state => {
+      const imported = sigaaComponent("GDCO0001", "unknown");
+      const result = combineAcademicDisplay({
+        catalog: [],
+        manual: [{ disciplinaId: "disc-1", code: "GDCO0001", name: "Manual", state }],
+        sigaa: [imported],
+      });
+      expect(result[0]).toMatchObject({
+        sigaa: imported,
+        presentation: { origin: "MANUAL", state, name: "Manual" },
+      });
     }
   );
 
