@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
-import {
-  getPublicSigaaCourses,
-  getPublicSigaaOfferings,
-} from "@/lib/server/services/planner/sigaa-offerings";
+import { getPublicSigaaCourses } from "@/lib/server/services/planner/sigaa-offerings";
 import { publicCourseIdSchema, semesterSchema } from "@/lib/shared/planner/types";
+
+import {
+  getLimitedPublicSigaaOfferings,
+  OfferingQueueFullError,
+} from "@/lib/server/services/planner/offerings-batch";
+import { offeringRequestPolicy } from "@/lib/server/services/planner/offering-request-policy";
 
 export const maxDuration = 60;
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const courseId = params.get("curso");
   try {
+    const policy = await offeringRequestPolicy(request, params.get("atualizar") === "1");
+    if (policy.response) {
+      return policy.response;
+    }
     if (!courseId) {
       return NextResponse.json({ courses: await getPublicSigaaCourses() });
     }
@@ -19,9 +26,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: "Curso ou semestre inválido." }, { status: 400 });
     }
     return NextResponse.json(
-      await getPublicSigaaOfferings(course.data, semester.data, params.get("atualizar") === "1")
+      await getLimitedPublicSigaaOfferings(course.data, semester.data, policy.refresh)
     );
-  } catch {
+  } catch (error) {
+    if (error instanceof OfferingQueueFullError) {
+      return NextResponse.json(
+        { message: "Consulta de oferta ocupada. Tente novamente em instantes." },
+        { status: 429, headers: { "Retry-After": "30" } }
+      );
+    }
     return NextResponse.json(
       {
         message:

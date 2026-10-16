@@ -284,12 +284,7 @@ export function PlannerResults({
               </Button>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Horário de Recife
-            {solution.maxDistanceMeters !== null &&
-              ` · Maior deslocamento entre aulas: ${Math.round(solution.maxDistanceMeters)} m em linha reta`}
-            {solution.travelUnknown && " · Há locais sem coordenadas para estimar deslocamentos"}
-          </p>
+          <p className="text-xs text-muted-foreground">Horário de Recife</p>
           <Popover
             open={Boolean(activeOffer)}
             onOpenChange={open => {

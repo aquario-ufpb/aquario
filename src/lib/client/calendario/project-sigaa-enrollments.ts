@@ -85,9 +85,6 @@ export function projectSigaaEnrollments(
   }
   for (const [index, item] of entries.entries()) {
     const code = item.code ? normalizeAcademicCode(item.code) : null;
-    if (code) {
-      result.codes.add(code);
-    }
     const row: ImportedEnrollment = {
       ...item,
       code,
@@ -142,6 +139,9 @@ export function projectSigaaEnrollments(
     }
     result.enrollments.push(row);
     if (key) {
+      if (code) {
+        result.codes.add(code);
+      }
       result.classes.push({
         id: -(10000 + index),
         codigo: code ?? "",

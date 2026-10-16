@@ -759,3 +759,11 @@ model CalendarRoomBinding {
 
   @@id([usuarioId, semester, sourceKey])
 }
+
+// Distributed request budget shared by public offering routes and all instances.
+model PublicOfferingRequestLimit {
+  key String @id
+  count Int
+  expiresAt DateTime
+  @@index([expiresAt])
+}

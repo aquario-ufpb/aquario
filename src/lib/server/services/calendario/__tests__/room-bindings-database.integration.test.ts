@@ -37,7 +37,21 @@ testDatabase("private calendar room bindings", () => {
       section: "07",
     };
     try {
+      // Old-course preferences must not consume an invisible quota after a profile change.
+      await db.calendarRoomBinding.createMany({
+        data: Array.from({ length: 64 }, (_, i) => ({
+          ...binding,
+          usuarioId: a.id,
+          profileCourseId: "previous-course",
+          sourceKey: `previous-${i}`,
+        })),
+      });
       await repository.save(a.id, course.id, binding);
+      expect(
+        await db.calendarRoomBinding.count({
+          where: { usuarioId: a.id, profileCourseId: "previous-course" },
+        })
+      ).toBe(0);
       expect(await repository.list(b.id, course.id, "2026.2")).toEqual([]);
       expect(await repository.list(a.id, "changed-course", "2026.2")).toEqual([]);
       expect(await repository.list(a.id, course.id, "2026.1")).toEqual([]);

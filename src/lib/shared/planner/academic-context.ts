@@ -16,7 +16,7 @@ export function buildAcademicContext(
   for (const component of components.values()) {
     if (component.status === "completed") {
       completed.add(normalizeCode(component.code));
-    } else {
+    } else if (component.status === "pending" || component.status === "enrolled") {
       completed.delete(normalizeCode(component.code));
     }
   }
@@ -30,14 +30,29 @@ export function buildAcademicContext(
   const directlyCompleted = new Set(completed);
   if (matched && grade) {
     for (const discipline of grade.disciplinas) {
-      if (discipline.equivalencias.some(code => directlyCompleted.has(normalizeCode(code)))) {
+      const status = components.get(normalizeCode(discipline.codigo))?.status;
+      if (
+        status !== "pending" &&
+        status !== "enrolled" &&
+        discipline.equivalencias.some(code => directlyCompleted.has(normalizeCode(code)))
+      ) {
         completed.add(normalizeCode(discipline.codigo));
       }
     }
   }
   const goals: PlannerGoal[] = (grade?.disciplinas ?? []).map(item => {
     const code = normalizeCode(item.codigo);
-    const imported = components.get(code);
+    const imported = matched ? components.get(code) : undefined;
+    const prerequisiteText = imported?.prerequisite?.trim();
+    const prerequisite: PlannerGoal["prerequisite"] = prerequisiteText
+      ? parseRequirement(prerequisiteText)
+      : item.preRequisitos.length
+        ? {
+            kind: "all",
+            items: item.preRequisitos.map(req => ({ kind: "code", code: normalizeCode(req) })),
+          }
+        : null;
+    const corequisite = imported ? parseRequirement(imported.corequisite) : null;
     return {
       code,
       name: imported?.name ?? item.nome,
@@ -46,16 +61,13 @@ export function buildAcademicContext(
       priority: item.natureza === "OBRIGATORIA" ? "high" : "optional",
       equivalents: matched ? item.equivalencias.map(normalizeCode) : [],
       workload: imported?.workloadHours ?? item.cargaHorariaTotal,
-      prerequisite: imported
-        ? parseRequirement(imported.prerequisite)
-        : item.preRequisitos.length
-          ? {
-              kind: "all",
-              items: item.preRequisitos.map(req => ({ kind: "code", code: normalizeCode(req) })),
-            }
-          : null,
-      corequisite: imported ? parseRequirement(imported.corequisite) : null,
-      requirementsKnown: matched && Boolean(imported),
+      prerequisite,
+      corequisite,
+      requirementsKnown:
+        matched &&
+        Boolean(prerequisiteText || item.preRequisitos.length) &&
+        prerequisite?.kind !== "unknown" &&
+        corequisite?.kind !== "unknown",
       completed: completed.has(code),
       unlocks: (grade?.disciplinas ?? []).filter(candidate =>
         candidate.preRequisitos.map(normalizeCode).includes(code)
@@ -74,8 +86,8 @@ export function buildAcademicContext(
         workload: component.workloadHours,
         prerequisite: parseRequirement(component.prerequisite),
         corequisite: parseRequirement(component.corequisite),
-        requirementsKnown: true,
-        completed: component.status === "completed",
+        requirementsKnown: matched,
+        completed: completed.has(normalizeCode(component.code)),
         unlocks: 0,
       });
     }

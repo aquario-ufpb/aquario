@@ -35,6 +35,7 @@ export const parseHorarioToSlots = (horario: string): CalendarSlot[] => {
   const result: CalendarSlot[] = [];
   const seen = new Set<string>();
   const blocks = horario
+    .replace(/\s*\(\d{2}\/\d{2}\/\d{4}\s*-\s*\d{2}\/\d{2}\/\d{4}\)\s*$/, "")
     .trim()
     .toUpperCase()
     .split(/[\s,;]+/);

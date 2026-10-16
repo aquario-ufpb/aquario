@@ -46,8 +46,8 @@ it("revalidates code, schedule, center and semester before using the chosen room
   expect(resolve([room], binding, "EDO1", "35M23", "2026.1")).toBeNull();
   expect(resolve([room], binding, "EDO1", "35M23", "2026.2", "OTHER")).toBeNull();
 });
-it("recovers changed allocation ids only when the confirmed section has one exact timetable candidate", () => {
-  expect(resolve([{ ...room, id: 200 }])?.id).toBe(200);
+it("requires confirmation again when allocation ids change, even for the same section and timetable", () => {
+  expect(resolve([{ ...room, id: 200 }])).toBeNull();
   expect(
     resolve([
       { ...room, id: 200 },

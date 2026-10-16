@@ -61,18 +61,6 @@ export function fitsAvailability(
 export function reservedFor(offer: PlannerOffer, courseId: string | null): number | null {
   return offer.source === "SIGAA" && courseId ? (offer.reservations[courseId] ?? null) : null;
 }
-export function distanceBetween(a: PlannerOffer, b: PlannerOffer): number | null {
-  if (!a.coordinates || !b.coordinates) {
-    return null;
-  }
-  const rad = (n: number) => (n * Math.PI) / 180;
-  const lat = rad(b.coordinates.lat - a.coordinates.lat);
-  const lng = rad(b.coordinates.lng - a.coordinates.lng);
-  const v =
-    Math.sin(lat / 2) ** 2 +
-    Math.cos(rad(a.coordinates.lat)) * Math.cos(rad(b.coordinates.lat)) * Math.sin(lng / 2) ** 2;
-  return Math.round(6371000 * 2 * Math.atan2(Math.sqrt(v), Math.sqrt(Math.max(0, 1 - v))));
-}
 const compare = (a: number[], b: number[]) => {
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) {
@@ -95,16 +83,7 @@ export function solvePlanner(
   const simulation = simulateApprovals(input.goals, input.assumedPassedCodes);
   const satisfied = new Set([...completed, ...simulation.assumedPassedCodes]);
   const progressPlanner = createProgressPlanner(simulation.goals, satisfied, settings);
-  const inactiveGoals = simulation.goals.filter(
-    goal => goal.completed || satisfied.has(normalizeCode(goal.code))
-  );
-  const inactiveOfferCodes = new Set([
-    ...satisfied,
-    ...inactiveGoals.flatMap(goal => [
-      normalizeCode(goal.code),
-      ...(settings.allowEquivalents ? goal.equivalents.map(normalizeCode) : []),
-    ]),
-  ]);
+  const inactiveOfferCodes = satisfied;
   const offersById = new Map(input.offers.map(offer => [offer.id, offer]));
   const fixed = new Set(
     input.fixedOfferIds.filter(id => {
@@ -156,10 +135,7 @@ export function solvePlanner(
     .map(goal => {
       const reasons = new Set<string>();
       const goalFixed = input.offers.filter(
-        offer =>
-          fixed.has(offer.id) &&
-          (normalizeCode(offer.code) === goal.code ||
-            (settings.allowEquivalents && goal.equivalents.includes(normalizeCode(offer.code))))
+        offer => fixed.has(offer.id) && normalizeCode(offer.code) === normalizeCode(goal.code)
       );
       const options: Selection[] = [];
       for (const offer of input.offers) {
@@ -167,14 +143,18 @@ export function solvePlanner(
         if (satisfied.has(code)) {
           continue;
         }
-        if (code !== goal.code && !(settings.allowEquivalents && goal.equivalents.includes(code))) {
+        if (
+          code !== normalizeCode(goal.code) &&
+          !(settings.allowEquivalents && goal.equivalents.map(normalizeCode).includes(code))
+        ) {
           continue;
         }
         const fail = (reason: string) => reasons.add(reason);
         // Credit equivalence does not waive enrollment rules of the offered component.
         const rules = rulesFor({ goal, offer });
         const unmet = rules.find(
-          rule => checkRequirement(rule.prerequisite, satisfied) === "unmet"
+          rule =>
+            rule.requirementsKnown && checkRequirement(rule.prerequisite, satisfied) === "unmet"
         );
         const uncertain = rules.some(
           rule =>
@@ -303,13 +283,27 @@ export function solvePlanner(
   const groups = allGroups.filter(group => group.options.length > 0 || group.required);
   const fixedChoices: PlannerBlockingChoice[] = [...fixed].map(id => {
     const offer = offersById.get(id);
+    const code = offer ? normalizeCode(offer.code) : id;
+    const directReasons = result.exclusions.find(
+      item => normalizeCode(item.code) === code
+    )?.reasons;
+    const equivalentReasons = settings.allowEquivalents
+      ? allGroups
+          .filter(group => group.goal.equivalents.map(normalizeCode).includes(code))
+          .flatMap(
+            group =>
+              result.exclusions.find(
+                item => normalizeCode(item.code) === normalizeCode(group.goal.code)
+              )?.reasons ?? []
+          )
+      : [];
     return {
       kind: "fixed" as const,
       code: offer?.code ?? id,
       name: offer?.name ?? "Turma não encontrada na oferta carregada",
       offerId: id,
       section: offer?.section,
-      reasons: result.exclusions.find(item => item.code === offer?.code)?.reasons ?? [],
+      reasons: [...new Set(directReasons?.length ? directReasons : equivalentReasons)],
     };
   });
   const requiredChoices: PlannerBlockingChoice[] = groups
@@ -354,9 +348,6 @@ export function solvePlanner(
   ): {
     days: number;
     gaps: number;
-    transfers: number;
-    distance: number | null;
-    unknown: boolean;
   } | null => {
     const daily = new Map<number, { slot: Meeting; offer: PlannerOffer }[]>();
     for (const selection of selected) {
@@ -369,10 +360,7 @@ export function solvePlanner(
     if (daily.size > settings.maxDays) {
       return null;
     }
-    let gaps = 0,
-      transfers = 0,
-      distance: number | null = null,
-      unknown = false;
+    let gaps = 0;
     for (const day of daily.values()) {
       day.sort((a, b) => a.slot.start - b.slot.start);
       let dayGaps = 0;
@@ -384,50 +372,13 @@ export function solvePlanner(
         }
         const gap = next.slot.start - prev.slot.end;
         dayGaps += gap;
-        if (prev.offer.id === next.offer.id) {
-          continue;
-        }
-        const sameLocation =
-          prev.offer.location &&
-          next.offer.location &&
-          normalizeCode(prev.offer.location) === normalizeCode(next.offer.location);
-        if (!sameLocation) {
-          const meters = distanceBetween(prev.offer, next.offer);
-          if (meters !== null) {
-            distance = Math.max(distance ?? 0, meters);
-          }
-          if (
-            !prev.offer.location ||
-            !next.offer.location ||
-            (settings.maxDistanceMeters !== null && meters === null)
-          ) {
-            unknown = true;
-          }
-          if (prev.offer.location && next.offer.location) {
-            transfers++;
-          }
-          if (final && gap < settings.transferMinutes) {
-            return null;
-          }
-          if (
-            final &&
-            settings.maxDistanceMeters !== null &&
-            meters !== null &&
-            meters > settings.maxDistanceMeters
-          ) {
-            return null;
-          }
-        }
       }
       if (final && dayGaps > settings.maxGapMinutes) {
         return null;
       }
       gaps += dayGaps;
     }
-    if (final && unknown && settings.requireLocations && !settings.includeConditional) {
-      return null;
-    }
-    return { days: daily.size, gaps, transfers, distance, unknown };
+    return { days: daily.size, gaps };
   };
   const record = (workload: number) => {
     if (
@@ -463,7 +414,10 @@ export function solvePlanner(
       if (
         kept.some(other =>
           rulesFor(other).some(rule => {
-            const state = checkRequirement(rule.corequisite, keptCodes);
+            const state =
+              rule.corequisite && !rule.requirementsKnown
+                ? "unknown"
+                : checkRequirement(rule.corequisite, keptCodes);
             return state === "unmet" || (state === "unknown" && !settings.includeConditional);
           })
         )
@@ -488,7 +442,10 @@ export function solvePlanner(
     ]);
     for (const item of selected) {
       for (const rule of rulesFor(item)) {
-        const co = checkRequirement(rule.corequisite, codes);
+        const co =
+          rule.corequisite && !rule.requirementsKnown
+            ? "unknown"
+            : checkRequirement(rule.corequisite, codes);
         if (co === "unmet" || (co === "unknown" && !settings.includeConditional)) {
           return;
         }
@@ -503,9 +460,6 @@ export function solvePlanner(
     const stats = metrics(true);
     if (!stats) {
       return;
-    }
-    if (stats.unknown) {
-      extra.push("Deslocamento a verificar: falta localização ou coordenadas");
     }
     const institutionalMinimum = input.institutionalWorkload?.minimum;
     const institutionalMaximum = input.institutionalWorkload?.maximum;
@@ -534,11 +488,7 @@ export function solvePlanner(
     ).length;
     const conditional = [...new Set([...selected.flatMap(item => item.conditional), ...extra])];
     const modeScore =
-      settings.mode === "days"
-        ? [-stats.days, -stats.gaps, -stats.transfers]
-        : settings.mode === "travel"
-          ? [-stats.transfers, -(stats.distance ?? 0), -stats.days]
-          : [-stats.gaps, -stats.days, -stats.transfers];
+      settings.mode === "days" ? [-stats.days, -stats.gaps] : [-stats.gaps, -stats.days];
     const progressScore =
       settings.progressStrategy === "balanced"
         ? []
@@ -572,9 +522,6 @@ export function solvePlanner(
       days: stats.days,
       gapMinutes: stats.gaps,
       reserved,
-      transfers: stats.transfers,
-      maxDistanceMeters: stats.distance,
-      travelUnknown: stats.unknown,
       conditional,
       omitted: allGroups
         .filter(group => !selected.some(item => item.goal.code === group.goal.code))
@@ -634,8 +581,10 @@ export function solvePlanner(
     ? result.limited
       ? "Melhores opções encontradas no limite de cálculo; não é garantia de ótimo global."
       : "Combinações encontradas sem relaxar suas restrições."
-    : "Nenhuma combinação atende a todas as restrições. Confira as exclusões, turmas fixadas, requisitos e limites de horários/carga.";
-  if (!result.solutions.length) {
+    : result.limited
+      ? "A busca parou no limite de cálculo antes de encontrar uma combinação; ainda não foi possível determinar se há uma opção viável."
+      : "Nenhuma combinação atende a todas as restrições. Confira as exclusões, turmas fixadas, requisitos e limites de horários/carga.";
+  if (!result.solutions.length && !result.limited) {
     result.blockingChoices = [...requiredChoices, ...fixedChoices].map(item => ({
       ...item,
       reasons: ["Não foi encontrada uma combinação com estas escolhas e os limites atuais."],

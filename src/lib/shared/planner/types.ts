@@ -69,7 +69,7 @@ export const goalSchema = z
   })
   .strict();
 export type PlannerGoal = z.infer<typeof goalSchema>;
-export const settingsSchema = z
+const currentSettingsSchema = z
   .object({
     offerScope: z.enum(["curriculum", "course"]).default("curriculum"),
     includeOptional: z.boolean().default(true),
@@ -86,10 +86,7 @@ export const settingsSchema = z
     maxWorkload: z.number().min(1).max(1000),
     maxDays: z.number().int().min(1).max(7),
     maxGapMinutes: z.number().int().min(0).max(1440),
-    transferMinutes: z.number().int().min(0).max(240),
-    maxDistanceMeters: z.number().min(0).max(1000000).nullable(),
-    requireLocations: z.boolean(),
-    mode: z.enum(["priorities", "days", "gaps", "travel"]),
+    mode: z.enum(["priorities", "days", "gaps"]),
     progressStrategy: z.enum(["balanced", "unlock", "target"]).default("balanced"),
     progressTarget: text.nullable().default(null),
   })
@@ -98,6 +95,20 @@ export const settingsSchema = z
     value => value.minClasses <= value.maxClasses && value.minWorkload <= value.maxWorkload,
     "Limites mínimos não podem superar os máximos"
   );
+/** Read older saved scenarios while discarding retired location constraints. */
+export const settingsSchema = z.preprocess(value => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+  const settings = { ...value } as Record<string, unknown>;
+  delete settings.transferMinutes;
+  delete settings.maxDistanceMeters;
+  delete settings.requireLocations;
+  if (settings.mode === "travel") {
+    settings.mode = "priorities";
+  }
+  return settings;
+}, currentSettingsSchema);
 export const draftSchema = z
   .object({
     version: z.literal(1),
@@ -155,9 +166,6 @@ export type PlannerSolution = {
   days: number;
   gapMinutes: number;
   reserved: number;
-  transfers: number;
-  maxDistanceMeters: number | null;
-  travelUnknown: boolean;
   conditional: string[];
   omitted: { code: string; name: string; reason: "filters" | "combination" }[];
 };
@@ -178,12 +186,22 @@ export type PlannerResult = {
   message: string;
 };
 export type PublicCourse = { id: string; name: string; campus: string; modality: string };
-export type OfferingResponse = {
-  offers: PlannerOffer[];
-  observedAt: string;
-  course: PublicCourse;
-  warnings: string[];
-};
+export const offeringResponseSchema = z
+  .object({
+    offers: z.array(offerSchema).max(1500),
+    observedAt: z.string().datetime(),
+    course: z
+      .object({
+        id: publicCourseIdSchema,
+        name: text,
+        campus: z.string().max(256),
+        modality: z.string().max(256),
+      })
+      .strict(),
+    warnings: z.array(z.string().max(2000)).max(100),
+  })
+  .strict();
+export type OfferingResponse = z.infer<typeof offeringResponseSchema>;
 export const defaultSettings: PlannerSettings = {
   offerScope: "curriculum",
   includeOptional: true,
@@ -200,9 +218,6 @@ export const defaultSettings: PlannerSettings = {
   maxWorkload: 420,
   maxDays: 6,
   maxGapMinutes: 1440,
-  transferMinutes: 0,
-  maxDistanceMeters: null,
-  requireLocations: false,
   mode: "priorities",
   progressStrategy: "balanced",
   progressTarget: null,

@@ -70,9 +70,5 @@ export function resolveRoomBinding(
     item => item.turma.trim() === binding.section.trim()
   );
   const exact = matches.filter(item => item.id === binding.allocationId);
-  return exact.length === 1
-    ? exact[0]
-    : exact.length === 0 && matches.length === 1
-      ? matches[0]
-      : null;
+  return exact.length === 1 ? exact[0] : null;
 }

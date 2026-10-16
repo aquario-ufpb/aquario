@@ -3,15 +3,27 @@ import { offeringSnapshotSchema } from "@/lib/shared/planner/offering-search";
 import { getCachedPublicSigaaOfferings } from "@/lib/server/services/planner/sigaa-offerings";
 
 /** One database lookup replaces a serial replay of all cached course portals. No upstream calls. */
+import { offeringRequestPolicy } from "@/lib/server/services/planner/offering-request-policy";
+
 export async function POST(request: Request) {
   try {
     const body = await request.text();
     if (body.length > 160000) {
       return NextResponse.json({ message: "Consulta muito grande." }, { status: 413 });
     }
-    const parsed = offeringSnapshotSchema.safeParse(JSON.parse(body));
+    let value: unknown;
+    try {
+      value = JSON.parse(body);
+    } catch {
+      return NextResponse.json({ message: "JSON inválido." }, { status: 400 });
+    }
+    const parsed = offeringSnapshotSchema.safeParse(value);
     if (!parsed.success) {
       return NextResponse.json({ message: "Consulta de cache inválida." }, { status: 400 });
+    }
+    const policy = await offeringRequestPolicy(request);
+    if (policy.response) {
+      return policy.response;
     }
     const { semester, courseIds, codes } = parsed.data;
     const rows = await getCachedPublicSigaaOfferings(semester, courseIds);

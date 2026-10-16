@@ -54,7 +54,7 @@ it("gives imported status priority over conflicting manual markings", () => {
   expect([...result.completedIds]).toEqual(["local-A1"]);
   expect([...result.enrolledIds]).toEqual(["local-B2"]);
 });
-it.each(["pending", "unknown"] as const)(
+it.each(["pending"] as const)(
   "does not keep stale manual completion when SIGAA says %s",
   status => {
     const result = curriculumStatus(
@@ -67,6 +67,16 @@ it.each(["pending", "unknown"] as const)(
     expect(result.enrolledIds.size).toBe(0);
   }
 );
+it("preserves manual completed and enrolled states when imported status is unknown", () => {
+  const result = curriculumStatus(
+    grade,
+    ["local-A1"],
+    ["local-B2"],
+    [component("A1", "unknown"), component("B2", "unknown")]
+  );
+  expect([...result.completedIds]).toEqual(["local-A1"]);
+  expect([...result.enrolledIds]).toEqual(["local-B2"]);
+});
 it("retains manual statuses for codes absent from SIGAA", () => {
   const result = curriculumStatus(grade, ["local-A1"], ["local-B2"], []);
   expect(result.completedIds.has("local-A1")).toBe(true);

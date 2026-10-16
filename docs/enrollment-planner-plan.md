@@ -7,14 +7,14 @@ Complementa [o plano de sincronização e horários](sigaa-sync-schedules-plan.m
 ## Implementação e operação
 
 - Página `/planejador`, acessível em Recursos, no menu e pelo calendário pessoal.
-- Consulta real ao SIGAA público: lista de cursos e formulário JSF de oferta por curso/semestre. A oferta é carregada automaticamente ao identificar/trocar o curso ou selecionar outro semestre; requisições anteriores são canceladas e suas respostas não são aplicadas ao semestre atual. Há cache público persistente de duas horas, indicação de carregamento e nova tentativa em caso de erro. Selecionar outro curso na consulta adicional também importa a oferta automaticamente.
+- Consulta real ao SIGAA público: lista de cursos e formulário JSF de oferta por curso/semestre. A oferta é carregada automaticamente ao identificar/trocar o curso ou selecionar outro semestre; requisições anteriores são canceladas e suas respostas não são aplicadas ao semestre atual. Há cache público persistente de duas horas, indicação de carregamento e nova tentativa em caso de erro. A ampliação para outros cursos exige ação explícita do aluno e considera somente códigos ainda sem oferta.
   O adapter descobre os nomes dinâmicos do formulário, usa sessão anônima curta e não executa scripts da página.
 - Fonte consultada para Engenharia da Computação (`1626865`) em 2026.2 retornou 71 turmas,
   com horário e `Vgs Reservadas`. O carimbo de consulta representa o instante observado; a oferta tem cache público de 2 horas.
 - Reservas são registradas pelo ID do curso consultado. Consultar outro curso não transforma suas reservas
   em reservas do curso do aluno. A correspondência usa o curso importado pelo SIGAA (ou o perfil, sem importação) quando nome/campus identificam uma única opção. Casos ambíguos mantêm escolha manual.
-- Cache em `PublicSigaaOfferingCache`, por curso/semestre, com validade de duas horas a partir da observação original. A rota de cache lê todos os cursos disponíveis em uma consulta ao banco, filtrando os códigos somente na resposta; não guarda o currículo ou preferências consultados. Só os cursos faltantes entram nas consultas ao SIGAA. “Atualizar ofertas” ignora esse cache; falha não grava oferta vazia e não renova a data. Migration `20261015000000_add_public_sigaa_offering_cache` necessária.
-- Busca progressiva: dois trabalhadores consultam um curso por resposta, com cache público de duas horas e limite global de duas consultas simultâneas no servidor. O aluno pode calcular com os dados já carregados; resultados parciais permanecem visíveis quando chegam novas ofertas, com aviso para recalcular. Falhas individuais não interrompem os demais cursos.
+- Cache em `PublicSigaaOfferingCache`, por curso/semestre, com validade de duas horas a partir da observação original. A rota de cache lê todos os cursos disponíveis em uma consulta ao banco, filtrando os códigos somente na resposta; não guarda o currículo ou preferências consultados. Na ampliação explícita, só os cursos sem cache válido entram nas consultas ao SIGAA. “Atualizar ofertas” ignora esse cache somente para usuários autenticados dentro do limite de atualização; pedidos anônimos de refresh usam a política normal de cache; falha não grava oferta vazia e não renova a data. Migration `20261015000000_add_public_sigaa_offering_cache` necessária.
+- Busca ampliada explícita: até quatro cursos por busca, limitada a 12 consultas por sessão, somente para códigos sem oferta carregada. O cache público de duas horas evita chamadas desnecessárias ao SIGAA. A fila do servidor aceita duas consultas ativas e oito em espera; quando cheia, responde 429 com indicação de nova tentativa. O aluno pode calcular com os dados já carregados; resultados parciais permanecem visíveis quando chegam novas ofertas, com aviso para recalcular. Falhas individuais não interrompem os demais cursos.
 - Plano de progresso avançado: equilibrado, abertura de cadeias ou disciplina alvo buscável. Analisa pré-requisitos diretos/indiretos com AND/OR, ciclos e regras desconhecidas; prioridades manuais continuam na frente e pré-requisitos não são satisfeitos por matrícula concorrente. Resultados mostram caminhos e o que terá pré-requisitos atendidos se houver aprovação. Não prevê oferta futura nem prazo de formatura.
 - Motor determinístico em Web Worker, até três soluções, cancelamento, limite de 100 mil nós/1,5s,
   aviso quando interrompido pelo orçamento. Restrições não são relaxadas automaticamente.
@@ -25,7 +25,7 @@ Complementa [o plano de sincronização e horários](sigaa-sync-schedules-plan.m
 - O balão da aula mostra pré-requisitos e dependentes diretos, diferenciando pré-requisitos atendidos após aprovação daquela disciplina de cadeiras ainda condicionadas a outros requisitos. Seções vazias são omitidas; não significa oferta ou matrícula garantida.
 - Alterar fixações/exclusões no resultado preserva a grade anterior com aviso e botão de recalcular; o popover também permite recalcular. Bloqueios de disciplinas exigidas e turmas fixadas mostram nomes/códigos e ações para remover a exigência ou desfixar.
 - Turmas fixadas, alternativas equivalentes,
-  filtros separados de oferta do curso, reservas/saldo e optativas, limites de carga/dias/janelas e transição entre locais.
+  filtros separados de oferta do curso, reservas/saldo e optativas, limites de carga, dias e janelas.
 - Uma única seção de motivos agrupa turmas descartadas e disciplinas viáveis fora da opção selecionada. Pré-requisitos mostram nomes conhecidos e códigos; nomes ausentes mantêm o código sem inventar dados.
 - Pré-requisitos com expressões AND/OR e correquisitos; expressões não interpretadas ficam a verificar.
   O currículo importado é buscado por código e curso; não se agregam requisitos de todos os currículos.
@@ -34,13 +34,12 @@ Complementa [o plano de sincronização e horários](sigaa-sync-schedules-plan.m
   Até 30 cenários por conta; salvar não escreve matrículas/concluídas e não persiste o snapshot SIGAA.
   Reabrir usa a oferta salva e recalcula com o histórico atual; a tela avisa para revalidar oferta/curso.
 - Exportação somente da grade selecionada em PNG, com período, nomes/códigos, turma, horários e locais informados. A imagem indica simulação e condições pendentes; não contém histórico acadêmico. Controles de JSON, ICS e Google removidos da página a pedido do usuário.
-- Turmas personalizadas e edição de localização/coordenadas pertencem ao cenário, sem alterar catálogo global.
-  Distância em linha reta depende de coordenadas informadas; intervalo entre locais é uma restrição configurada pelo aluno.
+- Turmas personalizadas pertencem ao cenário, sem alterar o catálogo global. O planejador não oferece edição de local/coordenadas nem critérios de distância ou deslocamento. Cenários antigos continuam legíveis: esses critérios são descartados e o antigo modo de deslocamento passa a usar prioridades.
 
 ### Instalação e verificação
 
 Instalar dependências com `npm ci`, configurar o banco e aplicar `npx prisma migrate deploy`.
-A migration adiciona `EnrollmentPlan`; as migrations foram aplicadas e conferidas em PostgreSQL descartável.
+Aplicar as migrations de `EnrollmentPlan`, `PublicSigaaOfferingCache`, `CalendarRoomBinding` e `20261017000000_add_public_offering_request_limit`. A última adiciona o limite distribuído de consultas públicas.
 Sem essa tabela, é possível calcular, mas salvar/carregar cenários retorna erro explícito.
 
 Verificações executadas: `npm run check-all`, `npm run verify:sigaa-boundary`, suíte Jest completa,
@@ -61,8 +60,7 @@ sem alteração do banco ou deployment de produção.
 
 - A consulta pública usada fornece **reserva publicada**, mas não saldo disponível, demanda ou vagas totais.
   Esses campos são `null`, exibidos como “Não informado”; exigir saldo confirmado pode excluir todas as turmas.
-- Essa consulta não fornece sala/local. É possível informar local/coordenadas no cenário para avaliar deslocamento.
-  SACI continua fora do planejador e fica no fluxo de salas após matrícula.
+- Essa consulta não fornece sala/local. O planejador não usa localização, coordenadas ou deslocamento nos cálculos. SACI continua no fluxo de salas do calendário após matrícula.
 - A consulta ao SIGAA pode falhar ou mudar de layout; nesse caso há erro explícito, sem preencher números fictícios.
 - Integração Google OAuth/assinatura, inferência de vagas livres e rotas geográficas não fazem parte desta entrega.
 - Solicitar matrícula continua sendo uma ação do aluno no SIGAA. Reservas e conferência de requisitos não garantem deferimento.
@@ -105,10 +103,10 @@ uma operação do fluxo acadêmico existente.
 4. **Preferências.** Marcar “Preciso incluir”, “Prioridade alta”, “Se couber” ou “Não incluir”.
    Fixar uma turma específica é diferente de priorizar uma disciplina com várias turmas possíveis.
 5. **Filtros e limites.** Definir quantidade/carga horária desejada, dias/turnos, intervalo entre aulas,
-   limite de janelas e deslocamento. Reservas e vagas são filtros próprios, não uma única opção ambígua.
+   limite de janelas. Reservas e vagas são filtros próprios, não uma única opção ambígua.
 6. **Gerar e comparar.** Mostrar até três grades diferentes, com lista acessível e semana compacta, total de horas,
    prioridades atendidas, reservas para o curso, substituições por equivalentes, dias ocupados, janelas,
-   deslocamentos entre aulas e pendências de verificação.
+   e pendências de verificação.
 7. **Ajustar e salvar cenário.** Fixar/trocar turma ou disciplina e recalcular. Salvar alternativas A/B/C
    para usar caso uma turma não fique disponível. Atualizar a oferta não altera silenciosamente um cenário salvo.
 
@@ -121,13 +119,13 @@ uma operação do fluxo acadêmico existente.
   ficam livres. Um bloqueio sempre prevalece sobre uma disponibilidade sobreposta.
 - Preferência de turno/horário é separada de indisponibilidade: o solver pode flexibilizar uma preferência conforme o modo
   escolhido, mas nunca desobedecer um intervalo bloqueado. A tela mostra qual modo de disponibilidade está ativo.
-- Aula que termina exatamente quando outra começa não conflita por horário; deslocamento pode exigir intervalo adicional.
+- Aula que termina exatamente quando outra começa não conflita por horário.
 - O aluno pode pedir, por exemplo, 3–5 disciplinas ou uma faixa de carga horária. Limites institucionais conhecidos
   são apresentados separadamente da preferência pessoal; limite desconhecido fica “A verificar”.
 - “Preciso incluir” é uma restrição explícita. Se duas disciplinas obrigatórias na simulação conflitam,
   explicar que não há combinação que atenda ambas; não remover uma delas silenciosamente.
 - Uma disciplina personalizada pertence ao cenário do aluno e não altera o catálogo acadêmico global.
-  Pode ter nome, código opcional, carga horária opcional e uma ou mais turmas com seus encontros/local.
+  Pode ter nome, código opcional, carga horária opcional e uma ou mais turmas com seus encontros.
 - Personalizadas sem comprovação curricular recebem “Requisitos a verificar” e “Aproveitamento no curso a verificar”.
   Não contam automaticamente como créditos que faltam para integralizar o curso.
 - O aluno pode informar vagas/reservas manualmente, mas esses números ficam marcados como informados pelo usuário,
@@ -181,8 +179,7 @@ Usar o currículo explicitamente associado ao aluno, não a união de regras de 
   “Simular aprovação das disciplinas atuais”, desligado por padrão; cada resultado dependente recebe essa condição.
 - Regras adicionais: carga mínima/máxima, carga cumprida, restrição de curso/turno/campus, autorização e quebra de requisito.
   Quando não houver fonte suficiente, não converter ausência de dado em autorização.
-- Oferta em outro centro não é excluída só por estar fora do catálogo local. Verificar elegibilidade e deslocamento
-  separadamente; aproveitar o caso real de matrícula extraordinária como teste de produto.
+- Oferta em outro centro não é excluída só por estar fora do catálogo local. Verificar a elegibilidade pelos requisitos disponíveis; aproveitar o caso real de matrícula extraordinária como teste de produto.
 - Modalidade, estágio, TCC e atividades sem horário fixo precisam de tratamento explícito, com carga e restrições próprias.
   Horário desconhecido não deve ser considerado livre pelo otimizador; manter como item a verificar até confirmação.
 
@@ -192,7 +189,7 @@ O resultado é uma conferência dos dados disponíveis. O processamento oficial 
 
 Implementar um solver determinístico de restrições, sem depender de modelo de linguagem para decidir viabilidade.
 Cada variável representa uma turma; opções da mesma disciplina são mutuamente exclusivas.
-Os encontros de uma turma são indivisíveis e incluem todos os dias e locais.
+Os encontros de uma turma são indivisíveis e incluem todos os dias e horários.
 
 Restrições obrigatórias: semestre compatível, disponibilidade, ausência de sobreposição, turmas fixadas,
 disciplinas exigidas pelo aluno, limites estritos configurados e requisitos comprovados.
@@ -201,7 +198,7 @@ Uma opção explícita permite comparações condicionais, identificadas como ta
 
 Ordenar soluções primeiro pelo atendimento das prioridades de disciplinas e, entre soluções que
 as atendam de modo equivalente, favorecer reservas para o curso. Depois considerar progresso curricular
-(obrigatórias e cadeias de pré-requisitos), dias/janelas/deslocamentos e preferências restantes.
+(obrigatórias e cadeias de pré-requisitos), dias e janelas e preferências restantes.
 Reservas desconhecidas não pontuam como reservas confirmadas. Demanda pode ser um critério adicional
 somente com dados válidos; não equivale a maximizar chance de matrícula.
 Permitir modos “Priorizar disciplinas”, “Concentrar em menos dias” e “Reduzir janelas”, com critérios visíveis.
@@ -216,23 +213,17 @@ Se não houver solução completa, explicar o conflito concreto e oferecer relax
 “EDO e Física só têm turmas no mesmo horário”; “4 disciplinas excedem sua disponibilidade”; “Falta Cálculo II”.
 Não relaxar filtros de reserva, horários ou disciplinas exigidas sem ação do aluno.
 
-## Indicador de distância e deslocamento
+## Salas no calendário pessoal
 
-No planejador, usar o local informado na **oferta SIGAA** quando disponível, com a observação de que
-a sala pode mudar até o início das aulas. SACI permanece no fluxo de calendário após matrícula.
+Salas SACI permanecem no calendário após matrícula. A escolha é privada e explícita, vinculada à turma
+SIGAA por código, semestre, centro, horário e ID exato da alocação. Se o SACI substituir o ID,
+a associação fica desatualizada e exige reconfirmação, mesmo com o mesmo texto de seção.
+Dados inválidos de uma preferência não impedem ler as demais; a cota é de 64 escolhas por curso/semestre,
+e preferências de cursos anteriores são removidas sob bloqueio do usuário ao salvar.
 
-- Mostrar por turma campus/prédio e, na comparação de grades, o par de aulas que exige maior deslocamento.
-  Uma turma só é “mais distante” em relação a uma referência explícita: aula anterior/seguinte ou ponto inicial escolhido.
-- Se houver coordenadas confiáveis, exibir distância aproximada entre prédios. Sem rota ou modelo validado,
-  não transformar distância em minutos exatos nem em trajeto acessível garantido.
-- Permitir que o aluno configure intervalo mínimo entre locais ou tempo estimado de deslocamento.
-  Com intervalo mínimo obrigatório, uma transição inviável impede a combinação mesmo sem sobreposição de aulas.
-- Preferência “Evitar outros campi/prédios distantes” pode penalizar uma solução sem proibi-la;
-  bloqueio de campus e limite de deslocamento são opções estritas separadas.
-- Se faltar localização, mostrar “Deslocamento a verificar”. Ausência de coordenadas não vale como distância zero.
-  Com verificação estrita de deslocamento ativa, cenários dependentes de local desconhecido são condicionais.
-- Se a sala mudar depois da matrícula, o calendário pessoal consulta a alocação SACI correspondente e
-  sinaliza a mudança; isso não reescreve a oferta usada em um cenário de planejamento salvo.
+Uma turma importada sem horário válido continua como pendência sem esconder o horário manual salvo
+para o mesmo código. Na combinação dos status acadêmicos, `unknown` não apaga uma marcação manual;
+status importados reconhecidos continuam seguindo a precedência definida para a apresentação.
 
 ## Fontes existentes e lacunas verificadas no código
 
@@ -250,7 +241,7 @@ Criar serviço de requisitos com `curriculoId` e representação de expressão, 
 O modelo `Vaga` do projeto representa oportunidades de emprego e não vagas acadêmicas.
 
 Criar uma porta de ofertas acadêmicas normalizadas com `source`, `observedAt`, `semester`, identidade
-da turma, encontros, local e campos opcionais de vagas/reservas/demanda. O adapter consulta SIGAA;
+da turma, encontros e campos opcionais de vagas/reservas/demanda. O adapter consulta SIGAA;
 o solver recebe dados normalizados e não depende do formato HTML. SACI/PAAS não integra essa porta do planejador.
 Manter consultas públicas de oferta separadas da sincronização de credenciais efêmeras do aluno.
 Dados públicos podem ter cache compartilhado por período/unidade; histórico, preferências e cenários são privados.
@@ -273,7 +264,7 @@ reserva de outro curso não satisfaz o filtro, período errado não entra, dado 
 personalizada não altera catálogo e cenário não altera matrícula. Testar também entrada impossível,
 turma externa, atualização de oferta, cenário condicionado à aprovação, múltiplos blocos e limite do solver.
 Incluir testes para reserva de outro curso, modo estrito versus preferência por reserva, substituta equivalente sem
-dupla contagem, disponibilidade não marcada, bloqueio sobreposto e transição entre prédios com intervalo insuficiente.
+dupla contagem, disponibilidade não marcada, bloqueio sobreposto, códigos ainda sem oferta e limites de consulta pública.
 
 ## A definir antes da integração completa
 
@@ -282,7 +273,6 @@ dupla contagem, disponibilidade não marcada, bloqueio sobreposto e transição 
 - Quais regras institucionais adicionais são consultáveis e versionáveis para o currículo do aluno?
 - Qual prazo de validade e frequência de atualização é adequado para cada fonte, sobretudo na extraordinária?
 - Qual limite de candidatas/tempo mantém o cálculo rápido em celulares? Escolher por medição, não por suposição.
-- Qual referência de localização o aluno quer usar para a primeira/última aula e quais prédios têm coordenadas confiáveis?
 
 ## Referências consultadas
 
@@ -299,9 +289,19 @@ A grade usa os mesmos horários de `TIME_SLOTS_BY_PERIOD` do calendário; a noit
 
 ## Busca ampliada e limites da simulação
 
-O planejador busca as ofertas públicas de todos os cursos para os códigos e equivalentes presentes no currículo do aluno (incluindo disciplinas atuais, que saem do cálculo ao simular aprovação). Uma consulta ao banco recupera de uma vez os cursos com cache público válido por duas horas; apenas cursos faltantes entram na fila. A API aceita lotes de até quatro cursos, e a interface recebe cada curso assim que termina, com dois trabalhadores e compartilhamento de consultas em andamento. A interface permite calcular antes de terminar, com aviso de cobertura parcial, preserva os resultados e oferece recalcular quando chegam novos dados. “Atualizar ofertas” força uma consulta à fonte sem renovar artificialmente a data do cache. Ausência nessas fontes não comprova ausência de uma turma no SIGAA.
+A oferta do curso selecionado é carregada automaticamente quando o curso ou semestre muda. Consultar
+outros cursos exige ampliação explícita: somente códigos ainda sem oferta, até quatro cursos por busca
+e orçamento de 12 consultas por sessão. O cache público válido por duas horas é lido antes da rede;
+apenas cursos sem cache entram na fila. Não há varredura automática de todos os cursos.
 
-A busca real de 2026.2 consultou 127 cursos sem falhas e encontrou Língua Inglesa I em ofertas de outros cursos, além das 71 turmas da oferta de Engenharia da Computação. Reservas são mantidas por curso de origem; nenhuma reserva de outro curso é atribuída ao aluno. O filtro de oferta do curso exige presença nessa oferta, mesmo com reserva zero; o filtro de reserva exige quantidade positiva para o curso selecionado.
+Os limites distribuídos são de 40 requisições por minuto por IP e três atualizações forçadas por minuto
+por usuário autenticado. Pedidos anônimos de refresh não ignoram o cache. A fila admite duas consultas
+ativas e oito em espera; saturação retorna 429. Os limites persistem pela migration
+`20261017000000_add_public_offering_request_limit`.
+
+Resultados parciais podem ser calculados e permanecem visíveis enquanto chegam dados. Novas ofertas
+pedem recálculo; falhas não viram ofertas vazias. Reservas são mantidas pelo curso de origem e ausência
+nas fontes consultadas não comprova ausência de oferta no SIGAA.
 
 Obrigatoriedade vem do currículo SIGAA ou do catálogo correspondente. Optativas podem ser desativadas. Sem prioridade ou fixação explícita, uma optativa não é incluída quando sua remoção preserva os mínimos, correquisitos e demais restrições; pode completar uma carga mínima que as obrigatórias não preencham.
 
@@ -311,7 +311,7 @@ O mínimo institucional do snapshot preenche inicialmente o campo de carga, mas 
 
 Oferta, escopo e atualização ficam no mesmo cartão. Detalhes de cobertura e dados consultados ficam recolhidos, enquanto falhas, carregamento e alertas continuam visíveis. A navegação por seção leva aos horários, prioridades, limites e resultados. No desktop, horários ficam ao lado das prioridades e limites; no celular, seguem uma sequência única sem rolagem horizontal da página.
 
-A comparação usa três cartões compactos, com carga, disciplinas, dias e janelas; ressalvas aparecem apenas quando existem. A grade selecionada vem antes da explicação dos caminhos acadêmicos, com fixação e imagem no cabeçalho. Deslocamentos informados permanecem visíveis junto à grade. A barra fixa de cálculo respeita a área segura do dispositivo, mantém cancelamento acessível e não impede calcular durante a busca parcial. A navegação automática aos resultados respeita a preferência por movimento reduzido.
+A comparação usa três cartões compactos, com carga, disciplinas, dias e janelas; ressalvas aparecem apenas quando existem. A grade selecionada vem antes da explicação dos caminhos acadêmicos, com fixação e imagem no cabeçalho. A barra fixa de cálculo respeita a área segura do dispositivo, mantém cancelamento acessível e não impede calcular durante a busca parcial. A navegação automática aos resultados respeita a preferência por movimento reduzido.
 
 Busca de prioridades pode ser limpa por um botão; metadados com zero dependências não ocupam espaço. Limites mínimos maiores que os máximos geram um aviso imediato. Fixar uma turma, inclusive uma grade inteira, retira a mesma turma das exclusões para evitar escolhas contraditórias. A paleta do planejador e do PNG preserva contraste de pelo menos 4,5:1 para texto branco.
 

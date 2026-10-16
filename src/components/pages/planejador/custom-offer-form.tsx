@@ -59,7 +59,7 @@ export function CustomOfferForm({
             semester,
             schedule,
             teacher: get("teacher"),
-            location: get("location") || null,
+            location: null,
             coordinates: null,
             source: "MANUAL",
             reservations: {},
@@ -83,7 +83,6 @@ export function CustomOfferForm({
             ["schedule", "Horário SIGAA (ex.: 35M23)", "text", true],
             ["hours", "Carga horária (h)", "number", false],
             ["teacher", "Docente (opcional)", "text", false],
-            ["location", "Local/prédio (opcional)", "text", false],
             ["pre", "Pré-requisitos (códigos com E/OU)", "text", false],
             ["co", "Correquisitos (códigos com E/OU)", "text", false],
           ] as const

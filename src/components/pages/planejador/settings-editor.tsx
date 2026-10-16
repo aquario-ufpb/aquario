@@ -20,8 +20,7 @@ export function SettingsEditor({
       | "allowEquivalents"
       | "allowWithoutReservation"
       | "includeConditional"
-      | "onlyAvailableSeats"
-      | "requireLocations",
+      | "onlyAvailableSeats",
     label: string
   ) => (
     <label className="flex items-start gap-2 text-sm">
@@ -30,14 +29,7 @@ export function SettingsEditor({
     </label>
   );
   const numeric = (
-    key:
-      | "minClasses"
-      | "maxClasses"
-      | "minWorkload"
-      | "maxWorkload"
-      | "maxDays"
-      | "maxGapMinutes"
-      | "transferMinutes",
+    key: "minClasses" | "maxClasses" | "minWorkload" | "maxWorkload" | "maxDays" | "maxGapMinutes",
     label: string,
     max: number
   ) => (
@@ -122,7 +114,6 @@ export function SettingsEditor({
               <option value="priorities">Favorecer progresso e reduzir janelas</option>
               <option value="days">Concentrar em menos dias</option>
               <option value="gaps">Reduzir janelas</option>
-              <option value="travel">Reduzir deslocamentos</option>
             </select>
           </div>
         </div>
@@ -168,37 +159,11 @@ export function SettingsEditor({
           minutos.
         </p>
         <details className="rounded-md border p-3">
-          <summary className="cursor-pointer text-sm font-medium">
-            Dias, janelas e deslocamento
-          </summary>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <summary className="cursor-pointer text-sm font-medium">Dias e janelas</summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {numeric("maxDays", "Máximo de dias por semana", 7)}
             {numeric("maxGapMinutes", "Máximo de janelas por dia (min)", 1440)}
-            {numeric("transferMinutes", "Intervalo entre locais diferentes (min)", 240)}
-            <div>
-              <Label htmlFor="max-distance">Distância máxima entre aulas (m)</Label>
-              <Input
-                id="max-distance"
-                type="number"
-                min={0}
-                placeholder="Sem limite"
-                value={settings.maxDistanceMeters ?? ""}
-                onChange={e =>
-                  change("maxDistanceMeters", e.target.value ? Number(e.target.value) : null)
-                }
-              />
-            </div>
           </div>
-          <div className="mt-3">
-            {checkbox(
-              "requireLocations",
-              "Exigir verificação de localização/deslocamento; dados ausentes só entram em cenário condicional"
-            )}
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Distâncias usam coordenadas informadas, em linha reta. O intervalo mínimo é definido por
-            você; não é um tempo de rota calculado.
-          </p>
         </details>
       </div>
     </details>

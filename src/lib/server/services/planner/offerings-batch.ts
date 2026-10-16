@@ -7,10 +7,15 @@ import { getPublicSigaaOfferings } from "./sigaa-offerings";
 
 // Shared in-flight work and a small process-wide limit protect the public JSF service.
 let active = 0;
+export const MAX_OFFERING_QUEUE = 8;
+export class OfferingQueueFullError extends Error {}
 const waiting: (() => void)[] = [];
 const pending = new Map<string, ReturnType<typeof getPublicSigaaOfferings>>();
 async function limited<T>(task: () => Promise<T>): Promise<T> {
   if (active >= 2) {
+    if (waiting.length >= MAX_OFFERING_QUEUE) {
+      throw new OfferingQueueFullError("SIGAA_QUEUE_FULL");
+    }
     await new Promise<void>(resolve => waiting.push(resolve));
   } else {
     active++;
@@ -26,7 +31,11 @@ async function limited<T>(task: () => Promise<T>): Promise<T> {
     }
   }
 }
-function query(courseId: string, semester: string, refresh = false) {
+export function getLimitedPublicSigaaOfferings(
+  courseId: string,
+  semester: string,
+  refresh = false
+) {
   const key = `${courseId}:${semester}:${refresh}`;
   const existing = pending.get(key);
   if (existing) {
@@ -44,7 +53,7 @@ export async function getOfferingBatch(
   const codes = new Set(request.codes);
   const courseIds = [...new Set(request.courseIds)];
   const responses = await Promise.allSettled(
-    courseIds.map(id => query(id, request.semester, request.refresh))
+    courseIds.map(id => getLimitedPublicSigaaOfferings(id, request.semester, request.refresh))
   );
   const result: OfferingBatchResponse = { results: [], failedCourseIds: [] };
   responses.forEach((response, index) => {

@@ -8,6 +8,7 @@ function setup() {
   let time = Date.parse("2026-10-15T10:00:00Z");
   const rows = new Map<string, OfferingResponse>();
   const repository: IPublicOfferingCacheRepository = {
+    consumeRequest: jest.fn(() => Promise.resolve(true)),
     findFresh: jest.fn((semester, ids, since) =>
       Promise.resolve(
         ids.flatMap(id => {

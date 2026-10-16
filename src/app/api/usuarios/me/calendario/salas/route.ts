@@ -7,6 +7,7 @@ import {
   calendarScheduleKey,
   calendarSemesterSchema,
   roomBindingRequestSchema,
+  roomBindingSchema,
   roomCandidates,
 } from "@/lib/shared/calendario/room-binding";
 import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
@@ -105,14 +106,18 @@ export const POST = privateRoute(async (request, owner) => {
     );
   }
   const selected = candidates[0];
+  const binding = roomBindingSchema.safeParse({
+    ...input,
+    code: source.code,
+    scheduleKey: calendarScheduleKey(source.scheduleRaw),
+    centerId,
+    section: selected.turma,
+  });
+  if (!binding.success) {
+    return json({ message: "Os dados da turma SACI são inválidos. Confirme a oferta atual." }, 409);
+  }
   try {
-    await container.calendarRoomBindingRepository.save(owner.id, owner.cursoId, {
-      ...input,
-      code: source.code,
-      scheduleKey: calendarScheduleKey(source.scheduleRaw),
-      centerId,
-      section: selected.turma,
-    });
+    await container.calendarRoomBindingRepository.save(owner.id, owner.cursoId, binding.data);
   } catch (error) {
     if (error instanceof Error && /CALENDAR_(?:COURSE_CHANGED|BINDING_QUOTA)/.test(error.message)) {
       return json(

@@ -113,3 +113,15 @@ it("rejects malformed or oversized inputs and keeps error responses private", as
   expect(result.status).toBe(503);
   expect(result.headers.get("cache-control")).toBe("private, no-store");
 });
+
+it.each(["", "x".repeat(65)])(
+  "rejects invalid derived SACI section %j before saving",
+  async section => {
+    (getPublishedSaciAllocation as jest.Mock).mockResolvedValueOnce({
+      semester: "2026.2",
+      allocations: [{ ...allocation, turma: section }],
+    });
+    expect((await POST(request(body))).status).toBe(409);
+    expect(repository.save).not.toHaveBeenCalled();
+  }
+);

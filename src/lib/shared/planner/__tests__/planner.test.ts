@@ -1,7 +1,15 @@
 /** @jest-environment node */
 import { checkRequirement, parseRequirement } from "../requirements";
-import { defaultSettings, type PlannerGoal, type PlannerInput, type PlannerOffer } from "../types";
-import { distanceBetween, fitsAvailability, meetingsFor, solvePlanner } from "../solver";
+import {
+  defaultSettings,
+  draftSchema,
+  emptyDraft,
+  settingsSchema,
+  type PlannerGoal,
+  type PlannerInput,
+  type PlannerOffer,
+} from "../types";
+import { fitsAvailability, meetingsFor, solvePlanner } from "../solver";
 import { generatePlannerICS, plannerCalendarSeries, recifeInstant } from "../calendar-export";
 
 const goal = (code: string, extra: Partial<PlannerGoal> = {}): PlannerGoal => ({
@@ -58,6 +66,104 @@ const input = (
 });
 
 describe("academic rules", () => {
+  it("fixes an offered component without requiring every objective that accepts its credit", () => {
+    const result = solvePlanner(
+      input([goal("A1", { equivalents: ["C3"] }), goal("C3")], [offer("C3")], {
+        fixedOfferIds: ["C3"],
+      })
+    );
+    expect(result.solutions.length).toBeGreaterThan(0);
+    expect(
+      result.solutions.every(
+        solution => solution.selections.length === 1 && solution.selections[0].offer.code === "C3"
+      )
+    ).toBe(true);
+  });
+  it("preserves a fixed equivalent when only the objective it can replace is completed", () => {
+    const result = solvePlanner(
+      input(
+        [
+          goal("D1", { completed: true, equivalents: ["E1"] }),
+          goal("E1", { priority: "optional" }),
+          goal("B1"),
+        ],
+        [offer("E1"), offer("B1")],
+        {
+          completedCodes: ["D1"],
+          fixedOfferIds: ["E1"],
+          settings: { ...defaultSettings, maxClasses: 1 },
+        }
+      )
+    );
+    expect(result.solutions.length).toBeGreaterThan(0);
+    expect(result.solutions.every(solution => solution.selections[0].offer.code === "E1")).toBe(
+      true
+    );
+  });
+  it("keeps unconfirmed unmet academic rules conditional rather than proving them unmet", () => {
+    const data = input(
+      [
+        goal("A1", {
+          requirementsKnown: false,
+          prerequisite: parseRequirement("Z1"),
+          corequisite: parseRequirement("Z2"),
+        }),
+      ],
+      [offer("A1")],
+      { settings: { ...defaultSettings, includeConditional: true } }
+    );
+    expect(solvePlanner(data).solutions[0].conditional.join()).toContain("requisitos a verificar");
+    expect(
+      solvePlanner({ ...data, settings: { ...data.settings, includeConditional: false } }).solutions
+    ).toEqual([]);
+    expect(
+      solvePlanner({ ...data, goals: [{ ...data.goals[0], requirementsKnown: true }] }).solutions
+    ).toEqual([]);
+  });
+  it.each([false, true])(
+    "reports normalized fixed-offer reasons through equivalent goals (direct goal: %s)",
+    direct => {
+      const result = solvePlanner(
+        input(
+          [
+            goal("A1", { equivalents: [" c3 "] }),
+            goal("C3", { priority: direct ? "high" : "exclude" }),
+          ],
+          [offer(" c3 ")],
+          { fixedOfferIds: [" c3 "], windows: [{ day: 1, start: 0, end: 1440, kind: "busy" }] }
+        )
+      );
+      expect(result.blockingChoices?.find(choice => choice.kind === "fixed")?.reasons).toContain(
+        "Fora da disponibilidade ou em horário bloqueado"
+      );
+    }
+  );
+  it("does not claim infeasibility when the budget ends before finding a solution", () => {
+    const result = solvePlanner(
+      input([goal("A1", { priority: "required" })], [offer("A1")], { fixedOfferIds: ["A1"] }),
+      { maxNodes: 1, maxMs: 1000 }
+    );
+    expect(result.limited).toBe(true);
+    expect(result.solutions).toEqual([]);
+    expect(result.blockingChoices).toBeUndefined();
+    expect(result.message).toContain("limite de cálculo");
+    expect(result.message).not.toContain("Nenhuma combinação atende");
+  });
+  it.each([null, "Outro prédio", "CI"])(
+    "ignores location when selecting back-to-back classes (%s)",
+    location => {
+      const data = input(
+        [goal("A1", { priority: "required" }), goal("B2", { priority: "required" })],
+        [offer("A1", "2M1"), offer("B2", "2M2", { location })]
+      );
+      const result = solvePlanner(data);
+      expect(result.solutions).toHaveLength(1);
+      expect(result.solutions[0].conditional).toEqual([]);
+      expect(result.solutions[0]).not.toHaveProperty("travelUnknown");
+      expect(result.solutions[0]).not.toHaveProperty("maxDistanceMeters");
+      expect(result.solutions[0]).not.toHaveProperty("transfers");
+    }
+  );
   it("checks the offered equivalent's prerequisites even when its target has none", () => {
     const data = input(
       [goal("A1", { equivalents: ["X1"] }), goal("X1", { prerequisite: parseRequirement("Z1") })],
@@ -331,23 +437,58 @@ describe("availability and optimization", () => {
     expect(solvePlanner(base).solutions).toHaveLength(0);
     expect(solvePlanner({ ...base, fixedOfferIds: ["missing"] }).message).toContain("fixada");
   });
-  it("enforces transfer time and reports missing location instead of zero distance", () => {
+  it("gives the same scores and alternatives regardless of locations or coordinates", () => {
     const base = input(
       [goal("A1", { priority: "required" }), goal("B2", { priority: "required" })],
-      [offer("A1", "2M1", { location: "CI" }), offer("B2", "2M2", { location: "CT" })]
+      [
+        offer("A1", "2M1", { location: "CI", coordinates: { lat: -7, lng: -34 } }),
+        offer("B2", "2M2", {
+          id: "far",
+          location: "Outro campus",
+          coordinates: { lat: 40, lng: 100 },
+        }),
+        offer("B2", "2M2", { id: "near", location: "CI", coordinates: { lat: -7, lng: -34 } }),
+      ]
     );
-    expect(
-      solvePlanner({ ...base, settings: { ...base.settings, transferMinutes: 15 } }).solutions
-    ).toHaveLength(0);
-    const unknown = {
+    const result = solvePlanner(base);
+    const withoutLocations = solvePlanner({
       ...base,
-      offers: [offer("A1", "2M1", { location: null }), offer("B2", "2M2", { location: null })],
+      offers: base.offers.map(item => ({ ...item, location: null, coordinates: null })),
+    });
+    const summary = (value: ReturnType<typeof solvePlanner>) =>
+      value.solutions.map(solution => ({
+        id: solution.id,
+        score: solution.score,
+        conditional: solution.conditional,
+      }));
+    expect(summary(result)).toEqual(summary(withoutLocations));
+    expect(result.solutions).toHaveLength(2);
+  });
+  it("loads old scenarios while ignoring retired location constraints and travel mode", () => {
+    const base = input(
+      [goal("A1", { priority: "required" }), goal("B2", { priority: "required" })],
+      [offer("A1", "2M1", { location: null }), offer("B2", "2M2", { location: "Other campus" })]
+    );
+    const legacyDraft = {
+      ...emptyDraft("2026.2"),
+      offers: base.offers,
+      settings: {
+        ...base.settings,
+        mode: "travel",
+        transferMinutes: 240,
+        maxDistanceMeters: 0,
+        requireLocations: true,
+      },
     };
-    expect(solvePlanner(unknown).solutions[0].travelUnknown).toBe(true);
-    expect(
-      solvePlanner({ ...unknown, settings: { ...base.settings, requireLocations: true } }).solutions
-    ).toHaveLength(0);
-    expect(distanceBetween(unknown.offers[0], unknown.offers[1])).toBeNull();
+    const parsed = draftSchema.parse(legacyDraft);
+    expect(parsed.settings).toEqual(defaultSettings);
+    expect(legacyDraft.settings.mode).toBe("travel");
+    const result = solvePlanner({ ...base, settings: parsed.settings });
+    expect(result.solutions).toHaveLength(1);
+    expect(result.solutions[0].conditional).toEqual([]);
+    expect(settingsSchema.safeParse({ ...defaultSettings, unexpectedSetting: true }).success).toBe(
+      false
+    );
   });
   it("returns distinct alternatives and declares search limits", () => {
     const base = input(

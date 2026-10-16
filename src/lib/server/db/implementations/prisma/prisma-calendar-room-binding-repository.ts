@@ -7,8 +7,8 @@ export class PrismaCalendarRoomBindingRepository implements ICalendarRoomBinding
       where: { usuarioId: ownerId, profileCourseId: courseId, semester },
       take: 64,
     });
-    return rows.map(row =>
-      roomBindingSchema.parse({
+    return rows.flatMap(row => {
+      const parsed = roomBindingSchema.safeParse({
         semester: row.semester,
         sourceKey: row.sourceKey,
         code: row.code,
@@ -16,10 +16,12 @@ export class PrismaCalendarRoomBindingRepository implements ICalendarRoomBinding
         centerId: row.centerId,
         section: row.section,
         allocationId: row.allocationId,
-      })
-    );
+      });
+      return parsed.success ? [parsed.data] : [];
+    });
   }
   async save(ownerId: string, courseId: string, binding: CalendarRoomBinding) {
+    binding = roomBindingSchema.parse(binding);
     await prisma.$transaction(async transaction => {
       const users = await transaction.$queryRaw<
         { cursoId: string }[]
@@ -27,6 +29,9 @@ export class PrismaCalendarRoomBindingRepository implements ICalendarRoomBinding
       if (users[0]?.cursoId !== courseId) {
         throw new Error("CALENDAR_COURSE_CHANGED");
       }
+      await transaction.calendarRoomBinding.deleteMany({
+        where: { usuarioId: ownerId, profileCourseId: { not: courseId } },
+      });
       const where = {
         usuarioId_semester_sourceKey: {
           usuarioId: ownerId,
@@ -38,7 +43,7 @@ export class PrismaCalendarRoomBindingRepository implements ICalendarRoomBinding
       if (
         !existing &&
         (await transaction.calendarRoomBinding.count({
-          where: { usuarioId: ownerId, semester: binding.semester },
+          where: { usuarioId: ownerId, profileCourseId: courseId, semester: binding.semester },
         })) >= 64
       ) {
         throw new Error("CALENDAR_BINDING_QUOTA");

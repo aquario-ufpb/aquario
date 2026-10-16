@@ -3,6 +3,7 @@ import type { SigaaAcademicSnapshotPayload } from "@/lib/shared/types/sigaa-acad
 import type { DisciplinaSemestreResponse } from "@/lib/shared/types/disciplina-semestre.types";
 import type { ClassWithRoom } from "@/components/pages/calendario/types";
 import { projectSigaaEnrollments } from "../project-sigaa-enrollments";
+import { resolveEnrolledClasses } from "../resolve-enrolled-classes";
 
 const snapshot: SigaaAcademicSnapshotPayload = {
   identity: {
@@ -130,10 +131,12 @@ it("keeps unknown schedules and enrolled components visible as pending without i
   });
   expect(unknown.enrollments).toHaveLength(1);
   expect(unknown.classes).toEqual([]);
+  expect(unknown.codes.has("EDO1")).toBe(false);
   expect(unknown.pending[0].reason).toContain("Horário");
   const missing = project({ ...snapshot, classes: [] });
   expect(missing.enrollments[0].code).toBe("EDO1");
   expect(missing.classes).toEqual([]);
+  expect(missing.codes.has("EDO1")).toBe(false);
 });
 it("keeps multiple sections of the same code distinct, including an extraordinary schedule", () => {
   const result = project({
@@ -185,4 +188,39 @@ it("applies an explicit room preference without creating a manual enrollment and
     roomSource: "SIGAA",
     bindingOutdated: true,
   });
+});
+
+it("keeps a saved manual timetable eligible when the imported enrollment has no usable schedule", () => {
+  for (const payload of [
+    { ...snapshot, classes: [] },
+    { ...snapshot, classes: [{ ...snapshot.classes[0], scheduleRaw: "A definir" }] },
+  ]) {
+    const result = project(payload, [manual], [allocation]);
+    const visibleManual = [manual].filter(item => !result.codes.has(item.disciplinaCodigo));
+    expect(visibleManual).toEqual([manual]);
+    expect(resolveEnrolledClasses(visibleManual, [allocation], true).classes).toEqual([allocation]);
+    expect(result.enrollments).toHaveLength(1);
+    expect(result.pending).toHaveLength(1);
+  }
+});
+it("marks a saved room as outdated after SACI republishes with a different allocation id", () => {
+  const result = projectSigaaEnrollments(
+    snapshot,
+    "2026.2",
+    [],
+    [{ ...allocation, id: 99 }],
+    "2026.2",
+    [
+      {
+        semester: "2026.2",
+        sourceKey: "123456",
+        allocationId: 12,
+        code: "EDO1",
+        scheduleKey: calendarScheduleKey("35T12"),
+        centerId: "CI",
+        section: "07",
+      },
+    ]
+  );
+  expect(result.enrollments[0]).toMatchObject({ bindingOutdated: true, roomSource: "SIGAA" });
 });
