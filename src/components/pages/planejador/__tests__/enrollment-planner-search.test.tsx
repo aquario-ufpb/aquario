@@ -381,3 +381,29 @@ it("queries the explicitly selected course and includes optional codes even if a
   });
   expect(plannerApi.offerings).toHaveBeenCalledWith("1", "2027.1", expect.any(AbortSignal), false);
 });
+
+it("spends broad-search budget only on uncached courses after warming the first twelve portals", async () => {
+  const warm = new Set(Array.from({ length: 12 }, (_, i) => String(i + 2)));
+  jest.mocked(plannerApi.offeringSnapshot).mockImplementation(body =>
+    Promise.resolve({
+      results: body.courseIds
+        .filter(id => warm.has(id))
+        .map(id => ({ ...ownResponse, course: courses[Number(id) - 1], offers: [] })),
+      missingCourseIds: body.courseIds.filter(id => !warm.has(id)),
+    })
+  );
+  renderWorkspace();
+  const expand = await screen.findByRole("button", {
+    name: "Buscar alternativas em outros cursos",
+  });
+  await waitFor(() => expect(expand).toBeEnabled());
+  fireEvent.click(expand);
+  await waitFor(() => expect(plannerApi.offeringBatch).toHaveBeenCalledTimes(1));
+  expect(jest.mocked(plannerApi.offeringBatch).mock.calls[0][0].courseIds).toEqual([
+    "14",
+    "15",
+    "16",
+    "17",
+  ]);
+  await screen.findByText(/8 consultas restantes nesta sessão/);
+});

@@ -6,7 +6,10 @@ it("chunks a larger course catalog without turning cache misses into upstream re
   jest
     .mocked(plannerApi.offeringSnapshot)
     .mockImplementation(body => Promise.resolve({ results: [], missingCourseIds: body.courseIds }));
-  expect(await readCachedCurriculumOfferings("2026.2", [...ids, "1"], ["OPT1"])).toEqual([]);
+  expect(await readCachedCurriculumOfferings("2026.2", [...ids, "1"], ["OPT1"])).toEqual({
+    results: [],
+    missingCourseIds: ids,
+  });
   expect(plannerApi.offeringSnapshot).toHaveBeenCalledTimes(3);
   expect(
     jest.mocked(plannerApi.offeringSnapshot).mock.calls.map(([body]) => body.courseIds.length)

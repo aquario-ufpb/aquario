@@ -302,12 +302,12 @@ function PlannerWorkspace() {
     queryFn: async ({ signal }) => ({
       semester: draft.semester,
       courseId: draft.courseId,
-      results: await readCachedCurriculumOfferings(
+      ...(await readCachedCurriculumOfferings(
         draft.semester,
         cachedCourseIds,
         searchCodes.split(","),
         signal
-      ),
+      )),
     }),
     enabled:
       ownOffers.isSuccess &&
@@ -344,6 +344,15 @@ function PlannerWorkspace() {
   const missingSearchCodes = searchCodes
     .split(",")
     .filter(code => code && !draft.offers.some(offer => normalizeCode(offer.code) === code));
+  const broadCandidateIds = (courses.data?.courses ?? [])
+    .filter(
+      course =>
+        course.id !== draft.courseId &&
+        !searchedCourses.current.has(`${draft.semester}:${course.id}`) &&
+        (!cachedOffers.isSuccess || cachedOffers.data.missingCourseIds.includes(course.id))
+    )
+    .map(course => course.id);
+  /** Spend the explicit search budget only on new portals missing from the cache. */
   const expandSearch = (retry = false, targetCourseId?: string) => {
     if (
       !draft.courseId ||
@@ -360,13 +369,7 @@ function PlannerWorkspace() {
         ? [targetCourseId]
         : retry && broadRequest
           ? broadRequest.ids
-          : (courses.data?.courses ?? [])
-              .filter(
-                course =>
-                  course.id !== draft.courseId &&
-                  !searchedCourses.current.has(`${draft.semester}:${course.id}`)
-              )
-              .map(course => course.id)
+          : broadCandidateIds
     ).slice(0, Math.min(4, broadBudget));
     const codes = targetCourseId ? searchCodes.split(",").filter(Boolean) : missingSearchCodes;
     if (targetCourseId && !cachedCourseIds.includes(targetCourseId)) {
@@ -834,7 +837,8 @@ function PlannerWorkspace() {
                   ownOffers.isFetching ||
                   cachedOffers.isFetching ||
                   broadSearch.running ||
-                  broadBudget <= 0
+                  broadBudget <= 0 ||
+                  broadCandidateIds.length === 0
                 }
                 onClick={() => expandSearch()}
               >

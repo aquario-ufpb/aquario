@@ -1,5 +1,5 @@
 import { plannerApi } from "./api";
-import type { OfferingResponse } from "@/lib/shared/planner/types";
+import type { OfferingSnapshotResponse } from "@/lib/shared/planner/offering-search";
 
 /** Read existing public cache only. Missing courses never trigger upstream lookups. */
 export async function readCachedCurriculumOfferings(
@@ -7,16 +7,17 @@ export async function readCachedCurriculumOfferings(
   courseIds: readonly string[],
   codes: string[],
   signal?: AbortSignal
-): Promise<OfferingResponse[]> {
+): Promise<OfferingSnapshotResponse> {
   const ids = [...new Set(courseIds)];
-  const results: OfferingResponse[] = [];
+  const snapshot: OfferingSnapshotResponse = { results: [], missingCourseIds: [] };
   for (let offset = 0; offset < ids.length; offset += 200) {
     signal?.throwIfAborted();
     const response = await plannerApi.offeringSnapshot(
       { semester, courseIds: ids.slice(offset, offset + 200), codes },
       signal
     );
-    results.push(...response.results);
+    snapshot.results.push(...response.results);
+    snapshot.missingCourseIds.push(...response.missingCourseIds);
   }
-  return results;
+  return snapshot;
 }
