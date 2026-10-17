@@ -25,12 +25,14 @@ import { apiClient } from "@/lib/client/api/api-client";
 import { throwApiError } from "@/lib/client/errors";
 import { OFFERING_CACHE_TTL_MS } from "@/lib/shared/planner/cache";
 import { plannerApi } from "@/lib/client/planner/api";
+import { readCachedCurriculumOfferings } from "@/lib/client/planner/cached-offerings";
 import { usePlannerSolver } from "@/lib/client/planner/use-planner-solver";
 import { nextPlanningSemester } from "@/lib/shared/planner/semester";
 import { normalizeCurriculumCode } from "@/lib/shared/sigaa/curriculum-code";
 import { buildAcademicContext } from "@/lib/shared/planner/academic-context";
 import { simulateApprovals } from "@/lib/shared/planner/simulated-approvals";
 import { normalizeCode } from "@/lib/shared/planner/requirements";
+import { curriculumSearchCodes } from "@/lib/shared/planner/search-codes";
 import { matchPublicCourse } from "@/lib/shared/planner/course-match";
 import { mergeOfferings } from "@/lib/shared/planner/merge-offerings";
 import {
@@ -83,6 +85,7 @@ function PlannerWorkspace() {
   const refreshOwnOffers = useRef(false);
   const initializedSemester = useRef(false);
   const [broadBudget, setBroadBudget] = useState(12);
+  const [alternativeCourseId, setAlternativeCourseId] = useState("");
   const searchedCourses = useRef(new Set<string>());
   const [broadRequest, setBroadRequest] = useState<{
     semester: string;
@@ -277,24 +280,75 @@ function PlannerWorkspace() {
     });
     setWarnings(response.data.warnings);
   }, [ownOffers.data, draft.courseId, draft.semester, scenarioRevision]); // eslint-disable-line react-hooks/exhaustive-deps
-  const searchCodes = [
-    ...new Set(
-      [...academic.goals, ...draft.customGoals]
-        .filter(goal => !goal.completed)
-        .flatMap(goal => [goal.code, ...goal.equivalents])
-        .map(normalizeCode)
-        .filter(code => /^[A-Z0-9]{1,64}$/.test(code))
-    ),
-  ]
-    .sort()
-    .join(",");
+  const searchCodes = curriculumSearchCodes([...academic.goals, ...draft.customGoals]).join(",");
+  const levelZeroElectives = academic.goals.filter(
+    goal => !goal.completed && goal.curricularRequired === false && goal.period === 0
+  );
+  const coveredLevelZeroElectives = levelZeroElectives.filter(goal =>
+    draft.offers.some(offer => [goal.code, ...goal.equivalents].includes(normalizeCode(offer.code)))
+  ).length;
+  const cachedCourseIds = (courses.data?.courses ?? [])
+    .filter(course => course.id !== draft.courseId)
+    .map(course => course.id);
+  const cachedOffers = useQuery({
+    queryKey: [
+      "planner",
+      "cached-curriculum-offers",
+      draft.courseId,
+      draft.semester,
+      cachedCourseIds,
+      searchCodes,
+    ],
+    queryFn: async ({ signal }) => ({
+      semester: draft.semester,
+      courseId: draft.courseId,
+      results: await readCachedCurriculumOfferings(
+        draft.semester,
+        cachedCourseIds,
+        searchCodes.split(","),
+        signal
+      ),
+    }),
+    enabled:
+      ownOffers.isSuccess &&
+      !ownOffers.isFetching &&
+      !!draft.courseId &&
+      !!searchCodes &&
+      cachedCourseIds.length > 0,
+    staleTime: 60000,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  useEffect(() => {
+    const response = cachedOffers.data;
+    if (!response) {
+      return;
+    }
+    setDraft(previous => {
+      if (previous.semester !== response.semester || previous.courseId !== response.courseId) {
+        return previous;
+      }
+      const offers = response.results.reduce(
+        (all, item) => mergeOfferings(all, item.offers, item.course.id),
+        previous.offers
+      );
+      if (offers.length > 1500) {
+        toast.error("O cache contém mais de 1500 turmas. Refine a busca antes de ampliar.");
+        return previous;
+      }
+      return JSON.stringify(offers) === JSON.stringify(previous.offers)
+        ? previous
+        : { ...previous, offers };
+    });
+  }, [cachedOffers.data, scenarioRevision]);
   const missingSearchCodes = searchCodes
     .split(",")
     .filter(code => code && !draft.offers.some(offer => normalizeCode(offer.code) === code));
-  const expandSearch = (retry = false) => {
+  const expandSearch = (retry = false, targetCourseId?: string) => {
     if (
       !draft.courseId ||
       ownOffers.isFetching ||
+      cachedOffers.isFetching ||
       !ownOffers.isSuccess ||
       broadSearch.running ||
       broadBudget <= 0
@@ -302,17 +356,22 @@ function PlannerWorkspace() {
       return;
     }
     const ids = (
-      retry && broadRequest
-        ? broadRequest.ids
-        : (courses.data?.courses ?? [])
-            .filter(
-              course =>
-                course.id !== draft.courseId &&
-                !searchedCourses.current.has(`${draft.semester}:${course.id}`)
-            )
-            .map(course => course.id)
+      targetCourseId
+        ? [targetCourseId]
+        : retry && broadRequest
+          ? broadRequest.ids
+          : (courses.data?.courses ?? [])
+              .filter(
+                course =>
+                  course.id !== draft.courseId &&
+                  !searchedCourses.current.has(`${draft.semester}:${course.id}`)
+              )
+              .map(course => course.id)
     ).slice(0, Math.min(4, broadBudget));
-    const codes = missingSearchCodes;
+    const codes = targetCourseId ? searchCodes.split(",").filter(Boolean) : missingSearchCodes;
+    if (targetCourseId && !cachedCourseIds.includes(targetCourseId)) {
+      return;
+    }
     if (!ids.length || !codes.length) {
       return;
     }
@@ -457,14 +516,21 @@ function PlannerWorkspace() {
   ]
     .filter(value => semesterSchema.safeParse(value).success)
     .sort((a, b) => b.localeCompare(a));
-  const offerSearchPending = ownOffers.isFetching || broadSearch.running;
+  const offerSearchPending = ownOffers.isFetching || cachedOffers.isFetching || broadSearch.running;
   const coverageRef = useRef({ pending: false, failed: false });
   useEffect(() => {
     coverageRef.current = {
       pending: offerSearchPending,
-      failed: broadSearch.failed > 0 || !!broadSearch.error || ownOffers.isError,
+      failed:
+        broadSearch.failed > 0 || !!broadSearch.error || ownOffers.isError || cachedOffers.isError,
     };
-  }, [offerSearchPending, broadSearch.failed, broadSearch.error, ownOffers.isError]);
+  }, [
+    offerSearchPending,
+    broadSearch.failed,
+    broadSearch.error,
+    ownOffers.isError,
+    cachedOffers.isError,
+  ]);
   const offersChangedSinceCalculation =
     calculatedOffers !== null && calculatedOffers !== draft.offers;
   const choicesKey = JSON.stringify([
@@ -764,7 +830,12 @@ function PlannerWorkspace() {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={ownOffers.isFetching || broadSearch.running || broadBudget <= 0}
+                disabled={
+                  ownOffers.isFetching ||
+                  cachedOffers.isFetching ||
+                  broadSearch.running ||
+                  broadBudget <= 0
+                }
                 onClick={() => expandSearch()}
               >
                 Buscar alternativas em outros cursos
@@ -775,12 +846,69 @@ function PlannerWorkspace() {
               </span>
             </div>
           )}
+          {cachedOffers.isFetching && (
+            <p role="status" className="text-xs text-muted-foreground">
+              Recuperando ofertas já armazenadas de outros cursos…
+            </p>
+          )}
+          {cachedOffers.isError && (
+            <p role="alert" className="text-xs text-amber-700 dark:text-amber-300">
+              Não foi possível recuperar as ofertas em cache. A oferta do seu curso continua
+              disponível.{" "}
+              <button className="underline" onClick={() => void cachedOffers.refetch()}>
+                Tentar novamente
+              </button>
+            </p>
+          )}
+          {ownOffers.isSuccess && searchCodes && (
+            <details className="rounded-md border p-3 text-sm">
+              <summary className="cursor-pointer font-medium">
+                Buscar optativas e outras turmas em um curso específico
+              </summary>
+              <div className="mt-3 space-y-2">
+                <CoursePicker
+                  label="Curso onde buscar outras turmas"
+                  courses={(courses.data?.courses ?? []).filter(
+                    course => course.id !== draft.courseId
+                  )}
+                  value={alternativeCourseId}
+                  onChange={setAlternativeCourseId}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={
+                    !alternativeCourseId ||
+                    alternativeCourseId === draft.courseId ||
+                    ownOffers.isFetching ||
+                    cachedOffers.isFetching ||
+                    broadSearch.running ||
+                    broadBudget <= 0
+                  }
+                  onClick={() => expandSearch(false, alternativeCourseId)}
+                >
+                  Buscar neste curso
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Consulta as disciplinas do seu currículo, incluindo optativas. Seu curso e suas
+                  reservas continuam os mesmos. Use “Todas as alternativas” para considerar turmas
+                  sem reserva.
+                </p>
+              </div>
+            </details>
+          )}
           <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span className="rounded-full bg-muted px-2.5 py-1 font-medium text-foreground">
               {draft.offers.length} turmas carregadas
             </span>
             Reserva não garante vaga disponível.
           </p>
+          {levelZeroElectives.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Optativas do nível 0: {coveredLevelZeroElectives} de {levelZeroElectives.length} com
+              turmas carregadas. Todas entram na consulta, mesmo com a lista recolhida.
+            </p>
+          )}
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <p>
               Oferta pública em cache por até 2h.
