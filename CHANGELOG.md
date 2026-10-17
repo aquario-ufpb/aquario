@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SACI/PAAS**: Consulta externa com cancelamento por timeout e conferência do centro/publicação; backup local não é reutilizado para outro centro. Parser de horários aceita múltiplos blocos e o sufixo de vigência SIGAA, preservando a rejeição de tokens desconhecidos e horários parcialmente inválidos.
 
 ### Fixed
+- **Oferta de optativas no planejador**: Recupera automaticamente ofertas públicas já em cache para todas as disciplinas pendentes, incluindo optativas do nível 0, sem consultar portais adicionais do SIGAA. Permite escolher um curso para buscar turmas alternativas e mostra a cobertura das optativas. Catálogos com mais de 200 cursos são consultados em lotes de cache compatíveis com o limite da API; a busca ampla reserva o orçamento para cursos ausentes do cache.
 - **Escolhas de sala**: Dados SACI inválidos são recusados antes da escrita; registros inválidos não impedem carregar as demais escolhas. Preferências de cursos anteriores deixam de consumir a cota do curso atual.
 - **CI**: Workflow de qualidade alinhado ao Node 22 já usado no guia e nos outros workflows; suíte de integração habilita os testes de persistência do planejador e das escolhas de sala.
 - **Elegibilidade de equivalentes**: Requisitos, correquisitos e carga da oferta equivalente são verificados; dados ausentes não viram aprovação garantida.

@@ -38,7 +38,28 @@ jest.mock("@/lib/client/planner/api", () => ({
 }));
 jest.mock("@/lib/client/planner/use-planner-solver", () => ({ usePlannerSolver: jest.fn() }));
 jest.mock("../availability-editor", () => ({ AvailabilityEditor: () => null, selectClass: "" }));
-jest.mock("../course-picker", () => ({ CoursePicker: () => null }));
+jest.mock("../course-picker", () => ({
+  CoursePicker: ({
+    courses,
+    value,
+    onChange,
+    label,
+  }: {
+    courses: { id: string; name: string }[];
+    value: string;
+    onChange: (id: string) => void;
+    label: string;
+  }) => (
+    <select aria-label={label} value={value} onChange={event => onChange(event.target.value)}>
+      <option value="">Escolha</option>
+      {courses.map(course => (
+        <option key={course.id} value={course.id}>
+          {course.name}
+        </option>
+      ))}
+    </select>
+  ),
+}));
 jest.mock("../progress-settings", () => ({ ProgressSettings: () => null }));
 jest.mock("../settings-editor", () => ({ SettingsEditor: () => null }));
 jest.mock("../custom-offer-form", () => ({ CustomOfferForm: () => null }));
@@ -160,9 +181,14 @@ it("loads the selected course first and never scans the other 204 courses automa
   const expand = await screen.findByRole("button", {
     name: "Buscar alternativas em outros cursos",
   });
-  expect(expand).toBeEnabled();
+  await waitFor(() => expect(expand).toBeEnabled());
   expect(plannerApi.offerings).toHaveBeenCalledWith("1", "2027.1", expect.any(AbortSignal), false);
-  expect(plannerApi.offeringSnapshot).not.toHaveBeenCalled();
+  expect(plannerApi.offeringSnapshot).toHaveBeenCalledTimes(2);
+  expect(
+    jest
+      .mocked(plannerApi.offeringSnapshot)
+      .mock.calls.every(([body]) => body.courseIds.length <= 200)
+  ).toBe(true);
   expect(plannerApi.offeringBatch).not.toHaveBeenCalled();
 });
 
@@ -188,7 +214,7 @@ it("expands only missing codes in batches of four courses and stops at twelve pe
     return body.courseIds;
   });
   expect(new Set(allIds).size).toBe(12);
-  expect(plannerApi.offeringSnapshot).toHaveBeenCalledTimes(3);
+  expect(plannerApi.offeringSnapshot).toHaveBeenCalledTimes(5);
   expect(jest.mocked(plannerApi.offerings).mock.invocationCallOrder[0]).toBeLessThan(
     jest.mocked(plannerApi.offeringBatch).mock.invocationCallOrder[0]
   );
@@ -280,3 +306,104 @@ it.each([true, false])(
     }
   }
 );
+
+it("restores cached optional offers without fetching any other SIGAA portal", async () => {
+  currentSnapshot = {
+    ...snapshot,
+    curriculum: {
+      ...snapshot.curriculum,
+      components: snapshot.curriculum.components.map(item =>
+        item.code === "C2" ? { ...item, required: false, period: 0 } : item
+      ),
+    },
+  };
+  jest.mocked(plannerApi.offeringSnapshot).mockImplementation(body =>
+    Promise.resolve({
+      results: body.courseIds.includes("2")
+        ? [
+            {
+              ...ownResponse,
+              course: courses[1],
+              offers: [
+                {
+                  ...ownResponse.offers[0],
+                  id: "optional",
+                  code: "C2",
+                  name: "Optativa",
+                  reservations: { "2": 20 },
+                },
+              ],
+            },
+          ]
+        : [],
+      missingCourseIds: body.courseIds.filter(id => id !== "2"),
+    })
+  );
+  renderWorkspace();
+  await screen.findByText("2 turmas carregadas");
+  expect(plannerApi.offeringBatch).not.toHaveBeenCalled();
+  expect(plannerApi.offerings).toHaveBeenCalledTimes(1);
+  expect(screen.getByLabelText("Incluir optativas para completar os mínimos")).toBeChecked();
+  expect(
+    screen.getByText(/Optativas do nível 0: 1 de 1 com turmas carregadas/)
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText("Incluir optativas para completar os mínimos"));
+  expect(screen.getByLabelText("Incluir optativas para completar os mínimos")).not.toBeChecked();
+  expect(screen.getByText("2 turmas carregadas")).toBeInTheDocument();
+  expect(plannerApi.offeringBatch).not.toHaveBeenCalled();
+});
+
+it("queries the explicitly selected course and includes optional codes even if another section is already loaded", async () => {
+  currentSnapshot = {
+    ...snapshot,
+    curriculum: {
+      ...snapshot.curriculum,
+      components: snapshot.curriculum.components.map(item =>
+        item.code === "C2" ? { ...item, required: false, period: 0 } : item
+      ),
+    },
+  };
+  renderWorkspace();
+  const expand = await screen.findByRole("button", {
+    name: "Buscar alternativas em outros cursos",
+  });
+  await waitFor(() => expect(expand).toBeEnabled());
+  fireEvent.click(screen.getByText("Buscar optativas e outras turmas em um curso específico"));
+  fireEvent.change(screen.getByLabelText("Curso onde buscar outras turmas"), {
+    target: { value: "205" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Buscar neste curso" }));
+  await waitFor(() => expect(plannerApi.offeringBatch).toHaveBeenCalledTimes(1));
+  expect(jest.mocked(plannerApi.offeringBatch).mock.calls[0][0]).toEqual({
+    semester: "2027.1",
+    courseIds: ["205"],
+    codes: ["C1", "C2"],
+  });
+  expect(plannerApi.offerings).toHaveBeenCalledWith("1", "2027.1", expect.any(AbortSignal), false);
+});
+
+it("spends broad-search budget only on uncached courses after warming the first twelve portals", async () => {
+  const warm = new Set(Array.from({ length: 12 }, (_, i) => String(i + 2)));
+  jest.mocked(plannerApi.offeringSnapshot).mockImplementation(body =>
+    Promise.resolve({
+      results: body.courseIds
+        .filter(id => warm.has(id))
+        .map(id => ({ ...ownResponse, course: courses[Number(id) - 1], offers: [] })),
+      missingCourseIds: body.courseIds.filter(id => !warm.has(id)),
+    })
+  );
+  renderWorkspace();
+  const expand = await screen.findByRole("button", {
+    name: "Buscar alternativas em outros cursos",
+  });
+  await waitFor(() => expect(expand).toBeEnabled());
+  fireEvent.click(expand);
+  await waitFor(() => expect(plannerApi.offeringBatch).toHaveBeenCalledTimes(1));
+  expect(jest.mocked(plannerApi.offeringBatch).mock.calls[0][0].courseIds).toEqual([
+    "14",
+    "15",
+    "16",
+    "17",
+  ]);
+  await screen.findByText(/8 consultas restantes nesta sessão/);
+});
