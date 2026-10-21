@@ -49,3 +49,30 @@ it("deduplicates shared sections, preserves manual data, and reports overflow ev
   expect(result.offers).toEqual([manual]);
   expect(result.omitted).toBe(1);
 });
+
+it("replaces refreshed reservations only for queried courses and codes, preserving manual offers", () => {
+  const removed = { ...offer("removed", "A1"), reservations: { "2": 20 } };
+  const shared = { ...offer("shared", "A1"), reservations: { "1": 10, "2": 20 } };
+  const unqueried = { ...offer("unqueried", "B2"), reservations: { "2": 20 } };
+  const manual = { ...removed, id: "manual", source: "MANUAL" as const };
+  const refreshed = mergeCachedOfferings([removed, shared, unqueried, manual], [row([])], 1500, [
+    "A1",
+  ]);
+  expect(refreshed.offers).toEqual([{ ...shared, reservations: { "1": 10 } }, unqueried, manual]);
+});
+
+it("retains local room metadata when replacing the only reservation with a fresh observation", () => {
+  const previous = {
+    ...offer("same", "A1"),
+    reservations: { "2": 20 },
+    location: "Sala confirmada",
+  };
+  const incoming = {
+    ...previous,
+    location: null,
+    availableSeats: 0,
+    observedAt: "2026-10-21T12:00:00Z",
+  };
+  const merged = mergeCachedOfferings([previous], [row([incoming])], 1500, ["A1"]);
+  expect(merged.offers).toEqual([{ ...incoming, location: "Sala confirmada" }]);
+});

@@ -566,7 +566,7 @@ it("fits cached missing codes into the remaining capacity without discarding the
   );
   renderWorkspace();
   await screen.findByText("1500 turmas carregadas");
-  expect(screen.getByText(/2 ofertas do cache ficaram de fora/)).toBeInTheDocument();
+  expect(screen.getByText(/2 ofertas encontradas ficaram de fora/)).toBeInTheDocument();
 });
 
 it("removes only explicitly excluded priorities from the cache query, keeping other level-zero electives", async () => {
@@ -589,4 +589,182 @@ it("removes only explicitly excluded priorities from the cache query, keeping ot
   for (const [body] of jest.mocked(plannerApi.offeringSnapshot).mock.calls.slice(2)) {
     expect(body.codes).toEqual(["C1"]);
   }
+});
+
+it("retries a targeted lookup with its original codes when all codes already have offers", async () => {
+  jest
+    .mocked(plannerApi.offerings)
+    .mockResolvedValue({ ...ownResponse, offers: [...ownResponse.offers, optionalOffer] });
+  jest
+    .mocked(plannerApi.offeringBatch)
+    .mockResolvedValue({ results: [], failedCourseIds: ["205"] });
+  renderWorkspace();
+  await screen.findByText("2 turmas carregadas");
+  await waitFor(() => expect(screen.queryByText(/Recuperando ofertas/)).not.toBeInTheDocument());
+  fireEvent.click(screen.getByText("Buscar optativas e outras turmas em um curso específico"));
+  fireEvent.change(await screen.findByLabelText("Curso onde buscar outras turmas"), {
+    target: { value: "205" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Buscar neste curso" }));
+  const retry = await screen.findByRole("button", { name: "Tentar completar busca" });
+  expect(plannerApi.offeringBatch).toHaveBeenCalledTimes(1);
+  fireEvent.click(retry);
+  await waitFor(() => expect(plannerApi.offeringBatch).toHaveBeenCalledTimes(2));
+  expect(retry).toBeEnabled();
+});
+
+it("keeps refreshed seat counts when selecting the cached course again", async () => {
+  jest.mocked(plannerApi.offeringSnapshot).mockImplementation(body =>
+    Promise.resolve({
+      results: body.courseIds.includes("205") ? [cachedCourse("205", [optionalOffer])] : [],
+      missingCourseIds: body.courseIds.filter(id => id !== "205"),
+    })
+  );
+  jest.mocked(plannerApi.offeringBatch).mockResolvedValue({
+    results: [cachedCourse("205", [{ ...optionalOffer, availableSeats: 0 }])],
+    failedCourseIds: [],
+  });
+  renderWorkspace();
+  await screen.findByText("2 turmas carregadas");
+  fireEvent.click(screen.getByText("Buscar optativas e outras turmas em um curso específico"));
+  fireEvent.change(await screen.findByLabelText("Curso onde buscar outras turmas"), {
+    target: { value: "205" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Atualizar este curso no SIGAA" }));
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Buscar neste curso" })).toBeEnabled()
+  );
+  const calc = () =>
+    fireEvent.click(
+      screen.getByRole("button", { name: /Encontrar combinações|Calcular com turmas carregadas/ })
+    );
+  calc();
+  expect(solver.run.mock.calls.at(-1)?.[0].offers.find(o => o.id === "C2")?.availableSeats).toBe(0);
+  fireEvent.click(screen.getByRole("button", { name: "Buscar neste curso" }));
+  calc();
+  expect(solver.run.mock.calls.at(-1)?.[0].offers.find(o => o.id === "C2")?.availableSeats).toBe(0);
+});
+
+it("cancels in-flight broad searches when loading a scenario for the same course and semester", async () => {
+  let complete: (value: Awaited<ReturnType<typeof plannerApi.offeringBatch>>) => void = () => {
+    throw new Error("not started");
+  };
+  jest.mocked(plannerApi.offeringBatch).mockImplementation(
+    () =>
+      new Promise(resolve => {
+        complete = resolve;
+      })
+  );
+  const saved: SavedPlan = {
+    id: "saved",
+    name: "Minhas turmas",
+    semester: "2027.1",
+    profileCourseId: "course",
+    updatedAt: "2026-10-15T12:00:00Z",
+    draft: { ...emptyDraft("2027.1"), courseId: "1", offers: ownResponse.offers },
+  };
+  jest.mocked(plannerApi.list).mockResolvedValue([saved]);
+  jest.mocked(plannerApi.load).mockResolvedValue(saved);
+  renderWorkspace();
+  const expand = await screen.findByRole("button", {
+    name: "Buscar alternativas em outros cursos",
+  });
+  await waitFor(() => expect(expand).toBeEnabled());
+  fireEvent.click(expand);
+  await waitFor(() => expect(plannerApi.offeringBatch).toHaveBeenCalledTimes(1));
+  const signal = jest.mocked(plannerApi.offeringBatch).mock.calls[0][1];
+  fireEvent.click(screen.getByText("Salvar e carregar cenários"));
+  fireEvent.click(await screen.findByRole("button", { name: "Carregar" }));
+  await screen.findByText(/Cenário carregado com a oferta da consulta salva/);
+  expect(screen.getByText("1 turmas carregadas")).toBeInTheDocument();
+  expect(signal?.aborted).toBe(true);
+  await act(async () => {
+    complete({ results: [cachedCourse("2", [optionalOffer])], failedCourseIds: [] });
+    await Promise.resolve();
+  });
+  expect(screen.getByText("1 turmas carregadas")).toBeInTheDocument();
+});
+
+it("reports offerings omitted at capacity after an explicit portal search", async () => {
+  jest.mocked(plannerApi.offerings).mockResolvedValue({
+    ...ownResponse,
+    offers: Array.from({ length: 1499 }, (_, i) => ({ ...ownResponse.offers[0], id: `own-${i}` })),
+  });
+  jest.mocked(plannerApi.offeringBatch).mockResolvedValue({
+    results: [
+      cachedCourse(
+        "2",
+        Array.from({ length: 3 }, (_, i) => ({ ...optionalOffer, id: `new-${i}` }))
+      ),
+    ],
+    failedCourseIds: [],
+  });
+  renderWorkspace();
+  const expand = await screen.findByRole("button", {
+    name: "Buscar alternativas em outros cursos",
+  });
+  await waitFor(() => expect(expand).toBeEnabled());
+  fireEvent.click(expand);
+  await screen.findByText("1500 turmas carregadas");
+  expect(screen.getByText(/2 ofertas encontradas ficaram de fora/)).toBeInTheDocument();
+});
+
+it("completes the code coverage of a course previously queried only for missing disciplines", async () => {
+  jest.mocked(plannerApi.offeringBatch).mockResolvedValue({
+    results: [cachedCourse("2", [optionalOffer])],
+    failedCourseIds: [],
+  });
+  renderWorkspace();
+  const expand = await screen.findByRole("button", {
+    name: "Buscar alternativas em outros cursos",
+  });
+  await waitFor(() => expect(expand).toBeEnabled());
+  fireEvent.click(expand);
+  await screen.findByText("2 turmas carregadas");
+  expect(jest.mocked(plannerApi.offeringBatch).mock.calls[0][0].codes).toEqual(["C2"]);
+  fireEvent.click(screen.getByText("Buscar optativas e outras turmas em um curso específico"));
+  fireEvent.change(await screen.findByLabelText("Curso onde buscar outras turmas"), {
+    target: { value: "2" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Buscar neste curso" }));
+  await waitFor(() => expect(plannerApi.offeringBatch).toHaveBeenCalledTimes(2));
+  expect(jest.mocked(plannerApi.offeringBatch).mock.calls[1][0].codes).toEqual(["C1", "C2"]);
+});
+
+it("retries a forced refresh without using the exhausted broad-search budget", async () => {
+  jest.mocked(plannerApi.offeringSnapshot).mockImplementation(body =>
+    Promise.resolve({
+      results: body.courseIds.includes("205") ? [cachedCourse("205", [])] : [],
+      missingCourseIds: body.courseIds.filter(id => id !== "205"),
+    })
+  );
+  renderWorkspace();
+  const expand = await screen.findByRole("button", {
+    name: "Buscar alternativas em outros cursos",
+  });
+  for (let i = 1; i <= 3; i++) {
+    await waitFor(() => expect(expand).toBeEnabled());
+    fireEvent.click(expand);
+    await waitFor(() => expect(plannerApi.offeringBatch).toHaveBeenCalledTimes(i));
+  }
+  await screen.findByText(/0 consultas restantes nesta sessão/);
+  fireEvent.click(screen.getByText("Buscar optativas e outras turmas em um curso específico"));
+  fireEvent.change(await screen.findByLabelText("Curso onde buscar outras turmas"), {
+    target: { value: "205" },
+  });
+  jest
+    .mocked(plannerApi.offeringBatch)
+    .mockResolvedValue({ results: [], failedCourseIds: ["205"] });
+  fireEvent.click(screen.getByRole("button", { name: "Atualizar este curso no SIGAA" }));
+  const retry = await screen.findByRole("button", { name: "Tentar completar busca" });
+  expect(retry).toBeEnabled();
+  fireEvent.click(retry);
+  await waitFor(() => expect(plannerApi.offeringBatch).toHaveBeenCalledTimes(5));
+  expect(jest.mocked(plannerApi.offeringBatch).mock.calls[4][0]).toEqual({
+    semester: "2027.1",
+    courseIds: ["205"],
+    codes: ["C1", "C2"],
+    refresh: true,
+  });
+  expect(screen.getByText(/Saldo de consultas SIGAA: 0 de 12/)).toBeInTheDocument();
 });
