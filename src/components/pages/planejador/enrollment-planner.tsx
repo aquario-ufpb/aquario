@@ -25,7 +25,10 @@ import { apiClient } from "@/lib/client/api/api-client";
 import { throwApiError } from "@/lib/client/errors";
 import { OFFERING_CACHE_TTL_MS } from "@/lib/shared/planner/cache";
 import { plannerApi } from "@/lib/client/planner/api";
-import { readCachedCurriculumOfferings } from "@/lib/client/planner/cached-offerings";
+import {
+  readCachedCurriculumOfferings,
+  type CachedCurriculumOfferings,
+} from "@/lib/client/planner/cached-offerings";
 import { usePlannerSolver } from "@/lib/client/planner/use-planner-solver";
 import { nextPlanningSemester } from "@/lib/shared/planner/semester";
 import { normalizeCurriculumCode } from "@/lib/shared/sigaa/curriculum-code";
@@ -35,6 +38,7 @@ import { normalizeCode } from "@/lib/shared/planner/requirements";
 import { curriculumSearchCodes } from "@/lib/shared/planner/search-codes";
 import { matchPublicCourse } from "@/lib/shared/planner/course-match";
 import { mergeOfferings } from "@/lib/shared/planner/merge-offerings";
+import { mergeCachedOfferings } from "@/lib/shared/planner/merge-cached-offerings";
 import {
   draftSchema,
   emptyDraft,
@@ -72,7 +76,17 @@ function PlannerWorkspace() {
   const manual = useDisciplinasConcluidas();
   const { data: semesters } = useSemestres();
   const snapshot = sigaa.data?.snapshot?.payload ?? null;
-  const [draft, setDraft] = useState<PlannerDraft>(() => emptyDraft(nextPlanningSemester()));
+  const [workspace, setWorkspace] = useState(() => ({
+    draft: emptyDraft(nextPlanningSemester()),
+    cacheOmitted: 0,
+  }));
+  const { draft, cacheOmitted } = workspace;
+  const setDraft = (change: PlannerDraft | ((previous: PlannerDraft) => PlannerDraft)) =>
+    setWorkspace(previous => ({
+      ...previous,
+      draft: typeof change === "function" ? change(previous.draft) : change,
+    }));
+  const preserveSavedOffers = useRef(false);
   const [calculatedChoices, setCalculatedChoices] = useState<string | null>(null);
   const [calculatedOffers, setCalculatedOffers] = useState<PlannerOffer[] | null>(null);
   const [calculationWasPartial, setCalculationWasPartial] = useState(false);
@@ -85,6 +99,9 @@ function PlannerWorkspace() {
   const refreshOwnOffers = useRef(false);
   const initializedSemester = useRef(false);
   const [broadBudget, setBroadBudget] = useState(12);
+  const networkBudget = useRef(12);
+  const [coursePanelOpen, setCoursePanelOpen] = useState(false);
+  const [courseNotice, setCourseNotice] = useState("");
   const [alternativeCourseId, setAlternativeCourseId] = useState("");
   const searchedCourses = useRef(new Set<string>());
   const [broadRequest, setBroadRequest] = useState<{
@@ -92,6 +109,7 @@ function PlannerWorkspace() {
     courseId: string;
     ids: string[];
     codes: string[];
+    refresh?: boolean;
   } | null>(null);
   const [broadSearch, setBroadSearch] = useState({
     running: false,
@@ -246,7 +264,9 @@ function PlannerWorkspace() {
         semester: draft.semester,
       };
     },
-    enabled: Boolean(draft.courseId && semesterSchema.safeParse(draft.semester).success),
+    enabled:
+      !preserveSavedOffers.current &&
+      Boolean(draft.courseId && semesterSchema.safeParse(draft.semester).success),
     staleTime: query =>
       query.state.data
         ? Math.max(
@@ -262,7 +282,12 @@ function PlannerWorkspace() {
   });
   useEffect(() => {
     const response = ownOffers.data;
-    if (!response || response.courseId !== draft.courseId || response.semester !== draft.semester) {
+    if (
+      preserveSavedOffers.current ||
+      !response ||
+      response.courseId !== draft.courseId ||
+      response.semester !== draft.semester
+    ) {
       return;
     }
     setDraft(previous => {
@@ -280,9 +305,13 @@ function PlannerWorkspace() {
     });
     setWarnings(response.data.warnings);
   }, [ownOffers.data, draft.courseId, draft.semester, scenarioRevision]); // eslint-disable-line react-hooks/exhaustive-deps
-  const searchCodes = curriculumSearchCodes([...academic.goals, ...draft.customGoals]).join(",");
-  const levelZeroElectives = academic.goals.filter(
-    goal => !goal.completed && goal.curricularRequired === false && goal.period === 0
+  const searchCodes = curriculumSearchCodes(goals).join(",");
+  const levelZeroElectives = goals.filter(
+    goal =>
+      !goal.completed &&
+      goal.priority !== "exclude" &&
+      goal.curricularRequired === false &&
+      goal.period === 0
   );
   const coveredLevelZeroElectives = levelZeroElectives.filter(goal =>
     draft.offers.some(offer => [goal.code, ...goal.equivalents].includes(normalizeCode(offer.code)))
@@ -290,15 +319,16 @@ function PlannerWorkspace() {
   const cachedCourseIds = (courses.data?.courses ?? [])
     .filter(course => course.id !== draft.courseId)
     .map(course => course.id);
+  const cachedOffersKey = [
+    "planner",
+    "cached-curriculum-offers",
+    draft.courseId,
+    draft.semester,
+    cachedCourseIds,
+    searchCodes,
+  ];
   const cachedOffers = useQuery({
-    queryKey: [
-      "planner",
-      "cached-curriculum-offers",
-      draft.courseId,
-      draft.semester,
-      cachedCourseIds,
-      searchCodes,
-    ],
+    queryKey: cachedOffersKey,
     queryFn: async ({ signal }) => ({
       semester: draft.semester,
       courseId: draft.courseId,
@@ -306,10 +336,15 @@ function PlannerWorkspace() {
         draft.semester,
         cachedCourseIds,
         searchCodes.split(","),
-        signal
+        signal,
+        queryClient.getQueryData<CachedCurriculumOfferings>(cachedOffersKey)?.failedCourseIds
+          ?.length
+          ? queryClient.getQueryData<CachedCurriculumOfferings>(cachedOffersKey)
+          : undefined
       )),
     }),
     enabled:
+      !preserveSavedOffers.current &&
       ownOffers.isSuccess &&
       !ownOffers.isFetching &&
       !!draft.courseId &&
@@ -321,26 +356,20 @@ function PlannerWorkspace() {
   });
   useEffect(() => {
     const response = cachedOffers.data;
-    if (!response) {
+    if (!response || preserveSavedOffers.current) {
       return;
     }
-    setDraft(previous => {
-      if (previous.semester !== response.semester || previous.courseId !== response.courseId) {
+    setWorkspace(previous => {
+      if (
+        previous.draft.semester !== response.semester ||
+        previous.draft.courseId !== response.courseId
+      ) {
         return previous;
       }
-      const offers = response.results.reduce(
-        (all, item) => mergeOfferings(all, item.offers, item.course.id),
-        previous.offers
-      );
-      if (offers.length > 1500) {
-        toast.error("O cache contém mais de 1500 turmas. Refine a busca antes de ampliar.");
-        return previous;
-      }
-      return JSON.stringify(offers) === JSON.stringify(previous.offers)
-        ? previous
-        : { ...previous, offers };
+      const merged = mergeCachedOfferings(previous.draft.offers, response.results);
+      return { draft: { ...previous.draft, offers: merged.offers }, cacheOmitted: merged.omitted };
     });
-  }, [cachedOffers.data, scenarioRevision]);
+  }, [cachedOffers.data]);
   const missingSearchCodes = searchCodes
     .split(",")
     .filter(code => code && !draft.offers.some(offer => normalizeCode(offer.code) === code));
@@ -352,15 +381,34 @@ function PlannerWorkspace() {
         (!cachedOffers.isSuccess || cachedOffers.data.missingCourseIds.includes(course.id))
     )
     .map(course => course.id);
-  /** Spend the explicit search budget only on new portals missing from the cache. */
-  const expandSearch = (retry = false, targetCourseId?: string) => {
+  const selectedCourseCached =
+    cachedOffers.data?.results.some(item => item.course.id === alternativeCourseId) ?? false;
+  const cacheHasFailures = (cachedOffers.data?.failedCourseIds?.length ?? 0) > 0;
+  /** Charge only network lookups; choosing a warm course reuses its loaded offers. */
+  const expandSearch = (retry = false, targetCourseId?: string, refresh = false) => {
+    if (targetCourseId && !refresh) {
+      const cached = cachedOffers.data?.results.find(item => item.course.id === targetCourseId);
+      if (cached) {
+        setWorkspace(previous => {
+          const merged = mergeCachedOfferings(previous.draft.offers, [cached]);
+          return {
+            draft: { ...previous.draft, offers: merged.offers },
+            cacheOmitted: merged.omitted,
+          };
+        });
+        setCourseNotice(
+          "As turmas desse curso já foram carregadas do cache. Nenhuma consulta SIGAA foi gasta."
+        );
+        return;
+      }
+    }
     if (
       !draft.courseId ||
       ownOffers.isFetching ||
       cachedOffers.isFetching ||
       !ownOffers.isSuccess ||
       broadSearch.running ||
-      broadBudget <= 0
+      (!refresh && broadBudget <= 0)
     ) {
       return;
     }
@@ -370,7 +418,7 @@ function PlannerWorkspace() {
         : retry && broadRequest
           ? broadRequest.ids
           : broadCandidateIds
-    ).slice(0, Math.min(4, broadBudget));
+    ).slice(0, refresh ? 1 : Math.min(4, broadBudget));
     const codes = targetCourseId ? searchCodes.split(",").filter(Boolean) : missingSearchCodes;
     if (targetCourseId && !cachedCourseIds.includes(targetCourseId)) {
       return;
@@ -378,9 +426,14 @@ function PlannerWorkspace() {
     if (!ids.length || !codes.length) {
       return;
     }
-    ids.forEach(id => searchedCourses.current.add(`${draft.semester}:${id}`));
-    setBroadBudget(value => value - ids.length);
-    setBroadRequest({ semester: draft.semester, courseId: draft.courseId, ids, codes });
+    setCourseNotice("");
+    setBroadRequest({
+      semester: draft.semester,
+      courseId: draft.courseId,
+      ids,
+      codes,
+      ...(refresh ? { refresh: true } : {}),
+    });
   };
   useEffect(() => {
     const request = broadRequest;
@@ -395,10 +448,12 @@ function PlannerWorkspace() {
         // Only the explicitly requested batch (at most four courses) touches cache/network.
         let cached;
         try {
-          cached = await plannerApi.offeringSnapshot(
-            { semester: request.semester, courseIds: request.ids, codes: request.codes },
-            controller.signal
-          );
+          cached = request.refresh
+            ? { results: [], missingCourseIds: request.ids }
+            : await plannerApi.offeringSnapshot(
+                { semester: request.semester, courseIds: request.ids, codes: request.codes },
+                controller.signal
+              );
         } catch {
           if (controller.signal.aborted) {
             return;
@@ -408,10 +463,22 @@ function PlannerWorkspace() {
         if (controller.signal.aborted) {
           return;
         }
-        const remaining = cached.missingCourseIds.filter(id => request.ids.includes(id));
+        const remaining = cached.missingCourseIds
+          .filter(id => request.ids.includes(id))
+          .slice(0, request.refresh ? 1 : networkBudget.current);
+        if (remaining.length && !request.refresh) {
+          networkBudget.current -= remaining.length;
+          setBroadBudget(networkBudget.current);
+          remaining.forEach(id => searchedCourses.current.add(`${request.semester}:${id}`));
+        }
         const fetched = remaining.length
           ? await plannerApi.offeringBatch(
-              { semester: request.semester, courseIds: remaining, codes: request.codes },
+              {
+                semester: request.semester,
+                courseIds: remaining,
+                codes: request.codes,
+                ...(request.refresh ? { refresh: true } : {}),
+              },
               controller.signal
             )
           : { results: [], failedCourseIds: [] };
@@ -423,15 +490,7 @@ function PlannerWorkspace() {
           if (previous.semester !== request.semester || previous.courseId !== request.courseId) {
             return previous;
           }
-          const offers = results.reduce(
-            (all, item) => mergeOfferings(all, item.offers, item.course.id),
-            previous.offers
-          );
-          if (offers.length > 1500) {
-            toast.error("A busca ultrapassou 1500 turmas. Reduza os códigos do cenário.");
-            return previous;
-          }
-          return { ...previous, offers };
+          return { ...previous, offers: mergeCachedOfferings(previous.offers, results).offers };
         });
         setBroadSearch({
           running: false,
@@ -469,7 +528,8 @@ function PlannerWorkspace() {
       solver.invalidate();
       initializedWorkload.current = true;
       initializedSemester.current = true;
-      setDraft(draftSchema.parse(plan.draft));
+      preserveSavedOffers.current = true;
+      setWorkspace({ draft: draftSchema.parse(plan.draft), cacheOmitted: 0 });
       setScenarioRevision(value => value + 1);
       setExisting(plan);
       setName(plan.name);
@@ -525,7 +585,11 @@ function PlannerWorkspace() {
     coverageRef.current = {
       pending: offerSearchPending,
       failed:
-        broadSearch.failed > 0 || !!broadSearch.error || ownOffers.isError || cachedOffers.isError,
+        broadSearch.failed > 0 ||
+        !!broadSearch.error ||
+        ownOffers.isError ||
+        cachedOffers.isError ||
+        cacheHasFailures,
     };
   }, [
     offerSearchPending,
@@ -533,6 +597,7 @@ function PlannerWorkspace() {
     broadSearch.error,
     ownOffers.isError,
     cachedOffers.isError,
+    cacheHasFailures,
   ]);
   const offersChangedSinceCalculation =
     calculatedOffers !== null && calculatedOffers !== draft.offers;
@@ -716,6 +781,7 @@ function PlannerWorkspace() {
                 disabled={persistencePending}
                 onChange={e => {
                   initializedSemester.current = true;
+                  preserveSavedOffers.current = false;
                   setBroadRequest(null);
                   const semester = e.target.value;
                   update(previous => ({ ...previous, semester, offers: [], fixedOfferIds: [] }));
@@ -752,6 +818,7 @@ function PlannerWorkspace() {
                     courses={courses.data?.courses ?? []}
                     value={draft.courseId ?? ""}
                     onChange={courseId => {
+                      preserveSavedOffers.current = false;
                       update(previous => ({ ...previous, courseId }));
                     }}
                   />
@@ -845,8 +912,16 @@ function PlannerWorkspace() {
                 Buscar alternativas em outros cursos
               </Button>
               <span>
-                {missingSearchCodes.length} códigos ainda sem turma · até 4 cursos por busca ·{" "}
-                {broadBudget} consultas restantes nesta sessão.
+                {cachedOffers.isSuccess &&
+                !cachedOffers.isFetching &&
+                broadCandidateIds.length === 0 ? (
+                  "O cache dos demais cursos já foi consultado. Nenhum portal novo resta para a busca ampla; use um curso específico para atualizar sua oferta."
+                ) : (
+                  <>
+                    {missingSearchCodes.length} códigos ainda sem turma · até 4 cursos por busca ·{" "}
+                    {broadBudget} consultas restantes nesta sessão.
+                  </>
+                )}
               </span>
             </div>
           )}
@@ -855,51 +930,87 @@ function PlannerWorkspace() {
               Recuperando ofertas já armazenadas de outros cursos…
             </p>
           )}
-          {cachedOffers.isError && (
+          {(cachedOffers.isError || cacheHasFailures) && (
             <p role="alert" className="text-xs text-amber-700 dark:text-amber-300">
-              Não foi possível recuperar as ofertas em cache. A oferta do seu curso continua
-              disponível.{" "}
+              {cacheHasFailures
+                ? "Parte dos lotes do cache não respondeu. As ofertas recuperadas continuam disponíveis."
+                : "Não foi possível recuperar as ofertas em cache. A oferta do seu curso continua disponível."}{" "}
               <button className="underline" onClick={() => void cachedOffers.refetch()}>
                 Tentar novamente
               </button>
             </p>
           )}
           {ownOffers.isSuccess && searchCodes && (
-            <details className="rounded-md border p-3 text-sm">
+            <details
+              className="rounded-md border p-3 text-sm"
+              onToggle={event => setCoursePanelOpen(event.currentTarget.open)}
+            >
               <summary className="cursor-pointer font-medium">
                 Buscar optativas e outras turmas em um curso específico
               </summary>
-              <div className="mt-3 space-y-2">
-                <CoursePicker
-                  label="Curso onde buscar outras turmas"
-                  courses={(courses.data?.courses ?? []).filter(
-                    course => course.id !== draft.courseId
+              {coursePanelOpen && (
+                <div className="mt-3 space-y-2">
+                  <CoursePicker
+                    label="Curso onde buscar outras turmas"
+                    courses={(courses.data?.courses ?? []).filter(
+                      course => course.id !== draft.courseId
+                    )}
+                    value={alternativeCourseId}
+                    onChange={id => {
+                      setAlternativeCourseId(id);
+                      setCourseNotice("");
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={
+                      !alternativeCourseId ||
+                      alternativeCourseId === draft.courseId ||
+                      ownOffers.isFetching ||
+                      cachedOffers.isFetching ||
+                      broadSearch.running ||
+                      (broadBudget <= 0 && !selectedCourseCached)
+                    }
+                    onClick={() => expandSearch(false, alternativeCourseId)}
+                  >
+                    Buscar neste curso
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Saldo de consultas SIGAA: {broadBudget} de 12. Leituras do cache não gastam esse
+                    saldo.
+                  </p>
+                  {courseNotice && (
+                    <p role="status" className="text-xs text-muted-foreground">
+                      {courseNotice}
+                    </p>
                   )}
-                  value={alternativeCourseId}
-                  onChange={setAlternativeCourseId}
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={
-                    !alternativeCourseId ||
-                    alternativeCourseId === draft.courseId ||
-                    ownOffers.isFetching ||
-                    cachedOffers.isFetching ||
-                    broadSearch.running ||
-                    broadBudget <= 0
-                  }
-                  onClick={() => expandSearch(false, alternativeCourseId)}
-                >
-                  Buscar neste curso
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Consulta as disciplinas do seu currículo, incluindo optativas. Seu curso e suas
-                  reservas continuam os mesmos. Use “Todas as alternativas” para considerar turmas
-                  sem reserva.
-                </p>
-              </div>
+                  {selectedCourseCached && userId && token && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={
+                        ownOffers.isFetching || cachedOffers.isFetching || broadSearch.running
+                      }
+                      onClick={() => expandSearch(false, alternativeCourseId, true)}
+                    >
+                      Atualizar este curso no SIGAA
+                    </Button>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Consulta as disciplinas do seu currículo, incluindo optativas. Seu curso e suas
+                    reservas continuam os mesmos. Use “Todas as alternativas” para considerar turmas
+                    sem reserva.
+                  </p>
+                </div>
+              )}
             </details>
+          )}
+          {cacheOmitted > 0 && (
+            <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
+              Limite de 1500 turmas: {cacheOmitted} ofertas do cache ficaram de fora. Suas turmas
+              foram preservadas e códigos ainda sem turma tiveram preferência.
+            </p>
           )}
           <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span className="rounded-full bg-muted px-2.5 py-1 font-medium text-foreground">
@@ -926,6 +1037,7 @@ function PlannerWorkspace() {
               className="h-8 gap-1.5 text-xs"
               disabled={!draft.courseId || ownOffers.isFetching || broadSearch.running}
               onClick={() => {
+                preserveSavedOffers.current = false;
                 refreshOwnOffers.current = true;
                 void ownOffers.refetch();
               }}

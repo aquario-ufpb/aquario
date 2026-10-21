@@ -35,3 +35,26 @@ it("queries every pending level-zero elective from the curriculum without needin
     true
   );
 });
+
+it("excludes only the user's explicit exclusions while retaining the remaining level-zero electives", () => {
+  const base = {
+    code: "OPT1",
+    name: "Optativa",
+    completed: false,
+    priority: "optional" as const,
+    curricularRequired: false,
+    period: 0,
+    equivalents: ["EQ1"],
+    workload: 60,
+    prerequisite: null,
+    corequisite: null,
+    requirementsKnown: false,
+    unlocks: 0,
+  };
+  expect(
+    curriculumSearchCodes([
+      { ...base, priority: "exclude" },
+      { ...base, code: "OPT2", equivalents: [] },
+    ])
+  ).toEqual(["OPT2"]);
+});

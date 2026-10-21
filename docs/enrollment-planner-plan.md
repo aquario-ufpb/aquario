@@ -7,16 +7,16 @@ Complementa [o plano de sincronização e horários](sigaa-sync-schedules-plan.m
 ## Implementação e operação
 
 - Página `/planejador`, acessível em Recursos, no menu e pelo calendário pessoal.
-- Consulta real ao SIGAA público: lista de cursos e formulário JSF de oferta por curso/semestre. A oferta é carregada automaticamente ao identificar/trocar o curso ou selecionar outro semestre; requisições anteriores são canceladas e suas respostas não são aplicadas ao semestre atual. Há cache público persistente de duas horas, indicação de carregamento e nova tentativa em caso de erro. A ampliação para outros cursos exige ação explícita do aluno e considera somente códigos ainda sem oferta.
+- Consulta real ao SIGAA público: lista de cursos e formulário JSF de oferta por curso/semestre. A oferta é carregada automaticamente ao identificar/trocar o curso ou selecionar outro semestre; requisições anteriores são canceladas e suas respostas não são aplicadas ao semestre atual. Há cache público persistente de duas horas, indicação de carregamento e nova tentativa em caso de erro. Ofertas de outros cursos são recuperadas automaticamente apenas do cache, sem abrir portais SIGAA. A busca ampla exige ação explícita e consulta códigos ainda sem oferta em cursos ausentes do cache; a escolha de um curso específico considera todos os códigos pendentes não excluídos, inclusive os que já têm turma.
   O adapter descobre os nomes dinâmicos do formulário, usa sessão anônima curta e não executa scripts da página.
 - Fonte consultada para Engenharia da Computação (`1626865`) em 2026.2 retornou 71 turmas,
   com horário e `Vgs Reservadas`. O carimbo de consulta representa o instante observado; a oferta tem cache público de 2 horas.
 - Reservas são registradas pelo ID do curso consultado. Consultar outro curso não transforma suas reservas
   em reservas do curso do aluno. A correspondência usa o curso importado pelo SIGAA (ou o perfil, sem importação) quando nome/campus identificam uma única opção. Casos ambíguos mantêm escolha manual.
 - Cache em `PublicSigaaOfferingCache`, por curso/semestre, com validade de duas horas a partir da observação original. A rota de cache lê todos os cursos disponíveis em uma consulta ao banco, filtrando os códigos somente na resposta; não guarda o currículo ou preferências consultados. Na ampliação explícita, só os cursos sem cache válido entram nas consultas ao SIGAA. “Atualizar ofertas” ignora esse cache somente para usuários autenticados dentro do limite de atualização; pedidos anônimos de refresh usam a política normal de cache; falha não grava oferta vazia e não renova a data. Migration `20261015000000_add_public_sigaa_offering_cache` necessária.
-- Todas as optativas pendentes do nível 0 participam da consulta, mesmo com a lista de prioridades recolhida ou o filtro de optativas desligado para o cálculo. Ofertas de outros cursos já presentes no cache público são recuperadas automaticamente em lotes de até 200 cursos, sem buscar portais ausentes no SIGAA. A cobertura informa quantas dessas optativas possuem turmas carregadas. A busca ampla usa os cursos ausentes do cache, sem gastar o orçamento com portais cuja oferta já foi recuperada.
-- O aluno pode escolher um curso específico para consultar as disciplinas do currículo, inclusive turmas alternativas de um código já carregado. Isso preserva o curso do perfil e suas reservas e consome o mesmo orçamento de 12 consultas por sessão.
-- Busca ampliada explícita: até quatro cursos por busca, limitada a 12 consultas por sessão, somente para códigos sem oferta carregada. O cache público de duas horas evita chamadas desnecessárias ao SIGAA. A fila do servidor aceita duas consultas ativas e oito em espera; quando cheia, responde 429 com indicação de nova tentativa. O aluno pode calcular com os dados já carregados; resultados parciais permanecem visíveis quando chegam novas ofertas, com aviso para recalcular. Falhas individuais não interrompem os demais cursos.
+- Todas as optativas pendentes do nível 0 participam da consulta, mesmo com a lista de prioridades recolhida ou o filtro de optativas desligado para o cálculo. Ofertas de outros cursos já presentes no cache público são recuperadas automaticamente em lotes de até 200 cursos, sem buscar portais ausentes no SIGAA. Disciplinas excluídas explicitamente pelo aluno saem dos códigos consultados; as demais optativas continuam incluídas. A cobertura informa quantas dessas optativas possuem turmas carregadas. Lotes que falham preservam as ofertas dos lotes concluídos; a nova tentativa repete somente os lotes com falha. A busca ampla usa os cursos ausentes do cache, sem gastar o orçamento com portais cuja oferta já foi recuperada. A carga automática respeita o teto de 1500 turmas: mantém as já escolhidas, prioriza códigos ainda sem turma e informa a quantidade omitida.
+- O aluno pode escolher um curso específico para consultar as disciplinas do currículo, inclusive turmas alternativas de um código já carregado. Isso preserva o curso do perfil e suas reservas. Curso já recuperado do cache não gasta saldo, e o painel mostra as consultas restantes mesmo quando todo código já tem turma. A atualização direta do portal é uma ação separada, autenticada e sujeita ao limite próprio de refresh.
+- Busca ampla explícita: até quatro cursos ausentes do cache por busca, limitada a 12 consultas ao portal por sessão, para códigos ainda sem oferta carregada. O saldo só é descontado depois da leitura de cache e antes de solicitar os portais faltantes. A escolha de curso específico usa todos os códigos pendentes não excluídos do currículo. O cache público de duas horas evita chamadas desnecessárias ao SIGAA. A fila do servidor aceita duas consultas ativas e oito em espera; quando cheia, responde 429 com indicação de nova tentativa. O aluno pode calcular com os dados já carregados; resultados parciais permanecem visíveis quando chegam novas ofertas, com aviso para recalcular. Falhas individuais não interrompem os demais cursos.
 - Plano de progresso avançado: equilibrado, abertura de cadeias ou disciplina alvo buscável. Analisa pré-requisitos diretos/indiretos com AND/OR, ciclos e regras desconhecidas; prioridades manuais continuam na frente e pré-requisitos não são satisfeitos por matrícula concorrente. Resultados mostram caminhos e o que terá pré-requisitos atendidos se houver aprovação. Não prevê oferta futura nem prazo de formatura.
 - Motor determinístico em Web Worker, até três soluções, cancelamento, limite de 100 mil nós/1,5s,
   aviso quando interrompido pelo orçamento. Restrições não são relaxadas automaticamente.
@@ -34,7 +34,7 @@ Complementa [o plano de sincronização e horários](sigaa-sync-schedules-plan.m
   Dados locais sem confirmação do snapshot ficam condicionais, pois o catálogo atual não representa todas as regras.
 - Cenários salvos em PostgreSQL por usuário, com versão otimista para evitar sobrescritas entre abas.
   Até 30 cenários por conta; salvar não escreve matrículas/concluídas e não persiste o snapshot SIGAA.
-  Reabrir usa a oferta salva e recalcula com o histórico atual; a tela avisa para revalidar oferta/curso.
+  Reabrir preserva a oferta salva e usa o histórico atual; a leitura automática do cache não repõe turmas removidas do cenário. A tela avisa para revalidar oferta/curso; atualizações de oferta permanecem explícitas.
 - Exportação somente da grade selecionada em PNG, com período, nomes/códigos, turma, horários e locais informados. A imagem indica simulação e condições pendentes; não contém histórico acadêmico. Controles de JSON, ICS e Google removidos da página a pedido do usuário.
 - Turmas personalizadas pertencem ao cenário, sem alterar o catálogo global. O planejador não oferece edição de local/coordenadas nem critérios de distância ou deslocamento. Cenários antigos continuam legíveis: esses critérios são descartados e o antigo modo de deslocamento passa a usar prioridades.
 
@@ -291,10 +291,12 @@ A grade usa os mesmos horários de `TIME_SLOTS_BY_PERIOD` do calendário; a noit
 
 ## Busca ampliada e limites da simulação
 
-A oferta do curso selecionado é carregada automaticamente quando o curso ou semestre muda. Consultar
-outros cursos exige ampliação explícita: somente códigos ainda sem oferta, até quatro cursos por busca
-e orçamento de 12 consultas por sessão. O cache público válido por duas horas é lido antes da rede;
-apenas cursos sem cache entram na fila. Não há varredura automática de todos os cursos.
+A oferta do curso selecionado é carregada automaticamente quando o curso ou semestre muda. Ofertas de
+outros cursos são recuperadas do cache sem consultar seus portais. A busca ampla explícita usa códigos
+ainda sem turma em até quatro cursos ausentes do cache por busca, dentro do saldo de 12 consultas ao
+portal por sessão. Escolher um curso específico considera todos os códigos pendentes não excluídos;
+reutilizar sua oferta em cache não reduz o saldo. Atualizações diretas têm uma ação autenticada e limite
+próprios. Não há varredura automática dos portais de todos os cursos.
 
 Os limites distribuídos são de 40 requisições por minuto por IP e três atualizações forçadas por minuto
 por usuário autenticado. Pedidos anônimos de refresh não ignoram o cache. A fila admite duas consultas
