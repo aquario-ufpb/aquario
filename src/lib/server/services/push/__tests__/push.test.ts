@@ -40,7 +40,7 @@ describe("sendExpoPush", () => {
       );
     });
 
-    const invalid = await sendExpoPush(tokens, message, fetchImpl as unknown as typeof fetch);
+    const result = await sendExpoPush(tokens, message, fetchImpl as unknown as typeof fetch);
 
     expect(fetchImpl).toHaveBeenCalledTimes(2);
     const [primeiro] = JSON.parse(String(fetchImpl.mock.calls[0]?.[1].body)) as unknown[];
@@ -52,7 +52,12 @@ describe("sendExpoPush", () => {
       sound: "default",
       channelId: "default",
     });
-    expect(invalid).toEqual(["ExponentPushToken[0]", "ExponentPushToken[100]"]);
+    expect(result).toEqual({
+      aceitos: 148,
+      invalidos: ["ExponentPushToken[0]", "ExponentPushToken[100]"],
+    });
+    // Cada lote tem timeout próprio.
+    expect(fetchImpl.mock.calls[0]?.[1].signal).toBeInstanceOf(AbortSignal);
   });
 
   it("não lança em falha de rede nem remove tokens por outros erros", async () => {
@@ -65,10 +70,10 @@ describe("sendExpoPush", () => {
 
     await expect(
       sendExpoPush(["ExponentPushToken[a]"], message, fetchImpl as unknown as typeof fetch)
-    ).resolves.toEqual([]);
+    ).resolves.toEqual({ aceitos: 0, invalidos: [] });
     await expect(
       sendExpoPush(["ExponentPushToken[a]"], message, fetchImpl as unknown as typeof fetch)
-    ).resolves.toEqual([]);
+    ).resolves.toEqual({ aceitos: 0, invalidos: [] });
   });
 });
 
@@ -81,9 +86,18 @@ describe("notifyCategoria", () => {
 
     await expect(
       notifyCategoria("vagas", message, fetchImpl as unknown as typeof fetch)
-    ).resolves.toEqual({ enviados: 1, removidos: 1 });
+    ).resolves.toEqual({ enviados: 0, removidos: 1 });
     expect(repository.tokensFor).toHaveBeenCalledWith("vagas");
     expect(repository.deleteTokens).toHaveBeenCalledWith(["ExponentPushToken[a]"]);
+  });
+
+  it("conta como enviados só os aceitos pelo Expo", async () => {
+    repository.tokensFor.mockResolvedValue(["ExponentPushToken[a]", "ExponentPushToken[b]"]);
+    const fetchImpl = jest.fn(() => Promise.resolve(new Response("erro", { status: 500 })));
+
+    await expect(
+      notifyCategoria("vagas", message, fetchImpl as unknown as typeof fetch)
+    ).resolves.toEqual({ enviados: 0, removidos: 0 });
   });
 
   it("não chama o Expo sem inscritos", async () => {
@@ -96,16 +110,19 @@ describe("notifyCategoria", () => {
 });
 
 describe("prazos", () => {
-  it("usa o dia seguinte no horário de Brasília", () => {
-    // 2026-11-03 23:30 em João Pessoa = 2026-11-04 02:30 UTC
+  it("pega a data de amanhã no calendário de Brasília, nas duas formas de gravação", () => {
+    // 2026-11-03 23:30 em João Pessoa = 2026-11-04 02:30 UTC: amanhã é dia 4.
     expect(amanhaNoBrasil(new Date("2026-11-04T02:30:00Z"))).toEqual({
-      inicio: new Date("2026-11-04T03:00:00Z"),
-      fim: new Date("2026-11-05T03:00:00Z"),
+      inicio: new Date("2026-11-04T00:00:00Z"),
+      fim: new Date("2026-11-05T00:00:00Z"),
     });
-    // 2026-11-04 08:00 em João Pessoa (horário do cron)
-    expect(amanhaNoBrasil(new Date("2026-11-04T11:00:00Z")).inicio).toEqual(
-      new Date("2026-11-05T03:00:00Z")
-    );
+    // 2026-11-04 08:00 em João Pessoa (horário do cron): amanhã é dia 5.
+    const { inicio, fim } = amanhaNoBrasil(new Date("2026-11-04T11:00:00Z"));
+    const dentro = (iso: string) => new Date(iso) >= inicio && new Date(iso) < fim;
+    expect(dentro("2026-11-05T00:00:00Z")).toBe(true); // rotas de admin (YYYY-MM-DD)
+    expect(dentro("2026-11-05T03:00:00Z")).toBe(true); // importação CSV (meia-noite local)
+    expect(dentro("2026-11-04T03:00:00Z")).toBe(false); // hoje
+    expect(dentro("2026-11-06T03:00:00Z")).toBe(false); // depois de amanhã
   });
 
   it("junta vários eventos numa notificação", () => {
@@ -127,8 +144,8 @@ describe("prazos", () => {
       removidos: 0,
     });
     expect(calendarioRepository.findEventosIniciandoEntre).toHaveBeenCalledWith(
-      new Date("2026-11-05T03:00:00Z"),
-      new Date("2026-11-06T03:00:00Z")
+      new Date("2026-11-05T00:00:00Z"),
+      new Date("2026-11-06T00:00:00Z")
     );
     expect(repository.tokensFor).not.toHaveBeenCalled();
   });

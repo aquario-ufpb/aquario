@@ -4,10 +4,12 @@ import { getContainer } from "@/lib/server/container";
 import { ApiError } from "@/lib/server/errors";
 import { expoPushTokenSchema, registrarDispositivoSchema } from "@/lib/shared/push/push";
 import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
+import { createLogger } from "@/lib/server/utils/logger";
 
 export const dynamic = "force-dynamic";
 
 const MAX_BODY_BYTES = 2048;
+const log = createLogger("push-dispositivos");
 
 function privateRoute(
   handler: (request: Request, usuario: UsuarioWithRelations) => Promise<Response>
@@ -16,7 +18,10 @@ function privateRoute(
     let response: Response;
     try {
       response = await withAuth(request, handler);
-    } catch {
+    } catch (error) {
+      log.error(`Falha em ${request.method} /api/usuarios/me/push-dispositivos`, {
+        error: String(error),
+      });
       response = ApiError.internal("Não foi possível salvar as notificações. Tente novamente.");
     }
     response.headers.set("Cache-Control", "private, no-store");
@@ -50,6 +55,10 @@ export const GET = privateRoute(async (request, usuario) => {
  * Registra o aparelho na conta (ou o transfere de outra conta) com as categorias escolhidas.
  */
 export const PUT = privateRoute(async (request, usuario) => {
+  // Recusa pelo cabeçalho antes de ler; o limite após a leitura cobre envios sem content-length.
+  if (Number(request.headers.get("content-length")) > MAX_BODY_BYTES) {
+    return ApiError.badRequest("Corpo da requisição muito grande");
+  }
   const raw = await request.text();
   if (Buffer.byteLength(raw) > MAX_BODY_BYTES) {
     return ApiError.badRequest("Corpo da requisição muito grande");

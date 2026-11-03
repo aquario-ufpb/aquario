@@ -7,6 +7,9 @@ import { ApiError, fromZodError } from "@/lib/server/errors";
 import { mapVagaToJson } from "@/lib/server/utils/vaga-mapper";
 import { createVagaSchema, TIPO_VAGA_VALUES } from "@/lib/server/api-schemas/vagas";
 import { notificarNovaVaga } from "@/lib/server/services/push/notificacoes";
+import { createLogger } from "@/lib/server/utils/logger";
+
+const log = createLogger("vagas");
 
 export async function GET(request: Request) {
   try {
@@ -76,7 +79,11 @@ export async function POST(request: Request) {
       });
 
       // Depois da resposta, para o push não atrasar nem derrubar a criação da vaga.
-      after(() => notificarNovaVaga({ ...vaga, entidade }).catch(() => undefined));
+      after(() =>
+        notificarNovaVaga({ ...vaga, entidade }).catch(error =>
+          log.error("Falha ao notificar nova vaga", { vagaId: vaga.id, error: String(error) })
+        )
+      );
 
       return NextResponse.json(mapVagaToJson(vaga), { status: 201 });
     } catch (error) {

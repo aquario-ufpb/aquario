@@ -3,15 +3,18 @@ import { getContainer } from "@/lib/server/container";
 import { notifyCategoria, type PushMessage } from "./expo-push";
 
 const DIA_MS = 24 * 60 * 60 * 1000;
-/** O calendário guarda as datas à meia-noite de João Pessoa (UTC−3, sem horário de verão). */
+/** João Pessoa: UTC−3, sem horário de verão. */
 const OFFSET_BRASIL_MS = 3 * 60 * 60 * 1000;
 
-/** Intervalo `[início, fim)` do dia seguinte no horário de Brasília. */
+/**
+ * Intervalo `[início, fim)` que cobre a data de amanhã (no calendário de Brasília) do jeito que
+ * os eventos são gravados: a importação por CSV usa a meia-noite local (03:00Z) e as rotas de
+ * admin gravam `YYYY-MM-DD` como meia-noite UTC (00:00Z). O dia inteiro em UTC pega os dois.
+ */
 export function amanhaNoBrasil(now: Date): { inicio: Date; fim: Date } {
   const local = new Date(now.getTime() - OFFSET_BRASIL_MS);
-  const hojeUtc = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate());
-  const inicio = new Date(hojeUtc + DIA_MS + OFFSET_BRASIL_MS);
-  return { inicio, fim: new Date(inicio.getTime() + DIA_MS) };
+  const amanha = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() + 1);
+  return { inicio: new Date(amanha), fim: new Date(amanha + DIA_MS) };
 }
 
 /** Uma notificação por dia, mesmo com vários eventos, para não lotar a bandeja. */

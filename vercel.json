@@ -5,6 +5,9 @@
   "functions": {
     "src/app/api/usuarios/me/sigaa/sync/route.ts": {
       "maxDuration": 180
+    },
+    "src/app/api/internal/push/prazos/route.ts": {
+      "maxDuration": 120
     }
   },
   "crons": [

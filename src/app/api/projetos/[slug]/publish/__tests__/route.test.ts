@@ -19,7 +19,11 @@ jest.mock("@/lib/server/services/push/notificacoes", () => ({
   notificarNovoProjeto: jest.fn().mockResolvedValue(undefined),
 }));
 
-const projetosRepository = { findBySlugWithAutores: jest.fn(), updateStatus: jest.fn() };
+const projetosRepository = {
+  findBySlugWithAutores: jest.fn(),
+  updateStatus: jest.fn(),
+  marcarNotificado: jest.fn(),
+};
 const entidadesRepository = { findById: jest.fn() };
 const projeto = (overrides: Record<string, unknown> = {}) => ({
   id: "p1",
@@ -45,6 +49,7 @@ beforeEach(() => {
   (getContainer as jest.Mock).mockReturnValue({ projetosRepository, entidadesRepository });
   projetosRepository.updateStatus.mockResolvedValue({ slug: "robo", status: "PUBLICADO" });
   entidadesRepository.findById.mockResolvedValue({ id: "e1", nome: "TRIL" });
+  projetosRepository.marcarNotificado.mockResolvedValue(true);
 });
 
 describe("publicar projeto", () => {
@@ -52,16 +57,17 @@ describe("publicar projeto", () => {
     projetosRepository.findBySlugWithAutores.mockResolvedValue(projeto());
 
     expect((await publicar()).status).toBe(200);
+    expect(projetosRepository.marcarNotificado).toHaveBeenCalledWith("robo");
     expect(notificarNovoProjeto).toHaveBeenCalledWith(
       expect.objectContaining({ slug: "robo", titulo: "Robô" }),
       "TRIL"
     );
   });
 
-  it("não repete o aviso ao republicar", async () => {
-    projetosRepository.findBySlugWithAutores.mockResolvedValue(
-      projeto({ publicadoEm: new Date("2026-10-01") })
-    );
+  it("não repete o aviso ao republicar nem em publicações simultâneas", async () => {
+    // A marca durável já existe (ou outra requisição acabou de gravá-la).
+    projetosRepository.findBySlugWithAutores.mockResolvedValue(projeto());
+    projetosRepository.marcarNotificado.mockResolvedValue(false);
 
     await publicar();
     expect(notificarNovoProjeto).not.toHaveBeenCalled();
@@ -73,6 +79,7 @@ describe("publicar projeto", () => {
     );
 
     await publicar();
+    expect(projetosRepository.marcarNotificado).not.toHaveBeenCalled();
     expect(notificarNovoProjeto).not.toHaveBeenCalled();
   });
 

@@ -706,6 +706,8 @@ model Projeto {
   criadoEm       DateTime      @default(now())
   atualizadoEm   DateTime      @updatedAt
   publicadoEm    DateTime?
+  /// Quando o push de "novo projeto" saiu. Despublicar não limpa, então republicar não avisa de novo.
+  notificadoEm   DateTime?
 
   autores ProjetoAutor[]
 
