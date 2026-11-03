@@ -285,6 +285,14 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     return asProjetoWithRelations(projeto);
   }
 
+  async marcarNotificado(slug: string): Promise<boolean> {
+    const { count } = await prisma.projeto.updateMany({
+      where: { slug, notificadoEm: null },
+      data: { notificadoEm: new Date() },
+    });
+    return count === 1;
+  }
+
   async replaceAutores(
     projetoId: string,
     slug: string,

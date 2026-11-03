@@ -44,6 +44,8 @@ export type ICalendarioRepository = {
 
   // Events
   findEventosBySemestreId(semestreId: string): Promise<EventoCalendario[]>;
+  /** Eventos que começam em `[inicio, fim)`, de qualquer semestre. */
+  findEventosIniciandoEntre(inicio: Date, fim: Date): Promise<EventoCalendario[]>;
   createEvento(data: CreateEventoInput): Promise<EventoCalendario>;
   createEventosBatch(data: CreateEventoInput[]): Promise<number>;
   replaceEventosBatch(semestreId: string, data: CreateEventoInput[]): Promise<number>;

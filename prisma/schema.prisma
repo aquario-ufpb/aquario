@@ -202,6 +202,7 @@ model Usuario {
   sigaaRateLimitBuckets SigaaRateLimitBucket[]
   enrollmentPlans EnrollmentPlan[]
   calendarRoomBindings CalendarRoomBinding[]
+  dispositivosPush DispositivoPush[]
 
   @@index([email])
   @@index([matricula])
@@ -705,6 +706,8 @@ model Projeto {
   criadoEm       DateTime      @default(now())
   atualizadoEm   DateTime      @updatedAt
   publicadoEm    DateTime?
+  /// Quando o push de "novo projeto" saiu. Despublicar não limpa, então republicar não avisa de novo.
+  notificadoEm   DateTime?
 
   autores ProjetoAutor[]
 
@@ -758,6 +761,22 @@ model CalendarRoomBinding {
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@id([usuarioId, semester, sourceKey])
+}
+
+// Opt-in push notifications for the mobile app (Expo push tokens).
+// The token is the key: signing into another account on the same device moves the device to it.
+model DispositivoPush {
+  token        String   @id
+  usuarioId    String
+  plataforma   String
+  prazos       Boolean  @default(false)
+  vagas        Boolean  @default(false)
+  entidades    Boolean  @default(false)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
 }
 
 // Distributed request budget shared by public offering routes and all instances.
