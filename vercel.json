@@ -11,6 +11,10 @@
     {
       "path": "/api/internal/sigaa/retention",
       "schedule": "17 3 * * *"
+    },
+    {
+      "path": "/api/internal/push/prazos",
+      "schedule": "0 11 * * *"
     }
   ]
 }

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { notificarNovoProjeto } from "@/lib/server/services/push/notificacoes";
 export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
 import { StatusProjeto } from "@prisma/client";
@@ -44,6 +45,20 @@ export function POST(request: NextRequest, context: RouteContext) {
         StatusProjeto.PUBLICADO,
         new Date()
       );
+
+      // Só na primeira publicação (despublicar e publicar de novo não repete o aviso) e só para
+      // projetos de entidade: a categoria do app é "novidades das entidades".
+      const entidadeId = projeto.autores.find(
+        autor => autor.autorPrincipal && autor.entidadeId
+      )?.entidadeId;
+      if (!projeto.publicadoEm && entidadeId) {
+        after(() =>
+          getContainer()
+            .entidadesRepository.findById(entidadeId)
+            .then(entidade => entidade && notificarNovoProjeto(projeto, entidade.nome))
+            .catch(() => undefined)
+        );
+      }
 
       return NextResponse.json(updatedProjeto);
     } catch (error) {

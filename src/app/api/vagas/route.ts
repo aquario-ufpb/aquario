@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 export const dynamic = "force-dynamic";
 import { z } from "zod";
 import { getContainer } from "@/lib/server/container";
@@ -6,6 +6,7 @@ import { withAuth, canManageVagaForEntidade } from "@/lib/server/services/auth/m
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { mapVagaToJson } from "@/lib/server/utils/vaga-mapper";
 import { createVagaSchema, TIPO_VAGA_VALUES } from "@/lib/server/api-schemas/vagas";
+import { notificarNovaVaga } from "@/lib/server/services/push/notificacoes";
 
 export async function GET(request: Request) {
   try {
@@ -73,6 +74,9 @@ export async function POST(request: Request) {
         informacoesAdicionais: data.informacoesAdicionais ?? null,
         etapasProcesso: data.etapasProcesso ?? [],
       });
+
+      // Depois da resposta, para o push não atrasar nem derrubar a criação da vaga.
+      after(() => notificarNovaVaga({ ...vaga, entidade }).catch(() => undefined));
 
       return NextResponse.json(mapVagaToJson(vaga), { status: 201 });
     } catch (error) {

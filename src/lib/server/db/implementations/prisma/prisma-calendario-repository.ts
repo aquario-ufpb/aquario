@@ -111,6 +111,13 @@ export class PrismaCalendarioRepository implements ICalendarioRepository {
     });
   }
 
+  findEventosIniciandoEntre(inicio: Date, fim: Date): Promise<EventoCalendario[]> {
+    return prisma.eventoCalendario.findMany({
+      where: { dataInicio: { gte: inicio, lt: fim } },
+      orderBy: { dataInicio: "asc" },
+    });
+  }
+
   createEvento(data: CreateEventoInput): Promise<EventoCalendario> {
     return prisma.eventoCalendario.create({
       data: {
