@@ -8,6 +8,7 @@ import {
   RefreshCw,
   SlidersHorizontal,
   ListOrdered,
+  Network,
   Clock3,
   LoaderCircle,
   X,
@@ -58,6 +59,7 @@ import { AvailabilityEditor, selectClass } from "./availability-editor";
 import { CoursePicker } from "./course-picker";
 import { ProgressSettings } from "./progress-settings";
 import { SettingsEditor } from "./settings-editor";
+import { BlockingPanel } from "./blocking-panel";
 import { CustomOfferForm } from "./custom-offer-form";
 import { OffersList } from "./offers-list";
 import { GoalsList } from "./goals-list";
@@ -771,6 +773,7 @@ function PlannerWorkspace() {
             { id: "planner-availability", label: "Horários" },
             { id: "planner-priorities", label: "Prioridades" },
             { id: "planner-settings", label: "Ajustes" },
+            { id: "planner-blocking", label: "Bloqueios" },
             ...(solver.result ? [{ id: "planner-results", label: "Opções" }] : []),
           ].map(item => (
             <a
@@ -1412,6 +1415,26 @@ function PlannerWorkspace() {
                 advanced={advanced}
                 settings={draft.settings}
                 onChange={settings => update(previous => ({ ...previous, settings }))}
+              />
+            </CardContent>
+          </Card>
+          <Card id="planner-blocking" className="scroll-mt-28 rounded-xl shadow-none">
+            <CardHeader className="p-4 pb-3 sm:p-5 sm:pb-3">
+              <CardTitle className="flex items-center gap-2.5 text-base">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Network size={15} />
+                </span>
+                Análise de bloqueios
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 sm:px-5 sm:pb-5">
+              <BlockingPanel
+                goals={simulation.goals}
+                completedCodes={academic.completedCodes}
+                assumedPassedCodes={assumePassed ? academic.enrolledCodes : []}
+                suggestedCodes={solver.result?.solutions[0]?.selections.map(s => s.goal.code) ?? []}
+                curriculumMatched={academic.curriculumMatched}
+                isLoading={(grade.isPending && Boolean(user)) || sigaa.isLoading}
               />
             </CardContent>
           </Card>
