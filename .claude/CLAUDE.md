@@ -56,13 +56,13 @@ const response = await apiClient(`${API_URL}/guias`, ...);
 ```
 
 ### Error Handling
-- **Backend**: Throw `ApiError` from `@/lib/server/api/errors` with machine-readable `ErrorCode`
+- **Backend**: Return an `ApiError.*` response (`notFound`, `badRequest`, `forbidden`, ...) from `@/lib/server/errors`; error codes are machine-readable `ErrorCode`s in `@/lib/shared/errors`
 - **Frontend**: Use `throwApiError(response)` to convert API errors to exceptions
 
 ```typescript
 // Backend route
 if (!user) {
-  throw new ApiError("User not found", 404, "USER_NOT_FOUND");
+  return ApiError.notFound("Usuário");
 }
 
 // Frontend service
@@ -82,15 +82,24 @@ const user = await container.usuarioRepository.findById(id);
 ```
 
 ### API Routes
-Use the `createApiHandler` wrapper for consistent error handling:
+Route handlers are plain `GET`/`POST` functions. Wrap authenticated ones in `withAuth` and validate bodies with the Zod schemas in `@/lib/server/api-schemas`:
 
 ```typescript
-import { createApiHandler } from "@/lib/server/api/route-handler";
+import { NextResponse } from "next/server";
+import { ZodError } from "zod";
+import { withAuth } from "@/lib/server/services/auth/middleware";
+import { ApiError, fromZodError } from "@/lib/server/errors";
 
-export const GET = createApiHandler(async (req) => {
-  // Your logic here
-  return NextResponse.json(data);
-});
+export async function POST(request: Request) {
+  return withAuth(request, async (req, usuario) => {
+    try {
+      const data = schema.parse(await req.json());
+      return NextResponse.json(await doSomething(usuario, data));
+    } catch (error) {
+      return error instanceof ZodError ? fromZodError(error) : ApiError.internal("Erro ao salvar");
+    }
+  });
+}
 ```
 
 ## Domain Terminology (Portuguese)

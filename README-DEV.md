@@ -68,7 +68,7 @@ Uses Docker for a local PostgreSQL database:
 
 ```bash
 # Start database
-docker-compose up -d
+docker compose up -d
 
 # Setup database
 npm run db:migrate

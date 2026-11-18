@@ -17,7 +17,7 @@ Thank you for your interest in contributing! 🎉
 ## Getting Started
 
 **Prerequisites:**
-- Node.js 18+ and npm installed ([Download Node.js](https://nodejs.org/))
+- Node.js 22+ and npm installed ([Download Node.js](https://nodejs.org/))
 
 ```bash
 # 1. Fork and clone
@@ -55,7 +55,7 @@ git push origin feature/my-feature
 **Full Stack (with Database):**
 
 ```bash
-docker-compose up -d
+docker compose up -d
 npm run db:migrate
 npm run dev
 ```
