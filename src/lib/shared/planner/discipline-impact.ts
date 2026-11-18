@@ -1,4 +1,9 @@
-import { checkRequirement, describeRequirement, normalizeCode } from "./requirements";
+import {
+  checkRequirement,
+  describeRequirement,
+  normalizeCode,
+  remainingRequirement,
+} from "./requirements";
 import { simulateApprovals } from "./simulated-approvals";
 import type { PlannerGoal, Requirement } from "./types";
 
@@ -10,18 +15,6 @@ const contains = (rule: Requirement | null, code: string): boolean => {
     ? normalizeCode(rule.code) === code
     : rule.items.some(item => contains(item, code));
 };
-function remaining(rule: Requirement | null, completed: Set<string>): Requirement | null {
-  if (!rule || checkRequirement(rule, completed) === "met") {
-    return null;
-  }
-  if (rule.kind === "code" || rule.kind === "unknown") {
-    return rule;
-  }
-  const items = rule.items
-    .map(item => remaining(item, completed))
-    .filter((item): item is Requirement => item !== null);
-  return items.length === 1 ? items[0] : { ...rule, items };
-}
 export type DisciplineImpactItem = { code: string; name: string; detail?: string };
 export type DisciplineImpact = {
   prerequisite: { description: string; state: "met" | "unmet" | "unknown" } | null;
@@ -77,7 +70,7 @@ export function getDisciplineImpact(
         code: candidate.code,
         name: candidate.name,
         detail: candidate.requirementsKnown
-          ? `Ainda requer: ${describeRequirement(remaining(candidate.prerequisite, after), label)}`
+          ? `Ainda requer: ${describeRequirement(remainingRequirement(candidate.prerequisite, after), label)}`
           : `Requisitos a verificar: ${describeRequirement(candidate.prerequisite, label)}`,
       });
     }
