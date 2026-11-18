@@ -208,15 +208,33 @@ describe("analyzeBlocking", () => {
     expect(find(result.blocked, "G1").chain).toEqual(["Y1", "Y2"]);
   });
 
-  it("blocks an OR with a branch outside the curriculum through the known branch", () => {
+  it("sends an OR with an unreadable branch to toVerify, with the known branch as a hint", () => {
     const result = analyzeBlocking({
-      goals: [goal("P1"), goal("A1", "P1"), goal("H1", "A1 OU ZZ99")],
+      goals: [goal("P1"), goal("A1", "P1"), goal("H1", "A1 OU ZZ99"), goal("H2", "H1")],
+      completedCodes: [],
+      selected: [],
+    });
+    expect(codes(result.toVerify)).toEqual(["H1", "H2"]);
+    expect(codes(result.blocked)).toEqual(["A1"]);
+    expect(find(result.blocked, "A1").dependents).toBe(0);
+  });
+
+  it("still blocks an OR whose branches are all known", () => {
+    const result = analyzeBlocking({
+      goals: [goal("P1"), goal("A1", "P1"), goal("D4", "P1"), goal("H1", "A1 OU D4")],
       completedCodes: [],
       selected: [],
     });
     expect(codes(result.blocked)).toContain("H1");
-    expect(codes(result.toVerify)).not.toContain("H1");
-    expect(find(result.blocked, "H1").chain).toEqual(["P1", "A1"]);
+  });
+
+  it("orders the chain by the branches that remain after an OR is resolved", () => {
+    const result = analyzeBlocking({
+      goals: [goal("C1"), goal("Z1", "A1 OU C1"), goal("A1", "Z1"), goal("G1", "A1 E Z1")],
+      completedCodes: ["C1"],
+      selected: [],
+    });
+    expect(find(result.blocked, "G1").chain).toEqual(["Z1", "A1"]);
   });
 
   it("analyzes 500 goals in 20 prerequisite chains quickly", () => {

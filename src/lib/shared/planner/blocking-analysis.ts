@@ -48,7 +48,8 @@ export function analyzeBlocking({
   // Same rule inside the graph: an unregistered root is a known ancestor, otherwise every
   // discipline that descends from it would be reported as "A verificar".
   const graph = buildRequirementGraph(
-    goals.map(goal => (isUnregistered(goal) ? { ...goal, requirementsKnown: true } : goal))
+    goals.map(goal => (isUnregistered(goal) ? { ...goal, requirementsKnown: true } : goal)),
+    { uncertainAny: true }
   );
   const projection = simulateApprovals(goals, assumedPassedCodes);
   const done = new Set(
@@ -135,8 +136,11 @@ export function analyzeBlocking({
     const waiting = new Map<string, number>(),
       children = new Map<string, string[]>();
     for (const code of left) {
+      // Only the branches still unmet: a resolved OR must not add edges back to its other side.
       const parents = new Set(
-        references(graph.byCode.get(code)?.prerequisite ?? null).filter(ref => left.has(ref))
+        references(remainingRequirement(graph.byCode.get(code)?.prerequisite ?? null, done)).filter(
+          ref => left.has(ref)
+        )
       );
       waiting.set(code, parents.size);
       for (const parent of parents) {

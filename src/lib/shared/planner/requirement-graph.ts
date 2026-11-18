@@ -21,7 +21,19 @@ export const references = (rule: Requirement | null): string[] =>
       ? [normalizeCode(rule.code)]
       : rule.items.flatMap(references);
 
-export function buildRequirementGraph(goals: PlannerGoal[]): RequirementGraph {
+export type GraphOptions = {
+  /**
+   * An OR with an unmet branch that cannot be read (code outside the curriculum, unknown rule)
+   * is uncertain even when another branch is known: the unreadable one may already hold.
+   * The schedule solver keeps the optimistic default.
+   */
+  uncertainAny?: boolean;
+};
+
+export function buildRequirementGraph(
+  goals: PlannerGoal[],
+  { uncertainAny = false }: GraphOptions = {}
+): RequirementGraph {
   const byCode = new Map(goals.map(goal => [normalizeCode(goal.code), goal]));
   const outgoing = new Map<string, Set<string>>();
   for (const goal of goals) {
@@ -45,6 +57,8 @@ export function buildRequirementGraph(goals: PlannerGoal[]): RequirementGraph {
       own.flatMap(waiver => (waiver.requires ? [normalizeCode(waiver.requires)] : []))
     );
     const cache = new Map<string, Missing>();
+    // Counts trail hits: an answer computed through one depends on the active path, so it is not cached.
+    let cuts = 0;
     // `skip` holds the waived codes; it is only passed at the requested goal's own level.
     const visit = (rule: Requirement | null, trail: Set<string>, skip: Set<string>): Missing => {
       if (!rule) {
@@ -59,12 +73,14 @@ export function buildRequirementGraph(goals: PlannerGoal[]): RequirementGraph {
           return { codes: new Set(), uncertain: false };
         }
         if (trail.has(code)) {
+          cuts++;
           return { codes: new Set([code]), uncertain: true };
         }
         const cached = cache.get(code);
         if (cached) {
           return cached;
         }
+        const before = cuts;
         const parent = byCode.get(code);
         const dependency = parent?.requirementsKnown
           ? visit(parent.prerequisite, new Set([...trail, code]), new Set())
@@ -73,12 +89,15 @@ export function buildRequirementGraph(goals: PlannerGoal[]): RequirementGraph {
           codes: new Set([code, ...dependency.codes]),
           uncertain: dependency.uncertain,
         };
-        cache.set(code, answer);
+        if (cuts === before) {
+          cache.set(code, answer);
+        }
         return answer;
       }
       const branches = rule.items.map(item => visit(item, trail, skip));
       if (rule.kind === "any") {
-        return branches.sort(
+        const hidden = branches.some(branch => branch.uncertain);
+        const best = [...branches].sort(
           (a, b) =>
             Number(a.uncertain) - Number(b.uncertain) ||
             a.codes.size - b.codes.size ||
@@ -87,6 +106,8 @@ export function buildRequirementGraph(goals: PlannerGoal[]): RequirementGraph {
               .join()
               .localeCompare([...b.codes].sort().join())
         )[0];
+        // A branch already met (nothing missing, certain) settles the OR.
+        return uncertainAny && hidden && best.codes.size > 0 ? { ...best, uncertain: true } : best;
       }
       return {
         codes: new Set(branches.flatMap(branch => [...branch.codes])),

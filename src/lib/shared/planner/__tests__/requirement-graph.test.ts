@@ -98,4 +98,30 @@ describe("buildRequirementGraph", () => {
     expect(graph.path("B2", "P1")).toBeNull();
     expect(graph.path("P1", "B2", new Set(["A1"]))).toBeNull();
   });
+
+  it("missing does not depend on the evaluation order inside a cycle", () => {
+    const goals = [
+      goal("X1"),
+      goal("A1", "B1 OU X1"),
+      goal("B1", "A1"),
+      goal("G1", "A1 E B1"),
+      goal("G2", "B1 E A1"),
+    ];
+    const graph = buildRequirementGraph(goals);
+    const a = graph.missing(need(graph, "G1"), new Set());
+    const b = graph.missing(need(graph, "G2"), new Set());
+    expect([...a.codes].sort()).toEqual([...b.codes].sort());
+    expect(a.uncertain).toBe(b.uncertain);
+  });
+
+  it("with uncertainAny, an OR with an unmet unreadable branch stays uncertain", () => {
+    const goals = [goal("P1"), goal("A1", "P1"), goal("H1", "A1 OU ZZ99")];
+    const loose = buildRequirementGraph(goals);
+    expect(loose.missing(need(loose, "H1"), new Set()).uncertain).toBe(false);
+    const strict = buildRequirementGraph(goals, { uncertainAny: true });
+    const result = strict.missing(need(strict, "H1"), new Set());
+    expect(result.uncertain).toBe(true);
+    expect([...result.codes].sort()).toEqual(["A1", "P1"]);
+    expect(strict.missing(need(strict, "H1"), new Set(["A1"])).uncertain).toBe(false);
+  });
 });
