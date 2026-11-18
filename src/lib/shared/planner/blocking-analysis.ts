@@ -42,7 +42,14 @@ export function analyzeBlocking({
   selected,
   waivers = [],
 }: BlockingInput): BlockingAnalysis {
-  const graph = buildRequirementGraph(goals);
+  // Deliberate divergence from the schedule solver, which is more conservative: a discipline with
+  // no registered requirement counts as "Disponível agora" here (the UI flags it with a badge).
+  const isUnregistered = (goal: PlannerGoal) => !goal.requirementsKnown && !goal.prerequisite;
+  // Same rule inside the graph: an unregistered root is a known ancestor, otherwise every
+  // discipline that descends from it would be reported as "A verificar".
+  const graph = buildRequirementGraph(
+    goals.map(goal => (isUnregistered(goal) ? { ...goal, requirementsKnown: true } : goal))
+  );
   const projection = simulateApprovals(goals, assumedPassedCodes);
   const done = new Set(
     [
@@ -69,9 +76,6 @@ export function analyzeBlocking({
     const set = credited(goal, codes);
     return !set || checkRequirement(goal.prerequisite, set) === "met";
   };
-  // Deliberate divergence from the schedule solver, which is more conservative: a discipline with
-  // no registered requirement counts as "Disponível agora" here (the UI flags it with a badge).
-  const isUnregistered = (goal: PlannerGoal) => !goal.requirementsKnown && !goal.prerequisite;
   const availableIn = (goal: PlannerGoal, codes: Set<string>) =>
     isUnregistered(goal) || (goal.requirementsKnown && satisfied(goal, codes));
 
