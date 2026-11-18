@@ -64,10 +64,10 @@ Entradas: `goals`, `completedCodes`, `assumedPassedCodes`, `selected` (S), `waiv
 
 Para cada cadeira pendente c (fora de H, de S′ e das creditadas por equivalência direta de S′; `exclude` **não** tira da análise, pois é filtro de busca e não fato acadêmico), na ordem:
 
-1. `requirementsKnown = false` com requisito `unknown` → **A verificar**. Com `prerequisite = null` → trata como sem requisito (ver decisão acima).
+1. `requirementsKnown = false` e `prerequisite ≠ null` → **A verificar**, seja o requisito ilegível (`unknown`) ou lido mas não confirmado (por exemplo, co-requisito ilegível). Só `prerequisite = null` com `requirementsKnown = false` é tratado como sem requisito (ver decisão acima).
 2. `checkRequirement(c, H)` é `met` → **Disponível agora** (com selo se o requisito era nulo e `requirementsKnown = false`).
 3. `checkRequirement(c, H′)` é `met` → **Liberada depois**.
-4. Senão o requisito direto está `unmet`. Se `missing(c, H′)` é `uncertain` (ciclo, código fora do currículo ou ancestral desconhecido) → **A verificar**. Caso contrário → **Bloqueada**.
+4. Senão o requisito direto está `unmet`. Se `missing(c, H′)` é `uncertain` (ciclo, código fora do currículo ou ancestral desconhecido) → **A verificar**. Caso contrário → **Bloqueada**. Um `OU` com um ramo ainda não cumprido e ilegível (código fora do currículo, regra `unknown`) também é `uncertain`, mesmo havendo outro ramo conhecido: o ramo ilegível pode já estar cumprido. O ramo conhecido segue como dica em `chain`/`pendingRule`. O solver de horários mantém o critério otimista.
 
 As quatro categorias formam uma **partição** das pendentes. **Atrasadas** é uma **visão cruzada**: `delayed = [{ cause: X, delays: [G...] }]`, em que X é Disponível agora, fora de S′, e G é Bloqueada em H′ mas passaria a ter requisito `met` em H′ ∪ {X} ∪ equivalências diretas de X. Teto conhecido: avalia um X por vez, então cadeira que precisa de duas ausências ao mesmo tempo não aparece; evoluir para pares se a coordenação pedir.
 

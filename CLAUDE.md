@@ -20,7 +20,7 @@ npx vitest run path/to/file.integration.test.ts   # single Vitest file
 npm run test:sigaa-db         # SIGAA DB tests; spins up a disposable local Postgres (Docker), refuses any DB not named aquario_sigaa_test[_x]
 npm run verify:sigaa-boundary # static check of prisma/schema.prisma (see SIGAA below)
 
-npm run db:migrate | db:seed | db:studio | db:reset | db:generate
+npm run db:migrate           # also: db:seed, db:studio, db:reset, db:generate
 ```
 
 - Jest and Vitest split by filename: `*.integration.test.ts(x)` is Vitest only; everything else under `src/**` (`__tests__/` dirs or `*.test.ts`) is Jest. Both resolve `@/` to `src/` and `@/content/` to `content/`.

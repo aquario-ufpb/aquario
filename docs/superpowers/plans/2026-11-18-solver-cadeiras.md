@@ -126,14 +126,14 @@
   - `H=["P1"], S=["A1"]`: `unlockedLater` = `B2, E5, O1`; `blocked` = `C3` com `pendingRule` = código `D4`; `delayed` = `[{cause D4, delays [C3]}]`; `available` contém `D4` e `K9` (com `noRegisteredRequirement:true`) e não contém `A1`; `toVerify` = `F6, U8, X1, X2`; `creditedBySelection = ["G9"]` e `G9` não aparece em nenhum grupo.
   - `H=[], S=[]`: `delayed` = `[{P1→[A1]}, {D4→[E5]}]`; `blocked` inclui `A1` com `dependents === 4` (`B2, C3, E5, O1`) e `B2` com `chain = ["P1","A1"]`; `X1`/`X2` não contam em nenhum `dependents`.
   - `invalidSelected`: `H=["P1"], S=["B2"]` → `["B2"]`, e `B2` continua em `blocked`; `ignoredSelected`: `H=["P1"], S=["P1"]` → `["P1"]`.
-  - `S` não conta como cumprida para outra de S: `H=["P1"], S=["A1","B2"]` → `B2` em `invalidSelected` e não em `unlockedLater`.
+  - `S` não conta como cumprida para outra de S: `H=["P1"], S=["A1","B2"]` → `B2` em `invalidSelected` (não conta em H′), mas ainda em `unlockedLater`, porque o `A1` válido cumpre o requisito dele em H′. Com `S=["B2"]` sozinho, `B2` continua em `blocked`.
   - Equivalência não transitiva: `W0(equivalents:["R0"])`, `R0(equivalents:["Q0"])`, `H=["Q0"], S=[]` → `creditedBySelection=[]`; `R0` e `W0` seguem listadas.
   - `waivers`: `{target:"C3", requires:"D4"}` com `H=["P1"], S=["A1"]` → `C3` em `unlockedLater`; `{target:"C3"}` com `H=[]` → `C3` em `available`.
   - `exclude` não remove: `A1` com `priority:"exclude"` continua nos grupos.
   - `goal.completed=true` fora de `completedCodes` não aparece; S com `" a1 "`/duplicata é normalizado e deduplicado; S com código inexistente vai para `invalidSelected` sem lançar.
   - Desempenho: 500 goals encadeados e `S` de 30 → resolve em menos de 1000 ms (limite folgado, só pega regressão O(n²) grosseira).
 - [ ] **Step 3: Rodar e ver falhar.**
-- [ ] **Step 4: Implementar `analyzeBlocking`** exatamente pela tabela "Modelo de classificação" da spec. Cálculo de H como em `discipline-impact.ts:38-45`. `isSatisfied` de waivers fica dentro de `requirement-graph.ts`/`blocking-analysis.ts`, num único ponto. Candidatos a X: disponíveis agora que aparecem em `missing(·, H′).codes` de alguma bloqueada. `dependents` usa `graph.reachable(code, H)` ∩ pendentes com `missing(·, H).uncertain === false`.
+- [ ] **Step 4: Implementar `analyzeBlocking`** exatamente pela tabela "Modelo de classificação" da spec. Cálculo de H como em `discipline-impact.ts:38-45`. `isSatisfied` de waivers fica dentro de `requirement-graph.ts`/`blocking-analysis.ts`, num único ponto. Candidatos a X: **todas** as disponíveis agora fora de S′, sem poda por `missing` (a poda perde a outra ponta de um `OU`: com `G1("A1 OU B2")` e as duas disponíveis, `delayed` deve listar `A1` e `B2`). Teste esse caso. `dependents` usa `graph.reachable(code, H)` ∩ pendentes com `missing(·, H).uncertain === false`.
 - [ ] **Step 5: Rodar** `npx jest src/lib/shared/planner`. Esperado: tudo verde.
 - [ ] **Step 6: Commit** `feat: add course blocking analysis for planner`.
 
