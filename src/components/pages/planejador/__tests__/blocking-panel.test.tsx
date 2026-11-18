@@ -181,3 +181,21 @@ it("shows loading, empty curriculum and mismatched curriculum states", () => {
   rerender(<BlockingPanel {...props} curriculumMatched={false} />);
   expect(screen.getByText(/currículo do SIGAA é diferente/i)).toBeInTheDocument();
 });
+
+it("does not bring back a selection after a curriculum without it", () => {
+  const { rerender } = render(<BlockingPanel {...props} />);
+  add("nome a1", "Nome A1");
+  expect(screen.getByRole("button", { name: "Remover Nome A1" })).toBeInTheDocument();
+  rerender(<BlockingPanel {...props} goals={[goal("Z1"), goal("Z2", "Z1")]} />);
+  rerender(<BlockingPanel {...props} />);
+  expect(screen.queryByRole("button", { name: "Remover Nome A1" })).not.toBeInTheDocument();
+  expect(screen.getByText("Nenhuma cadeira em S.")).toBeInTheDocument();
+});
+
+it("keeps the selection through a transient empty curriculum", () => {
+  const { rerender } = render(<BlockingPanel {...props} />);
+  add("nome a1", "Nome A1");
+  rerender(<BlockingPanel {...props} goals={[]} />);
+  rerender(<BlockingPanel {...props} />);
+  expect(screen.getByRole("button", { name: "Remover Nome A1" })).toBeInTheDocument();
+});

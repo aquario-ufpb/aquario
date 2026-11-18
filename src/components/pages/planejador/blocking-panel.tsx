@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -78,7 +78,17 @@ export function BlockingPanel({
     () => new Map(goals.map(goal => [normalizeCode(goal.code), goal])),
     [goals]
   );
-  // Codes from another curriculum (course switch, stale suggestion) silently leave S.
+  // Codes from another curriculum (course switch, stale suggestion) leave S for good, so they do
+  // not come back if the curriculum changes again. An empty curriculum is a loading state: keep S.
+  useEffect(() => {
+    if (!byCode.size) {
+      return;
+    }
+    setSelected(previous => {
+      const kept = previous.filter(code => byCode.has(normalizeCode(code)));
+      return kept.length === previous.length ? previous : kept;
+    });
+  }, [byCode]);
   const selected = useMemo(
     () => chosen.filter(code => byCode.has(normalizeCode(code))),
     [chosen, byCode]
