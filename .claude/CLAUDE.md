@@ -86,19 +86,23 @@ Route handlers are plain `GET`/`POST` functions. Wrap authenticated ones in `wit
 
 ```typescript
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
 import { withAuth } from "@/lib/server/services/auth/middleware";
-import { ApiError, fromZodError } from "@/lib/server/errors";
+import { ApiError, handleError } from "@/lib/server/errors";
 
 export async function POST(request: Request) {
-  return withAuth(request, async (req, usuario) => {
-    try {
+  // The try/catch wraps withAuth: its user lookup runs before the callback and can also throw.
+  try {
+    return await withAuth(request, async (req, usuario) => {
       const data = schema.parse(await req.json());
       return NextResponse.json(await doSomething(usuario, data));
-    } catch (error) {
-      return error instanceof ZodError ? fromZodError(error) : ApiError.internal("Erro ao salvar");
+    });
+  } catch (error) {
+    // req.json() throws a SyntaxError on a malformed body: that is the client's fault.
+    if (error instanceof SyntaxError) {
+      return ApiError.badRequest("Corpo da requisição inválido");
     }
-  });
+    return handleError(error, "Erro ao salvar"); // ZodError -> 400, anything else -> 500
+  }
 }
 ```
 

@@ -55,7 +55,7 @@ git push origin feature/my-feature
 **Full Stack (with Database):**
 
 ```bash
-docker compose up -d
+docker compose up -d   # or `docker-compose up -d` with the legacy Compose v1
 npm run db:migrate
 npm run dev
 ```
