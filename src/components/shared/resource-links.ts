@@ -64,4 +64,4 @@ export const NAVIGATION_RESOURCES: readonly NavigationResource[] = [
   },
 ] as const;
 
-export const SIGAA_MCP_URL = "https://github.com/PucaVaz/sigaa-for-ai-agents";
+export const SIGAA_TOOLS_URL = "https://github.com/PucaVaz/sigaa-tools";

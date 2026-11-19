@@ -4,7 +4,7 @@ import { forwardRef, type ComponentPropsWithoutRef } from "react";
 
 import { trackEvent } from "@/analytics/posthog-client";
 
-import { SIGAA_MCP_URL } from "./resource-links";
+import { SIGAA_TOOLS_URL } from "./resource-links";
 
 type SigaaMcpLinkProps = Readonly<
   {
@@ -20,7 +20,7 @@ export const SigaaMcpLink = forwardRef<HTMLAnchorElement, SigaaMcpLinkProps>(fun
     <a
       {...anchorProps}
       ref={ref}
-      href={SIGAA_MCP_URL}
+      href={SIGAA_TOOLS_URL}
       target="_blank"
       rel="noopener noreferrer"
       className={className}
