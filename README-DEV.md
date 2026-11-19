@@ -43,7 +43,7 @@ This is an open-source project with different environment configurations:
 | Environment | Who             | Database             | Email          | Analytics |
 | ----------- | --------------- | -------------------- | -------------- | --------- |
 | **Dev**     | Anyone          | Local Docker         | Mock (console) | Disabled  |
-| **Staging** | Project members | Neon (synthetic seed)| Resend         | Enabled   |
+| **Staging** | Project members | Neon (staging branch)| Resend         | Enabled   |
 | **Prod**    | Production      | Neon (main branch)   | Resend         | Enabled   |
 
 ### Smart Defaults
@@ -409,7 +409,7 @@ We use GitHub Actions for continuous integration and deployment.
 │  2. STAGING - PR Merged                                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  PR merged → main updated                                        │
-│    → New staging database with migrations and seed                        │
+│    → Neon staging branch reset from main                        │
 │    → Deployed to staging.aquarioufpb.com                        │
 │    → PR's Neon branch deleted (cleanup)                         │
 └─────────────────────────────────────────────────────────────────┘
@@ -436,10 +436,10 @@ We use GitHub Actions for continuous integration and deployment.
 | Branch | Data | Purpose |
 |--------|------|---------|
 | `main` | Production data | Production database |
-| `aq-ci-staging-r…` | Migrations and seed from an empty template | Replaced after the staging alias is verified |
-| `aq-ci-pr-123-r…` | Migrations and seed from an empty template | Per-PR preview (deleted on close) |
+| `staging` | Copy of main | Reset on each merge to main |
+| `pr-123-title` | Seed data only | Per-PR preview (deleted on close) |
 
-Preview and staging share an isolated Neon project. Production credentials belong to the protected production environment. [Configuration and cutover](docs/sigaa-v1-environments.md)
+The integration and browser tests use disposable PostgreSQL services on the GitHub Actions runner. The browser tests seed the public curriculum and register their own test accounts.
 
 ---
 

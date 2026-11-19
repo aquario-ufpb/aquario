@@ -5,78 +5,37 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 env:
-  VERSION: ${{ github.event.release.tag_name }}
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
   release-production:
     name: Release to Production
     runs-on: ubuntu-latest
-    environment: production
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: true
           # Deploy exactly what was tagged, so a hotfix release cut from a
           # release/* branch doesn't also ship whatever is unreleased on main.
           ref: ${{ github.event.release.tag_name }}
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Deploy to Vercel (Production)
-        id: deploy
-        env:
-          VERCEL_TOKEN: ${{ secrets.PRODUCTION_VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.PRODUCTION_VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ vars.PRODUCTION_VERCEL_PROJECT_ID }}
-        run: |
-          : "${VERCEL_TOKEN:?Missing production token}" "${VERCEL_ORG_ID:?Missing production team}" "${VERCEL_PROJECT_ID:?Missing production project}"
-          URL=$(vercel deploy --prod --token="$VERCEL_TOKEN")
-          echo "url=$URL" >> $GITHUB_OUTPUT
-
-      - name: Summary
-        env:
-          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
-          RELEASE_NOTES: ${{ github.event.release.body }}
-        run: |
-          echo "## 🚀 Production Release" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Environment | URL |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------------|-----|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Production** | [aquarioufpb.com](https://aquarioufpb.com) |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Vercel URL** | $DEPLOY_URL |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Release Notes:**" >> $GITHUB_STEP_SUMMARY
-          printf '%s\n' "$RELEASE_NOTES" >> $GITHUB_STEP_SUMMARY
-
-  update-badge:
-    name: Update release badge
-    needs: release-production
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-
       - name: Update version badge in README
         run: |
-          # The badge contains numeric versions only.
-          [[ "$VERSION" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)([-+][0-9A-Za-z.+-]+)?$ ]] || {
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          }
-          VERSION_NUM="${BASH_REMATCH[1]}"
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION_NUM="${VERSION#v}"
+
+          # The badge PR targets main, so build it from main in a separate
+          # worktree — leaving the tagged checkout above untouched for deploy.
+          git fetch --no-tags --depth=1 origin main
+          git worktree add ../main-badge FETCH_HEAD
+          cd ../main-badge
 
           # Update the version badge
           sed -i "s/version-[0-9]*\.[0-9]*\.[0-9]*-blue/version-${VERSION_NUM}-blue/g" README.md
@@ -93,8 +52,10 @@ jobs:
       - name: Create PR for version badge update
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
+          VERSION="${{ github.event.release.tag_name }}"
           BRANCH="chore/update-version-badge-${VERSION}"
 
+          cd ../main-badge
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -115,3 +76,26 @@ jobs:
           gh pr merge "$BRANCH" --auto --squash --delete-branch || echo "Auto-merge enabled, waiting for requirements"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel (Production)
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Summary
+        run: |
+          echo "## 🚀 Production Release" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | URL |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Production** | [aquarioufpb.com](https://aquarioufpb.com) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Vercel URL** | ${{ steps.deploy.outputs.url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Release Notes:**" >> $GITHUB_STEP_SUMMARY
+          echo "${{ github.event.release.body }}" >> $GITHUB_STEP_SUMMARY
