@@ -94,10 +94,7 @@ export function analyzeBlocking({
     const goal = graph.byCode.get(code);
     if (done.has(code)) {
       ignoredSelected.push(code);
-    } else if (
-      (goal && availableIn(goal, done)) ||
-      servedBy(code).some(g => availableIn(g, done))
-    ) {
+    } else if (goal ? availableIn(goal, done) : servedBy(code).some(g => availableIn(g, done))) {
       chosen.push(code);
     } else {
       invalidSelected.push(code);
@@ -121,7 +118,6 @@ export function analyzeBlocking({
   const missingNow = memo(done);
 
   const pending = goals.filter(goal => !after.has(key(goal)));
-  const pendingCodes = new Set(pending.map(key));
   const available: BlockingAnalysis["available"] = [],
     unlockedLater: BlockingItem[] = [],
     blockedGoals: PlannerGoal[] = [],
@@ -175,18 +171,18 @@ export function analyzeBlocking({
     const placed = new Set(chain);
     return [...chain, ...[...left].filter(code => !placed.has(code)).sort()];
   };
-  // Disciplines met by history or by S do not wait on anything: they do not propagate a dependency.
-  const settled = new Set([
-    ...after,
-    ...[...available, ...unlockedLater].map(entry => normalizeCode(entry.code)),
-  ]);
+  const pendingRuleOf = (goal: PlannerGoal) =>
+    remainingRequirement(goal.prerequisite, credited(goal, after) ?? after);
+  const pendingGraph = buildRequirementGraph(
+    blockedGoals.map(goal => ({ ...goal, prerequisite: pendingRuleOf(goal) }))
+  );
   const blocked = blockedGoals.map(goal => ({
     ...item(goal),
-    pendingRule: remainingRequirement(goal.prerequisite, credited(goal, after) ?? after),
+    pendingRule: pendingRuleOf(goal),
     chain: chainOf(goal),
-    dependents: [...graph.reachable(key(goal), settled)].filter(code => {
+    dependents: [...pendingGraph.reachable(key(goal))].filter(code => {
       const dependent = graph.byCode.get(code);
-      return dependent && pendingCodes.has(code) && !missingNow(dependent).uncertain;
+      return dependent && !missingNow(dependent).uncertain;
     }).length,
   }));
 

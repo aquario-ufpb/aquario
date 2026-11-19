@@ -76,8 +76,9 @@ export function buildRequirementGraph(
         return [];
       }
       // Only what is still unmet: an OR already met by `done` adds no edge back into a cycle.
-      return references(remainingRequirement(node.prerequisite, done)).filter(
-        ref => !done.has(ref) && !waiver.skip.has(ref) && byCode.has(ref)
+      const credited = waiver.skip.size ? new Set([...done, ...waiver.skip]) : done;
+      return references(remainingRequirement(node.prerequisite, credited)).filter(ref =>
+        byCode.has(ref)
       );
     };
     // Tarjan from the goal: every node in a cycle maps to its component. Results then never

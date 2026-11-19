@@ -304,6 +304,53 @@ describe("analyzeBlocking", () => {
     expect(find(only.blocked, "A1").dependents).toBe(1);
   });
 
+  it("checks the selected curriculum discipline's own prerequisites before awarding credit", () => {
+    const result = analyzeBlocking({
+      goals: [
+        goal("A1", null, { equivalents: ["B2"] }),
+        goal("B2", "P1"),
+        goal("P1"),
+        goal("X1", "B2"),
+      ],
+      completedCodes: [],
+      selected: ["B2"],
+    });
+    expect(result.invalidSelected).toEqual(["B2"]);
+    expect(result.creditedBySelection).toEqual([]);
+    expect(result.unlockedLater).toEqual([]);
+  });
+
+  it("drops a satisfied alternative from direct and transitive dependent counts", () => {
+    const goals = [
+      goal("P1"),
+      goal("A1", "P1"),
+      goal("D1"),
+      goal("Q1", "P1"),
+      goal("T1", "(A1 OU D1) E Q1"),
+      goal("U1", "T1"),
+    ];
+    for (const history of [true, false]) {
+      const result = analyzeBlocking({
+        goals,
+        completedCodes: history ? ["D1"] : [],
+        selected: history ? [] : ["D1"],
+      });
+      expect(find(result.blocked, "A1").dependents).toBe(0);
+      expect(find(result.blocked, "Q1").dependents).toBe(2);
+    }
+  });
+
+  it("breaks an ancestor cycle when a waiver satisfies the other alternative", () => {
+    const result = analyzeBlocking({
+      goals: [goal("A1", "A1 OU Z9"), goal("B1", "A1")],
+      completedCodes: [],
+      selected: [],
+      waivers: [{ target: "A1", requires: "Z9" }],
+    });
+    expect(codes(result.available)).toEqual(["A1"]);
+    expect(find(result.blocked, "B1").chain).toEqual(["A1"]);
+  });
+
   it("credits equivalences from a selected offer that is outside the curriculum", () => {
     const curriculum = [goal("A1", null, { equivalents: ["EXT1"] }), goal("X1", "A1")];
     const result = analyzeBlocking({ goals: curriculum, completedCodes: [], selected: ["ext1"] });
