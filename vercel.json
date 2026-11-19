@@ -5,12 +5,19 @@
   "functions": {
     "src/app/api/usuarios/me/sigaa/sync/route.ts": {
       "maxDuration": 180
+    },
+    "src/app/api/internal/push/prazos/route.ts": {
+      "maxDuration": 120
     }
   },
   "crons": [
     {
       "path": "/api/internal/sigaa/retention",
       "schedule": "17 3 * * *"
+    },
+    {
+      "path": "/api/internal/push/prazos",
+      "schedule": "0 11 * * *"
     }
   ]
 }

@@ -26,6 +26,7 @@ import type { ISigaaRepository } from "@/lib/server/db/interfaces/sigaa-reposito
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
 import type { IEnrollmentPlanRepository } from "@/lib/server/db/interfaces/enrollment-plan-repository.interface";
 import type { IBlobStorage } from "@/lib/server/services/blob/blob-storage.interface";
+import type { IPushDispositivosRepository } from "@/lib/server/db/interfaces/push-dispositivos-repository.interface";
 
 /**
  * Container type definition
@@ -59,6 +60,7 @@ export type Container = {
   publicOfferingCacheRepository: IPublicOfferingCacheRepository;
   enrollmentPlanRepository: IEnrollmentPlanRepository;
   calendarRoomBindingRepository: ICalendarRoomBindingRepository;
+  pushDispositivosRepository: IPushDispositivosRepository;
 
   // Services
   emailService: IEmailService;

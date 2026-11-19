@@ -126,6 +126,12 @@ export type IProjetosRepository = {
     publicadoEm: Date | null
   ): Promise<ProjetoWithRelations>;
 
+  /**
+   * Grava `notificadoEm` só se ainda estiver vazio. Atômico: entre requisições concorrentes,
+   * apenas uma recebe `true` e envia o push de "novo projeto".
+   */
+  marcarNotificado(slug: string): Promise<boolean>;
+
   replaceAutores(
     projetoId: string,
     slug: string,
