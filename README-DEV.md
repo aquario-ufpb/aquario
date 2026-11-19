@@ -67,8 +67,8 @@ The app automatically configures itself based on what's present:
 Uses Docker for a local PostgreSQL database:
 
 ```bash
-# Start database
-docker-compose up -d
+# Start database (or `docker-compose up -d` with the legacy Compose v1)
+docker compose up -d
 
 # Setup database
 npm run db:migrate

@@ -48,7 +48,7 @@ function createEnvFileIfNeeded() {
 # Database
 # -------------------------------------------
 # PostgreSQL connection string (local Docker)
-# For local Docker, run: docker-compose up -d
+# For local Docker, run: docker compose up -d
 DATABASE_URL="postgresql://aquario:aquario@localhost:5432/aquario"
 
 # -------------------------------------------
@@ -118,6 +118,35 @@ function exec(command, options = {}) {
     return false;
   }
 }
+
+/** Compose v2 (`docker compose`) or legacy v1 (`docker-compose`), whichever is installed. */
+function composeCommand() {
+  return ["docker compose", "docker-compose"].find(command => {
+    try {
+      execSync(`${command} version`, { stdio: "pipe" });
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
+/** Starts the local database; true only when Compose actually ran. */
+function startDatabase(successMessage) {
+  const compose = composeCommand();
+  if (compose && exec(`${compose} up -d`)) {
+    console.log(`   ✅ ${successMessage}\n`);
+    return true;
+  }
+  console.log("   ❌ Could not start the Docker database");
+  console.log(
+    "   💡 Install Docker Compose (v2: `docker compose`, or v1: `docker-compose`) or set DATABASE_URL\n"
+  );
+  return false;
+}
+
+// Set when a database start was attempted and failed: later steps must not run against no database.
+let databaseStartFailed = false;
 
 function checkCommand(command) {
   try {
@@ -258,18 +287,15 @@ if (isUsingCloudDatabase) {
 
         if (exists) {
           console.log("   🔄 Starting existing Docker container...");
-          exec("docker-compose up -d");
-          console.log("   ✅ Docker database started\n");
+          databaseStartFailed ||= !startDatabase("Docker database started");
         } else {
           console.log("   🆕 Creating and starting Docker database...");
-          exec("docker-compose up -d");
-          console.log("   ✅ Docker database created and started\n");
+          databaseStartFailed ||= !startDatabase("Docker database created and started");
         }
       }
     } catch (_error) {
       console.log("   ⚠️  Could not check Docker status, attempting to start...");
-      exec("docker-compose up -d");
-      console.log("   ✅ Docker database setup attempted\n");
+      databaseStartFailed ||= !startDatabase("Docker database setup attempted");
     }
   }
 } else if (isUsingLocalDatabase) {
@@ -306,20 +332,27 @@ if (isUsingCloudDatabase) {
 
         if (exists) {
           console.log("   🔄 Starting existing Docker container...");
-          exec("docker-compose up -d");
-          console.log("   ✅ Docker database started\n");
+          databaseStartFailed ||= !startDatabase("Docker database started");
         } else {
           console.log("   🆕 Creating and starting Docker database...");
-          exec("docker-compose up -d");
-          console.log("   ✅ Docker database created and started\n");
+          databaseStartFailed ||= !startDatabase("Docker database created and started");
         }
       }
     } catch (_error) {
       console.log("   ⚠️  Could not check Docker status, attempting to start...");
-      exec("docker-compose up -d");
-      console.log("   ✅ Docker database setup attempted\n");
+      databaseStartFailed ||= !startDatabase("Docker database setup attempted");
     }
   }
+}
+
+if (databaseStartFailed) {
+  console.log(
+    "❌ Setup stopped: the local database is not running, so migrations and seed were skipped."
+  );
+  console.log(
+    "   💡 Fix Docker Compose (or point DATABASE_URL to a running database) and run 'npm run setup' again\n"
+  );
+  process.exit(1);
 }
 
 // =============================================================================
