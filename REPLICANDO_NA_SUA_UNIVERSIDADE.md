@@ -129,10 +129,7 @@ postgresql://neondb_owner:abc123@ep-cool-name-123456.us-east-2.aws.neon.tech/neo
 
 Guarde esse valor — ele sera a variavel `DATABASE_URL`.
 
-**2.3.** Para o CI/CD funcionar (preview deployments automaticos), voce tambem vai precisar de:
-
-- **`NEON_API_KEY`**: Acesse *Account Settings > API Keys* no painel do Neon
-- **`NEON_PROJECT_ID`**: Visivel na URL da dashboard do seu projeto (ex: `crimson-frog-12345678`)
+**2.3.** Para preview e staging, crie um segundo projeto Neon com uma raiz vazia chamada `aquario-synthetic` e uma chave restrita ao projeto. Consulte o [guia de configuração dos ambientes](docs/sigaa-v1-environments.md).
 
 ---
 
@@ -147,27 +144,22 @@ A Vercel hospeda a aplicacao Next.js (frontend + API) e faz deploys automaticos.
 - Selecione o fork do Aquario na sua organizacao
 - Framework: **Next.js** (detectado automaticamente)
 
-**3.3.** Configure as variaveis de ambiente. Na aba **Settings > Environment Variables**, adicione:
+**3.3.** Configure as variáveis no projeto de produção. Na aba **Settings > Environment Variables**, adicione:
 
 | Variavel | Valor | Ambiente |
 |----------|-------|----------|
-| `DATABASE_URL` | Connection string do Neon | Production, Preview, Development |
-| `JWT_SECRET` | String aleatoria de 32+ caracteres* | Production, Preview |
-| `RESEND_API_KEY` | Chave da API do Resend (passo 5) | Production, Preview |
-| `EMAIL_FROM` | `noreply@seudominio.com` | Production, Preview |
-| `BLOB_READ_WRITE_TOKEN` | Token do Vercel Blob (passo 4) | Production, Preview |
+| `DATABASE_URL` | Connection string do Neon | Production |
+| `JWT_SECRET` | String aleatoria de 32+ caracteres* | Production |
+| `RESEND_API_KEY` | Chave da API do Resend (passo 5) | Production |
+| `EMAIL_FROM` | `noreply@seudominio.com` | Production |
+| `BLOB_READ_WRITE_TOKEN` | Token do Vercel Blob (passo 4) | Production |
 | `NEXT_PUBLIC_APP_URL` | `https://seudominio.com` | Production |
-| `NEXT_PUBLIC_IS_STAGING` | `true` | Preview |
-| `MASTER_ADMIN_EMAILS` | `seu@email.com` | Production, Preview |
-| `NEXT_PUBLIC_GUIAS_DATA_PROVIDER` | `backend` | Production, Preview |
+| `MASTER_ADMIN_EMAILS` | `seu@email.com` | Production |
+| `NEXT_PUBLIC_GUIAS_DATA_PROVIDER` | `backend` | Production |
 
 > *Gere um JWT_SECRET seguro com: `openssl rand -base64 32`
 
-**3.4.** Para o CI/CD, voce vai precisar de tres valores da Vercel:
-
-- **`VERCEL_TOKEN`**: Acesse *Settings > Tokens* em https://vercel.com/account/tokens
-- **`VERCEL_ORG_ID`**: Visivel em *Settings > General* do seu time/conta
-- **`VERCEL_PROJECT_ID`**: Visivel em *Settings > General* do projeto
+**3.4.** Crie projetos Vercel exclusivos para staging e preview. Configure credenciais de teste no projeto correspondente e siga o [guia de ambientes](docs/sigaa-v1-environments.md) para os tokens de deploy, IDs e restrições de acesso.
 
 > **Como funciona o deploy:** push para `main` deploya para staging. Criar um GitHub Release deploya para producao.
 
@@ -259,20 +251,7 @@ Um dominio proprio (ex: `aquarioufrj.com`) da um toque profissional.
 
 ## Configurando o CI/CD
 
-O Aquario usa GitHub Actions para CI/CD automatizado. Para tudo funcionar, voce precisa configurar os **secrets** do repositorio.
-
-### GitHub Secrets Necessarios
-
-Va em **Settings > Secrets and variables > Actions** no seu repositorio e adicione:
-
-| Secret | Onde obter | Usado por |
-|--------|-----------|-----------|
-| `VERCEL_TOKEN` | Vercel > Account Settings > Tokens | Preview, Staging, Production |
-| `VERCEL_ORG_ID` | Vercel > Settings > General | Preview, Staging, Production |
-| `VERCEL_PROJECT_ID` | Vercel > Project > Settings > General | Preview, Staging, Production |
-| `NEON_API_KEY` | Neon > Account Settings > API Keys | Preview, Staging |
-| `NEON_PROJECT_ID` | URL da dashboard do Neon | Preview, Staging |
-| `TOKEN_PAT` | GitHub > Settings > Developer settings > Personal access tokens | Atualizacao de submodules (opcional) |
+Os workflows de deploy usam os environments protegidos `nonproduction-preview`, `staging` e `production`. Siga a [lista de variáveis, segredos e restrições de branch](docs/sigaa-v1-environments.md). Os workflows de manutenção podem usar `MAINTENANCE_TOKEN_PAT`, cadastrado exclusivamente no environment `repository-maintenance`.
 
 ### Workflows e o que fazem
 
@@ -281,7 +260,7 @@ Va em **Settings > Secrets and variables > Actions** no seu repositorio e adicio
 | **code-quality** | Push/PR para `main` | Lint, formatacao, type-check, build |
 | **tests** | Push/PR para `main` | Testes unitarios (Jest) e integracao (Vitest) |
 | **preview** | PR aberto/atualizado | Cria branch no Neon + deploy de preview na Vercel |
-| **staging** | Push para `main` | Reseta staging no Neon + deploy para staging |
+| **staging** | Push para `main` | Cria um banco de teste com migrations e seed e publica em staging |
 | **production** | GitHub Release criado | Deploy para producao na Vercel |
 | **update-*-submodule** | Manual (workflow dispatch) | Atualiza submodules de conteudo |
 | **update-paas-data** | Semanal (seg 2h UTC) ou manual | Atualiza dados do PAAS |
@@ -294,7 +273,7 @@ PR aberto/atualizado
   → Deploy de preview com URL unica
 
 PR mergeado em main
-  → Staging resetado no Neon
+  → Novo banco de staging com migrations e seed
   → Deploy para staging (staging.seudominio.com)
 
 Release criado no GitHub
@@ -418,7 +397,7 @@ Use esta checklist para garantir que tudo esta configurado:
 - [ ] `EMAIL_FROM` configurado
 - [ ] `NEXT_PUBLIC_APP_URL` configurado
 - [ ] `MASTER_ADMIN_EMAILS` configurado com seu email
-- [ ] GitHub Secrets configurados (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `NEON_API_KEY`, `NEON_PROJECT_ID`)
+- [ ] Credenciais e projetos de cada ambiente configurados conforme o guia de ambientes
 - [ ] `prisma/seed.ts` editado com dados da sua universidade (campus, centro, cursos, calendario)
 - [ ] Seed rodado com sucesso
 - [ ] Primeiro deploy funcionando

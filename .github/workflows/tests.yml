@@ -8,6 +8,9 @@ on:
       - "prisma/**"
       - "package.json"
       - ".github/workflows/tests.yml"
+      - ".github/workflows/preview.yml"
+      - ".github/workflows/staging.yml"
+      - "scripts/ci/**"
   pull_request:
     paths:
       - "src/**"
@@ -17,6 +20,9 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/tests.yml"
+      - ".github/workflows/preview.yml"
+      - ".github/workflows/staging.yml"
+      - "scripts/ci/**"
 
 jobs:
   unit-tests:
@@ -41,6 +47,9 @@ jobs:
 
       - name: Generate Prisma Client
         run: npm run db:generate
+
+      - name: Test nonproduction provisioning with simulated provider responses
+        run: python3 -m unittest discover -s scripts/ci -v
 
       - name: Run unit tests
         run: npm run test -- --coverage --maxWorkers=2

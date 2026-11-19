@@ -24,11 +24,7 @@ type AuthEvent =
   | { name: "register_attempted" }
   | { name: "register_succeeded" }
   | { name: "register_failed"; error_type: string }
-  | { name: "forgot_password_submitted" }
-  | { name: "reset_password_submitted" }
-  | { name: "reset_password_succeeded" }
-  | { name: "email_verification_succeeded" }
-  | { name: "email_verification_resent" };
+  | { name: "forgot_password_submitted" };
 
 type SobreEvent = {
   name: "sobre_contact_clicked";

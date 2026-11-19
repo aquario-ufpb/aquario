@@ -7,6 +7,7 @@ import { z } from "zod";
 import { createLogger } from "@/lib/server/utils/logger";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { updatePhotoSchema } from "@/lib/server/api-schemas/usuarios";
+import { cleanupOwnedImage } from "@/lib/server/services/blob/managed-images";
 
 const log = createLogger("Photo");
 
@@ -33,14 +34,7 @@ export async function PATCH(request: Request) {
 
       // Delete the old photo only after the database no longer points to it.
       if (usuario.urlFotoPerfil && usuario.urlFotoPerfil !== urlFotoPerfil) {
-        try {
-          await blobStorage.delete(usuario.urlFotoPerfil);
-        } catch (error) {
-          log.warn("Could not delete old photo", {
-            url: usuario.urlFotoPerfil,
-            error: String(error),
-          });
-        }
+        await cleanupOwnedImage(blobStorage, usuario.id, usuario.urlFotoPerfil);
       }
 
       return NextResponse.json(formatUserResponse(updatedUser));
@@ -75,11 +69,7 @@ export async function DELETE(request: Request) {
 
       // Delete the photo from storage after the database no longer references it.
       if (usuario.urlFotoPerfil) {
-        try {
-          await blobStorage.delete(usuario.urlFotoPerfil);
-        } catch (error) {
-          log.warn("Could not delete photo", { url: usuario.urlFotoPerfil, error: String(error) });
-        }
+        await cleanupOwnedImage(blobStorage, usuario.id, usuario.urlFotoPerfil);
       }
 
       return NextResponse.json(formatUserResponse(updatedUser));

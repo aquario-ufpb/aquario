@@ -4,6 +4,7 @@ import { getContainer } from "@/lib/server/container";
 import { updateProjetoAutoresSchema } from "@/lib/shared/validations/projetos";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { withAuth, canManageProjeto } from "@/lib/server/services/auth/middleware";
+import { canAttributeEntidades } from "@/lib/server/services/auth/projeto-authors";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
@@ -59,6 +60,12 @@ export function PUT(request: NextRequest, context: RouteContext) {
 
       const usuarioIds = autores.map(a => a.usuarioId).filter((id): id is string => !!id);
       const entidadeIds = autores.map(a => a.entidadeId).filter((id): id is string => !!id);
+
+      if (!(await canAttributeEntidades(usuario, entidadeIds))) {
+        return ApiError.forbidden(
+          "Você não tem permissão de admin em uma das entidades listadas como autor."
+        );
+      }
 
       if (!(await projetosRepository.usuariosExist(usuarioIds))) {
         return ApiError.badRequest("Um ou mais usuários não existem");

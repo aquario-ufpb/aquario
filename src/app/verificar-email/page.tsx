@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEmailActionToken } from "@/lib/client/hooks/use-email-action-token";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { authService } from "@/lib/client/api/auth";
 import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser } from "@/lib/client/hooks/use-usuarios";
-import { trackEvent } from "@/analytics/posthog-client";
 
 function VerificarEmailForm() {
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +16,8 @@ function VerificarEmailForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [resendSuccess, setResendSuccess] = useState(false);
-  const searchParams = useSearchParams();
+  const emailToken = useEmailActionToken();
+  const submittedToken = React.useRef<string | null>(null);
   const { token } = useAuth();
   const { data: user } = useCurrentUser();
 
@@ -29,11 +29,10 @@ function VerificarEmailForm() {
       try {
         const result = await authService.verifyEmail(verifyToken);
         if (result.success) {
-          trackEvent("email_verification_succeeded");
           setSuccess(true);
           // Refresh user data if logged in
           if (token) {
-            window.location.reload();
+            window.location.replace("/");
           }
         }
       } catch (err: unknown) {
@@ -50,11 +49,11 @@ function VerificarEmailForm() {
   );
 
   useEffect(() => {
-    const tokenParam = searchParams.get("token");
-    if (tokenParam) {
-      handleVerify(tokenParam);
+    if (emailToken && submittedToken.current !== emailToken) {
+      submittedToken.current = emailToken;
+      void handleVerify(emailToken);
     }
-  }, [searchParams, handleVerify]);
+  }, [emailToken, handleVerify]);
 
   const handleResend = async () => {
     if (token) {
@@ -65,7 +64,6 @@ function VerificarEmailForm() {
 
       try {
         await authService.resendVerification(token);
-        trackEvent("email_verification_resent");
         setResendSuccess(true);
         setError(null);
       } catch (err: unknown) {
@@ -90,7 +88,6 @@ function VerificarEmailForm() {
 
       try {
         await authService.requestResendVerification(email);
-        trackEvent("email_verification_resent");
         setResendSuccess(true);
         setError(null);
       } catch (err: unknown) {
@@ -162,7 +159,7 @@ function VerificarEmailForm() {
             Verificar email
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {searchParams.get("token")
+            {emailToken
               ? "Verificando seu email..."
               : "Verifique seu email ou solicite um novo link"}
           </p>
@@ -170,7 +167,7 @@ function VerificarEmailForm() {
 
         {/* Content */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
-          {isLoading && !searchParams.get("token") ? (
+          {isLoading && !emailToken ? (
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
               <p className="text-gray-600 dark:text-gray-400">Verificando...</p>
@@ -203,7 +200,7 @@ function VerificarEmailForm() {
                 </div>
               )}
 
-              {!searchParams.get("token") && (
+              {!emailToken && (
                 <div className="space-y-4">
                   <p className="text-center text-gray-600 dark:text-gray-400 mb-4">
                     {user && !user.eVerificado

@@ -43,7 +43,7 @@ This is an open-source project with different environment configurations:
 | Environment | Who             | Database             | Email          | Analytics |
 | ----------- | --------------- | -------------------- | -------------- | --------- |
 | **Dev**     | Anyone          | Local Docker         | Mock (console) | Disabled  |
-| **Staging** | Project members | Neon (staging branch)| Resend         | Enabled   |
+| **Staging** | Project members | Neon (synthetic seed)| Resend         | Enabled   |
 | **Prod**    | Production      | Neon (main branch)   | Resend         | Enabled   |
 
 ### Smart Defaults
@@ -403,7 +403,7 @@ We use GitHub Actions for continuous integration and deployment.
 │  2. STAGING - PR Merged                                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  PR merged → main updated                                        │
-│    → Neon staging branch reset from main                        │
+│    → New staging database with migrations and seed                        │
 │    → Deployed to staging.aquarioufpb.com                        │
 │    → PR's Neon branch deleted (cleanup)                         │
 └─────────────────────────────────────────────────────────────────┘
@@ -430,10 +430,10 @@ We use GitHub Actions for continuous integration and deployment.
 | Branch | Data | Purpose |
 |--------|------|---------|
 | `main` | Production data | Production database |
-| `staging` | Copy of main | Reset on each merge to main |
-| `pr-123-title` | Seed data only | Per-PR preview (deleted on close) |
+| `aq-ci-staging-r…` | Migrations and seed from an empty template | Replaced after the staging alias is verified |
+| `aq-ci-pr-123-r…` | Migrations and seed from an empty template | Per-PR preview (deleted on close) |
 
-> **Security:** Preview deployments only have seed data, never production data.
+Preview and staging share an isolated Neon project. Production credentials belong to the protected production environment. [Configuration and cutover](docs/sigaa-v1-environments.md)
 
 ---
 

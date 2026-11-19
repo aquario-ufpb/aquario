@@ -90,6 +90,12 @@ export type IMembrosRepository = {
   findByUsuarioId(usuarioId: string): Promise<MembroWithEntidade[]>;
   findRawByUsuarioId(usuarioId: string): Promise<MembroRaw[]>;
   update(id: string, data: UpdateMembroInput): Promise<MembroWithRelations>;
+  updateOwn(
+    id: string,
+    usuarioId: string,
+    data: UpdateMembroInput,
+    access: "self" | "entity-admin"
+  ): Promise<MembroWithRelations | null>;
   delete(id: string): Promise<void>;
   deleteByUsuarioId(usuarioId: string): Promise<number>;
   usuarioExists(usuarioId: string): Promise<boolean>;

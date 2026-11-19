@@ -169,7 +169,7 @@ export async function uploadProjetoImage(file: File): Promise<string> {
 /**
  * DELETE /api/upload/projeto-image — session cleanup for blobs the caller
  * uploaded but didn't commit (cover-replace + cancel). For replacing a
- * committed cover, the PATCH handler GCs the old blob automatically.
+ * committed cover, PATCH handles cleanup when ownership and references permit.
  */
 export async function deleteProjetoImage(url: string): Promise<void> {
   const res = await apiClient(`/upload/projeto-image?url=${encodeURIComponent(url)}`, {

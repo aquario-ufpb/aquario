@@ -1,21 +1,30 @@
 # Política de ambientes SIGAA V1
 
+## Preparar os ambientes de deploy
+
+1. Crie um projeto Neon exclusivo para testes. Renomeie a raiz para `aquario-synthetic`, com o banco vazio `neondb` e apenas o papel de aplicação `neondb_owner`. Mantenha a raiz sem tabelas, migrations ou dados. Gere uma **chave de API de projeto** restrita a esse projeto. Cada execução cria uma filha com `init_source=parent-schema`, troca a senha da filha e aplica as migrations e o seed nela. [Chaves de projeto Neon](https://neon.com/docs/manage/orgs-api)
+2. Crie projetos Vercel distintos para **preview**, **staging** e **produção**. Conecte o repo ao projeto de preview e desative os deploys Git automáticos nos três projetos para que as Actions controlem a publicação e o banco de cada build. Mova o alias de staging para seu projeto. Use tokens de operadores ou equipes com acesso somente ao ambiente correspondente. Revise integrações, variáveis compartilhadas e todos os targets. O código de uma PR pode ler o ambiente de seu build e runtime. Use apenas credenciais descartáveis de teste no projeto de preview, inclusive para JWT e Blob. Mantenha tokens de CI e do conector, bancos de outros ambientes e contas privilegiadas fora dele.
+3. No GitHub, restrinja os environments `nonproduction-preview` e `staging` a `main`. Restrinja o environment `production` à branch protegida `main` para a importação manual e às tags de release protegidas para deploy. Exija revisão para acessar segredos de produção. Cadastre os valores abaixo antes do primeiro deploy.
+4. Na troca de ambientes, revogue chaves antigas de Neon e Vercel compartilhadas com workflows, rotacione os segredos e senhas de produção que estiveram disponíveis nos ambientes anteriores e remova as cópias em secrets do repositório ou organização acessíveis a PRs. Desative URLs de deployments antigos e retire as branches legadas com o operador responsável, depois de confirmar o novo staging. A limpeza automática atua somente em filhas criadas pela nova convenção. Revise logs e artefatos históricos conforme a política de retenção da equipe.
+
+| Onde configurar | Nomes | Finalidade |
+| --- | --- | --- |
+| GitHub Actions, **variables** | `NONPROD_NEON_PROJECT_ID`, `PRODUCTION_NEON_PROJECT_ID`, `PREVIEW_VERCEL_PROJECT_ID`, `STAGING_VERCEL_PROJECT_ID`, `PRODUCTION_VERCEL_PROJECT_ID` | Identificar os destinos e detectar projetos compartilhados. IDs podem ser visíveis ao CI. |
+| Cada environment `nonproduction-preview` e `staging` | Variable `NONPROD_VERCEL_ORG_ID`. Secrets `NONPROD_NEON_API_KEY` e `NONPROD_VERCEL_TOKEN` | Equipe da Vercel e chaves exclusivas do ambiente. A chave Neon tem escopo do projeto de testes. |
+| Environment `staging`, **secrets** | `STAGING_SIGAA_REAUTH_JWT_SECRET`, `STAGING_SIGAA_CONNECTOR_URL`, `STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS`, `STAGING_SIGAA_CONNECTOR_API_SECRET` | Acesso ao conector de staging no deployment promovido. |
+| Environment `production`, **secrets** | `PRODUCTION_VERCEL_TOKEN`, `PRODUCTION_VERCEL_ORG_ID`, `PRODUCTION_VERCEL_PROJECT_ID`, `PRODUCTION_NEON_API_KEY`, `PRODUCTION_NEON_PROJECT_ID` | Publicação da release e importação manual de entidade. |
+
+A configuração de `DATABASE_URL` de produção na Vercel pertence somente ao target Production do projeto de produção. Mantenha a configuração local em um banco de desenvolvimento. A URL da filha de preview é temporária e específica da branch Git. O seed padrão em `prisma/seed.ts` carrega o catálogo público e exemplos. Não acrescente contas administrativas, senhas ou matrículas de teste reais ao seed de CI.
+
 ## Preview
 
-Deployments de pull request não recebem `SIGAA_CONNECTOR_URL` nem
-`SIGAA_CONNECTOR_API_SECRET`. O carregador server-only também rejeita o conector quando
-`VERCEL_ENV=preview`, exceto no deployment de staging explicitamente identificado.
+PRs do próprio repositório para `main` recebem uma URL quando o build remoto do SHA da PR termina. A Action usa o workflow e o script da base. A Vercel recebe o código da PR e as credenciais da filha correspondente. Ao atualizar a PR, a Action mantém o banco anterior até o novo build ficar pronto. Fechar a PR limpa bancos gerenciados e a variável de branch.
 
-O banco de Preview é recriado com migrations e seed. Nenhum snapshot acadêmico de produção é
-necessário para validar a interface.
+Deployments de PR mantêm o conector SIGAA desabilitado. O carregador server-only rejeita o conector quando `VERCEL_ENV=preview`, exceto no deployment de staging identificado.
 
 ## Staging
 
-Staging usa credenciais próprias, diferentes de produção. O workflow remove conexões, snapshots,
-tentativas, limites e matrículas originadas pelo SIGAA antes de publicar o deployment. A verificação
-SQL falha se algum dado acadêmico importado permanecer. O deployment pode ser iniciado manualmente
-na branch que contém o stack; os segredos entram somente nessa execução e não são cadastrados no
-ambiente Preview geral do projeto.
+Um push para `main` ou uma execução manual nessa branch cria um banco de staging com migrations e seed. Os segredos do conector entram apenas no deployment de staging. O banco anterior é retirado depois de verificar que o alias aponta para o novo deployment. Uma falha ambígua durante a promoção mantém o banco disponível até a próxima promoção bem-sucedida.
 
 ## Produção
 

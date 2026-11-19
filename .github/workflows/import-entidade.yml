@@ -31,6 +31,8 @@ jobs:
   import:
     name: Import entidade
     runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
 
     env:
       ENTIDADE_FILE: ${{ inputs.file }}
@@ -62,8 +64,8 @@ jobs:
       # step, so it never leaves the step as an output or env var.
       - name: Import entidade
         env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+          NEON_API_KEY: ${{ secrets.PRODUCTION_NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.PRODUCTION_NEON_PROJECT_ID }}
         run: |
           set -euo pipefail
           API="https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID"
@@ -83,8 +85,18 @@ jobs:
             echo "::error::Failed to get production connection URI"
             exit 1
           fi
-          echo "::add-mask::$DATABASE_URL"
           export DATABASE_URL
+          python3 - <<'PYMASK'
+          import os
+          from urllib.parse import unquote, urlsplit
+          uri = os.environ["DATABASE_URL"]
+          password = urlsplit(uri).password
+          if not password:
+              raise SystemExit("Missing database role password")
+          for value in dict.fromkeys([password, unquote(password), uri]):
+              escaped = value.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+              print("::add-mask::" + escaped, flush=True)
+          PYMASK
 
           if [ "$APPLY" == "true" ]; then
             npx tsx scripts/import-entidade.ts "$ENTIDADE_FILE" --apply

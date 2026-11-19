@@ -248,6 +248,7 @@ export function OnboardingModal({
           className="fixed inset-0 z-50 touch-none overscroll-none bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none"
         />
         <DialogPrimitive.Content
+          data-ph-no-capture="true"
           data-onboarding-dialog
           onPointerDownOutside={e => e.preventDefault()}
           onEscapeKeyDown={e => e.preventDefault()}

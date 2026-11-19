@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
 import type {
   IMembrosRepository,
@@ -157,28 +158,42 @@ export class PrismaMembrosRepository implements IMembrosRepository {
   }
 
   async update(id: string, data: UpdateMembroInput): Promise<MembroWithRelations> {
-    const updateData: Record<string, unknown> = {};
-
-    if (data.papel !== undefined) {
-      updateData.papel = data.papel;
-    }
-    if (data.cargoId !== undefined) {
-      updateData.cargoId = data.cargoId;
-    }
-    if (data.startedAt !== undefined) {
-      updateData.startedAt = data.startedAt;
-    }
-    if (data.endedAt !== undefined) {
-      updateData.endedAt = data.endedAt;
-    }
-
     const membro = await prisma.membroEntidade.update({
       where: { id },
-      data: updateData,
+      data,
       include: membroInclude,
     });
 
     return this.mapToMembroWithRelations(membro);
+  }
+
+  async updateOwn(
+    id: string,
+    usuarioId: string,
+    data: UpdateMembroInput,
+    access: "self" | "entity-admin"
+  ): Promise<MembroWithRelations | null> {
+    // PostgreSQL rechecks the predicate after waiting on a concurrent write
+    // to this membership, including a demotion or an ended term.
+    const master = { usuario: { papelPlataforma: "MASTER_ADMIN" as const } };
+    const where: Prisma.MembroEntidadeWhereUniqueInput = { id, usuarioId };
+    if (access === "entity-admin") {
+      where.OR = [master, { papel: "ADMIN", endedAt: null }];
+    } else if (data.papel !== undefined) {
+      Object.assign(where, master);
+    } else if (data.endedAt === null) {
+      where.OR = [master, { papel: "MEMBRO" }, { endedAt: null }];
+    }
+
+    try {
+      const membro = await prisma.membroEntidade.update({ where, data, include: membroInclude });
+      return this.mapToMembroWithRelations(membro);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async delete(id: string): Promise<void> {

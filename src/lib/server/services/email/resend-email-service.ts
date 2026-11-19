@@ -21,7 +21,7 @@ export class ResendEmailService implements IEmailService {
   }
 
   async sendVerificationEmail(to: string, token: string, nome: string): Promise<void> {
-    const verificationUrl = `${this.frontendUrl}/verificar-email?token=${token}`;
+    const verificationUrl = `${this.frontendUrl}/verificar-email#token=${encodeURIComponent(token)}`;
 
     try {
       await this.resend.emails.send({
@@ -37,7 +37,7 @@ export class ResendEmailService implements IEmailService {
   }
 
   async sendPasswordResetEmail(to: string, token: string, nome: string): Promise<void> {
-    const resetUrl = `${this.frontendUrl}/resetar-senha?token=${token}`;
+    const resetUrl = `${this.frontendUrl}/resetar-senha#token=${encodeURIComponent(token)}`;
 
     try {
       await this.resend.emails.send({

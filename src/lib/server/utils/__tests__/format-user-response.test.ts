@@ -8,6 +8,7 @@ function makeUsuario(): UsuarioWithRelations {
     email: "test@academico.ufpb.br",
     slug: "test-user",
     papelPlataforma: "MASTER_ADMIN",
+    sessionVersion: 0,
     eVerificado: true,
     eFacade: false,
     senhaHash: "hash",
