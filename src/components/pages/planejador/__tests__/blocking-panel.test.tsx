@@ -207,3 +207,9 @@ it("uses the offered code, even outside the curriculum, when the generated grid 
   expect(screen.getByRole("button", { name: "Remover EXT1" })).toBeInTheDocument();
   expect(within(group(/^Liberadas depois/)).getByText("Nome Q2")).toBeInTheDocument();
 });
+
+it("tells the student that a suggested discipline already completed was ignored", () => {
+  render(<BlockingPanel {...props} suggestedCodes={["P1"]} />);
+  fireEvent.click(screen.getByRole("button", { name: "Usar grade gerada" }));
+  expect(screen.getByText(/Nome P1 já está cumprida e foi ignorada/)).toBeInTheDocument();
+});
