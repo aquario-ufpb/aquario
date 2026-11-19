@@ -77,9 +77,11 @@ describe("buildRequirementGraph", () => {
     const whole = graph.missing(b2, new Set(), [{ target: "B2" }]);
     expect(sorted(whole.codes)).toEqual([]);
     expect(whole.uncertain).toBe(false);
+    // A waiver lifts the requirements of its own target wherever that target is expanded:
+    // A1 is still needed by B2, but P1 no longer is.
     const other = graph.missing(b2, new Set(), [{ target: "A1" }]);
-    expect(sorted(other.codes)).toEqual(["A1", "P1"]);
-    // A waiver applies only to the requested goal, never to its ancestors.
+    expect(sorted(other.codes)).toEqual(["A1"]);
+    // A waiver on B2 never reaches B2's ancestors.
     const ancestor = graph.missing(b2, new Set(), [{ target: "B2", requires: "P1" }]);
     expect(sorted(ancestor.codes)).toEqual(["A1", "P1"]);
   });
@@ -123,5 +125,33 @@ describe("buildRequirementGraph", () => {
     expect(result.uncertain).toBe(true);
     expect([...result.codes].sort()).toEqual(["A1", "P1"]);
     expect(strict.missing(need(strict, "H1"), new Set(["A1"])).uncertain).toBe(false);
+  });
+
+  it("missing applies an ancestor's own waivers when it expands it", () => {
+    const graph = buildRequirementGraph([goal("A1", "Z9"), goal("B1", "A1")]);
+    const pair = graph.missing(need(graph, "B1"), new Set(), [{ target: "A1", requires: "Z9" }]);
+    expect(pair.uncertain).toBe(false);
+    expect([...pair.codes]).toEqual(["A1"]);
+    const whole = graph.missing(need(graph, "B1"), new Set(), [{ target: "A1" }]);
+    expect(whole.uncertain).toBe(false);
+    expect([...whole.codes]).toEqual(["A1"]);
+    expect(graph.missing(need(graph, "B1"), new Set()).uncertain).toBe(true);
+  });
+
+  it("missing stays fast when two paths per level converge on a cycle", () => {
+    const goals = [goal("CY1", "CY2"), goal("CY2", "CY1")];
+    let previous = ["CY1", "CY2"];
+    for (let level = 0; level < 40; level++) {
+      const pair = [`L${level}a`, `L${level}b`];
+      goals.push(...pair.map(code => goal(code, `${previous[0]} E ${previous[1]}`)));
+      previous = pair;
+    }
+    goals.push(goal("TOP", `${previous[0]} E ${previous[1]}`));
+    const graph = buildRequirementGraph(goals);
+    const started = Date.now();
+    const result = graph.missing(need(graph, "TOP"), new Set());
+    expect(Date.now() - started).toBeLessThan(500);
+    expect(result.uncertain).toBe(true);
+    expect(result.codes.has("CY1")).toBe(true);
   });
 });

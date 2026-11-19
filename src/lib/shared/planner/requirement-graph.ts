@@ -1,4 +1,4 @@
-import { normalizeCode } from "./requirements";
+import { checkRequirement, normalizeCode, remainingRequirement } from "./requirements";
 import type { PlannerGoal, Requirement } from "./types";
 
 export type Missing = { codes: Set<string>; uncertain: boolean };
@@ -46,55 +46,88 @@ export function buildRequirementGraph(
       outgoing.set(code, next);
     }
   }
-  // ponytail: copies `trail` and `codes` per level, O(depth²) per call (~1 s per pass on a
-  // 500-deep chain); share a per-`done` cache across calls if deep curricula show up.
+  // ponytail: each call copies `codes` per level (O(depth²) on a very deep chain); share a
+  // per-`done` cache across calls if deep curricula show up.
   const missing = (goal: PlannerGoal, done: Set<string>, waivers: Waiver[] = []): Missing => {
-    const own = waivers.filter(waiver => normalizeCode(waiver.target) === normalizeCode(goal.code));
-    if (own.some(waiver => waiver.requires === undefined)) {
-      return { codes: new Set(), uncertain: false };
+    const empty = (): Missing => ({ codes: new Set(), uncertain: false });
+    const waiverFor = (code: string) => {
+      const own = waivers.filter(waiver => normalizeCode(waiver.target) === code);
+      return {
+        whole: own.some(waiver => waiver.requires === undefined),
+        skip: new Set(
+          own.flatMap(waiver => (waiver.requires ? [normalizeCode(waiver.requires)] : []))
+        ),
+      };
+    };
+    const root = normalizeCode(goal.code);
+    const rootWaiver = waiverFor(root);
+    if (rootWaiver.whole || done.has(goal.code)) {
+      return empty();
     }
-    const waived = new Set(
-      own.flatMap(waiver => (waiver.requires ? [normalizeCode(waiver.requires)] : []))
-    );
+    if (!goal.requirementsKnown) {
+      return { codes: new Set(), uncertain: true };
+    }
+
+    // Requirement edges still open for `code`: not done, not waived, inside the curriculum.
+    const edges = (code: string): string[] => {
+      const node = byCode.get(code);
+      const waiver = waiverFor(code);
+      if (!node?.requirementsKnown || waiver.whole) {
+        return [];
+      }
+      // Only what is still unmet: an OR already met by `done` adds no edge back into a cycle.
+      return references(remainingRequirement(node.prerequisite, done)).filter(
+        ref => !done.has(ref) && !waiver.skip.has(ref) && byCode.has(ref)
+      );
+    };
+    // Tarjan from the goal: every node in a cycle maps to its component. Results then never
+    // depend on the path taken to reach a node, so each code is evaluated once.
+    const order = new Map<string, number>(),
+      low = new Map<string, number>(),
+      stack: string[] = [],
+      cycles = new Map<string, string[]>();
+    const lowOf = (code: string) => low.get(code) ?? 0;
+    const strong = (code: string) => {
+      order.set(code, order.size);
+      low.set(code, order.size - 1);
+      stack.push(code);
+      for (const next of edges(code)) {
+        if (!order.has(next)) {
+          strong(next);
+          low.set(code, Math.min(lowOf(code), lowOf(next)));
+        } else if (stack.includes(next)) {
+          low.set(code, Math.min(lowOf(code), order.get(next) ?? 0));
+        }
+      }
+      if (lowOf(code) === order.get(code)) {
+        const members = stack.splice(stack.indexOf(code));
+        if (members.length > 1 || edges(code).includes(code)) {
+          for (const member of members) {
+            cycles.set(member, members);
+          }
+        }
+      }
+    };
+    strong(root);
+
     const cache = new Map<string, Missing>();
-    // Counts trail hits: an answer computed through one depends on the active path, so it is not cached.
-    let cuts = 0;
-    // `skip` holds the waived codes; it is only passed at the requested goal's own level.
-    const visit = (rule: Requirement | null, trail: Set<string>, skip: Set<string>): Missing => {
+    const visit = (rule: Requirement | null, skip: Set<string>): Missing => {
       if (!rule) {
-        return { codes: new Set(), uncertain: false };
+        return empty();
       }
       if (rule.kind === "unknown") {
         return { codes: new Set(), uncertain: true };
       }
       if (rule.kind === "code") {
         const code = normalizeCode(rule.code);
-        if (done.has(code) || skip.has(code)) {
-          return { codes: new Set(), uncertain: false };
-        }
-        if (trail.has(code)) {
-          cuts++;
-          return { codes: new Set([code]), uncertain: true };
-        }
-        const cached = cache.get(code);
-        if (cached) {
-          return cached;
-        }
-        const before = cuts;
-        const parent = byCode.get(code);
-        const dependency = parent?.requirementsKnown
-          ? visit(parent.prerequisite, new Set([...trail, code]), new Set())
-          : { codes: new Set<string>(), uncertain: true };
-        const answer = {
-          codes: new Set([code, ...dependency.codes]),
-          uncertain: dependency.uncertain,
-        };
-        if (cuts === before) {
-          cache.set(code, answer);
-        }
-        return answer;
+        return done.has(code) || skip.has(code) ? empty() : evaluate(code);
       }
-      const branches = rule.items.map(item => visit(item, trail, skip));
+      // A group already met (by history or by a waiver) has nothing left to expand. This also
+      // keeps the walk inside the edges used to detect cycles.
+      if (checkRequirement(rule, new Set([...done, ...skip])) === "met") {
+        return empty();
+      }
+      const branches = rule.items.map(item => visit(item, skip));
       if (rule.kind === "any") {
         const hidden = branches.some(branch => branch.uncertain);
         const best = [...branches].sort(
@@ -114,12 +147,39 @@ export function buildRequirementGraph(
         uncertain: branches.some(branch => branch.uncertain),
       };
     };
-    if (done.has(goal.code)) {
-      return { codes: new Set(), uncertain: false };
-    }
-    return goal.requirementsKnown
-      ? visit(goal.prerequisite, new Set([goal.code]), waived)
-      : { codes: new Set(), uncertain: true };
+    const evaluate = (code: string): Missing => {
+      const cached = cache.get(code);
+      if (cached) {
+        return cached;
+      }
+      const members = cycles.get(code);
+      let answer: Missing;
+      if (members) {
+        // A cycle cannot be resolved: keep every member and whatever hangs off it, uncertain.
+        const codes = new Set(members);
+        for (const member of members) {
+          for (const ref of edges(member).filter(ref => !members.includes(ref))) {
+            evaluate(ref).codes.forEach(item => codes.add(item));
+          }
+        }
+        answer = { codes, uncertain: true };
+        members.forEach(member => cache.set(member, answer));
+        return answer;
+      }
+      const parent = byCode.get(code);
+      const waiver = waiverFor(code);
+      if (!parent?.requirementsKnown) {
+        answer = { codes: new Set([code]), uncertain: true };
+      } else if (waiver.whole) {
+        answer = { codes: new Set([code]), uncertain: false };
+      } else {
+        const dependency = visit(parent.prerequisite, waiver.skip);
+        answer = { codes: new Set([code, ...dependency.codes]), uncertain: dependency.uncertain };
+      }
+      cache.set(code, answer);
+      return answer;
+    };
+    return visit(goal.prerequisite, rootWaiver.skip);
   };
   const reachable = (from: string, blocked: Set<string> = new Set()): Set<string> => {
     const seen = new Set<string>();
