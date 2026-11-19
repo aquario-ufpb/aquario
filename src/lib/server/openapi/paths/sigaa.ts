@@ -7,6 +7,7 @@ import {
   sigaaSyncRequestSchema,
 } from "@/lib/server/api-schemas/sigaa";
 import { sigaaAcademicSnapshotPayloadSchema } from "@/lib/server/services/sigaa/storage.types";
+import { SIGAA_DEADLINES_HEADER } from "@/lib/shared/types/sigaa-academic";
 import { ErrorCode } from "@/lib/shared/errors";
 
 import type { CommonSchemas } from "../common-schemas";
@@ -249,6 +250,9 @@ export function registerSigaaPaths(registry: OpenAPIRegistry, schemas: CommonSch
     path: "/usuarios/me/academico",
     tags: ["SIGAA"],
     summary: "Ler o último retrato acadêmico importado",
+    description:
+      "Envie X-Aquario-Sigaa-Deadlines com valor 1 para incluir os prazos das turmas quando disponíveis.",
+    request: { headers: z.object({ [SIGAA_DEADLINES_HEADER]: z.literal("1").optional() }) },
     security: [{ bearerAuth: [] }],
     responses: {
       200: {

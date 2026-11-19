@@ -12,6 +12,7 @@ import { resolveEnrolledClasses, type CalendarPendingItem } from "./resolve-enro
 export type ImportedEnrollment = {
   id: string;
   sourceKey: string | null;
+  sourceClass: SigaaAcademicSnapshotPayload["classes"][number] | null;
   hasRoomBinding: boolean;
   bindingOutdated: boolean;
   code: string | null;
@@ -54,9 +55,13 @@ export function projectSigaaEnrollments(
   const currentClasses = snapshot.classes.filter(
     item => (item.semester ?? sourceSemester) === semester
   );
-  const entries = currentClasses.map(item => ({
+  const entries: Pick<
+    ImportedEnrollment,
+    "id" | "sourceKey" | "sourceClass" | "code" | "name" | "schedule" | "room"
+  >[] = currentClasses.map(item => ({
     id: `sigaa:${item.sourceKey}`,
-    sourceKey: item.sourceKey as string | null,
+    sourceKey: item.sourceKey,
+    sourceClass: item,
     code: item.code,
     name: item.name,
     schedule: item.scheduleRaw,
@@ -74,7 +79,8 @@ export function projectSigaaEnrollments(
       ) {
         entries.push({
           id: `sigaa:component:${component.code}`,
-          sourceKey: null as string | null,
+          sourceKey: null,
+          sourceClass: null,
           code: component.code,
           name: component.name,
           schedule: null,

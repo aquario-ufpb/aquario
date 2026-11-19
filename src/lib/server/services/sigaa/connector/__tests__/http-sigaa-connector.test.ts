@@ -133,6 +133,7 @@ describe("HttpSigaaConnector", () => {
       signal: timeoutSignal,
     });
     const headers = new Headers(init?.headers);
+    expect(headers.get("x-aquario-sigaa-deadlines")).toBe("1");
     expect(headers.get("accept")).toBe("application/json");
     expect(headers.get("authorization")).toBe(`Bearer ${BEARER_TOKEN}`);
     expect(headers.get("content-type")).toBe("application/json");

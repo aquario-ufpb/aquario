@@ -18,6 +18,7 @@ import type {
 } from "@/lib/server/db/interfaces/sigaa-repository.interface";
 import { prisma } from "@/lib/server/db/prisma";
 import {
+  attachStoredClassDeadlines,
   leaseSecretSchema,
   matriculaSchema,
   parseSigaaAcademicSnapshotPayload,
@@ -25,6 +26,7 @@ import {
   sigaaMatriculaLockKey,
   sigaaRunIdSchema,
   toSigaaAcademicSnapshotPayload,
+  toStoredClassDeadlines,
   type SigaaSnapshotCandidate,
   type UsuarioId,
 } from "@/lib/server/services/sigaa/storage.types";
@@ -280,6 +282,7 @@ export class PrismaSigaaRepository implements ISigaaRepository {
   }): Promise<CommitLatestResult> {
     const candidate = parseSigaaSnapshotCandidate(input.candidate);
     const payload = toSigaaAcademicSnapshotPayload(candidate);
+    const classDeadlines = toStoredClassDeadlines(candidate, input.lease.runId) ?? Prisma.DbNull;
 
     try {
       return await this.database.$transaction(async transaction => {
@@ -459,6 +462,7 @@ export class PrismaSigaaRepository implements ISigaaRepository {
             upstreamCommit: candidate.upstreamCommit,
             installedByRunId: run.id,
             payload,
+            classDeadlines,
           },
           update: {
             contractVersion: candidate.contractVersion,
@@ -467,6 +471,7 @@ export class PrismaSigaaRepository implements ISigaaRepository {
             upstreamCommit: candidate.upstreamCommit,
             installedByRunId: run.id,
             payload,
+            classDeadlines,
           },
         });
 
@@ -683,6 +688,7 @@ export class PrismaSigaaRepository implements ISigaaRepository {
   }): Promise<CommitCourseChangeResult> {
     const candidate = parseSigaaSnapshotCandidate(input.candidate);
     const payload = toSigaaAcademicSnapshotPayload(candidate);
+    const classDeadlines = toStoredClassDeadlines(candidate, input.lease.runId) ?? Prisma.DbNull;
 
     try {
       return await this.database.$transaction(async transaction => {
@@ -867,6 +873,7 @@ export class PrismaSigaaRepository implements ISigaaRepository {
             upstreamCommit: candidate.upstreamCommit,
             installedByRunId: run.id,
             payload,
+            classDeadlines,
           },
           update: {
             contractVersion: candidate.contractVersion,
@@ -875,6 +882,7 @@ export class PrismaSigaaRepository implements ISigaaRepository {
             upstreamCommit: candidate.upstreamCommit,
             installedByRunId: run.id,
             payload,
+            classDeadlines,
           },
         });
         const completedRun = await transaction.sigaaSyncRun.update({
@@ -988,7 +996,10 @@ export class PrismaSigaaRepository implements ISigaaRepository {
     });
   }
 
-  async readImportedState(ownerId: UsuarioId): Promise<ImportedAcademicState> {
+  async readImportedState(
+    ownerId: UsuarioId,
+    options?: { includeDeadlines: boolean }
+  ): Promise<ImportedAcademicState> {
     const owner = await this.database.usuario.findUnique({
       where: { id: ownerId },
       select: {
@@ -1005,6 +1016,8 @@ export class PrismaSigaaRepository implements ISigaaRepository {
     }
 
     const connection = owner.sigaaConnection;
+    const snapshot = connection?.snapshot;
+    const payload = snapshot && parseSigaaAcademicSnapshotPayload(snapshot.payload);
     return {
       matricula: {
         value: owner.matricula,
@@ -1020,16 +1033,19 @@ export class PrismaSigaaRepository implements ISigaaRepository {
             disconnectedAt: connection.disconnectedAt,
           }
         : null,
-      snapshot: connection?.snapshot
-        ? {
-            contractVersion: connection.snapshot.contractVersion,
-            connectorObservedAt: connection.snapshot.connectorObservedAt,
-            synchronizedAt: connection.snapshot.synchronizedAt,
-            upstreamCommit: connection.snapshot.upstreamCommit,
-            installedByRunId: connection.snapshot.installedByRunId,
-            payload: parseSigaaAcademicSnapshotPayload(connection.snapshot.payload),
-          }
-        : null,
+      snapshot:
+        snapshot && payload
+          ? {
+              contractVersion: snapshot.contractVersion,
+              connectorObservedAt: snapshot.connectorObservedAt,
+              synchronizedAt: snapshot.synchronizedAt,
+              upstreamCommit: snapshot.upstreamCommit,
+              installedByRunId: snapshot.installedByRunId,
+              payload: options?.includeDeadlines
+                ? attachStoredClassDeadlines(payload, snapshot.classDeadlines)
+                : payload,
+            }
+          : null,
     };
   }
 

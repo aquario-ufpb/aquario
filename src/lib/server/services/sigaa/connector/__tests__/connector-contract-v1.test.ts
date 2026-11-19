@@ -136,6 +136,20 @@ describe("SIGAA connector V1 contract", () => {
     expect(candidate.curriculum).not.toHaveProperty("counts");
   });
 
+  it("carries only bounded deadline metadata for the matching class", () => {
+    const fixture = fixtureValue();
+    const event = { id: "42", kind: "avaliacao", title: "Prova 1", date: "" };
+    fixture.classes[0].deadlines = [event];
+    expect(
+      decodeSyncResponse(JSON.stringify(fixture), CONNECTOR_REQUEST_ID).classes[0].deadlines
+    ).toEqual([event]);
+
+    fixture.classes[0].deadlines = [{ ...event, body: "private detail" }];
+    expectInvalidResponse(fixture);
+    fixture.classes[0].deadlines = Array(257).fill(event);
+    expectInvalidResponse(fixture);
+  });
+
   it("keeps the fixture literal and sanitized instead of replacing placeholders at runtime", () => {
     const fixture = fixtureValue();
 

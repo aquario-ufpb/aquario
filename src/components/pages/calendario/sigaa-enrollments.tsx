@@ -5,8 +5,11 @@ import { roomCandidates, type RoomCandidate } from "@/lib/shared/calendario/room
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
+import { SigaaClassDeadlines } from "./sigaa-class-deadlines";
+
 export function SigaaEnrollments({
   enrollments,
+  observedAt,
   allocations,
   sameSemester,
   centerId,
@@ -14,6 +17,7 @@ export function SigaaEnrollments({
   onSave,
 }: {
   enrollments: ImportedEnrollment[];
+  observedAt: string | undefined;
   allocations: readonly RoomCandidate[];
   sameSemester: boolean;
   centerId: string;
@@ -48,6 +52,9 @@ export function SigaaEnrollments({
                 ? `${item.room} · ${item.roomSource === "SACI" ? "SACI" : "SIGAA, a confirmar no SACI"}`
                 : "Sala a confirmar"}
             </p>
+            {item.sourceClass && observedAt && (
+              <SigaaClassDeadlines classItem={item.sourceClass} observedAt={observedAt} />
+            )}
             {item.bindingOutdated && (
               <p className="text-xs text-amber-700 dark:text-amber-300">
                 A escolha de sala anterior precisa ser conferida na oferta atual.

@@ -3,6 +3,8 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { isIP } from "node:net";
 
+import { SIGAA_DEADLINES_HEADER } from "@/lib/shared/types/sigaa-academic";
+
 import {
   decodeFailureResponse,
   decodeSyncResponse,
@@ -74,6 +76,7 @@ export class HttpSigaaConnector implements ISigaaConnector {
         method: "POST",
         headers: {
           Accept: "application/json",
+          [SIGAA_DEADLINES_HEADER]: "1",
           Authorization: `Bearer ${this.#bearerToken}`,
           "Content-Type": "application/json",
           "X-Request-ID": requestId,

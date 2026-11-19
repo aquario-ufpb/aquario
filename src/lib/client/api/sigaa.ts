@@ -1,13 +1,18 @@
 import { z } from "zod";
 
+import { SIGAA_CONSENT_VERSION } from "@/lib/shared/sigaa/consent";
+
 import { ApiError, ErrorCode, throwApiError } from "@/lib/client/errors/api-error";
 import { API_URL, ENDPOINTS } from "@/lib/shared/config/constants";
-import { sigaaAcademicSnapshotPayloadSchema } from "@/lib/shared/types/sigaa-academic";
+import {
+  SIGAA_DEADLINES_HEADER,
+  sigaaAcademicSnapshotPayloadSchema,
+} from "@/lib/shared/types/sigaa-academic";
 
 import { apiClient } from "./api-client";
 import { tokenManager } from "./token-manager";
 
-export const SIGAA_CONSENT_VERSION = "sigaa-v1-2026-08";
+export { SIGAA_CONSENT_VERSION };
 
 const isoDateSchema = z.string().datetime();
 const runSchema = z
@@ -208,7 +213,7 @@ export async function getOwnSigaaAcademicState(): Promise<SigaaImportedState> {
   const response = await apiClient(ENDPOINTS.SIGAA_ACADEMIC_ME, {
     method: "GET",
     cache: "no-store",
-    headers: { "Cache-Control": "no-store" },
+    headers: { "Cache-Control": "no-store", [SIGAA_DEADLINES_HEADER]: "1" },
   });
   return parseResponse(response, importedStateSchema);
 }

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 import { trackEvent } from "@/analytics/posthog-client";
 import type { SigaaConnectionState } from "@/analytics/posthog-events";
+import { SigaaClassDeadlines } from "@/components/pages/calendario/sigaa-class-deadlines";
 import { SigaaIntegrationCredits } from "@/components/pages/perfil/sigaa-integration-credits";
 import { SigaaConnectDialog } from "@/components/pages/perfil/sigaa-connect-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -856,6 +857,14 @@ function MeusDadosAcademicosPageContent() {
                   {item.scheduleRaw && <p>{formatHorario(item.scheduleRaw)}</p>}
                   {item.room && <p>Sala {item.room}</p>}
                 </div>
+                {item.deadlines?.length ? (
+                  <div className="sm:col-span-2">
+                    <SigaaClassDeadlines
+                      classItem={item}
+                      observedAt={snapshot.connectorObservedAt}
+                    />
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

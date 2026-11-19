@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { SigaaClassDeadline } from "@/lib/shared/types/sigaa-academic";
+
 import type { EphemeralSigaaCredentials } from "./ephemeral-credentials";
 
 export type SigaaComponentStatus = "completed" | "enrolled" | "pending" | "unknown";
@@ -41,6 +43,7 @@ export type SigaaGrade = Readonly<{
 
 export type SigaaClass = Readonly<{
   sourceKey: string;
+  deadlines?: readonly SigaaClassDeadline[];
   name: string;
   code: string | null;
   room: string | null;
