@@ -8,6 +8,7 @@ test("publishes Markdown and restores its formatting in the project editor", asy
   const editor = page.locator('[contenteditable="true"].tiptap');
   await editor.click();
   await page.getByRole("button", { name: "Negrito", exact: true }).click();
+  await expect(editor).toBeFocused();
   await page.keyboard.type("Texto do projeto");
   await expect(editor.locator("strong")).toHaveText("Texto do projeto");
 
