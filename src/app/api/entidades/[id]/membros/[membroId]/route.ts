@@ -68,10 +68,12 @@ export async function PUT(request: Request, context: RouteContext) {
         updateData.endedAt = data.endedAt ? new Date(data.endedAt) : null;
       }
 
-      const updatedMembro =
-        membership.usuarioId === usuario.id
-          ? await membrosRepository.updateOwn(membroId, usuario.id, updateData, "entity-admin")
-          : await membrosRepository.update(membroId, updateData);
+      const updatedMembro = await membrosRepository.updateAsEntityAdmin(
+        membroId,
+        entidadeId,
+        usuario.id,
+        updateData
+      );
       if (!updatedMembro) {
         return ApiError.forbidden("Você não tem permissão para alterar este vínculo.");
       }

@@ -53,7 +53,7 @@ export class VercelBlobStorage implements IBlobStorage {
       return true;
     } catch (error) {
       log.error("Error deleting blob", error, { url: urlOrPath });
-      return false;
+      throw error;
     }
   }
 

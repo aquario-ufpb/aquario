@@ -90,11 +90,16 @@ export type IMembrosRepository = {
   findByUsuarioId(usuarioId: string): Promise<MembroWithEntidade[]>;
   findRawByUsuarioId(usuarioId: string): Promise<MembroRaw[]>;
   update(id: string, data: UpdateMembroInput): Promise<MembroWithRelations>;
+  updateAsEntityAdmin(
+    id: string,
+    entidadeId: string,
+    actorId: string,
+    data: UpdateMembroInput
+  ): Promise<MembroWithRelations | null>;
   updateOwn(
     id: string,
     usuarioId: string,
-    data: UpdateMembroInput,
-    access: "self" | "entity-admin"
+    data: UpdateMembroInput
   ): Promise<MembroWithRelations | null>;
   delete(id: string): Promise<void>;
   deleteByUsuarioId(usuarioId: string): Promise<number>;

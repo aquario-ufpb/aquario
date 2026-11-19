@@ -696,6 +696,7 @@ model Projeto {
   slug           String        @unique
   subtitulo      String?
   textContent    String?
+  markdownMediaUrls String[] @default([])
   urlImagem      String?
   status         StatusProjeto @default(RASCUNHO)
   tags           String[]      @default([])

@@ -5,79 +5,26 @@ on:
     types: [published]
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+
+env:
+  VERSION: ${{ github.event.release.tag_name }}
 
 jobs:
   release-production:
     name: Release to Production
     runs-on: ubuntu-latest
     environment: production
-    env:
-      VERSION: ${{ github.event.release.tag_name }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           submodules: true
           # Deploy exactly what was tagged, so a hotfix release cut from a
           # release/* branch doesn't also ship whatever is unreleased on main.
           ref: ${{ github.event.release.tag_name }}
-
-      - name: Update version badge in README
-        run: |
-          # The badge contains numeric versions only.
-          [[ "$VERSION" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)([-+][0-9A-Za-z.+-]+)?$ ]] || {
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          }
-          VERSION_NUM="${BASH_REMATCH[1]}"
-
-          # The badge PR targets main, so build it from main in a separate
-          # worktree — leaving the tagged checkout above untouched for deploy.
-          git fetch --no-tags --depth=1 origin main
-          git worktree add ../main-badge FETCH_HEAD
-          cd ../main-badge
-
-          # Update the version badge
-          sed -i "s/version-[0-9]*\.[0-9]*\.[0-9]*-blue/version-${VERSION_NUM}-blue/g" README.md
-
-          # Check if there are changes
-          if git diff --quiet README.md; then
-            echo "No changes to README.md"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          fi
-        id: check_changes
-
-      - name: Create PR for version badge update
-        if: steps.check_changes.outputs.has_changes == 'true'
-        run: |
-          BRANCH="chore/update-version-badge-${VERSION}"
-
-          cd ../main-badge
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Delete remote branch if it exists
-          git push origin --delete "$BRANCH" 2>/dev/null || true
-
-          git checkout -b "$BRANCH"
-          git add README.md
-          git commit -m "chore: update version badge to ${VERSION}"
-          git push origin "$BRANCH"
-
-          # Create PR and enable auto-merge (will merge once requirements are met)
-          gh pr create --title "chore: update version badge to ${VERSION}" \
-            --body "Automated PR to update version badge after release ${VERSION}" \
-            --base main \
-            --head "$BRANCH"
-
-          gh pr merge "$BRANCH" --auto --squash --delete-branch || echo "Auto-merge enabled, waiting for requirements"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Vercel CLI
         run: npm install -g vercel
@@ -87,7 +34,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.PRODUCTION_VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.PRODUCTION_VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.PRODUCTION_VERCEL_PROJECT_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.PRODUCTION_VERCEL_PROJECT_ID }}
         run: |
           : "${VERCEL_TOKEN:?Missing production token}" "${VERCEL_ORG_ID:?Missing production team}" "${VERCEL_PROJECT_ID:?Missing production project}"
           URL=$(vercel deploy --prod --token="$VERCEL_TOKEN")
@@ -109,3 +56,62 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Release Notes:**" >> $GITHUB_STEP_SUMMARY
           printf '%s\n' "$RELEASE_NOTES" >> $GITHUB_STEP_SUMMARY
+
+  update-badge:
+    name: Update release badge
+    needs: release-production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update version badge in README
+        run: |
+          # The badge contains numeric versions only.
+          [[ "$VERSION" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)([-+][0-9A-Za-z.+-]+)?$ ]] || {
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+          VERSION_NUM="${BASH_REMATCH[1]}"
+
+          # Update the version badge
+          sed -i "s/version-[0-9]*\.[0-9]*\.[0-9]*-blue/version-${VERSION_NUM}-blue/g" README.md
+
+          # Check if there are changes
+          if git diff --quiet README.md; then
+            echo "No changes to README.md"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+        id: check_changes
+
+      - name: Create PR for version badge update
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          BRANCH="chore/update-version-badge-${VERSION}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Delete remote branch if it exists
+          git push origin --delete "$BRANCH" 2>/dev/null || true
+
+          git checkout -b "$BRANCH"
+          git add README.md
+          git commit -m "chore: update version badge to ${VERSION}"
+          git push origin "$BRANCH"
+
+          # Create PR and enable auto-merge (will merge once requirements are met)
+          gh pr create --title "chore: update version badge to ${VERSION}" \
+            --body "Automated PR to update version badge after release ${VERSION}" \
+            --base main \
+            --head "$BRANCH"
+
+          gh pr merge "$BRANCH" --auto --squash --delete-branch || echo "Auto-merge enabled, waiting for requirements"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

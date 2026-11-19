@@ -159,7 +159,7 @@ A Vercel hospeda a aplicacao Next.js (frontend + API) e faz deploys automaticos.
 
 > *Gere um JWT_SECRET seguro com: `openssl rand -base64 32`
 
-**3.4.** Crie projetos Vercel exclusivos para staging e preview. Configure credenciais de teste no projeto correspondente e siga o [guia de ambientes](docs/sigaa-v1-environments.md) para os tokens de deploy, IDs e restrições de acesso.
+**3.4.** Crie projetos Vercel exclusivos para staging e preview. Configure credenciais de teste no projeto correspondente e siga o [guia de ambientes](docs/sigaa-v1-environments.md) para os tokens de deploy, IDs e restrições de acesso. No fork, configure seu domínio no projeto Vercel de staging e substitua `staging.aquarioufpb.com` pelo seu alias em `.github/workflows/staging.yml`, inclusive na URL do resumo do deploy.
 
 > **Como funciona o deploy:** push para `main` deploya para staging. Criar um GitHub Release deploya para producao.
 

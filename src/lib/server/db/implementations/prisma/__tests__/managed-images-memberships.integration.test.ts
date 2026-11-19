@@ -6,9 +6,11 @@ import { describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/server/db/prisma";
 import {
   InvalidImageError,
+  readImageUpload,
   retireOwnedImage,
   uploadManagedImage,
 } from "@/lib/server/services/blob/managed-images";
+import { PrismaProjetosRepository } from "../prisma-projetos-repository";
 import { PrismaMembrosRepository } from "../prisma-membros-repository";
 import { assertDisposableSigaaDatabase } from "./sigaa-test-database-guard";
 
@@ -36,6 +38,29 @@ async function waitForBlockedWrite(tx: Prisma.TransactionClient) {
   throw new Error("The concurrent operation did not reach the locked row");
 }
 
+async function runWhileLocked<T>(
+  hold: (tx: Prisma.TransactionClient) => Promise<unknown>,
+  compete: () => Promise<T>
+): Promise<T> {
+  let pending!: Promise<T>;
+  try {
+    await prisma.$transaction(async tx => {
+      await hold(tx);
+      pending = compete();
+      await Promise.race([
+        waitForBlockedWrite(tx),
+        pending.then(() => {
+          throw new Error("The competing write finished without waiting for the lock");
+        }),
+      ]);
+    });
+  } finally {
+    // The transaction has released its locks; drain even if the probe or write failed.
+    await Promise.allSettled([pending]);
+  }
+  return pending;
+}
+
 async function createUserAndEntity() {
   const key = randomUUID();
   const campus = await prisma.campus.create({
@@ -56,6 +81,29 @@ async function createUserAndEntity() {
 }
 
 describe("raster upload boundary", () => {
+  it("rejects APNG before losing the animation", async () => {
+    const apng = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACGFjVEwAAAACAAAAAPONk3AAAAAaZmNUTAAAAAAAAAABAAAAAQAAAAAAAAAAAMgD6AAABqkRWgAAAAxJREFUeJxj+M/AAAADAQEAyf6S7wAAABpmY1RMAAAAAQAAAAEAAAABAAAAAAAAAAAAyAPoAACd2vuOAAAAEGZkQVQAAAACeJxjYGD4DwABAwEAaL/t9AAAAABJRU5ErkJggg==",
+      "base64"
+    );
+    const file = new File([new Uint8Array(apng)], "animated.png", { type: "image/png" });
+    const blobs = storage();
+    await expect(uploadManagedImage(blobs, "user", "projetos", file)).rejects.toThrow(/APNG/);
+    expect(blobs.upload).not.toHaveBeenCalled();
+  });
+
+  it("reads the multipart file and limits actual bytes even without Content-Length", async () => {
+    const form = new FormData();
+    form.append("file", new File(["fixture"], "small.png", { type: "image/png" }));
+    const request = new Request("http://localhost/upload", { method: "POST", body: form });
+    expect(await readImageUpload(request)).toMatchObject({ name: "small.png", size: 7 });
+    const payload = new FormData();
+    payload.append("file", new Blob([new Uint8Array(6 * 1024 * 1024)]), "large.png");
+    const large = new Request(request.url, { method: "POST", body: payload });
+    expect(large.headers.has("content-length")).toBe(false);
+    await expect(readImageUpload(large)).rejects.toThrow(/muito grande/);
+  });
+
   it.each([
     new File(["fixture"], "fixture.png", { type: "image/png" }),
     new File(["GIF89a"], "fixture.gif", { type: "image/gif" }),
@@ -92,32 +140,43 @@ describe.skipIf(!databaseUrl)("media lifecycle and memberships on PostgreSQL", (
       expect(await retireOwnedImage(blobs, "someone-else", url)).toBe(false);
       expect(await retireOwnedImage(blobs, owner, "https://example.test/legacy")).toBe(false);
 
-      let concurrentCancel: Promise<boolean> | undefined;
-      const project = await prisma.$transaction(async tx => {
-        const saved = await tx.projeto.create({
-          data: {
-            slug: identifier,
-            titulo: "Fixture",
-            urlImagem: url,
-            textContent: `![](${url}#preview)`,
-          },
+      expect(
+        await runWhileLocked(
+          tx =>
+            tx.projeto.create({ data: { slug: identifier, titulo: "Fixture", urlImagem: url } }),
+          () => retireOwnedImage(blobs, owner, url)
+        )
+      ).toBe(false);
+      const projects = new PrismaProjetosRepository();
+      await projects.update(identifier, { urlImagem: null, textContent: `![](${url}#preview)` });
+      expect(await retireOwnedImage(blobs, owner, url)).toBe(false);
+      const escaped = url.replaceAll("-", "\\-");
+      await projects.update(identifier, { textContent: `![image][ref]\n\n[ref]: ${escaped}` });
+      expect(await retireOwnedImage(blobs, owner, url)).toBe(false);
+      for (const field of ["urlOutro", "urlDemo", "urlRepositorio"] as const) {
+        await projects.update(identifier, {
+          textContent: null,
+          urlOutro: null,
+          urlDemo: null,
+          urlRepositorio: null,
+          [field]: url,
         });
-        concurrentCancel = retireOwnedImage(blobs, owner, url);
-        await waitForBlockedWrite(tx);
-        return saved;
+        expect(await retireOwnedImage(blobs, owner, url)).toBe(false);
+      }
+      await projects.update(identifier, {
+        urlRepositorio: null,
+        textContent: `A literal in code: \`![](${url})\``,
       });
-      expect(await concurrentCancel).toBe(false);
-      expect(await retireOwnedImage(blobs, owner, url)).toBe(false);
-      await prisma.projeto.update({ where: { id: project.id }, data: { urlImagem: null } });
-      expect(await retireOwnedImage(blobs, owner, url)).toBe(false);
       expect(blobs.delete).not.toHaveBeenCalled();
-      await prisma.projeto.delete({ where: { id: project.id } });
+      blobs.delete.mockRejectedValueOnce(new Error("Storage unavailable"));
+      await expect(retireOwnedImage(blobs, owner, url)).rejects.toThrow("Storage unavailable");
       expect(await retireOwnedImage(blobs, owner, url)).toBe(true);
       expect(blobs.delete).toHaveBeenCalledWith(url);
       await expect(
-        prisma.projeto.create({
-          data: { slug: identifier, titulo: "Stale draft", textContent: `![](${url})` },
-        })
+        projects.create(
+          { slug: randomUUID(), titulo: "Stale draft", textContent: `![](${url})` },
+          []
+        )
       ).rejects.toThrow();
     } finally {
       await prisma.projeto.deleteMany({ where: { slug: identifier } });
@@ -160,23 +219,34 @@ describe.skipIf(!databaseUrl)("media lifecycle and memberships on PostgreSQL", (
     });
     const repository = new PrismaMembrosRepository();
     try {
-      let concurrentReopen: ReturnType<typeof repository.updateOwn> | undefined;
-      await prisma.$transaction(async tx => {
-        await tx.membroEntidade.update({ where: { id: row.id }, data: { endedAt: new Date() } });
-        concurrentReopen = repository.updateOwn(row.id, user.id, { endedAt: null }, "self");
-        await waitForBlockedWrite(tx);
-      });
-      expect(await concurrentReopen).toBeNull();
       expect(
-        await repository.updateOwn(row.id, user.id, { endedAt: null }, "entity-admin")
+        await runWhileLocked(
+          tx => tx.membroEntidade.update({ where: { id: row.id }, data: { endedAt: new Date() } }),
+          () => repository.updateOwn(row.id, user.id, { endedAt: null })
+        )
       ).toBeNull();
-      await prisma.membroEntidade.update({ where: { id: row.id }, data: { papel: "MEMBRO" } });
-      expect(await repository.updateOwn(row.id, user.id, { endedAt: null }, "self")).toMatchObject({
+      expect(
+        await repository.updateAsEntityAdmin(row.id, entity.id, user.id, { endedAt: null })
+      ).toBeNull();
+      const active = await prisma.membroEntidade.create({
+        data: { papel: "ADMIN", entidadeId: entity.id, usuarioId: user.id },
+      });
+      expect(
+        await repository.updateAsEntityAdmin(row.id, entity.id, user.id, { papel: "MEMBRO" })
+      ).toMatchObject({ papel: "MEMBRO" });
+      expect(
+        await runWhileLocked(
+          tx =>
+            tx.membroEntidade.update({ where: { id: active.id }, data: { endedAt: new Date() } }),
+          () => repository.updateAsEntityAdmin(row.id, entity.id, user.id, { papel: "ADMIN" })
+        )
+      ).toBeNull();
+      expect(await repository.updateOwn(row.id, user.id, { endedAt: null })).toMatchObject({
         endedAt: null,
       });
     } finally {
       await prisma.$transaction([
-        prisma.membroEntidade.delete({ where: { id: row.id } }),
+        prisma.membroEntidade.deleteMany({ where: { usuarioId: user.id, entidadeId: entity.id } }),
         prisma.entidade.delete({ where: { id: entity.id } }),
         prisma.usuario.delete({ where: { id: user.id } }),
         prisma.curso.delete({ where: { id: centro.cursos[0].id } }),

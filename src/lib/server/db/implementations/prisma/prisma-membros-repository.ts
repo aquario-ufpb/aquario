@@ -167,19 +167,43 @@ export class PrismaMembrosRepository implements IMembrosRepository {
     return this.mapToMembroWithRelations(membro);
   }
 
+  updateAsEntityAdmin(
+    id: string,
+    entidadeId: string,
+    actorId: string,
+    data: UpdateMembroInput
+  ): Promise<MembroWithRelations | null> {
+    return prisma.$transaction(async tx => {
+      const master = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "Usuario"
+        WHERE id = ${actorId} AND "papelPlataforma" = 'MASTER_ADMIN' FOR SHARE`;
+      if (!master.length) {
+        // Hold the actor's current authorization until the historical or current target is updated.
+        const active = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "MembroEntidade"
+          WHERE "usuarioId" = ${actorId} AND "entidadeId" = ${entidadeId}
+            AND papel = 'ADMIN' AND "endedAt" IS NULL FOR UPDATE`;
+        if (!active.length) {
+          return null;
+        }
+      }
+      const membro = await tx.membroEntidade.update({
+        where: { id, entidadeId },
+        data,
+        include: membroInclude,
+      });
+      return this.mapToMembroWithRelations(membro);
+    });
+  }
+
   async updateOwn(
     id: string,
     usuarioId: string,
-    data: UpdateMembroInput,
-    access: "self" | "entity-admin"
+    data: UpdateMembroInput
   ): Promise<MembroWithRelations | null> {
     // PostgreSQL rechecks the predicate after waiting on a concurrent write
     // to this membership, including a demotion or an ended term.
     const master = { usuario: { papelPlataforma: "MASTER_ADMIN" as const } };
     const where: Prisma.MembroEntidadeWhereUniqueInput = { id, usuarioId };
-    if (access === "entity-admin") {
-      where.OR = [master, { papel: "ADMIN", endedAt: null }];
-    } else if (data.papel !== undefined) {
+    if (data.papel !== undefined) {
       Object.assign(where, master);
     } else if (data.endedAt === null) {
       where.OR = [master, { papel: "MEMBRO" }, { endedAt: null }];

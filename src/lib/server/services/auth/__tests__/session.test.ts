@@ -38,10 +38,17 @@ describe("session lifecycle", () => {
     jest.useRealTimers();
   });
 
-  it("revokes legacy and refreshed credentials for required, optional and refresh requests", async () => {
+  it("requires a new login for sessions issued before version tracking", async () => {
     const legacy = jwt.sign({ sub: userId }, mockJwtSecret, { expiresIn: "7d" });
-    expect((await getOptionalUser(request(legacy)))?.id).toBe(userId);
-    const response = await refresh(request(legacy));
+    expect(verifyToken(legacy)).toBeNull();
+    expect(await getOptionalUser(request(legacy))).toBeNull();
+    expect((await withAuth(request(legacy), jest.fn())).status).toBe(401);
+    expect((await refresh(request(legacy))).status).toBe(401);
+  });
+
+  it("revokes current and refreshed credentials for required, optional and refresh requests", async () => {
+    const current = signToken(userId, 0);
+    const response = await refresh(request(current));
     expect(response.status).toBe(200);
     const { token } = await response.json();
     expect(verifyToken(token)).toEqual({
@@ -52,7 +59,7 @@ describe("session lifecycle", () => {
 
     mockFindById.mockResolvedValue({ id: userId, sessionVersion: 1 });
     const handler = jest.fn();
-    for (const stale of [legacy, token]) {
+    for (const stale of [current, token]) {
       expect(await getOptionalUser(request(stale))).toBeNull();
       expect((await withAuth(request(stale), handler)).status).toBe(401);
       expect((await refresh(request(stale))).status).toBe(401);

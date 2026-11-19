@@ -9,8 +9,8 @@ const sessionClaims = z
     sub: z.string().min(1),
     iat: z.number().int().positive(),
     exp: z.number().int().positive(),
-    sessionVersion: z.number().int().nonnegative().default(0),
-    sessionStartedAt: z.number().int().positive().optional(),
+    sessionVersion: z.number().int().nonnegative(),
+    sessionStartedAt: z.number().int().positive(),
   })
   .strict();
 
@@ -42,8 +42,7 @@ export function signToken(
 export function verifyToken(token: string): Session | null {
   try {
     const claims = sessionClaims.parse(jwt.verify(token, getSecret(), { algorithms: ["HS256"] }));
-    // Legacy sessions had only sub, iat and exp. Their last issuance starts the migration window.
-    const sessionStartedAt = claims.sessionStartedAt ?? claims.iat;
+    const { sessionStartedAt } = claims;
     const now = Math.floor(Date.now() / 1000);
     if (
       sessionStartedAt > claims.iat ||

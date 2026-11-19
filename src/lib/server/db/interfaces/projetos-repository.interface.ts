@@ -33,7 +33,7 @@ export type ProjetoAutorPublic = ProjetoAutor & {
 /**
  * Projeto com autores populados
  */
-export type ProjetoWithRelations = Projeto & {
+export type ProjetoWithRelations = Omit<Projeto, "markdownMediaUrls"> & {
   autores: ProjetoAutorPublic[];
 };
 

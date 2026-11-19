@@ -12,19 +12,23 @@
 | GitHub Actions, **variables** | `NONPROD_NEON_PROJECT_ID`, `PRODUCTION_NEON_PROJECT_ID`, `PREVIEW_VERCEL_PROJECT_ID`, `STAGING_VERCEL_PROJECT_ID`, `PRODUCTION_VERCEL_PROJECT_ID` | Identificar os destinos e detectar projetos compartilhados. IDs podem ser visíveis ao CI. |
 | Cada environment `nonproduction-preview` e `staging` | Variable `NONPROD_VERCEL_ORG_ID`. Secrets `NONPROD_NEON_API_KEY` e `NONPROD_VERCEL_TOKEN` | Equipe da Vercel e chaves exclusivas do ambiente. A chave Neon tem escopo do projeto de testes. |
 | Environment `staging`, **secrets** | `STAGING_SIGAA_REAUTH_JWT_SECRET`, `STAGING_SIGAA_CONNECTOR_URL`, `STAGING_SIGAA_CONNECTOR_ALLOWED_ORIGINS`, `STAGING_SIGAA_CONNECTOR_API_SECRET` | Acesso ao conector de staging no deployment promovido. |
-| Environment `production`, **secrets** | `PRODUCTION_VERCEL_TOKEN`, `PRODUCTION_VERCEL_ORG_ID`, `PRODUCTION_VERCEL_PROJECT_ID`, `PRODUCTION_NEON_API_KEY`, `PRODUCTION_NEON_PROJECT_ID` | Publicação da release e importação manual de entidade. |
+| Environment `production`, **secrets** | `PRODUCTION_VERCEL_TOKEN`, `PRODUCTION_VERCEL_ORG_ID`, `PRODUCTION_NEON_API_KEY` | Publicação da release e importação manual de entidade. |
 
-A configuração de `DATABASE_URL` de produção na Vercel pertence somente ao target Production do projeto de produção. Mantenha a configuração local em um banco de desenvolvimento. A URL da filha de preview é temporária e específica da branch Git. O seed padrão em `prisma/seed.ts` carrega o catálogo público e exemplos. Não acrescente contas administrativas, senhas ou matrículas de teste reais ao seed de CI.
+A configuração de `DATABASE_URL` de produção na Vercel pertence somente ao target Production do projeto de produção. Mantenha a configuração local em um banco de desenvolvimento. O build de preview recebe uma URL temporária específica da branch Git. O seed padrão em `prisma/seed.ts` carrega o catálogo público e exemplos. Não acrescente contas administrativas, senhas ou matrículas de teste reais ao seed de CI.
 
 ## Preview
 
-PRs do próprio repositório para `main` recebem uma URL quando o build remoto do SHA da PR termina. A Action usa o workflow e o script da base. A Vercel recebe o código da PR e as credenciais da filha correspondente. Ao atualizar a PR, a Action mantém o banco anterior até o novo build ficar pronto. Fechar a PR limpa bancos gerenciados e a variável de branch.
+PRs do próprio repositório para `main` entram em uma fila compartilhada. A Action consulta o estado atual da PR antes de admitir até oito PRs com banco próprio. O runner executa o código de controle da branch padrão, e a Vercel compila o SHA da PR.
+
+Durante o build, a Action cria uma `DATABASE_URL` de preview marcada com o identificador da tentativa. Se encontrar uma variável de outro proprietário na mesma branch, interrompe o deploy. Ao concluir, remove a variável temporária, publica o novo link na PR e só então retira os bancos anteriores. Se a Vercel rejeitar o deploy, a Action desfaz a tentativa. Se a resposta se perder, procura o deployment pelo identificador e preserva o banco enquanto o resultado for incerto. A próxima publicação bem-sucedida, o fechamento da PR ou a mudança de base para fora de `main` recolhe os recursos antigos.
 
 Deployments de PR mantêm o conector SIGAA desabilitado. O carregador server-only rejeita o conector quando `VERCEL_ENV=preview`, exceto no deployment de staging identificado.
 
 ## Staging
 
 Um push para `main` ou uma execução manual nessa branch cria um banco de staging com migrations e seed. Os segredos do conector entram apenas no deployment de staging. O banco anterior é retirado depois de verificar que o alias aponta para o novo deployment. Uma falha ambígua durante a promoção mantém o banco disponível até a próxima promoção bem-sucedida.
+
+Quando um workflow de manutenção atualiza `main` com o `GITHUB_TOKEN` padrão, o GitHub suprime o evento de push para outros workflows. Após essa atualização, execute **Staging Deployment** manualmente em `main`. Com `MAINTENANCE_TOKEN_PAT` configurado no environment `repository-maintenance`, o push dispara staging automaticamente.
 
 ## Produção
 

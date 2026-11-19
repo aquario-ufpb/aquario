@@ -65,7 +65,7 @@ jobs:
       - name: Import entidade
         env:
           NEON_API_KEY: ${{ secrets.PRODUCTION_NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ secrets.PRODUCTION_NEON_PROJECT_ID }}
+          NEON_PROJECT_ID: ${{ vars.PRODUCTION_NEON_PROJECT_ID }}
         run: |
           set -euo pipefail
           API="https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID"

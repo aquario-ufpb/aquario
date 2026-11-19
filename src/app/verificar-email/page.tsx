@@ -160,7 +160,9 @@ function VerificarEmailForm() {
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
             {emailToken
-              ? "Verificando seu email..."
+              ? isLoading
+                ? "Verificando seu email..."
+                : "Verificação de email"
               : "Verifique seu email ou solicite um novo link"}
           </p>
         </div>
@@ -187,6 +189,16 @@ function VerificarEmailForm() {
               {error && (
                 <div className="mb-6 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                   <p className="text-sm text-red-600 dark:text-red-400 text-center mb-2">{error}</p>
+                  {emailToken && (
+                    <Button
+                      onClick={() => handleVerify(emailToken)}
+                      variant="outline"
+                      className="w-full mt-2"
+                      disabled={isLoading}
+                    >
+                      Tentar verificar novamente
+                    </Button>
+                  )}
                   {error.includes("expirado") && token && (
                     <Button
                       onClick={handleResend}

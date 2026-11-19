@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { StatusProjeto } from "@prisma/client";
 import { getContainer } from "@/lib/server/container";
@@ -120,8 +120,9 @@ export function PATCH(request: NextRequest, context: RouteContext) {
 
       const projeto = await projetosRepository.update(slug, data);
 
-      if (existingProjeto.urlImagem && existingProjeto.urlImagem !== projeto.urlImagem) {
-        await cleanupOwnedImage(getContainer().blobStorage, usuario.id, existingProjeto.urlImagem);
+      const oldCover = existingProjeto.urlImagem;
+      if (oldCover && oldCover !== projeto.urlImagem) {
+        after(() => cleanupOwnedImage(getContainer().blobStorage, usuario.id, oldCover));
       }
 
       return NextResponse.json(projeto);

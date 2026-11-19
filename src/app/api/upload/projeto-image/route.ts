@@ -4,6 +4,7 @@ import { withAuth } from "@/lib/server/services/auth/middleware";
 import { ApiError } from "@/lib/server/errors";
 import {
   InvalidImageError,
+  readImageUpload,
   retireOwnedImage,
   uploadManagedImage,
 } from "@/lib/server/services/blob/managed-images";
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 export function POST(request: NextRequest) {
   return withAuth(request, async (req, usuario) => {
     try {
-      const file = (await req.formData()).get("file");
+      const file = await readImageUpload(req);
       const url = await uploadManagedImage(
         getContainer().blobStorage,
         usuario.id,

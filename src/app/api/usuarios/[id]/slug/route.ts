@@ -46,7 +46,10 @@ export function PATCH(request: Request, context: RouteContext) {
         },
       });
 
-      return NextResponse.json(formatUserResponse(updatedUser));
+      return NextResponse.json({
+        ...formatUserResponse(updatedUser),
+        eFacade: updatedUser.eFacade,
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return fromZodError(error);

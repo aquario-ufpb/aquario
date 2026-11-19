@@ -10,6 +10,58 @@ const allowedTypes = new Set(["image/jpeg", "image/jpg", "image/png", "image/gif
 
 export class InvalidImageError extends Error {}
 
+// Leave room for the multipart boundary and field headers in addition to one 5 MB image.
+const maxMultipartBytes = maxBytes + 64 * 1024;
+
+export async function readImageUpload(request: Request) {
+  const tooLarge = () => new InvalidImageError("Arquivo muito grande (máximo 5 MB).");
+  if (Number(request.headers.get("content-length")) > maxMultipartBytes) {
+    throw tooLarge();
+  }
+  if (!request.body) {
+    throw new InvalidImageError("Envie uma imagem.");
+  }
+  let length = 0;
+  const body = request.body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        length += chunk.byteLength;
+        if (length > maxMultipartBytes) {
+          controller.error(tooLarge());
+        } else {
+          controller.enqueue(chunk);
+        }
+      },
+    })
+  );
+  try {
+    return (await new Response(body, { headers: request.headers }).formData()).get("file");
+  } catch {
+    // The platform can wrap the stream's error in a multipart parser error.
+    if (length > maxMultipartBytes) {
+      throw tooLarge();
+    }
+    throw new InvalidImageError("Envie uma imagem em um formulário multipart válido.");
+  }
+}
+
+function isAnimatedPng(bytes: Buffer) {
+  if (bytes.toString("latin1", 1, 4) !== "PNG") {
+    return false;
+  }
+  // APNG requires an animation control chunk before the first image data chunk.
+  for (let offset = 8; offset + 12 <= bytes.length; offset += bytes.readUInt32BE(offset) + 12) {
+    const chunkType = bytes.toString("latin1", offset + 4, offset + 8);
+    if (chunkType === "acTL") {
+      return true;
+    }
+    if (chunkType === "IDAT") {
+      break;
+    }
+  }
+  return false;
+}
+
 function hasRasterSignature(bytes: Buffer) {
   return (
     bytes.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])) ||
@@ -35,6 +87,10 @@ export async function uploadManagedImage(
   const bytes = Buffer.from(await file.arrayBuffer());
   if (!hasRasterSignature(bytes)) {
     throw new InvalidImageError("O arquivo não é uma imagem válida.");
+  }
+
+  if (isAnimatedPng(bytes)) {
+    throw new InvalidImageError("Para imagens animadas, envie um GIF ou WebP em vez de APNG.");
   }
 
   let image: Buffer;

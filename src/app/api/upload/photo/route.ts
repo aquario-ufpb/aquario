@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/server/errors";
 import {
   cleanupOwnedImage,
   InvalidImageError,
+  readImageUpload,
   uploadManagedImage,
 } from "@/lib/server/services/blob/managed-images";
 
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
     const oldPhotoUrl = usuario.urlFotoPerfil;
 
     try {
-      const file = (await req.formData()).get("file");
+      const file = await readImageUpload(req);
       const { blobStorage, usuariosRepository } = getContainer();
       uploadedUrl = await uploadManagedImage(blobStorage, usuario.id, "photos", file);
 

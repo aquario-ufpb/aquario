@@ -78,7 +78,7 @@ export async function PUT(request: Request, context: RouteContext) {
         return ApiError.badRequest("A data de início deve ser anterior à data de término.");
       }
 
-      if (!(await membrosRepository.updateOwn(membroId, usuario.id, updateData, "self"))) {
+      if (!(await membrosRepository.updateOwn(membroId, usuario.id, updateData))) {
         return ApiError.forbidden("Você não tem permissão para alterar este vínculo.");
       }
 

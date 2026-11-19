@@ -2,25 +2,25 @@ name: Preview Deployment
 
 on:
   pull_request_target:
-    branches: [main]
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened, edited, closed]
 
 permissions:
   contents: read
   pull-requests: write
 
-concurrency:
-  group: preview-${{ github.event.pull_request.number }}
-  cancel-in-progress: false
-
 jobs:
   preview:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.pull_request.base.ref == 'main' || github.event.changes.base.ref.from == 'main') &&
+      (github.event.action != 'edited' || github.event.changes.base)
+    concurrency:
+      group: nonproduction-preview-capacity
+      queue: max
     runs-on: ubuntu-latest
     environment: nonproduction-preview
     env:
       MODE: preview
-      PR_ACTION: ${{ github.event.action }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
       PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -34,7 +34,7 @@ jobs:
       # Only reviewed control code runs on this runner. Vercel builds the PR SHA remotely.
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
           sparse-checkout: scripts/ci
 
@@ -47,26 +47,19 @@ jobs:
             const { data: pr } = await github.rest.pulls.get({
               ...context.repo, pull_number: context.issue.number
             });
-            return context.payload.action === 'closed'
-              ? pr.state === 'closed'
-              : pr.state === 'open' && pr.head.sha === context.payload.pull_request.head.sha;
+            if (pr.state === 'closed' || pr.base.ref !== 'main') return 'cleanup';
+            return pr.head.sha === context.payload.pull_request.head.sha ? 'deploy' : 'skip';
 
       - name: Deploy or clean up the preview
-        if: steps.current.outputs.result == 'true'
+        if: steps.current.outputs.result != 'skip'
         id: preview
         env:
           NONPROD_NEON_API_KEY: ${{ secrets.NONPROD_NEON_API_KEY }}
           NONPROD_VERCEL_TOKEN: ${{ secrets.NONPROD_VERCEL_TOKEN }}
-        run: python3 scripts/ci/nonproduction.py
-
-      - name: Remove replaced preview databases
-        if: success() && steps.current.outputs.result == 'true' && github.event.action != 'closed'
-        env:
-          NONPROD_NEON_API_KEY: ${{ secrets.NONPROD_NEON_API_KEY }}
-        run: python3 scripts/ci/nonproduction.py previous
+        run: python3 scripts/ci/nonproduction.py "${{ steps.current.outputs.result }}"
 
       - name: Comment preview URL
-        if: success() && steps.current.outputs.result == 'true' && github.event.action != 'closed'
+        if: success() && steps.current.outputs.result == 'deploy'
         uses: actions/github-script@v7
         env:
           PREVIEW_URL: ${{ steps.preview.outputs.url }}
@@ -83,3 +76,9 @@ jobs:
             } else {
               await github.rest.issues.createComment({ ...issue, body });
             }
+
+      - name: Remove replaced preview databases
+        if: success() && steps.current.outputs.result == 'deploy'
+        env:
+          NONPROD_NEON_API_KEY: ${{ secrets.NONPROD_NEON_API_KEY }}
+        run: python3 scripts/ci/nonproduction.py previous

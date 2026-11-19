@@ -254,6 +254,7 @@ export function OnboardingModal({
           onEscapeKeyDown={e => e.preventDefault()}
           onInteractOutside={e => e.preventDefault()}
           className={cn(
+            "ph-no-capture",
             // Mobile uses svh so the sticky footer stays above Safari's toolbar.
             // top+bottom insets against the layout viewport put "Pular" under the chrome.
             "fixed left-[max(0.5rem,env(safe-area-inset-left))] right-[max(0.5rem,env(safe-area-inset-right))] top-[max(0.5rem,env(safe-area-inset-top))] z-50",

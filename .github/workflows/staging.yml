@@ -154,7 +154,9 @@ jobs:
           echo "✅ Alias set successfully"
 
       - name: Remove the failed staging database before alias promotion
-        if: failure() && steps.db-url.outcome == 'success' && steps.alias.outcome == 'skipped'
+        if: >-
+          (failure() || cancelled()) && steps.db-url.outcome != 'skipped' &&
+          steps.alias.outcome == 'skipped'
         env:
           NONPROD_NEON_API_KEY: ${{ secrets.NONPROD_NEON_API_KEY }}
         run: python3 scripts/ci/nonproduction.py failed

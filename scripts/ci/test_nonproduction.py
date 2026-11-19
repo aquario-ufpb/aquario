@@ -50,6 +50,18 @@ PROJECT = {
     "link": {"repoId": 123, "productionBranch": "main"},
 }
 
+BINDING = {
+    "key": "DATABASE_URL",
+    "type": "sensitive",
+    "target": ["preview"],
+    "gitBranch": "topic/example",
+    "id": "managed",
+    "comment": "Aquario CI aq-ci-pr-23-r100-1",
+}
+STORED = {"created": BINDING, "failed": []}
+NO_BINDINGS = {"envs": []}
+CURRENT_BINDING = {"envs": [BINDING]}
+
 
 class NonproductionTests(unittest.TestCase):
     def setUp(self):
@@ -257,22 +269,26 @@ class NonproductionTests(unittest.TestCase):
                 "vercel",
                 side_effect=[
                     PROJECT,
-                    {},
+                    NO_BINDINGS,
+                    STORED,
                     {"id": "dpl"},
                     {"readyState": "READY", "url": "preview-test.vercel.app"},
+                    CURRENT_BINDING,
+                    {},
                 ],
             ) as vercel,
             patch.object(ci, "prepare_database", return_value=URI),
             patch.object(ci, "write_output") as output,
         ):
             ci.deploy_preview()
-        _, _, env = vercel.call_args_list[1].args
+        _, _, env = vercel.call_args_list[2].args
         self.assertEqual(
             (env["gitBranch"], env["target"], env["type"], env["value"]),
             ("topic/example", ["preview"], "sensitive", URI),
         )
-        self.assertEqual(vercel.call_args_list[2].kwargs, {"forceNew": "1"})
-        _, _, deploy = vercel.call_args_list[2].args
+        self.assertEqual(vercel.call_args_list[2].kwargs, {})
+        self.assertEqual(vercel.call_args_list[3].kwargs, {"forceNew": "1"})
+        _, _, deploy = vercel.call_args_list[3].args
         self.assertEqual(
             deploy["gitSource"],
             {"type": "github", "repoId": "123", "ref": "topic/example", "sha": SHA},
@@ -281,25 +297,180 @@ class NonproductionTests(unittest.TestCase):
         self.assertIn("prisma db seed", deploy["projectSettings"]["buildCommand"])
         output.assert_called_once_with("url", "https://preview-test.vercel.app")
 
-    def test_failed_preview_rolls_back_current_database(self):
+    def test_preview_rollback_across_both_providers(self):
+        for failure in (
+            [ci.ProviderError("api.vercel.com", 400)],
+            [{"id": "dpl"}, {"readyState": "ERROR"}],
+            [{"id": "dpl"}, {"readyState": "CANCELED"}],
+        ):
+            with (
+                self.subTest(failure=failure),
+                patch.object(
+                    ci,
+                    "vercel",
+                    side_effect=[
+                        PROJECT,
+                        NO_BINDINGS,
+                        STORED,
+                        *failure,
+                        CURRENT_BINDING,
+                        {},
+                    ],
+                ) as vercel,
+                patch.object(ci, "prepare_database", return_value=URI),
+                patch.object(
+                    ci,
+                    "neon",
+                    side_effect=[
+                        {"branches": [ROOT, CURRENT, PREVIOUS, OTHER]},
+                        {},
+                    ],
+                ) as neon,
+            ):
+                with self.assertRaises(RuntimeError):
+                    ci.deploy_preview()
+                self.assertEqual(
+                    vercel.call_args_list[-1],
+                    call("/v9/projects/preview-vercel/env/managed", "DELETE"),
+                )
+                self.assertEqual(
+                    neon.call_args_list[1:], [call("/branches/br-new", "DELETE")]
+                )
+
+    def test_operator_binding_is_preserved_before_allocating_database(self):
+        for manual in (
+            dict(BINDING, comment="manual"),
+            dict(BINDING, target=["preview", "development"]),
+        ):
+            with (
+                self.subTest(manual=manual),
+                patch.object(
+                    ci, "vercel", side_effect=[PROJECT, {"envs": [manual]}]
+                ) as vercel,
+                patch.object(ci, "prepare_database") as db,
+            ):
+                with self.assertRaisesRegex(ValueError, "another owner"):
+                    ci.deploy_preview()
+                db.assert_not_called()
+                self.assertEqual(vercel.call_count, 2)
+
+    def test_conflict_during_env_creation_preserves_new_operator_binding(self):
+        manual = dict(BINDING, comment="manual")
         with (
             patch.object(
                 ci,
                 "vercel",
-                side_effect=[PROJECT, {}, {"id": "dpl"}, {"readyState": "ERROR"}],
+                side_effect=[
+                    PROJECT,
+                    NO_BINDINGS,
+                    {"failed": [{"error": "conflict"}]},
+                    {"envs": [manual]},
+                ],
+            ) as vercel,
+            patch.object(ci, "prepare_database", return_value=URI),
+            patch.object(ci, "remove_branches") as remove,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "environment variable"):
+                ci.deploy_preview()
+            self.assertEqual(vercel.call_count, 4)
+            remove.assert_called_once_with("failed")
+
+    def test_lost_deployment_response_resumes_only_the_matching_attempt(self):
+        marker = BINDING["comment"]
+        deployments = [
+            {"uid": "other", "meta": {"aquarioAttempt": "other"}},
+            {"uid": "mine", "meta": {"aquarioAttempt": marker}},
+        ]
+        with (
+            patch.object(
+                ci,
+                "vercel",
+                side_effect=[
+                    PROJECT,
+                    NO_BINDINGS,
+                    STORED,
+                    TimeoutError(),
+                    {"deployments": deployments},
+                    {"readyState": "READY", "url": "mine.vercel.app"},
+                    CURRENT_BINDING,
+                    {},
+                ],
+            ) as vercel,
+            patch.object(ci, "prepare_database", return_value=URI),
+            patch.object(ci, "write_output") as output,
+        ):
+            ci.deploy_preview()
+            self.assertIn(call("/v13/deployments/mine"), vercel.call_args_list)
+            output.assert_called_once_with("url", "https://mine.vercel.app")
+
+    def test_unconfirmed_deployment_preserves_its_database_and_binding(self):
+        with (
+            patch.object(
+                ci,
+                "vercel",
+                side_effect=[
+                    PROJECT,
+                    NO_BINDINGS,
+                    STORED,
+                    TimeoutError(),
+                    {"deployments": []},
+                ],
             ),
             patch.object(ci, "prepare_database", return_value=URI),
             patch.object(ci, "remove_branches") as remove,
         ):
-            with self.assertRaisesRegex(RuntimeError, "ERROR"):
+            with self.assertRaisesRegex(RuntimeError, "Unconfirmed deployment"):
                 ci.deploy_preview()
-            remove.assert_called_once_with("failed")
+            remove.assert_not_called()
+
+    def test_lost_neon_create_response_reclaims_only_matching_child(self):
+        with patch.object(
+            ci,
+            "neon",
+            side_effect=[
+                {"branches": [ROOT, PREVIOUS]},
+                TimeoutError(),
+                {"branches": [ROOT, PREVIOUS, CURRENT, OTHER]},
+                {},
+            ],
+        ) as neon:
+            with self.assertRaises(TimeoutError):
+                ci.prepare_database()
+            self.assertEqual(
+                neon.call_args_list[-1], call("/branches/br-new", "DELETE")
+            )
+
+    def test_limit_allows_updates_but_refuses_a_ninth_pr(self):
+        branches = [
+            ROOT,
+            *[branch(f"aq-ci-pr-{n}-r42-1", f"br-{n}") for n in range(1, 9)],
+        ]
+        with patch.object(ci, "neon", return_value={"branches": branches}) as neon:
+            with self.assertRaisesRegex(ValueError, "limit reached"):
+                ci.prepare_database()
+            self.assertEqual(neon.call_count, 1)
+        with (
+            patch.dict(os.environ, {"PR_NUMBER": "1"}),
+            patch.object(
+                ci,
+                "neon",
+                side_effect=[
+                    {"branches": branches},
+                    TimeoutError(),
+                    {"branches": branches},
+                ],
+            ) as neon,
+        ):
+            with self.assertRaises(TimeoutError):
+                ci.prepare_database()
+            self.assertEqual(neon.call_args_list[1].args[:2], ("/branches", "POST"))
 
     def test_closing_pr_removes_only_its_own_environment_entry(self):
         env = {
             "key": "DATABASE_URL",
             "gitBranch": "topic/example",
             "id": "managed",
+            "target": ["preview"],
             "comment": "Aquario CI aq-ci-pr-23",
         }
         with (
