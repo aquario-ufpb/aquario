@@ -171,6 +171,7 @@ aquario/
 | `npm run test:integration`    | Integration tests (Vitest) |
 | `npm run test:integration:ui` | Integration tests with UI  |
 | `npm run test:all`            | Run all test suites        |
+| `npm run test:e2e`            | E2E tests (Playwright)     |
 
 ### Versioning & Releases
 
@@ -234,6 +235,11 @@ See `.env.example` for the complete list with detailed comments.
 | --------------- | --------- | ------------------------- | ----------------------------------------- |
 | **Unit**        | Jest      | Pure functions, utilities | `src/**/__tests__/*.test.ts`              |
 | **Integration** | Vitest    | React hooks, API routes   | `src/**/__tests__/*.integration.test.tsx` |
+| **E2E**         | Playwright | Real browser, seeded DB  | `e2e/*.spec.ts`                           |
+
+### E2E Tests (Playwright)
+
+The E2E suite signs in as a throwaway student (created through the real API) and drives `/planejador` in Chromium. It needs the local database migrated **and seeded** (`npm run db:seed`) because it reads the Ciência da Computação curriculum. Install the browser once with `npx playwright install chromium`, then run `npm run test:e2e`; it starts `npm run dev` itself or reuses a running server. Each run leaves one `e2e-*@e2e.ufpb.br` user in the local database.
 
 ### Writing Tests
 
