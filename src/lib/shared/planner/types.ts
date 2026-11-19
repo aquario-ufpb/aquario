@@ -117,7 +117,7 @@ export const draftSchema = z
     windows: z.array(windowSchema).max(224),
     settings: settingsSchema,
     priorityOrder: z.array(text).max(2048).default([]),
-    priorities: z.record(z.enum(["required", "high", "optional", "exclude"])),
+    priorities: z.record(z.string(), z.enum(["required", "high", "optional", "exclude"])),
     fixedOfferIds: z.array(text).max(12),
     excludedOfferIds: z.array(text).max(1500).default([]),
     customGoals: z.array(goalSchema).max(30),

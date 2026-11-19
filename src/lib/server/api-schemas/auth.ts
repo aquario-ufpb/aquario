@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 
 /**
  * Zod request schemas for the /api/auth/* endpoints.
@@ -27,8 +28,8 @@ export const registerSchema = z.object({
     .string()
     .min(8, "Senha deve ter pelo menos 8 caracteres")
     .max(128, "Senha deve ter no máximo 128 caracteres"),
-  centroId: z.string().uuid("Centro inválido"),
-  cursoId: z.string().uuid("Curso inválido"),
+  centroId: uuidSchema("Centro inválido"),
+  cursoId: uuidSchema("Curso inválido"),
   urlFotoPerfil: z.string().url().optional(),
 });
 

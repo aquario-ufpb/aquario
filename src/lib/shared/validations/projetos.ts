@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 
 /**
  * Accepts either an absolute URL or a server-relative path (starting with "/").
@@ -31,8 +32,8 @@ const httpUrlSchema = z
  */
 const projetoAutorSchema = z
   .object({
-    usuarioId: z.string().uuid("ID de usuário inválido").optional().nullable(),
-    entidadeId: z.string().uuid("ID de entidade inválido").optional().nullable(),
+    usuarioId: uuidSchema("ID de usuário inválido").optional().nullable(),
+    entidadeId: uuidSchema("ID de entidade inválido").optional().nullable(),
     autorPrincipal: z.boolean().default(false),
   })
   .refine(a => !!a.usuarioId || !!a.entidadeId, {
@@ -40,7 +41,7 @@ const projetoAutorSchema = z
     path: ["usuarioId"],
   });
 
-const createProjetoBaseSchema = z.object({
+const projetoFields = z.object({
   titulo: z.string().min(1).max(255),
   slug: z
     .string()
@@ -53,13 +54,12 @@ const createProjetoBaseSchema = z.object({
   // as literal text. No XSS surface at the storage layer.
   textContent: z.string().max(50000).optional().nullable(),
   urlImagem: internalUrlSchema.optional().nullable(),
-  status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).default("RASCUNHO"),
+  status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]),
   // Normalize tags to lowercase + trimmed at validation time so search and
   // dedup are trivially consistent. Drop empties so a trailing comma in the
   // input field doesn't create a "" tag.
   tags: z
     .array(z.string().max(50))
-    .default([])
     .transform(arr => Array.from(new Set(arr.map(t => t.trim().toLowerCase()).filter(Boolean)))),
   dataInicio: z.coerce.date().optional().nullable(),
   dataFim: z.coerce.date().optional().nullable(),
@@ -69,7 +69,11 @@ const createProjetoBaseSchema = z.object({
   autores: z.array(projetoAutorSchema).min(1),
 });
 
-export const createProjetoSchema = createProjetoBaseSchema
+export const createProjetoSchema = projetoFields
+  .extend({
+    status: projetoFields.shape.status.default("RASCUNHO"),
+    tags: projetoFields.shape.tags.default([]),
+  })
   .refine(
     data => {
       if (data.dataInicio && data.dataFim) {
@@ -87,7 +91,7 @@ export const createProjetoSchema = createProjetoBaseSchema
     path: ["autores"],
   });
 
-export const updateProjetoSchema = createProjetoBaseSchema
+export const updateProjetoSchema = projetoFields
   .partial()
   .omit({ autores: true })
   .refine(
@@ -121,8 +125,8 @@ export const listProjetosSchema = z.object({
    * to projects the caller is authorized to see.
    */
   status: z.enum(["RASCUNHO", "PUBLICADO", "ARQUIVADO"]).default("PUBLICADO"),
-  entidadeId: z.string().uuid().optional(),
-  usuarioId: z.string().uuid().optional(),
+  entidadeId: uuidSchema().optional(),
+  usuarioId: uuidSchema().optional(),
   tags: z.string().optional(),
   search: z.string().optional(),
   tipoEntidade: z

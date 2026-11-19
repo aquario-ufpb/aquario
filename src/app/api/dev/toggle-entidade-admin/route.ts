@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { handleError } from "@/lib/server/errors";
@@ -8,7 +9,7 @@ import { IS_DEV } from "@/lib/shared/config/env";
 export const dynamic = "force-dynamic";
 
 const toggleSchema = z.object({
-  entidadeId: z.string().uuid(),
+  entidadeId: uuidSchema(),
 });
 
 export function POST(request: Request) {

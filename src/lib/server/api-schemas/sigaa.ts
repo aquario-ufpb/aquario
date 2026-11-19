@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 
 import { SIGAA_CONSENT_VERSION } from "@/lib/shared/sigaa/consent";
 
@@ -9,10 +10,12 @@ export { SIGAA_CONSENT_VERSION };
 export const sigaaReauthRequestSchema = z
   .object({
     password: z
-      .string({ required_error: "Senha do Aquário é obrigatória" })
+      .string({
+        error: issue => (issue.input === undefined ? "Senha do Aquário é obrigatória" : undefined),
+      })
       .min(1, "Senha do Aquário é obrigatória")
       .max(128, "Senha do Aquário deve ter no máximo 128 caracteres"),
-    proposalId: z.string().uuid().optional(),
+    proposalId: uuidSchema().optional(),
   })
   .strict();
 
@@ -31,7 +34,7 @@ export type SigaaSyncRequest = z.infer<typeof sigaaSyncRequestSchema>;
 
 export const sigaaCourseChangeConfirmationRequestSchema = z
   .object({
-    proposalId: z.string().uuid(),
+    proposalId: uuidSchema(),
     username: z.string().min(1).max(64),
     password: z.string().min(1).max(256),
     idempotencyKey: idempotencyKeySchema,

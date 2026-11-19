@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 
 /**
  * Zod request schemas for the /api/vagas endpoints.
@@ -26,7 +27,7 @@ export const createVagaSchema = z.object({
   titulo: z.string().min(1, "Título é obrigatório").max(200, "Título muito longo"),
   descricao: z.string().min(1, "Descrição é obrigatória").max(10000, "Descrição muito longa"),
   tipoVaga: z.enum(TIPO_VAGA_VALUES),
-  entidadeId: z.string().uuid("ID de entidade inválido"),
+  entidadeId: uuidSchema("ID de entidade inválido"),
   linkInscricao: z
     .string()
     .url("Link para inscrição deve ser uma URL válida")

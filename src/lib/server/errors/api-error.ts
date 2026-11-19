@@ -91,12 +91,12 @@ export const ApiError = {
  * Convert Zod validation errors to our standard format
  */
 export function fromZodError(error: ZodError): NextResponse<ApiErrorBody> {
-  const fieldErrors: FieldError[] = error.errors.map(err => ({
+  const fieldErrors: FieldError[] = error.issues.map(err => ({
     field: err.path.join("."),
     message: err.message,
   }));
 
-  const firstMessage = error.errors[0]?.message || "Dados inválidos";
+  const firstMessage = error.issues[0]?.message || "Dados inválidos";
 
   return ApiError.validation(firstMessage, fieldErrors);
 }

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 import { withAuth } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { privatePlanResponse, readPlanRequest } from "@/lib/server/services/planner/private-plans";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export function GET(request: Request, context: Context) {
   return withAuth(request, async (_req, owner) => {
     const { id } = await context.params;
-    if (!z.string().uuid().safeParse(id).success) {
+    if (!uuidSchema().safeParse(id).success) {
       return privatePlanResponse({ message: "Cenário inválido." }, 400);
     }
     try {
@@ -24,7 +24,7 @@ export function GET(request: Request, context: Context) {
 export function PATCH(request: Request, context: Context) {
   return withAuth(request, async (req, owner) => {
     const { id } = await context.params;
-    if (!z.string().uuid().safeParse(id).success) {
+    if (!uuidSchema().safeParse(id).success) {
       return privatePlanResponse({ message: "Cenário inválido." }, 400);
     }
     let body;
@@ -62,7 +62,7 @@ export function PATCH(request: Request, context: Context) {
 export function DELETE(request: Request, context: Context) {
   return withAuth(request, async (_req, owner) => {
     const { id } = await context.params;
-    if (!z.string().uuid().safeParse(id).success) {
+    if (!uuidSchema().safeParse(id).success) {
       return privatePlanResponse({ message: "Cenário inválido." }, 400);
     }
     try {
