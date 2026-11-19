@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Complementary to `.claude/CLAUDE.md` (stack overview, domain glossary in Portuguese, changelog rule). Read that too; this file covers commands and architecture details that need cross-file context. Where they disagree, trust the code (see "Stale docs" below).
+Complementary to `.claude/CLAUDE.md` (stack overview, domain glossary in Portuguese, changelog rule). Read that too; this file covers commands and architecture details that need cross-file context. Where they disagree, trust the code.
 
 ## Commands
 
@@ -59,7 +59,3 @@ The planner (`/planejador`, `server/services/planner`, `client/planner`) parses 
 
 ### Environments
 Smart defaults: no `RESEND_API_KEY` → emails are logged and users auto-verified; no PostHog key or dev mode → analytics off. See `README-DEV.md`.
-
-## Stale docs
-
-`.claude/CLAUDE.md` and `.cursor/rules.md` mention `createApiHandler` (`@/lib/server/api/route-handler`) and `@/lib/server/api/errors`. Neither exists; `src/lib/server/api/` is absent. Use `withAuth` and `@/lib/server/errors` as above, and consider fixing those files.

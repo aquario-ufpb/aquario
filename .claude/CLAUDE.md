@@ -56,13 +56,13 @@ const response = await apiClient(`${API_URL}/guias`, ...);
 ```
 
 ### Error Handling
-- **Backend**: Throw `ApiError` from `@/lib/server/api/errors` with machine-readable `ErrorCode`
+- **Backend**: Return an `ApiError.*` response (`notFound`, `badRequest`, `forbidden`, ...) from `@/lib/server/errors`; error codes are machine-readable `ErrorCode`s in `@/lib/shared/errors`
 - **Frontend**: Use `throwApiError(response)` to convert API errors to exceptions
 
 ```typescript
 // Backend route
 if (!user) {
-  throw new ApiError("User not found", 404, "USER_NOT_FOUND");
+  return ApiError.notFound("Usuário");
 }
 
 // Frontend service
@@ -82,15 +82,28 @@ const user = await container.usuarioRepository.findById(id);
 ```
 
 ### API Routes
-Use the `createApiHandler` wrapper for consistent error handling:
+Route handlers are plain `GET`/`POST` functions. Wrap authenticated ones in `withAuth` and validate bodies with the Zod schemas in `@/lib/server/api-schemas`:
 
 ```typescript
-import { createApiHandler } from "@/lib/server/api/route-handler";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/server/services/auth/middleware";
+import { ApiError, handleError } from "@/lib/server/errors";
 
-export const GET = createApiHandler(async (req) => {
-  // Your logic here
-  return NextResponse.json(data);
-});
+export async function POST(request: Request) {
+  // The try/catch wraps withAuth: its user lookup runs before the callback and can also throw.
+  try {
+    return await withAuth(request, async (req, usuario) => {
+      const data = schema.parse(await req.json());
+      return NextResponse.json(await doSomething(usuario, data));
+    });
+  } catch (error) {
+    // req.json() throws a SyntaxError on a malformed body: that is the client's fault.
+    if (error instanceof SyntaxError) {
+      return ApiError.badRequest("Corpo da requisição inválido");
+    }
+    return handleError(error, "Erro ao salvar"); // ZodError -> 400, anything else -> 500
+  }
+}
 ```
 
 ## Domain Terminology (Portuguese)
