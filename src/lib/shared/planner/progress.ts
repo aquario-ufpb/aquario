@@ -1,13 +1,6 @@
+import { buildRequirementGraph } from "./requirement-graph";
 import { checkRequirement, normalizeCode } from "./requirements";
-import type { PlannerGoal, PlannerProgress, PlannerSettings, Requirement } from "./types";
-
-type Missing = { codes: Set<string>; uncertain: boolean };
-const references = (rule: Requirement | null): string[] =>
-  !rule || rule.kind === "unknown"
-    ? []
-    : rule.kind === "code"
-      ? [normalizeCode(rule.code)]
-      : rule.items.flatMap(references);
+import type { PlannerGoal, PlannerProgress, PlannerSettings } from "./types";
 
 /** A prerequisite graph describes progress after approval, never eligibility in the same term. */
 export function createProgressPlanner(
@@ -15,96 +8,13 @@ export function createProgressPlanner(
   completed: Set<string>,
   settings: PlannerSettings
 ) {
-  const byCode = new Map(goals.map(goal => [normalizeCode(goal.code), goal]));
+  const graph = buildRequirementGraph(goals);
+  const { byCode, missing } = graph;
   const target = settings.progressTarget
     ? byCode.get(normalizeCode(settings.progressTarget))
     : undefined;
   const label = (code: string) => ({ code, name: byCode.get(code)?.name ?? code });
-  const outgoing = new Map<string, Set<string>>();
-  for (const goal of goals) {
-    if (!goal.requirementsKnown) {
-      continue;
-    }
-    for (const code of references(goal.prerequisite)) {
-      const next = outgoing.get(code) ?? new Set<string>();
-      next.add(goal.code);
-      outgoing.set(code, next);
-    }
-  }
-  const missing = (goal: PlannerGoal, done: Set<string>): Missing => {
-    const cache = new Map<string, Missing>();
-    const visit = (rule: Requirement | null, trail: Set<string>): Missing => {
-      if (!rule) {
-        return { codes: new Set(), uncertain: false };
-      }
-      if (rule.kind === "unknown") {
-        return { codes: new Set(), uncertain: true };
-      }
-      if (rule.kind === "code") {
-        const code = normalizeCode(rule.code);
-        if (done.has(code)) {
-          return { codes: new Set(), uncertain: false };
-        }
-        if (trail.has(code)) {
-          return { codes: new Set([code]), uncertain: true };
-        }
-        const cached = cache.get(code);
-        if (cached) {
-          return cached;
-        }
-        const parent = byCode.get(code);
-        const dependency = parent?.requirementsKnown
-          ? visit(parent.prerequisite, new Set([...trail, code]))
-          : { codes: new Set<string>(), uncertain: true };
-        const answer = {
-          codes: new Set([code, ...dependency.codes]),
-          uncertain: dependency.uncertain,
-        };
-        cache.set(code, answer);
-        return answer;
-      }
-      const branches = rule.items.map(item => visit(item, trail));
-      if (rule.kind === "any") {
-        return branches.sort(
-          (a, b) =>
-            Number(a.uncertain) - Number(b.uncertain) ||
-            a.codes.size - b.codes.size ||
-            [...a.codes]
-              .sort()
-              .join()
-              .localeCompare([...b.codes].sort().join())
-        )[0];
-      }
-      return {
-        codes: new Set(branches.flatMap(branch => [...branch.codes])),
-        uncertain: branches.some(branch => branch.uncertain),
-      };
-    };
-    if (done.has(goal.code)) {
-      return { codes: new Set(), uncertain: false };
-    }
-    return goal.requirementsKnown
-      ? visit(goal.prerequisite, new Set([goal.code]))
-      : { codes: new Set(), uncertain: true };
-  };
-  const path = (start: string, destination: string): string[] | null => {
-    const queue = [[start]],
-      visited = new Set([start]);
-    for (let i = 0; i < queue.length; i++) {
-      const route = queue[i],
-        last = route[route.length - 1];
-      if (last === destination) {
-        return route;
-      }
-      for (const next of outgoing.get(last) ?? []) {
-        if (!visited.has(next) && !completed.has(next)) {
-          visited.add(next);
-          queue.push([...route, next]);
-        }
-      }
-    }
-    return null;
-  };
+  const path = (start: string, destination: string) => graph.path(start, destination, completed);
   const pending = goals.filter(
     goal =>
       !completed.has(goal.code) &&
@@ -115,14 +25,13 @@ export function createProgressPlanner(
   const baseline = target ? missing(target, completed) : undefined;
   const reliablePending = pending.filter(goal => !missing(goal, completed).uncertain);
   const downstream = new Map(
-    goals.map(goal => [
-      goal.code,
-      new Set(
-        reliablePending
-          .filter(other => other.code !== goal.code && path(goal.code, other.code))
-          .map(other => other.code)
-      ),
-    ])
+    goals.map(goal => {
+      const reach = graph.reachable(goal.code, completed);
+      return [
+        goal.code,
+        new Set(reliablePending.filter(other => reach.has(other.code)).map(other => other.code)),
+      ];
+    })
   );
   return {
     weight: (code: string) =>
