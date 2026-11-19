@@ -131,18 +131,22 @@ function composeCommand() {
   });
 }
 
-/** Starts the local database and reports success only when Compose actually ran. */
+/** Starts the local database; true only when Compose actually ran. */
 function startDatabase(successMessage) {
   const compose = composeCommand();
   if (compose && exec(`${compose} up -d`)) {
     console.log(`   ✅ ${successMessage}\n`);
-    return;
+    return true;
   }
   console.log("   ❌ Could not start the Docker database");
   console.log(
     "   💡 Install Docker Compose (v2: `docker compose`, or v1: `docker-compose`) or set DATABASE_URL\n"
   );
+  return false;
 }
+
+// Set when a database start was attempted and failed: later steps must not run against no database.
+let databaseStartFailed = false;
 
 function checkCommand(command) {
   try {
@@ -283,15 +287,15 @@ if (isUsingCloudDatabase) {
 
         if (exists) {
           console.log("   🔄 Starting existing Docker container...");
-          startDatabase("Docker database started");
+          databaseStartFailed ||= !startDatabase("Docker database started");
         } else {
           console.log("   🆕 Creating and starting Docker database...");
-          startDatabase("Docker database created and started");
+          databaseStartFailed ||= !startDatabase("Docker database created and started");
         }
       }
     } catch (_error) {
       console.log("   ⚠️  Could not check Docker status, attempting to start...");
-      startDatabase("Docker database setup attempted");
+      databaseStartFailed ||= !startDatabase("Docker database setup attempted");
     }
   }
 } else if (isUsingLocalDatabase) {
@@ -328,17 +332,27 @@ if (isUsingCloudDatabase) {
 
         if (exists) {
           console.log("   🔄 Starting existing Docker container...");
-          startDatabase("Docker database started");
+          databaseStartFailed ||= !startDatabase("Docker database started");
         } else {
           console.log("   🆕 Creating and starting Docker database...");
-          startDatabase("Docker database created and started");
+          databaseStartFailed ||= !startDatabase("Docker database created and started");
         }
       }
     } catch (_error) {
       console.log("   ⚠️  Could not check Docker status, attempting to start...");
-      startDatabase("Docker database setup attempted");
+      databaseStartFailed ||= !startDatabase("Docker database setup attempted");
     }
   }
+}
+
+if (databaseStartFailed) {
+  console.log(
+    "❌ Setup stopped: the local database is not running, so migrations and seed were skipped."
+  );
+  console.log(
+    "   💡 Fix Docker Compose (or point DATABASE_URL to a running database) and run 'npm run setup' again\n"
+  );
+  process.exit(1);
 }
 
 // =============================================================================
