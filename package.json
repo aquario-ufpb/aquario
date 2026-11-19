@@ -159,6 +159,8 @@
     "@prisma/config@6.19.3": {
       "deepmerge-ts": "8.0.2"
     },
-    "@ai-sdk/provider-utils@4.0.5": "4.0.67"
+    "@scalar/agent-chat@0.12.18": {
+      "@ai-sdk/provider-utils": "4.0.67"
+    }
   }
 }
