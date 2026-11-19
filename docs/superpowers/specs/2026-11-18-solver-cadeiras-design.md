@@ -49,7 +49,7 @@ O estudante quer saber, antes de se matricular, **o que acontece com o resto do 
 - `unknown` nunca é "Bloqueada".
 - Equivalências só direcionais e explícitas, via `simulateApprovals`, sem alterá-lo.
 - Todas as cadeiras do currículo entram no cálculo; optativas recolhidas na UI.
-- **S é seleção livre**, com botão "Usar grade gerada".
+- **S é seleção livre**, com botão "Usar grade gerada". O botão importa o código da **oferta** escolhida pelo solver, não o do objetivo: uma oferta fora do currículo vale em S quando algum objetivo disponível a lista como equivalente, e as equivalências direcionais partem dela.
 - Painel "Análise de bloqueios" no `/planejador`.
 - Detalhe: pré-requisito mínimo pendente + contador de dependentes; cadeia completa ao expandir.
 - **Cadeira sem nenhum requisito registrado** (`requirementsKnown = false` e `prerequisite = null`) é **"Disponível agora" com selo "sem requisito registrado"**. Só vai para "A verificar" quando há texto ilegível (`unknown`). Isso difere do solver de horários, que é mais conservador, e deve constar no código e no PR.
@@ -64,7 +64,7 @@ Entradas: `goals`, `completedCodes`, `assumedPassedCodes`, `selected` (S), `waiv
 
 Para cada cadeira pendente c (fora de H, de S′ e das creditadas por equivalência direta de S′; `exclude` **não** tira da análise, pois é filtro de busca e não fato acadêmico), na ordem:
 
-1. `requirementsKnown = false` e `prerequisite ≠ null` → **A verificar**, seja o requisito ilegível (`unknown`) ou lido mas não confirmado (por exemplo, co-requisito ilegível). Só `prerequisite = null` com `requirementsKnown = false` é tratado como sem requisito (ver decisão acima).
+1. `requirementsKnown = false` e `prerequisite ≠ null` → **A verificar**, seja o requisito ilegível (`unknown`) ou lido mas não confirmado (por exemplo, co-requisito ilegível). Só `prerequisite = null` **e** `corequisite = null` com `requirementsKnown = false` é tratado como sem requisito (ver decisão acima); um co-requisito ilegível mantém a cadeira em "A verificar".
 2. `checkRequirement(c, H)` é `met` → **Disponível agora** (com selo se o requisito era nulo e `requirementsKnown = false`).
 3. `checkRequirement(c, H′)` é `met` → **Liberada depois**.
 4. Senão o requisito direto está `unmet`. Se `missing(c, H′)` é `uncertain` (ciclo, código fora do currículo ou ancestral desconhecido) → **A verificar**. Caso contrário → **Bloqueada**. Um `OU` com um ramo ainda não cumprido e ilegível (código fora do currículo, regra `unknown`) também é `uncertain`, mesmo havendo outro ramo conhecido: o ramo ilegível pode já estar cumprido. O ramo conhecido segue como dica em `chain`/`pendingRule`. O solver de horários mantém o critério otimista.
@@ -96,7 +96,7 @@ analyzeBlocking(input): {
 
 `optional = curricularRequired === false`. Goals personalizados não têm `curricularRequired` e contam como obrigatórias. Uma optativa é "afetada por S" quando seu grupo muda entre H e H′ ou quando aparece em `delayed`; só essas aparecem fora do bloco recolhido.
 
-`dependents` é o número de cadeias pendentes alcançáveis pela adjacência reversa, com `missing(·, H).uncertain = false`, sem o filtro `includeOptional` do solver. O universo é o do currículo inteiro.
+`dependents` é o número de cadeias pendentes alcançáveis pela adjacência reversa, com `missing(·, H).uncertain = false`, sem o filtro `includeOptional` do solver. A busca não atravessa cadeiras já cumpridas por H ou por S′ (disponíveis agora ou liberadas depois): um `OU` já satisfeito não conta como dependência. O universo é o do currículo inteiro.
 
 ## Extração do grafo (decisão minha, revisar)
 

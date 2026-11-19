@@ -78,7 +78,7 @@
   - `missing returns the transitive chain`: `P1, A1("P1"), B2("A1")` → `missing(B2, new Set()).codes` = `{A1, P1}`, `uncertain=false`.
   - `missing is uncertain for cycles, unknown ancestors and codes outside the curriculum` (três casos).
   - `missing keeps the any-branch tie-break` (mesmos valores da Task 1).
-  - `missing honors waivers`: `{target:"B2", requires:"A1"}` → vazio; `{target:"B2"}` → vazio e certo; waiver de outro target não muda nada. O waiver vale só para o goal pedido, não para os ancestrais.
+  - `missing honors waivers`: `{target:"B2", requires:"A1"}` → vazio; `{target:"B2"}` → vazio e certo; O waiver de um target vale onde esse target for expandido (inclusive como ancestral de outro goal), mas nunca se estende aos ancestrais dele: `{B2, requires:P1}` não dispensa o `P1` que `A1` exige.
   - `reachable skips blocked nodes`: `reachable("P1")` = `{A1, B2}`; com `blocked = {A1}` = `{}`.
   - `path` devolve a menor rota ou `null`.
 - [ ] **Step 2: Rodar e ver falhar** (`Cannot find module`).
