@@ -74,6 +74,23 @@ export function checkRequirement(
   return states.includes("met") ? "met" : states.includes("unknown") ? "unknown" : "unmet";
 }
 
+/** The part of `rule` still unmet by `completed`, or null when it is met. */
+export function remainingRequirement(
+  rule: Requirement | null,
+  completed: Set<string>
+): Requirement | null {
+  if (!rule || checkRequirement(rule, completed) === "met") {
+    return null;
+  }
+  if (rule.kind === "code" || rule.kind === "unknown") {
+    return rule;
+  }
+  const items = rule.items
+    .map(item => remainingRequirement(item, completed))
+    .filter((item): item is Requirement => item !== null);
+  return items.length === 1 ? items[0] : { ...rule, items };
+}
+
 export function describeRequirement(
   requirement: Requirement | null,
   labelCode: (code: string) => string = code => code
