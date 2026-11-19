@@ -1432,7 +1432,9 @@ function PlannerWorkspace() {
                 goals={simulation.goals}
                 completedCodes={academic.completedCodes}
                 assumedPassedCodes={assumePassed ? academic.enrolledCodes : []}
-                suggestedCodes={solver.result?.solutions[0]?.selections.map(s => s.goal.code) ?? []}
+                suggestedCodes={
+                  solver.result?.solutions[0]?.selections.map(s => s.offer.code) ?? []
+                }
                 // Only a real comparison can be a mismatch: with no grade or no snapshot nothing differs.
                 curriculumMatched={academic.curriculumMatched || !grade.data || !snapshot}
                 isLoading={

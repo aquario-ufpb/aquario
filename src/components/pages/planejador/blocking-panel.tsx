@@ -78,6 +78,13 @@ export function BlockingPanel({
     () => new Map(goals.map(goal => [normalizeCode(goal.code), goal])),
     [goals]
   );
+  // Offered codes outside the curriculum are valid when a goal lists them as an equivalent.
+  const equivalentCodes = useMemo(
+    () => new Set(goals.flatMap(goal => goal.equivalents.map(normalizeCode))),
+    [goals]
+  );
+  const inCurriculum = (code: string) =>
+    byCode.has(normalizeCode(code)) || equivalentCodes.has(normalizeCode(code));
   // Codes from another curriculum (course switch, stale suggestion) leave S for good, so they do
   // not come back if the curriculum changes again. An empty curriculum is a loading state: keep S.
   useEffect(() => {
@@ -85,13 +92,15 @@ export function BlockingPanel({
       return;
     }
     setSelected(previous => {
-      const kept = previous.filter(code => byCode.has(normalizeCode(code)));
+      const kept = previous.filter(inCurriculum);
       return kept.length === previous.length ? previous : kept;
     });
-  }, [byCode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [byCode, equivalentCodes]);
   const selected = useMemo(
-    () => chosen.filter(code => byCode.has(normalizeCode(code))),
-    [chosen, byCode]
+    () => chosen.filter(inCurriculum),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chosen, byCode, equivalentCodes]
   );
   const analysis = useMemo(
     () =>

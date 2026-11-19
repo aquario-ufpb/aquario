@@ -199,3 +199,11 @@ it("keeps the selection through a transient empty curriculum", () => {
   rerender(<BlockingPanel {...props} />);
   expect(screen.getByRole("button", { name: "Remover Nome A1" })).toBeInTheDocument();
 });
+
+it("uses the offered code, even outside the curriculum, when the generated grid is applied", () => {
+  const curriculum = [...goals, goal("Q1", null, { equivalents: ["EXT1"] }), goal("Q2", "Q1")];
+  render(<BlockingPanel {...props} goals={curriculum} suggestedCodes={["EXT1"]} />);
+  fireEvent.click(screen.getByRole("button", { name: "Usar grade gerada" }));
+  expect(screen.getByRole("button", { name: "Remover EXT1" })).toBeInTheDocument();
+  expect(within(group(/^Liberadas depois/)).getByText("Nome Q2")).toBeInTheDocument();
+});
