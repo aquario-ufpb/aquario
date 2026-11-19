@@ -178,7 +178,10 @@ export type ISigaaRepository = {
     connectorRequestId?: string;
   }): Promise<SigaaRunReceipt>;
 
-  readImportedState(ownerId: UsuarioId): Promise<ImportedAcademicState>;
+  readImportedState(
+    ownerId: UsuarioId,
+    options?: { includeDeadlines: boolean }
+  ): Promise<ImportedAcademicState>;
   disconnect(ownerId: UsuarioId): Promise<DisconnectResult>;
   deleteImportedData(ownerId: UsuarioId): Promise<DeleteImportedDataResult>;
   deleteExpiredRuns(): Promise<{ deleted: number }>;

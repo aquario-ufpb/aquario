@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   sigaaAcademicSnapshotPayloadSchema,
   sigaaAcademicSnapshotPayloadShape,
+  sigaaClassDeadlinesSchema,
   type SigaaAcademicSnapshotPayload,
 } from "@/lib/shared/types/sigaa-academic";
 
@@ -55,7 +56,43 @@ export const toSigaaAcademicSnapshotPayload = (
     identity: candidate.identity,
     curriculum: candidate.curriculum,
     grades: candidate.grades,
-    classes: candidate.classes,
+    classes: candidate.classes.map(({ deadlines: _deadlines, ...currentClass }) => currentClass),
   });
+
+const storedClassDeadlinesSchema = z
+  .object({
+    runId: z.string().uuid(),
+    classes: z
+      .array(
+        z.object({ sourceKey: requiredText(64), deadlines: sigaaClassDeadlinesSchema }).strict()
+      )
+      .max(64),
+  })
+  .strict();
+
+export function toStoredClassDeadlines(candidate: SigaaSnapshotCandidate, runId: string) {
+  const classes = candidate.classes.flatMap(({ sourceKey, deadlines }) =>
+    deadlines === undefined ? [] : [{ sourceKey, deadlines }]
+  );
+  return classes.length > 0 ? { runId, classes } : null;
+}
+
+export function attachStoredClassDeadlines(
+  payload: SigaaAcademicSnapshotPayload,
+  stored: unknown
+): SigaaAcademicSnapshotPayload {
+  if (stored === null) {
+    return payload;
+  }
+  const { classes } = storedClassDeadlinesSchema.parse(stored);
+  const byClass = new Map(classes.map(item => [item.sourceKey, item.deadlines]));
+  return {
+    ...payload,
+    classes: payload.classes.map(item => {
+      const deadlines = byClass.get(item.sourceKey);
+      return deadlines === undefined ? item : { ...item, deadlines };
+    }),
+  };
+}
 
 export const sigaaMatriculaLockKey = (matricula: string): string => `sigaa:matricula:${matricula}`;

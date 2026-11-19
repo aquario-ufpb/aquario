@@ -239,6 +239,7 @@ model SigaaAcademicSnapshot {
   upstreamCommit      String   @db.Char(40)
   installedByRunId    String?
   payload             Json
+  classDeadlines      Json?
 
   connection     SigaaConnection @relation(fields: [usuarioId], references: [usuarioId], onDelete: Cascade)
   installedByRun SigaaSyncRun?   @relation(fields: [usuarioId, installedByRunId], references: [usuarioId, id], onDelete: NoAction)

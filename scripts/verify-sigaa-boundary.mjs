@@ -40,7 +40,11 @@ const jsonFields = sigaaModels.flatMap(([, modelName, body]) =>
     .filter(line => /\sJson\??(?:\s|$)/.test(line))
     .map(line => `${modelName}.${line.trim().split(/\s+/)[0]}`)
 );
-if (jsonFields.join(",") !== "SigaaAcademicSnapshot.payload") {
+const expectedJsonFields = [
+  "SigaaAcademicSnapshot.classDeadlines",
+  "SigaaAcademicSnapshot.payload",
+];
+if (jsonFields.sort().join(",") !== expectedJsonFields.join(",")) {
   throw new Error(`Unexpected SIGAA JSON fields: ${jsonFields.join(", ") || "none"}.`);
 }
 
@@ -51,7 +55,9 @@ if (!/matriculaOrigem\s+MatriculaOrigem\?/.test(schema)) {
 function sourceFiles(root) {
   return readdirSync(root, { withFileTypes: true }).flatMap(entry => {
     const path = join(root, entry.name);
-    if (entry.isDirectory()) return sourceFiles(path);
+    if (entry.isDirectory()) {
+      return sourceFiles(path);
+    }
     return [".ts", ".tsx"].includes(extname(entry.name)) ? [path] : [];
   });
 }

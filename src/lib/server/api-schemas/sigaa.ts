@@ -1,8 +1,10 @@
 import { z } from "zod";
 
+import { SIGAA_CONSENT_VERSION } from "@/lib/shared/sigaa/consent";
+
 import { idempotencyKeySchema } from "@/lib/server/services/sigaa/storage.types";
 
-export const SIGAA_CONSENT_VERSION = "sigaa-v1-2026-08";
+export { SIGAA_CONSENT_VERSION };
 
 export const sigaaReauthRequestSchema = z
   .object({
