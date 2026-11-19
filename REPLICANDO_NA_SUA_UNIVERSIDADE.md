@@ -272,7 +272,8 @@ Va em **Settings > Secrets and variables > Actions** no seu repositorio e adicio
 | `VERCEL_PROJECT_ID` | Vercel > Project > Settings > General | Preview, Staging, Production |
 | `NEON_API_KEY` | Neon > Account Settings > API Keys | Preview, Staging |
 | `NEON_PROJECT_ID` | URL da dashboard do Neon | Preview, Staging |
-| `TOKEN_PAT` | GitHub > Settings > Developer settings > Personal access tokens | Atualizacao de submodules (opcional) |
+
+Para as atualizações de submódulos e do PAAS, o token padrão é o `GITHUB_TOKEN`. Se o push precisar de um token dedicado, configure `MAINTENANCE_TOKEN_PAT` no environment `repository-maintenance`. [Permissões de manutenção](SECURITY.md)
 
 ### Workflows e o que fazem
 

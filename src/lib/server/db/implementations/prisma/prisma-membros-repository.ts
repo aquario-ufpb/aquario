@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
 import type {
   IMembrosRepository,
@@ -157,28 +158,66 @@ export class PrismaMembrosRepository implements IMembrosRepository {
   }
 
   async update(id: string, data: UpdateMembroInput): Promise<MembroWithRelations> {
-    const updateData: Record<string, unknown> = {};
-
-    if (data.papel !== undefined) {
-      updateData.papel = data.papel;
-    }
-    if (data.cargoId !== undefined) {
-      updateData.cargoId = data.cargoId;
-    }
-    if (data.startedAt !== undefined) {
-      updateData.startedAt = data.startedAt;
-    }
-    if (data.endedAt !== undefined) {
-      updateData.endedAt = data.endedAt;
-    }
-
     const membro = await prisma.membroEntidade.update({
       where: { id },
-      data: updateData,
+      data,
       include: membroInclude,
     });
 
     return this.mapToMembroWithRelations(membro);
+  }
+
+  updateAsEntityAdmin(
+    id: string,
+    entidadeId: string,
+    actorId: string,
+    data: UpdateMembroInput
+  ): Promise<MembroWithRelations | null> {
+    return prisma.$transaction(async tx => {
+      const master = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "Usuario"
+        WHERE id = ${actorId} AND "papelPlataforma" = 'MASTER_ADMIN' FOR SHARE`;
+      if (!master.length) {
+        // Hold the actor's current authorization until the historical or current target is updated.
+        const active = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "MembroEntidade"
+          WHERE "usuarioId" = ${actorId} AND "entidadeId" = ${entidadeId}
+            AND papel = 'ADMIN' AND "endedAt" IS NULL FOR UPDATE`;
+        if (!active.length) {
+          return null;
+        }
+      }
+      const membro = await tx.membroEntidade.update({
+        where: { id, entidadeId },
+        data,
+        include: membroInclude,
+      });
+      return this.mapToMembroWithRelations(membro);
+    });
+  }
+
+  async updateOwn(
+    id: string,
+    usuarioId: string,
+    data: UpdateMembroInput
+  ): Promise<MembroWithRelations | null> {
+    // PostgreSQL rechecks the predicate after waiting on a concurrent write
+    // to this membership, including a demotion or an ended term.
+    const master = { usuario: { papelPlataforma: "MASTER_ADMIN" as const } };
+    const where: Prisma.MembroEntidadeWhereUniqueInput = { id, usuarioId };
+    if (data.papel !== undefined) {
+      Object.assign(where, master);
+    } else if (data.endedAt === null) {
+      where.OR = [master, { papel: "MEMBRO" }, { endedAt: null }];
+    }
+
+    try {
+      const membro = await prisma.membroEntidade.update({ where, data, include: membroInclude });
+      return this.mapToMembroWithRelations(membro);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async delete(id: string): Promise<void> {

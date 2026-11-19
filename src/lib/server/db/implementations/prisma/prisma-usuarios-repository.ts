@@ -366,10 +366,33 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
     });
   }
 
-  async updatePassword(id: string, senhaHash: string): Promise<void> {
-    await prisma.usuario.update({
-      where: { id },
-      data: { senhaHash },
+  resetPasswordWithToken(usuarioId: string, tokenId: string, senhaHash: string): Promise<boolean> {
+    return prisma.$transaction(async tx => {
+      // Serialize password changes even if two different reset links were issued concurrently.
+      await tx.$queryRaw`SELECT id FROM "Usuario" WHERE id = ${usuarioId} FOR UPDATE`;
+      const now = new Date();
+      const claimed = await tx.tokenVerificacao.updateMany({
+        where: {
+          id: tokenId,
+          usuarioId,
+          tipo: "RESET_SENHA",
+          usadoEm: null,
+          expiraEm: { gt: now },
+        },
+        data: { usadoEm: now },
+      });
+      if (claimed.count !== 1) {
+        return false;
+      }
+      await tx.usuario.update({
+        where: { id: usuarioId },
+        data: { senhaHash, sessionVersion: { increment: 1 } },
+      });
+      await tx.tokenVerificacao.updateMany({
+        where: { usuarioId, tipo: "RESET_SENHA", usadoEm: null },
+        data: { usadoEm: now },
+      });
+      return true;
     });
   }
 

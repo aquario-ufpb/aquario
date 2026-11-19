@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 
 /**
  * Zod request schemas for the /api/entidades/* endpoints.
@@ -35,9 +36,9 @@ export const updateEntidadeSchema = z.object({
 
 /** Schema de validação para adição de membro a uma entidade. */
 export const addMemberSchema = z.object({
-  usuarioId: z.string().uuid("ID de usuário inválido"),
+  usuarioId: uuidSchema("ID de usuário inválido"),
   papel: z.enum(["ADMIN", "MEMBRO"]),
-  cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
+  cargoId: uuidSchema("ID de cargo inválido").nullable().optional(),
   startedAt: z.string().optional(), // ISO date string
   endedAt: z.string().nullable().optional(), // ISO date string or null
 });
@@ -45,7 +46,7 @@ export const addMemberSchema = z.object({
 /** Schema de validação para atualização de membro de uma entidade. */
 export const updateMemberSchema = z.object({
   papel: z.enum(["ADMIN", "MEMBRO"]).optional(),
-  cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
+  cargoId: uuidSchema("ID de cargo inválido").nullable().optional(),
   startedAt: z.string().optional(), // ISO date string
   endedAt: z.string().nullable().optional(), // ISO date string or null
 });

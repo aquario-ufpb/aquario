@@ -7,10 +7,6 @@ jest.mock("../graph-edges", () => ({
   GraphEdges: () => null,
 }));
 
-jest.mock("../discipline-detail-dialog", () => ({
-  DisciplineDetailDialog: () => null,
-}));
-
 jest.mock("@/lib/client/grades-curriculares/export", () => ({
   exportGradeAsImage: jest.fn(),
 }));
@@ -95,6 +91,17 @@ function renderGraph(props: Partial<React.ComponentProps<typeof CurriculumGraph>
 function selectionStateOf(nome: string): string | null {
   return screen.getByRole("button", { name: nome }).getAttribute("aria-pressed");
 }
+
+it("keeps the portaled discipline detail outside replay and autocapture", () => {
+  const { container } = renderGraph({ selectionMode: false });
+  const discipline = screen.getByRole("button", { name: "Cálculo I" });
+  fireEvent.click(discipline);
+  fireEvent.click(discipline);
+  const dialog = screen.getByRole("dialog");
+  expect(container).not.toContainElement(dialog);
+  expect(dialog).toHaveClass("ph-no-capture");
+  expect(dialog).toHaveAttribute("data-ph-no-capture", "true");
+});
 
 beforeAll(() => {
   Object.defineProperty(window, "matchMedia", {

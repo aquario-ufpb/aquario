@@ -78,7 +78,9 @@ export async function PUT(request: Request, context: RouteContext) {
         return ApiError.badRequest("A data de início deve ser anterior à data de término.");
       }
 
-      await membrosRepository.update(membroId, updateData);
+      if (!(await membrosRepository.updateOwn(membroId, usuario.id, updateData))) {
+        return ApiError.forbidden("Você não tem permissão para alterar este vínculo.");
+      }
 
       // Get the updated membership with full entity data
       const updated = await membrosRepository.findByIdWithEntidade(membroId);

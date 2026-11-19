@@ -24,7 +24,7 @@ jest.mock("@/lib/server/container", () => ({
       findActiveByUsuarioAndEntidade: mockFindActiveByUsuarioAndEntidade,
       findByEntidadeAndMembro: mockFindByEntidadeAndMembro,
       cargoExistsInEntidade: mockCargoExistsInEntidade,
-      update: mockMembroUpdate,
+      updateAsEntityAdmin: mockMembroUpdate,
       delete: mockMembroDelete,
     },
   }),
@@ -115,6 +115,8 @@ describe("PUT /api/entidades/[id]/membros/[membroId]", () => {
     expect(body.papel).toBe("ADMIN");
     expect(mockMembroUpdate).toHaveBeenCalledWith(
       "membro-1",
+      "ent-1",
+      "caller-1",
       expect.objectContaining({ papel: "ADMIN" })
     );
   });
@@ -192,6 +194,8 @@ describe("PUT /api/entidades/[id]/membros/[membroId]", () => {
     expect(response.status).toBe(200);
     expect(mockMembroUpdate).toHaveBeenCalledWith(
       "membro-1",
+      "ent-1",
+      "caller-1",
       expect.objectContaining({
         startedAt: expect.any(Date),
         endedAt: expect.any(Date),

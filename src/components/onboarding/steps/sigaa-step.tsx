@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Database, RefreshCw, ShieldCheck } from "lucide-react";
 
+import { SIGAA_CONSENT_VERSION } from "@/lib/shared/sigaa/consent";
 import { SigaaConnectFlow } from "@/components/sigaa/sigaa-connect-flow";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -120,7 +121,7 @@ export function SigaaStep({ onComplete, onSkip, isMutating, onPendingChange }: S
     return (
       <div className="mx-auto w-full max-w-2xl">
         <SigaaConnectFlow
-          requireConsent={!stateQuery.data?.connection?.consentedAt}
+          requireConsent={stateQuery.data?.connection?.consentVersion !== SIGAA_CONSENT_VERSION}
           onSynchronized={handleSynchronized}
           onExit={handleFlowExit}
           exitLabel="Prefiro configurar manualmente"

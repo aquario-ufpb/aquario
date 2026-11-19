@@ -89,17 +89,19 @@ export function registerSigaaPaths(registry: OpenAPIRegistry, schemas: CommonSch
     },
   });
 
-  const runSchema = z
-    .object({
-      id: z.string().uuid(),
-      status: z.enum(["RUNNING", "SUCCEEDED", "FAILED", "SUPERSEDED"]),
-      failureCode: z.string().nullable(),
-      connectorRequestId: z.string().nullable(),
-      startedAt: z.string().datetime(),
-      finishedAt: z.string().datetime().nullable(),
-    })
-    .strict()
-    .openapi("SigaaSyncRun");
+  const runSchema = registry.register(
+    "SigaaSyncRun",
+    z
+      .object({
+        id: z.string().uuid(),
+        status: z.enum(["RUNNING", "SUCCEEDED", "FAILED", "SUPERSEDED"]),
+        failureCode: z.string().nullable(),
+        connectorRequestId: z.string().nullable(),
+        startedAt: z.string().datetime(),
+        finishedAt: z.string().datetime().nullable(),
+      })
+      .strict()
+  );
   const succeededRunSchema = runSchema.extend({ status: z.literal("SUCCEEDED") }).strict();
   const privateHeaders = {
     "Cache-Control": {
@@ -111,8 +113,9 @@ export function registerSigaaPaths(registry: OpenAPIRegistry, schemas: CommonSch
     message: z.string(),
     code: z.literal(ErrorCode.SIGAA_COURSE_MISMATCH),
   };
-  const courseMismatchSchema = z
-    .discriminatedUnion("resolution", [
+  const courseMismatchSchema = registry.register(
+    "SigaaCourseMismatch",
+    z.discriminatedUnion("resolution", [
       z
         .object({
           ...mismatchBase,
@@ -140,7 +143,7 @@ export function registerSigaaPaths(registry: OpenAPIRegistry, schemas: CommonSch
         .strict(),
       z.object({ ...mismatchBase, resolution: z.literal("stale") }).strict(),
     ])
-    .openapi("SigaaCourseMismatch");
+  );
 
   registry.registerPath({
     method: "post",

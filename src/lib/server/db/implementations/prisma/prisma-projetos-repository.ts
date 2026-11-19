@@ -8,6 +8,7 @@ import type {
   CreateProjetoInput,
   CreateProjetoAutorInput,
 } from "@/lib/server/db/interfaces/projetos-repository.interface";
+import { markdownMediaUrls } from "@/lib/server/services/blob/markdown-media-urls";
 import { SlugConflictError } from "@/lib/server/db/errors";
 
 /**
@@ -59,6 +60,7 @@ const autoresInclude = {
  * `as unknown as ProjetoWithRelations` casts.
  */
 const projetoWithAutoresArgs = Prisma.validator<Prisma.ProjetoDefaultArgs>()({
+  omit: { markdownMediaUrls: true },
   include: { autores: autoresInclude },
 });
 
@@ -242,6 +244,7 @@ export class PrismaProjetosRepository implements IProjetosRepository {
       const projeto = await prisma.projeto.create({
         data: {
           ...(data as Prisma.ProjetoCreateInput),
+          markdownMediaUrls: await markdownMediaUrls(data.textContent),
           autores: {
             create: autores.map(autor => ({
               usuarioId: autor.usuarioId ?? null,
@@ -262,7 +265,11 @@ export class PrismaProjetosRepository implements IProjetosRepository {
     try {
       const projeto = await prisma.projeto.update({
         where: { slug },
-        data: data as Prisma.ProjetoUpdateInput,
+        data: {
+          ...(data as Prisma.ProjetoUpdateInput),
+          markdownMediaUrls:
+            data.textContent === undefined ? undefined : await markdownMediaUrls(data.textContent),
+        },
         ...projetoWithAutoresArgs,
       });
       return asProjetoWithRelations(projeto);

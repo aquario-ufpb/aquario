@@ -248,11 +248,13 @@ export function OnboardingModal({
           className="fixed inset-0 z-50 touch-none overscroll-none bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 motion-reduce:animate-none"
         />
         <DialogPrimitive.Content
+          data-ph-no-capture="true"
           data-onboarding-dialog
           onPointerDownOutside={e => e.preventDefault()}
           onEscapeKeyDown={e => e.preventDefault()}
           onInteractOutside={e => e.preventDefault()}
           className={cn(
+            "ph-no-capture",
             // Mobile uses svh so the sticky footer stays above Safari's toolbar.
             // top+bottom insets against the layout viewport put "Pular" under the chrome.
             "fixed left-[max(0.5rem,env(safe-area-inset-left))] right-[max(0.5rem,env(safe-area-inset-right))] top-[max(0.5rem,env(safe-area-inset-top))] z-50",

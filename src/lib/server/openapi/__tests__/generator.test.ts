@@ -170,6 +170,12 @@ describe("getOpenApiDocument", () => {
     expect(Object.keys(second.paths ?? {}).length).toBe(Object.keys(first.paths ?? {}).length);
   });
 
+  it("exports the named SIGAA schemas used by API consumers", () => {
+    const schemas = getOpenApiDocument().components?.schemas;
+    expect(schemas).toHaveProperty("SigaaSyncRun");
+    expect(schemas).toHaveProperty("SigaaCourseMismatch");
+  });
+
   it("includes the canonical ApiErrorBody component schema", () => {
     const doc = getOpenApiDocument();
     const schemas = doc.components?.schemas ?? {};

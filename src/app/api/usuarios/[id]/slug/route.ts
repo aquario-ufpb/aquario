@@ -5,6 +5,7 @@ import { withAdmin } from "@/lib/server/services/auth/middleware";
 import { getContainer } from "@/lib/server/container";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { updateSlugSchema } from "@/lib/server/api-schemas/usuarios";
+import { formatUserResponse } from "@/lib/server/utils/format-user-response";
 import { recordAuditLog } from "@/lib/server/services/audit-log";
 
 type RouteContext = {
@@ -31,6 +32,9 @@ export function PATCH(request: Request, context: RouteContext) {
 
       // Fetch updated user
       const updatedUser = await usuariosRepository.findById(id);
+      if (!updatedUser) {
+        return ApiError.userNotFound();
+      }
       await recordAuditLog(req, currentUser, {
         action: "usuario.slug.updated",
         resourceType: "usuario",
@@ -38,11 +42,14 @@ export function PATCH(request: Request, context: RouteContext) {
         metadata: {
           targetUserName: usuario.nome,
           previousSlug: usuario.slug,
-          newSlug: updatedUser?.slug ?? normalizedSlug,
+          newSlug: updatedUser.slug,
         },
       });
 
-      return NextResponse.json(updatedUser);
+      return NextResponse.json({
+        ...formatUserResponse(updatedUser),
+        eFacade: updatedUser.eFacade,
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return fromZodError(error);

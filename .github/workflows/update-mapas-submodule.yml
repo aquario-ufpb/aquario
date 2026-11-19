@@ -14,13 +14,15 @@ permissions:
 jobs:
   update-submodule:
     runs-on: ubuntu-latest
+    environment: repository-maintenance
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: true
-          token: ${{ secrets.TOKEN_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.MAINTENANCE_TOKEN_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Configure Git
         run: |
@@ -57,10 +59,11 @@ jobs:
       - name: Commit and push changes
         if: steps.check_changes.outputs.changed == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MAINTENANCE_TOKEN_PAT || secrets.GITHUB_TOKEN }}
+          COMMIT_MESSAGE: ${{ inputs.commit_message }}
         run: |
           git add content/aquario-mapas
-          git commit -m "${{ github.event.inputs.commit_message }}"
+          git commit -m "$COMMIT_MESSAGE"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git push
           echo "✅ Changes committed and pushed to main!"

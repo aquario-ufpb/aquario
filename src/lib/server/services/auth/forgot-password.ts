@@ -1,4 +1,5 @@
 import { randomBytes } from "crypto";
+import { EMAIL_ENABLED, IS_PROD } from "@/lib/server/config/env";
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
 import type { ITokenVerificacaoRepository } from "@/lib/server/db/interfaces/token-verificacao-repository.interface";
 import type { IEmailService } from "@/lib/server/services/email/email-service.interface";
@@ -40,6 +41,11 @@ export async function forgotPassword(
     success: true,
     message: "Se o email estiver cadastrado, você receberá um link para redefinir sua senha.",
   };
+
+  if (IS_PROD && !EMAIL_ENABLED) {
+    log.error("Password recovery is unavailable because email is not configured");
+    return successResponse;
+  }
 
   const usuario = await deps.usuariosRepository.findByEmail(normalizedEmail);
 

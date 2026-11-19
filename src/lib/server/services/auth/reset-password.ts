@@ -54,21 +54,15 @@ export async function resetPassword(
     throw new Error("Token inválido.");
   }
 
-  // Find the user
-  const usuario = await deps.usuariosRepository.findById(tokenData.usuarioId);
-
-  if (!usuario) {
-    throw new Error("Usuário não encontrado.");
-  }
-
-  // Hash the new password
   const senhaHash = await hash(input.novaSenha, 10);
-
-  // Update user's password
-  await deps.usuariosRepository.updatePassword(usuario.id, senhaHash);
-
-  // Mark token as used
-  await deps.tokenVerificacaoRepository.markAsUsed(tokenData.id);
+  const consumed = await deps.usuariosRepository.resetPasswordWithToken(
+    tokenData.usuarioId,
+    tokenData.id,
+    senhaHash
+  );
+  if (!consumed) {
+    throw new Error("Token inválido ou expirado.");
+  }
 
   return {
     success: true,

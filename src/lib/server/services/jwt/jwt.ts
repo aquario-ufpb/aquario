@@ -1,10 +1,23 @@
 import jwt, { type SignOptions } from "jsonwebtoken";
+import { z } from "zod";
 import { JWT_SECRET, JWT_EXPIRES_IN } from "@/lib/server/config/env";
 
-export type JwtPayload = {
-  sub: string; // User ID
-  iat?: number; // Issued at
-  exp?: number; // Expiration
+const MAX_SESSION_SECONDS = 30 * 24 * 60 * 60;
+
+const sessionClaims = z
+  .object({
+    sub: z.string().min(1),
+    iat: z.number().int().positive(),
+    exp: z.number().int().positive(),
+    sessionVersion: z.number().int().nonnegative(),
+    sessionStartedAt: z.number().int().positive(),
+  })
+  .strict();
+
+export type Session = {
+  sub: string;
+  sessionVersion: number;
+  sessionStartedAt: number;
 };
 
 const getSecret = (): string => {
@@ -14,24 +27,31 @@ const getSecret = (): string => {
   return JWT_SECRET;
 };
 
-/**
- * Sign a JWT token for a user
- */
-export function signToken(userId: string): string {
+export function signToken(
+  userId: string,
+  sessionVersion: number,
+  sessionStartedAt = Math.floor(Date.now() / 1000)
+): string {
   const options: SignOptions = {
+    algorithm: "HS256",
     expiresIn: JWT_EXPIRES_IN as SignOptions["expiresIn"],
   };
-  return jwt.sign({ sub: userId }, getSecret(), options);
+  return jwt.sign({ sub: userId, sessionVersion, sessionStartedAt }, getSecret(), options);
 }
 
-/**
- * Verify and decode a JWT token
- * @returns The decoded payload or null if invalid
- */
-export function verifyToken(token: string): JwtPayload | null {
+export function verifyToken(token: string): Session | null {
   try {
-    const payload = jwt.verify(token, getSecret()) as JwtPayload;
-    return payload;
+    const claims = sessionClaims.parse(jwt.verify(token, getSecret(), { algorithms: ["HS256"] }));
+    const { sessionStartedAt } = claims;
+    const now = Math.floor(Date.now() / 1000);
+    if (
+      sessionStartedAt > claims.iat ||
+      claims.iat > now ||
+      now >= sessionStartedAt + MAX_SESSION_SECONDS
+    ) {
+      return null;
+    }
+    return { sub: claims.sub, sessionVersion: claims.sessionVersion, sessionStartedAt };
   } catch {
     return null;
   }

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { StatusProjeto } from "@prisma/client";
 import { getContainer } from "@/lib/server/container";
@@ -6,6 +6,7 @@ import { updateProjetoSchema } from "@/lib/shared/validations/projetos";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { SlugConflictError } from "@/lib/server/db/errors";
 import { withAuth, canManageProjeto, getOptionalUser } from "@/lib/server/services/auth/middleware";
+import { cleanupOwnedImage } from "@/lib/server/services/blob/managed-images";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
@@ -119,29 +120,9 @@ export function PATCH(request: NextRequest, context: RouteContext) {
 
       const projeto = await projetosRepository.update(slug, data);
 
-      // GC the old cover blob if urlImagem changed. Fire-and-forget — failure
-      // here would leak a blob but shouldn't fail the user-facing update.
-      // Triggers regardless of who originally uploaded the old blob, which is
-      // why server-side cleanup matters: an entidade admin replacing a cover
-      // uploaded by a co-admin can't delete it via the user-scoped DELETE.
-      const oldUrl = existingProjeto.urlImagem;
-      const newUrl = projeto.urlImagem;
-      if (oldUrl && oldUrl !== newUrl) {
-        const { blobStorage } = getContainer();
-        // Both rejections AND `false` resolutions need to be logged —
-        // blobStorage.delete reports most cleanup failures by resolving false.
-        void blobStorage
-          .delete(oldUrl)
-          .then(deleted => {
-            if (!deleted) {
-              console.error("Failed to delete old cover blob (returned false)", {
-                url: oldUrl,
-              });
-            }
-          })
-          .catch(err => {
-            console.error("Failed to delete old cover blob", { url: oldUrl, err });
-          });
+      const oldCover = existingProjeto.urlImagem;
+      if (oldCover && oldCover !== projeto.urlImagem) {
+        after(() => cleanupOwnedImage(getContainer().blobStorage, usuario.id, oldCover));
       }
 
       return NextResponse.json(projeto);

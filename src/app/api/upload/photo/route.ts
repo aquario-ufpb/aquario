@@ -5,55 +5,24 @@ import { getContainer } from "@/lib/server/container";
 import { formatUserResponse } from "@/lib/server/utils/format-user-response";
 import { createLogger } from "@/lib/server/utils/logger";
 import { ApiError } from "@/lib/server/errors";
+import {
+  cleanupOwnedImage,
+  InvalidImageError,
+  readImageUpload,
+  uploadManagedImage,
+} from "@/lib/server/services/blob/managed-images";
 
 const log = createLogger("Upload");
 
-/**
- * POST /api/upload/photo
- * Upload a profile photo and update the database atomically
- * This ensures the photo URL in the database always matches what's in storage
- */
 export async function POST(request: Request) {
   return await withAuth(request, async (req, usuario) => {
     let uploadedUrl: string | null = null;
     const oldPhotoUrl = usuario.urlFotoPerfil;
 
     try {
-      const formData = await req.formData();
-      const file = formData.get("file") as File | null;
-
-      if (!file) {
-        return ApiError.badRequest("Nenhum arquivo enviado.");
-      }
-
-      // Validate file type
-      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
-      if (!allowedTypes.includes(file.type)) {
-        return ApiError.badRequest("Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF.");
-      }
-
-      // Validate file size (max 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        return ApiError.badRequest("Arquivo muito grande. Tamanho máximo: 5MB.");
-      }
-
+      const file = await readImageUpload(req);
       const { blobStorage, usuariosRepository } = getContainer();
-
-      // Map MIME type to safe file extension (don't trust user-provided filename)
-      const mimeToExtension: Record<string, string> = {
-        "image/jpeg": "jpg",
-        "image/jpg": "jpg", // Non-standard but some browsers send this
-        "image/png": "png",
-        "image/webp": "webp",
-        "image/gif": "gif",
-      };
-      const extension = mimeToExtension[file.type] || "jpg";
-      const timestamp = Date.now();
-      const filename = `photos/${usuario.id}-${timestamp}.${extension}`;
-
-      // Upload new file
-      uploadedUrl = await blobStorage.upload(file, filename, file.type);
+      uploadedUrl = await uploadManagedImage(blobStorage, usuario.id, "photos", file);
 
       // Update database with new URL
       await usuariosRepository.updateFotoPerfil(usuario.id, uploadedUrl);
@@ -65,23 +34,16 @@ export async function POST(request: Request) {
       }
 
       if (oldPhotoUrl) {
-        try {
-          await blobStorage.delete(oldPhotoUrl);
-        } catch (error) {
-          log.warn("Could not delete old photo", { url: oldPhotoUrl, error: String(error) });
-        }
+        await cleanupOwnedImage(blobStorage, usuario.id, oldPhotoUrl);
       }
 
       return NextResponse.json(formatUserResponse(updatedUser));
     } catch (error) {
-      // If upload succeeded but database update failed, try to clean up the uploaded file
+      if (error instanceof InvalidImageError) {
+        return ApiError.badRequest(error.message);
+      }
       if (uploadedUrl) {
-        try {
-          const { blobStorage } = getContainer();
-          await blobStorage.delete(uploadedUrl);
-        } catch (cleanupError) {
-          log.error("Failed to cleanup uploaded file after error", cleanupError);
-        }
+        await cleanupOwnedImage(getContainer().blobStorage, usuario.id, uploadedUrl);
       }
 
       log.error("Error uploading photo", error, { userId: usuario.id });

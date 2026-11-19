@@ -102,18 +102,14 @@ export class LocalBlobStorage implements IBlobStorage {
       const path = this.extractPath(urlOrPath);
       const filePath = this.getFilePath(path);
 
-      // Check if file exists
-      try {
-        await access(filePath);
-      } catch {
-        return false; // File doesn't exist
-      }
-
       await unlink(filePath);
       return true;
     } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return false;
+      }
       log.error("Error deleting file", error, { path: urlOrPath });
-      return false;
+      throw error;
     }
   }
 

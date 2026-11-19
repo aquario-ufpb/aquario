@@ -42,7 +42,7 @@
     "db:seed:registration": "dotenv -e .env -- tsx prisma/seed-registration.ts"
   },
   "dependencies": {
-    "@asteasolutions/zod-to-openapi": "^7.3.4",
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -69,15 +69,11 @@
     "@scalar/api-reference-react": "^0.9.54",
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-query-devtools": "^5.90.2",
-    "@tiptap/extension-blockquote": "^2.10.0",
-    "@tiptap/extension-image": "^2.27.2",
-    "@tiptap/extension-link": "^2.9.1",
-    "@tiptap/extension-placeholder": "^2.9.1",
-    "@tiptap/extension-text-style": "^2.9.1",
-    "@tiptap/extension-underline": "^2.9.1",
-    "@tiptap/pm": "^2.9.1",
-    "@tiptap/react": "^2.9.1",
-    "@tiptap/starter-kit": "^2.9.1",
+    "@tiptap/core": "^3.34.0",
+    "@tiptap/extension-image": "^3.34.0",
+    "@tiptap/pm": "^3.34.0",
+    "@tiptap/react": "^3.34.0",
+    "@tiptap/starter-kit": "^3.34.0",
     "@vercel/blob": "^2.0.0",
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.2.0",
@@ -90,7 +86,7 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.427.0",
     "motion": "^12.23.24",
-    "next": "^15.5.9",
+    "next": "^15.5.29",
     "next-themes": "^0.3.0",
     "pdf-parse": "^1.1.1",
     "posthog-js": "^1.398.6",
@@ -100,14 +96,19 @@
     "react-easy-crop": "^5.5.6",
     "react-markdown": "^9.1.0",
     "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
     "resend": "^4.0.0",
     "sass": "^1.81.0",
     "server-only": "^0.0.1",
+    "sharp": "^0.35.5",
     "sonner": "^2.0.7",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
-    "tiptap-markdown": "^0.8.10",
-    "zod": "^3.23.0"
+    "tiptap-markdown": "^0.9.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",
@@ -124,26 +125,26 @@
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "@vitejs/plugin-react": "^5.0.4",
-    "@vitest/ui": "^4.1.10",
+    "@vitest/ui": "^4.1.12",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.2",
-    "eslint-config-next": "^15.5.9",
+    "eslint-config-next": "^15.5.29",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-unicorn": "^50.0.0",
-    "happy-dom": "^20.0.8",
+    "happy-dom": "^21.0.4",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
     "jsdom": "^27.0.0",
     "lint-staged": "^16.3.2",
-    "postcss": "^8",
+    "postcss": "^8.5.33",
     "prettier": "^3.6.2",
     "prisma": "^6.0.0",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.19.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.12"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -154,6 +155,31 @@
   "overrides": {
     "monaco-editor": {
       "dompurify": "^3.2.6"
+    },
+    "next": {
+      "postcss": "$postcss"
+    },
+    "zod@>=4.0.0 <4.6.6": "^4.6.6",
+    "@prisma/config@6.19.3": {
+      "deepmerge-ts": "8.0.2"
+    },
+    "@scalar/agent-chat@0.12.18": {
+      "@ai-sdk/provider-utils": "4.0.67"
+    },
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "6.1.6"
+    },
+    "@jest/reporters@30.2.0": {
+      "glob": "14.0.6"
+    },
+    "jest-config@30.2.0": {
+      "glob": "14.0.6"
+    },
+    "jest-runtime@30.2.0": {
+      "glob": "14.0.6"
+    },
+    "test-exclude@6.0.0": {
+      "glob": "7.2.3"
     }
   }
 }

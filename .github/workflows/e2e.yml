@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "e2e/**"
+      - "src/components/shared/tiptap.tsx"
+      - "src/app/projetos/**"
       - "playwright.config.ts"
       - "src/app/planejador/**"
       - "src/app/api/curriculos/grade/**"
@@ -23,6 +25,10 @@ jobs:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
+    env:
+      DATABASE_URL: postgresql://aquario:aquario@127.0.0.1:5432/aquario
+      JWT_SECRET: synthetic-signing-key-for-local-browser-tests
 
     services:
       postgres:
@@ -55,16 +61,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # .env.example already points DATABASE_URL at aquario:aquario@localhost:5432/aquario and
-      # leaves RESEND_API_KEY unset, so accounts are auto-verified.
-      - name: Create .env
-        run: cp .env.example .env
-
       - name: Prepare database
         run: |
           npm run db:generate
           npm run db:migrate:deploy
-          npx dotenv -e .env -- tsx prisma/seed.ts
+          npx tsx prisma/seed.ts
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium

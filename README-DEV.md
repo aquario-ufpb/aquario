@@ -439,7 +439,7 @@ We use GitHub Actions for continuous integration and deployment.
 | `staging` | Copy of main | Reset on each merge to main |
 | `pr-123-title` | Seed data only | Per-PR preview (deleted on close) |
 
-> **Security:** Preview deployments only have seed data, never production data.
+The integration and browser tests use disposable PostgreSQL services on the GitHub Actions runner. The browser tests seed the public curriculum and register their own test accounts.
 
 ---
 

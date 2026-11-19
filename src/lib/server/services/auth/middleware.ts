@@ -1,4 +1,4 @@
-import { verifyToken } from "@/lib/server/services/jwt/jwt";
+import { verifyToken, type Session } from "@/lib/server/services/jwt/jwt";
 import { getContainer } from "@/lib/server/container";
 import { ApiError } from "@/lib/server/errors";
 import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
@@ -14,34 +14,34 @@ function extractToken(request: Request): string | null {
   return authHeader.slice(7);
 }
 
-/**
- * Middleware wrapper for protected routes
- * Verifies the JWT token and attaches the user to the request
- */
+async function readSession(request: Request) {
+  const token = extractToken(request);
+  if (!token) {
+    return { error: ApiError.tokenMissing } as const;
+  }
+  const session = verifyToken(token);
+  if (!session) {
+    return { error: ApiError.tokenInvalid } as const;
+  }
+  const usuario = await getContainer().usuariosRepository.findById(session.sub);
+  if (!usuario) {
+    return { error: ApiError.userNotFound } as const;
+  }
+  if (usuario.sessionVersion !== session.sessionVersion) {
+    return { error: ApiError.tokenInvalid } as const;
+  }
+  return { usuario, session } as const;
+}
+
 export async function withAuth(
   request: Request,
-  handler: (req: Request, usuario: UsuarioWithRelations) => Promise<Response>
+  handler: (req: Request, usuario: UsuarioWithRelations, session: Session) => Promise<Response>
 ): Promise<Response> {
-  const token = extractToken(request);
-
-  if (!token) {
-    return ApiError.tokenMissing();
+  const result = await readSession(request);
+  if (result.error) {
+    return result.error();
   }
-
-  const payload = verifyToken(token);
-
-  if (!payload) {
-    return ApiError.tokenInvalid();
-  }
-
-  const { usuariosRepository } = getContainer();
-  const usuario = await usuariosRepository.findById(payload.sub);
-
-  if (!usuario) {
-    return ApiError.userNotFound();
-  }
-
-  return handler(request, usuario);
+  return handler(request, result.usuario, result.session);
 }
 
 /**
@@ -68,20 +68,8 @@ export function withAdmin(
  * Returns null if no valid token is present
  */
 export async function getOptionalUser(request: Request): Promise<UsuarioWithRelations | null> {
-  const token = extractToken(request);
-
-  if (!token) {
-    return null;
-  }
-
-  const payload = verifyToken(token);
-
-  if (!payload) {
-    return null;
-  }
-
-  const { usuariosRepository } = getContainer();
-  return await usuariosRepository.findById(payload.sub);
+  const result = await readSession(request);
+  return result.usuario ?? null;
 }
 
 /**

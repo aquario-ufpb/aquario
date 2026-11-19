@@ -1,33 +1,24 @@
 "use client";
 
-import React, { useState, FormEvent, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, FormEvent, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/lib/client/api/auth";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { PasswordInput } from "@/components/auth/password-input";
-import { trackEvent } from "@/analytics/posthog-client";
+import { useEmailActionToken } from "@/lib/client/hooks/use-email-action-token";
 
 function ResetarSenhaForm() {
   const router = useRouter();
-  const [token, setToken] = useState("");
+  const token = useEmailActionToken();
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const tokenParam = searchParams.get("token");
-    if (tokenParam) {
-      setToken(tokenParam);
-    } else {
-      setError("Token inválido ou ausente");
-    }
-  }, [searchParams]);
+  const formError = error ?? (token === null ? "Token inválido ou ausente" : null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -54,11 +45,9 @@ function ResetarSenhaForm() {
     }
 
     setIsLoading(true);
-    trackEvent("reset_password_submitted");
 
     try {
       await authService.resetPassword(token, novaSenha);
-      trackEvent("reset_password_succeeded");
       setSuccess(true);
       setTimeout(() => {
         router.push("/login?reset=true");
@@ -155,9 +144,9 @@ function ResetarSenhaForm() {
             </div>
           </div>
 
-          {error && (
+          {formError && (
             <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+              <p className="text-sm text-red-600 dark:text-red-400 text-center">{formError}</p>
             </div>
           )}
 

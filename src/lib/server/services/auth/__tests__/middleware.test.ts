@@ -28,11 +28,14 @@ function makeUsuario(overrides: Partial<UsuarioWithRelations> = {}): UsuarioWith
     nome: "Test User",
     email: "test@academico.ufpb.br",
     papelPlataforma: "USER",
+    sessionVersion: 0,
     centro: { id: "c1", nome: "CI", sigla: "CI", descricao: null, campusId: "campus-1" },
     curso: { id: "k1", nome: "CC", centroId: "c1", criadoEm: new Date(), atualizadoEm: new Date() },
     ...overrides,
   } as UsuarioWithRelations;
 }
+
+const session = { sub: "user-1", sessionVersion: 0, sessionStartedAt: 1 };
 
 function makeRequest(token?: string): Request {
   const headers = new Headers();
@@ -49,13 +52,13 @@ beforeEach(() => {
 describe("withAuth", () => {
   it("calls handler with user when token is valid", async () => {
     const usuario = makeUsuario();
-    (verifyToken as jest.Mock).mockReturnValue({ sub: "user-1" });
+    (verifyToken as jest.Mock).mockReturnValue(session);
     mockFindById.mockResolvedValue(usuario);
 
     const handler = jest.fn().mockResolvedValue(new Response("ok"));
     const response = await withAuth(makeRequest("valid-token"), handler);
 
-    expect(handler).toHaveBeenCalledWith(expect.any(Request), usuario);
+    expect(handler).toHaveBeenCalledWith(expect.any(Request), usuario, session);
     expect(response.status).toBe(200);
   });
 
@@ -92,7 +95,7 @@ describe("withAuth", () => {
 describe("withAdmin", () => {
   it("calls handler when user is MASTER_ADMIN", async () => {
     const admin = makeUsuario({ papelPlataforma: "MASTER_ADMIN" });
-    (verifyToken as jest.Mock).mockReturnValue({ sub: "user-1" });
+    (verifyToken as jest.Mock).mockReturnValue(session);
     mockFindById.mockResolvedValue(admin);
 
     const handler = jest.fn().mockResolvedValue(new Response("ok"));
@@ -104,7 +107,7 @@ describe("withAdmin", () => {
 
   it("returns 403 when user is not MASTER_ADMIN", async () => {
     const regularUser = makeUsuario({ papelPlataforma: "USER" });
-    (verifyToken as jest.Mock).mockReturnValue({ sub: "user-1" });
+    (verifyToken as jest.Mock).mockReturnValue(session);
     mockFindById.mockResolvedValue(regularUser);
 
     const handler = jest.fn();
@@ -125,7 +128,7 @@ describe("withAdmin", () => {
 describe("getOptionalUser", () => {
   it("returns user when valid token is provided", async () => {
     const usuario = makeUsuario();
-    (verifyToken as jest.Mock).mockReturnValue({ sub: "user-1" });
+    (verifyToken as jest.Mock).mockReturnValue(session);
     mockFindById.mockResolvedValue(usuario);
 
     const result = await getOptionalUser(makeRequest("valid-token"));

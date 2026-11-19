@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { mapImagePath } from "@/lib/client/api/entidades";
 import { CoAutoresPicker, type CoAutor } from "@/components/shared/co-autores-picker";
@@ -52,7 +53,9 @@ function CharCount({ length, max }: { length: number; max: number }) {
 
 export default function NovoProjetoPage() {
   const router = useRouter();
-  const { data: usuario, isLoading: isLoadingUser } = useCurrentUser();
+  const { isLoading: isRestoringSession } = useAuth();
+  const { data: usuario, isLoading: isFetchingUser } = useCurrentUser();
+  const isLoadingUser = isRestoringSession || isFetchingUser;
   const { data: memberships = [] } = useMyMemberships();
 
   const [titulo, setTitulo] = useState("");

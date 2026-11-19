@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 
 /**
  * Zod request schemas for the /api/usuarios/* endpoints.
@@ -52,14 +53,14 @@ export const updateSlugSchema = z.object({
 /** Schema de validação para criação de usuário facade (placeholder sem login). */
 export const createFacadeUserSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  centroId: z.string().uuid("Centro inválido"),
-  cursoId: z.string().uuid("Curso inválido"),
+  centroId: uuidSchema("Centro inválido"),
+  cursoId: uuidSchema("Curso inválido"),
 });
 
 /** Schema de validação para fusão de usuário facade com usuário real. */
 export const mergeFacadeUserSchema = z.object({
-  facadeUserId: z.string().uuid("ID de usuário facade inválido"),
-  realUserId: z.string().uuid("ID de usuário real inválido"),
+  facadeUserId: uuidSchema("ID de usuário facade inválido"),
+  realUserId: uuidSchema("ID de usuário real inválido"),
   deleteFacade: z.boolean().default(true),
 });
 
@@ -71,7 +72,7 @@ export const mergeFacadeUserSchema = z.object({
  * Replaces the full set of completed disciplines for the current user.
  */
 export const updateCompletedDisciplinasSchema = z.object({
-  disciplinaIds: z.array(z.string().uuid()),
+  disciplinaIds: z.array(uuidSchema()),
 });
 
 /**
@@ -79,19 +80,19 @@ export const updateCompletedDisciplinasSchema = z.object({
  * the onboarding flow and the curriculum page.
  */
 export const marcarDisciplinasSchema = z.object({
-  disciplinaIds: z.array(z.string().uuid()).min(1),
+  disciplinaIds: z.array(uuidSchema()).min(1),
   status: z.enum(["concluida", "cursando", "none"]),
-  expectedCursoId: z.string().uuid().optional(),
-  expectedCurriculoId: z.string().uuid().optional(),
+  expectedCursoId: uuidSchema().optional(),
+  expectedCurriculoId: uuidSchema().optional(),
 });
 
 /**
  * Create a new membership for the current user in the given entity.
  */
 export const createOwnMembershipSchema = z.object({
-  entidadeId: z.string().uuid("ID de entidade inválido"),
+  entidadeId: uuidSchema("ID de entidade inválido"),
   papel: z.enum(["ADMIN", "MEMBRO"]).optional().default("MEMBRO"),
-  cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
+  cargoId: uuidSchema("ID de cargo inválido").nullable().optional(),
   startedAt: dateString.optional(),
   endedAt: dateString.nullable().optional(),
 });
@@ -101,7 +102,7 @@ export const createOwnMembershipSchema = z.object({
  */
 export const updateOwnMembershipSchema = z.object({
   papel: z.enum(["ADMIN", "MEMBRO"]).optional(),
-  cargoId: z.string().uuid("ID de cargo inválido").nullable().optional(),
+  cargoId: uuidSchema("ID de cargo inválido").nullable().optional(),
   startedAt: dateString.optional(),
   endedAt: dateString.nullable().optional(),
 });

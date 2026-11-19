@@ -40,6 +40,13 @@ const nextConfig = {
     return config;
   },
 
+  async headers() {
+    return ["/resetar-senha", "/verificar-email"].map(source => ({
+      source,
+      headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+    }));
+  },
+
   async rewrites() {
     return [
       {

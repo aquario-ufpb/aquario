@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "public": true,
+  "public": false,
   "regions": ["iad1"],
   "functions": {
     "src/app/api/usuarios/me/sigaa/sync/route.ts": {

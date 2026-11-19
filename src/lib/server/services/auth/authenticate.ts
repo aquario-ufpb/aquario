@@ -44,7 +44,7 @@ export async function authenticate(
     );
   }
 
-  const token = signToken(usuario.id);
+  const token = signToken(usuario.id, usuario.sessionVersion);
 
   return { token, usuario };
 }

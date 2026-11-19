@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 
 import {
   sigaaAcademicSnapshotPayloadSchema,
@@ -11,9 +12,9 @@ const requiredText = (maximum: number) => z.string().min(1).max(maximum);
 const matriculaValueSchema = z.string().regex(/^\d{11}$/);
 const gitCommitValueSchema = z.string().regex(/^[0-9a-f]{40}$/);
 
-export const usuarioIdSchema = z.string().uuid().brand<"UsuarioId">();
-export const sigaaRunIdSchema = z.string().uuid().brand<"SigaaRunId">();
-export const idempotencyKeySchema = z.string().uuid().brand<"IdempotencyKey">();
+export const usuarioIdSchema = uuidSchema().brand<"UsuarioId">();
+export const sigaaRunIdSchema = uuidSchema().brand<"SigaaRunId">();
+export const idempotencyKeySchema = uuidSchema().brand<"IdempotencyKey">();
 export const leaseSecretSchema = z
   .string()
   .regex(/^[0-9a-f]{64}$/)
@@ -61,7 +62,7 @@ export const toSigaaAcademicSnapshotPayload = (
 
 const storedClassDeadlinesSchema = z
   .object({
-    runId: z.string().uuid(),
+    runId: uuidSchema(),
     classes: z
       .array(
         z.object({ sourceKey: requiredText(64), deadlines: sigaaClassDeadlinesSchema }).strict()

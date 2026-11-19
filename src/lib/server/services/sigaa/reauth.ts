@@ -3,6 +3,7 @@ import { compare } from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 
 import { sigaaReauthRequestSchema } from "@/lib/server/api-schemas/sigaa";
 import { readSigaaReauthEnvironment } from "@/lib/server/config/sigaa-env";
@@ -48,9 +49,9 @@ const sigaaProofClaimsSchema = z
     aud: z.literal(SIGAA_REAUTH_AUDIENCE),
     sub: z.string().min(1),
     purpose: z.literal(SIGAA_REAUTH_PURPOSE),
-    jti: z.string().uuid(),
+    jti: uuidSchema(),
     authTime: z.number().int().nonnegative(),
-    proposalId: z.string().uuid().optional(),
+    proposalId: uuidSchema().optional(),
     iat: z.number().int().nonnegative(),
     exp: z.number().int().positive(),
   })

@@ -34,6 +34,7 @@ function makeUsuario(senhaHash: string): UsuarioWithRelations {
     nome: "Test User",
     email: "test@academico.ufpb.br",
     senhaHash,
+    sessionVersion: 0,
     eVerificado: true,
     eFacade: false,
     slug: "test-user",

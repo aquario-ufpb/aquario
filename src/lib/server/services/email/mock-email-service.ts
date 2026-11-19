@@ -19,7 +19,7 @@ export class MockEmailService implements IEmailService {
   }> = [];
 
   sendVerificationEmail(to: string, token: string, nome: string): Promise<void> {
-    log.info("Sending verification email", { to, token, nome });
+    log.info("Sending verification email", { to });
 
     this.sentEmails.push({
       type: "verification",
@@ -33,7 +33,7 @@ export class MockEmailService implements IEmailService {
   }
 
   sendPasswordResetEmail(to: string, token: string, nome: string): Promise<void> {
-    log.info("Sending password reset email", { to, token, nome });
+    log.info("Sending password reset email", { to });
 
     this.sentEmails.push({
       type: "password-reset",

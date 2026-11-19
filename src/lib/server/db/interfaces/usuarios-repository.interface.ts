@@ -48,9 +48,9 @@ export type IUsuariosRepository = {
   markAsVerified(id: string): Promise<void>;
 
   /**
-   * Update user's password hash
+   * Consume a valid reset token, change the password, and revoke earlier sessions atomically.
    */
-  updatePassword(id: string, senhaHash: string): Promise<void>;
+  resetPasswordWithToken(usuarioId: string, tokenId: string, senhaHash: string): Promise<boolean>;
 
   /**
    * Update user's platform role

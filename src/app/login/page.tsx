@@ -145,9 +145,9 @@ function LoginForm() {
               {error.includes("não verificado") && (
                 <p className="text-xs text-red-500 dark:text-red-400 text-center mt-2">
                   Verifique sua caixa de entrada ou{" "}
-                  <Link href="/verificar-email" className="underline">
+                  <a href="/verificar-email" className="underline">
                     solicite um novo email de verificação
-                  </Link>
+                  </a>
                 </p>
               )}
             </div>

@@ -31,6 +31,7 @@ jobs:
   import:
     name: Import entidade
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     env:
       ENTIDADE_FILE: ${{ inputs.file }}
@@ -83,8 +84,18 @@ jobs:
             echo "::error::Failed to get production connection URI"
             exit 1
           fi
-          echo "::add-mask::$DATABASE_URL"
           export DATABASE_URL
+          python3 - <<'PYMASK'
+          import os
+          from urllib.parse import unquote, urlsplit
+          uri = os.environ["DATABASE_URL"]
+          password = urlsplit(uri).password
+          if not password:
+              raise SystemExit("Missing database role password")
+          for value in dict.fromkeys([password, unquote(password), uri]):
+              escaped = value.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+              print("::add-mask::" + escaped, flush=True)
+          PYMASK
 
           if [ "$APPLY" == "true" ]; then
             npx tsx scripts/import-entidade.ts "$ENTIDADE_FILE" --apply

@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { useProjetoBySlug } from "@/lib/client/hooks/use-projetos";
 import { useUpdateProjeto, useUpdateProjetoAutores } from "@/lib/client/hooks/use-criar-projeto";
@@ -58,8 +59,10 @@ function CharCount({ length, max }: { length: number; max: number }) {
 export default function EditarProjetoPage() {
   const router = useRouter();
   const { id: slug } = useParams<{ id: string }>();
-  const { data: usuario, isLoading: isLoadingUser } = useCurrentUser();
-  const { data: memberships = [] } = useMyMemberships();
+  const { isLoading: isRestoringSession } = useAuth();
+  const { data: usuario, isLoading: isFetchingUser } = useCurrentUser();
+  const isLoadingUser = isRestoringSession || isFetchingUser;
+  const { data: memberships = [], isLoading: isLoadingMemberships } = useMyMemberships();
   const { data: projeto, isLoading: isLoadingProjeto, error } = useProjetoBySlug(slug);
 
   const updateProjeto = useUpdateProjeto(slug);
@@ -129,6 +132,8 @@ export default function EditarProjetoPage() {
     [usuario, projeto, myAdminEntidadeIds]
   );
 
+  const isCheckingPermission = isLoadingUser || (!canEdit && isLoadingMemberships);
+
   // Hydrate state from projeto once it loads. We use a state flag (not a ref)
   // so the render that gates Tiptap can react to hydration completing — Tiptap's
   // `content` prop is only consumed at editor init.
@@ -187,11 +192,11 @@ export default function EditarProjetoPage() {
   }, [isLoadingUser, usuario, router, slug]);
 
   useEffect(() => {
-    if (projeto && usuario && !canEdit) {
+    if (!isCheckingPermission && projeto && usuario && !canEdit) {
       toast.error("Você não tem permissão para editar este projeto.");
       router.push(`/projetos/${slug}`);
     }
-  }, [projeto, usuario, canEdit, router, slug]);
+  }, [isCheckingPermission, projeto, usuario, canEdit, router, slug]);
 
   const registerBlob = (url: string) => {
     setUploadedBlobs(prev => [...prev, url]);
@@ -349,7 +354,7 @@ export default function EditarProjetoPage() {
     }
   };
 
-  if (isLoadingUser || isLoadingProjeto || (projeto && !hasHydrated)) {
+  if (isCheckingPermission || isLoadingProjeto || (projeto && !hasHydrated)) {
     return <div className="p-8 text-center text-muted-foreground">Carregando...</div>;
   }
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "@/lib/shared/validations/uuid";
 
 import { SIGAA_CONSENT_VERSION } from "@/lib/shared/sigaa/consent";
 
@@ -17,7 +18,7 @@ export { SIGAA_CONSENT_VERSION };
 const isoDateSchema = z.string().datetime();
 const runSchema = z
   .object({
-    id: z.string().uuid(),
+    id: uuidSchema(),
     status: z.enum(["RUNNING", "SUCCEEDED", "FAILED", "SUPERSEDED"]),
     failureCode: z.string().nullable(),
     connectorRequestId: z.string().nullable(),
@@ -76,7 +77,7 @@ const courseChangeMismatchSchema = z
     message: z.string(),
     code: z.literal(ErrorCode.SIGAA_COURSE_MISMATCH),
     resolution: z.literal("confirmation_required"),
-    proposalId: z.string().uuid(),
+    proposalId: uuidSchema(),
     expiresAt: isoDateSchema,
     currentCourse: z.string().min(1),
     sigaaCourse: z.string().min(1),

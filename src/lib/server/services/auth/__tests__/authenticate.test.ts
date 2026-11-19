@@ -1,4 +1,5 @@
 import { authenticate } from "../authenticate";
+import { signToken } from "@/lib/server/services/jwt/jwt";
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
 import type { UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
 import { hash } from "bcryptjs";
@@ -14,6 +15,7 @@ function makeUsuario(overrides: Partial<UsuarioWithRelations> = {}): UsuarioWith
     nome: "Test User",
     email: "test@academico.ufpb.br",
     senhaHash: "hashed-password",
+    sessionVersion: 0,
     eVerificado: true,
     eFacade: false,
     slug: "test-user",
@@ -49,7 +51,7 @@ function makeMockRepo(usuario: UsuarioWithRelations | null = null): IUsuariosRep
     search: jest.fn(),
     create: jest.fn(),
     markAsVerified: jest.fn(),
-    updatePassword: jest.fn(),
+    resetPasswordWithToken: jest.fn(),
     updatePapelPlataforma: jest.fn(),
     updateFotoPerfil: jest.fn(),
     updateCentro: jest.fn(),
@@ -66,7 +68,7 @@ function makeMockRepo(usuario: UsuarioWithRelations | null = null): IUsuariosRep
 describe("authenticate", () => {
   it("returns token and user on valid credentials", async () => {
     const senhaHash = await hash("password123", 10);
-    const usuario = makeUsuario({ senhaHash });
+    const usuario = makeUsuario({ senhaHash, sessionVersion: 2 });
     const repo = makeMockRepo(usuario);
 
     const result = await authenticate(
@@ -74,6 +76,7 @@ describe("authenticate", () => {
       repo
     );
 
+    expect(signToken).toHaveBeenCalledWith(usuario.id, 2);
     expect(result.token).toBe("mock-jwt-token");
     expect(result.usuario).toBe(usuario);
     expect(repo.findByEmail).toHaveBeenCalledWith("test@academico.ufpb.br");

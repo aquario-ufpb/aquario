@@ -1,7 +1,7 @@
 import { resetPassword } from "../reset-password";
 import type { IUsuariosRepository } from "@/lib/server/db/interfaces/usuarios-repository.interface";
 import type { ITokenVerificacaoRepository } from "@/lib/server/db/interfaces/token-verificacao-repository.interface";
-import type { TokenVerificacao, UsuarioWithRelations } from "@/lib/server/db/interfaces/types";
+import type { TokenVerificacao } from "@/lib/server/db/interfaces/types";
 
 // Mock bcryptjs to avoid slow hashing in tests
 jest.mock("bcryptjs", () => ({
@@ -21,20 +21,7 @@ function makeToken(overrides: Partial<TokenVerificacao> = {}): TokenVerificacao 
   } as TokenVerificacao;
 }
 
-function makeUsuario(): UsuarioWithRelations {
-  return {
-    id: "user-1",
-    nome: "Test User",
-    email: "test@academico.ufpb.br",
-    centro: { id: "c1", nome: "CI", sigla: "CI", descricao: null, campusId: "campus-1" },
-    curso: { id: "k1", nome: "CC", centroId: "c1", criadoEm: new Date(), atualizadoEm: new Date() },
-  } as unknown as UsuarioWithRelations;
-}
-
-function makeDeps(
-  tokenData: TokenVerificacao | null = makeToken(),
-  usuario: UsuarioWithRelations | null = makeUsuario()
-) {
+function makeDeps(tokenData: TokenVerificacao | null = makeToken(), consumed = true) {
   return {
     tokenVerificacaoRepository: {
       findByToken: jest.fn().mockResolvedValue(tokenData),
@@ -45,8 +32,7 @@ function makeDeps(
       deleteByUsuarioIdAndTipo: jest.fn(),
     } as unknown as ITokenVerificacaoRepository,
     usuariosRepository: {
-      findById: jest.fn().mockResolvedValue(usuario),
-      updatePassword: jest.fn().mockResolvedValue(undefined),
+      resetPasswordWithToken: jest.fn().mockResolvedValue(consumed),
     } as unknown as IUsuariosRepository,
   };
 }
@@ -62,11 +48,11 @@ describe("resetPassword", () => {
 
     expect(result.success).toBe(true);
     expect(result.message).toContain("Senha redefinida com sucesso");
-    expect(deps.usuariosRepository.updatePassword).toHaveBeenCalledWith(
+    expect(deps.usuariosRepository.resetPasswordWithToken).toHaveBeenCalledWith(
       "user-1",
+      "token-1",
       "new-hashed-password"
     );
-    expect(deps.tokenVerificacaoRepository.markAsUsed).toHaveBeenCalledWith("token-1");
   });
 
   it("throws when password is too short", async () => {
@@ -121,11 +107,11 @@ describe("resetPassword", () => {
     ).rejects.toThrow("Token inválido");
   });
 
-  it("throws when user is not found", async () => {
-    const deps = makeDeps(makeToken(), null);
+  it("rejects a reset link that was consumed while hashing the password", async () => {
+    const deps = makeDeps(makeToken(), false);
 
     await expect(
       resetPassword({ token: "reset-token", novaSenha: "valid-password-123" }, deps)
-    ).rejects.toThrow("Usuário não encontrado");
+    ).rejects.toThrow("Token inválido ou expirado");
   });
 });

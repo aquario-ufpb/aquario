@@ -4,11 +4,8 @@ import { getContainer } from "@/lib/server/container";
 import { createProjetoSchema, listProjetosSchema } from "@/lib/shared/validations/projetos";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { SlugConflictError } from "@/lib/server/db/errors";
-import {
-  withAuth,
-  canManageVagaForEntidade,
-  getOptionalUser,
-} from "@/lib/server/services/auth/middleware";
+import { withAuth, getOptionalUser } from "@/lib/server/services/auth/middleware";
+import { canAttributeEntidades } from "@/lib/server/services/auth/projeto-authors";
 import type { ProjetosListResponse } from "@/lib/shared/types/projeto";
 import type { FindManyProjetosParams } from "@/lib/server/db/interfaces/projetos-repository.interface";
 
@@ -122,11 +119,7 @@ export function POST(request: NextRequest) {
       const usuarioIds = autores.map(a => a.usuarioId).filter((id): id is string => !!id);
       const entidadeIds = autores.map(a => a.entidadeId).filter((id): id is string => !!id);
 
-      // Rule 2 first — also doubles as the data we need for rule 1's entidade leg.
-      const entidadeAdminFlags = await Promise.all(
-        entidadeIds.map(id => canManageVagaForEntidade(usuario, id))
-      );
-      if (!isMasterAdmin && entidadeAdminFlags.some(ok => !ok)) {
+      if (!(await canAttributeEntidades(usuario, entidadeIds))) {
         return ApiError.forbidden(
           "Você não tem permissão de admin em uma das entidades listadas como autor."
         );
@@ -134,8 +127,7 @@ export function POST(request: NextRequest) {
 
       // Rule 1 — at least one of the three claims must hold.
       const isUserAuthor = usuarioIds.includes(usuario.id);
-      const adminsAnyEntidadeAuthor = entidadeAdminFlags.some(ok => ok);
-      if (!isMasterAdmin && !isUserAuthor && !adminsAnyEntidadeAuthor) {
+      if (!isMasterAdmin && !isUserAuthor && entidadeIds.length === 0) {
         return ApiError.forbidden(
           "Você só pode criar projetos em que esteja listado como autor ou admin de uma entidade autora."
         );

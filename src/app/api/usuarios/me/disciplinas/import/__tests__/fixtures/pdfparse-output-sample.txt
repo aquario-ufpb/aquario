@@ -100,7 +100,7 @@ https://sigaa.ufpb.br/sigaa/portais/discente/beta/discente.jsf                  
            22:20                                     (CAE 110 )                      (CAE 110 )
                                         ATENÇÃO
               Para verificar a autenticidade deste documento acesse https://sigaa.ufpb.br/sigaa/documentos/
-                         informando a matrícula, a data de emissão e o código de verificação ed2ecdf858
+                         informando a matrícula, a data de emissão e o código de verificação CODIGO-FICTICIO
           SIGAA | STI - Superintendência de Tecnologia da Informação da UFPB / Cooperação UFRN - Copyright © 2006-2026 |
                                        sigaa-65dc884947-8vbdr.sigaa-65dc884947-8vbdr | 26.6.0
 https://sigaa.ufpb.br/sigaa/portais/discente/beta/discente.jsf                                        2/2

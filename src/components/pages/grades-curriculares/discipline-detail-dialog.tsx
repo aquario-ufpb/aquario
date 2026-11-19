@@ -89,7 +89,10 @@ export function DisciplineDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent
+        className="ph-no-capture max-w-lg max-h-[85vh] overflow-y-auto"
+        data-ph-no-capture="true"
+      >
         <DialogHeader>
           {history.length > 0 && (
             <button
