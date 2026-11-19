@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/contexts/auth-context";
 import { useCurrentUser, useMyMemberships } from "@/lib/client/hooks/use-usuarios";
 import { useProjetoBySlug } from "@/lib/client/hooks/use-projetos";
 import { useUpdateProjeto, useUpdateProjetoAutores } from "@/lib/client/hooks/use-criar-projeto";
@@ -58,7 +59,9 @@ function CharCount({ length, max }: { length: number; max: number }) {
 export default function EditarProjetoPage() {
   const router = useRouter();
   const { id: slug } = useParams<{ id: string }>();
-  const { data: usuario, isLoading: isLoadingUser } = useCurrentUser();
+  const { isLoading: isRestoringSession } = useAuth();
+  const { data: usuario, isLoading: isFetchingUser } = useCurrentUser();
+  const isLoadingUser = isRestoringSession || isFetchingUser;
   const { data: memberships = [] } = useMyMemberships();
   const { data: projeto, isLoading: isLoadingProjeto, error } = useProjetoBySlug(slug);
 

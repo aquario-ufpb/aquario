@@ -143,7 +143,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       };
       fetchUser();
-    } else {
+    } else if (!activeSessionRef.current) {
+      // A stored token may already be queued for the next render.
       setUser(null);
       setIsLoading(false);
       // Reset PostHog when user is logged out

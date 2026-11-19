@@ -69,15 +69,11 @@
     "@scalar/api-reference-react": "^0.9.54",
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-query-devtools": "^5.90.2",
-    "@tiptap/extension-blockquote": "^2.10.0",
-    "@tiptap/extension-image": "^2.27.2",
-    "@tiptap/extension-link": "^2.9.1",
-    "@tiptap/extension-placeholder": "^2.9.1",
-    "@tiptap/extension-text-style": "^2.9.1",
-    "@tiptap/extension-underline": "^2.9.1",
-    "@tiptap/pm": "^2.9.1",
-    "@tiptap/react": "^2.9.1",
-    "@tiptap/starter-kit": "^2.9.1",
+    "@tiptap/core": "^3.34.0",
+    "@tiptap/extension-image": "^3.34.0",
+    "@tiptap/pm": "^3.34.0",
+    "@tiptap/react": "^3.34.0",
+    "@tiptap/starter-kit": "^3.34.0",
     "@vercel/blob": "^2.0.0",
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.2.0",
@@ -107,7 +103,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
-    "tiptap-markdown": "^0.8.10",
+    "tiptap-markdown": "^0.9.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -162,6 +158,7 @@
     "zod@>=4.0.0 <4.6.6": "^4.6.6",
     "@prisma/config@6.19.3": {
       "deepmerge-ts": "8.0.2"
-    }
+    },
+    "@ai-sdk/provider-utils@4.0.5": "4.0.67"
   }
 }

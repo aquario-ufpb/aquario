@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "e2e/**"
+      - "src/components/shared/tiptap.tsx"
+      - "src/app/projetos/**"
       - "playwright.config.ts"
       - "src/app/planejador/**"
       - "src/app/api/curriculos/grade/**"

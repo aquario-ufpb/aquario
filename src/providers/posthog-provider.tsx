@@ -22,6 +22,8 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         ui_host: "https://us.posthog.com",
         defaults: "2025-05-24",
         capture_exceptions: true,
+        // The optional tours bundle ships its own copy of DOMPurify.
+        disable_product_tours: true,
         before_send: event => (isEmailActionPage() ? null : event),
         mask_personal_data_properties: true,
         custom_personal_data_properties: ["token"],

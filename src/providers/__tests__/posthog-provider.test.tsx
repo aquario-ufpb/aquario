@@ -43,6 +43,7 @@ describe("PostHogProvider privacy", () => {
     await waitFor(() => expect(posthog.init).toHaveBeenCalledTimes(1));
     expect(jest.mocked(posthog.init).mock.calls[0][1]).toMatchObject({
       disable_capture_url_hashes: true,
+      disable_product_tours: true,
       custom_personal_data_properties: ["token"],
       session_recording: {
         blockSelector: ".ph-no-capture, [data-ph-no-capture='true']",

@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SACI/PAAS**: Consulta externa com cancelamento por timeout e conferência do centro/publicação; backup local não é reutilizado para outro centro. Parser de horários aceita múltiplos blocos e o sufixo de vigência SIGAA, preservando a rejeição de tokens desconhecidos e horários parcialmente inválidos.
 
 ### Fixed
+- Atualizados o editor de projetos Tiptap e as dependências da documentação, analytics e build para corrigir os avisos moderados e baixos do npm. Tours remotos do PostHog foram desativados.
 - Atualizadas as dependências de validação da API e de configuração do Prisma para corrigir os alertas altos de Zod e deepmerge-ts. A edição parcial de projetos preserva o status e as tags quando esses campos são omitidos.
 - O planejador verifica os pré-requisitos da cadeira selecionada mesmo quando ela vale como equivalente. A contagem de dependentes e a identificação de ciclos consideram apenas os requisitos que ainda faltam após aprovações e dispensas.
 - Preview e staging usam bancos de teste isolados da produção. A alteração requer credenciais separadas por ambiente antes dos próximos deployments.
