@@ -136,8 +136,8 @@ export default function RecursosPage() {
               </span>
             </span>
             <span className="block max-w-3xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              O MCP aberto do sigaa-for-ai-agents permite consultar informações do SIGAA no Claude,
-              ChatGPT e outras ferramentas compatíveis. A configuração acontece fora do Aquário.
+              O MCP aberto do sigaa-tools permite consultar informações do SIGAA no Claude, ChatGPT
+              e outras ferramentas compatíveis. A configuração acontece fora do Aquário.
             </span>
           </span>
           <span className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-full border border-sky-200 bg-white px-4 text-sm font-semibold text-aquario-primary transition-colors group-hover:bg-sky-50 dark:border-sky-800 dark:bg-white/5 dark:text-sky-100 dark:group-hover:bg-white/10 sm:self-auto">

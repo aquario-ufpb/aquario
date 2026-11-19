@@ -137,9 +137,9 @@ describe("MeusDadosAcademicosCard", () => {
     expect(screen.getByText("Turmas do período atual")).toBeInTheDocument();
     expect(screen.getByText(/senha é usada apenas durante a consulta/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Conectar ao SIGAA" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /sigaa-for-ai-agents, de PucaVaz/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /sigaa-tools, de PucaVaz/i })).toHaveAttribute(
       "href",
-      "https://github.com/PucaVaz/sigaa-for-ai-agents"
+      "https://github.com/PucaVaz/sigaa-tools"
     );
     expect(screen.getByRole("link", { name: /aquario-sigaa-connector/i })).toHaveAttribute(
       "href",
