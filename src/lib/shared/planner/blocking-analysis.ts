@@ -44,7 +44,9 @@ export function analyzeBlocking({
 }: BlockingInput): BlockingAnalysis {
   // Deliberate divergence from the schedule solver, which is more conservative: a discipline with
   // no registered requirement counts as "Disponível agora" here (the UI flags it with a badge).
-  const isUnregistered = (goal: PlannerGoal) => !goal.requirementsKnown && !goal.prerequisite;
+  // A corequisite we could not read is a pending requirement, not an absent one.
+  const isUnregistered = (goal: PlannerGoal) =>
+    !goal.requirementsKnown && !goal.prerequisite && !goal.corequisite;
   // Same rule inside the graph: an unregistered root is a known ancestor, otherwise every
   // discipline that descends from it would be reported as "A verificar".
   const graph = buildRequirementGraph(
@@ -80,6 +82,11 @@ export function analyzeBlocking({
   const availableIn = (goal: PlannerGoal, codes: Set<string>) =>
     isUnregistered(goal) || (goal.requirementsKnown && satisfied(goal, codes));
 
+  // Offers outside the curriculum still count through the goals that list them as equivalents.
+  const servedBy = (code: string) =>
+    goals.filter(
+      goal => !done.has(key(goal)) && goal.equivalents.some(item => normalizeCode(item) === code)
+    );
   const invalidSelected: string[] = [],
     ignoredSelected: string[] = [],
     chosen: string[] = [];
@@ -87,7 +94,10 @@ export function analyzeBlocking({
     const goal = graph.byCode.get(code);
     if (done.has(code)) {
       ignoredSelected.push(code);
-    } else if (goal && availableIn(goal, done)) {
+    } else if (
+      (goal && availableIn(goal, done)) ||
+      servedBy(code).some(g => availableIn(g, done))
+    ) {
       chosen.push(code);
     } else {
       invalidSelected.push(code);
@@ -165,11 +175,16 @@ export function analyzeBlocking({
     const placed = new Set(chain);
     return [...chain, ...[...left].filter(code => !placed.has(code)).sort()];
   };
+  // Disciplines met by history or by S do not wait on anything: they do not propagate a dependency.
+  const settled = new Set([
+    ...after,
+    ...[...available, ...unlockedLater].map(entry => normalizeCode(entry.code)),
+  ]);
   const blocked = blockedGoals.map(goal => ({
     ...item(goal),
     pendingRule: remainingRequirement(goal.prerequisite, credited(goal, after) ?? after),
     chain: chainOf(goal),
-    dependents: [...graph.reachable(key(goal), done)].filter(code => {
+    dependents: [...graph.reachable(key(goal), settled)].filter(code => {
       const dependent = graph.byCode.get(code);
       return dependent && pendingCodes.has(code) && !missingNow(dependent).uncertain;
     }).length,

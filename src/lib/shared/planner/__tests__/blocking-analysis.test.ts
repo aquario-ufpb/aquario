@@ -270,4 +270,51 @@ describe("analyzeBlocking", () => {
     expect(picked.unlockedLater.map(item => item.code)).toEqual(["R2"]);
     expect(picked.blocked.map(item => item.code)).toEqual(["R3"]);
   });
+
+  it("sends a discipline with an unreadable corequisite to toVerify, never to available", () => {
+    const coreq = goal("C1", null, {
+      requirementsKnown: false,
+      corequisite: { kind: "unknown", raw: "Autorização da coordenação" },
+    });
+    const result = analyzeBlocking({
+      goals: [coreq, goal("D1", "C1"), goal("K1", null, { requirementsKnown: false })],
+      completedCodes: [],
+      selected: ["C1"],
+    });
+    expect(codes(result.toVerify)).toContain("C1");
+    expect(codes(result.available)).toEqual(["K1"]);
+    expect(result.invalidSelected).toEqual(["C1"]);
+    expect(codes(result.unlockedLater)).toEqual([]);
+  });
+
+  it("counts only dependents that still wait on the blocked discipline", () => {
+    const base = [goal("P0"), goal("A1", "P0"), goal("D1"), goal("T1", "A1 OU D1")];
+    const withHistory = analyzeBlocking({ goals: base, completedCodes: ["D1"], selected: [] });
+    expect(find(withHistory.blocked, "A1").dependents).toBe(0);
+    const withSelection = analyzeBlocking({ goals: base, completedCodes: [], selected: ["D1"] });
+    expect(codes(withSelection.unlockedLater)).toContain("T1");
+    expect(find(withSelection.blocked, "A1").dependents).toBe(0);
+    const open = analyzeBlocking({ goals: base, completedCodes: [], selected: [] });
+    expect(find(open.blocked, "A1").dependents).toBe(1);
+    const only = analyzeBlocking({
+      goals: [goal("P0"), goal("A1", "P0"), goal("T1", "A1")],
+      completedCodes: [],
+      selected: [],
+    });
+    expect(find(only.blocked, "A1").dependents).toBe(1);
+  });
+
+  it("credits equivalences from a selected offer that is outside the curriculum", () => {
+    const curriculum = [goal("A1", null, { equivalents: ["EXT1"] }), goal("X1", "A1")];
+    const result = analyzeBlocking({ goals: curriculum, completedCodes: [], selected: ["ext1"] });
+    expect(result.invalidSelected).toEqual([]);
+    expect(result.creditedBySelection).toEqual(["A1"]);
+    expect(codes(result.unlockedLater)).toEqual(["X1"]);
+    const unavailable = analyzeBlocking({
+      goals: [goal("P0"), goal("A1", "P0", { equivalents: ["EXT1"] })],
+      completedCodes: [],
+      selected: ["EXT1"],
+    });
+    expect(unavailable.invalidSelected).toEqual(["EXT1"]);
+  });
 });
