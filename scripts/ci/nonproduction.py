@@ -186,12 +186,16 @@ def prepare_database():
     ):
         raise ValueError("Unexpected branch returned by Neon")
     try:
+        if child.get("init_source", "parent-schema") != "parent-schema":
+            raise ValueError("Neon created a branch with an unexpected data source")
         wait_neon(created)
         child_id = quote(child["id"], safe="")
         # Children of unprotected Neon branches can inherit the parent's role password.
-        wait_neon(
-            neon(f"/branches/{child_id}/roles/neondb_owner/reset_password", "POST")
-        )
+        reset = neon(f"/branches/{child_id}/roles/neondb_owner/reset_password", "POST")
+        role = reset["role"]
+        if role["branch_id"] != child["id"] or role["name"] != "neondb_owner":
+            raise ValueError("Unexpected role returned by Neon")
+        wait_neon(reset)
         args = urlencode(
             {
                 "branch_id": child["id"],
@@ -205,6 +209,8 @@ def prepare_database():
             parsed.scheme not in {"postgres", "postgresql"}
             or not parsed.password
             or not parsed.hostname
+            or parsed.username != role["name"]
+            or unquote(parsed.password) != role["password"]
         ):
             raise ValueError("Neon returned an invalid database URI")
         # Mask both forms because clients can log either the encoded or decoded password.

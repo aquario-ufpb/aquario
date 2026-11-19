@@ -64,17 +64,23 @@ class NonproductionTests(unittest.TestCase):
 
     def test_incomplete_or_shared_configuration_makes_zero_requests(self):
         for key in SETTINGS:
-            with self.subTest(key=key), patch.dict(os.environ, {key: ""}):
-                with self.assertRaises((KeyError, ValueError)):
-                    ci.deploy_preview()
+            with (
+                self.subTest(key=key),
+                patch.dict(os.environ, {key: ""}),
+                self.assertRaises((KeyError, ValueError)),
+            ):
+                ci.deploy_preview()
         for dest, shared in [
             ("NONPROD_NEON_PROJECT_ID", "live-neon"),
             ("PREVIEW_VERCEL_PROJECT_ID", "stage-vercel"),
             ("STAGING_VERCEL_PROJECT_ID", "live-vercel"),
         ]:
-            with self.subTest(dest=dest), patch.dict(os.environ, {dest: shared}):
-                with self.assertRaises(ValueError):
-                    ci.deploy_preview()
+            with (
+                self.subTest(dest=dest),
+                patch.dict(os.environ, {dest: shared}),
+                self.assertRaises(ValueError),
+            ):
+                ci.deploy_preview()
         self.network.assert_not_called()
 
     def test_uses_empty_root_and_rotates_only_child_role_before_returning_masked_uri(
@@ -89,7 +95,14 @@ class NonproductionTests(unittest.TestCase):
                     {"branches": [ROOT]},
                     {"branch": CURRENT, "operations": [{"id": "op-create"}]},
                     {"operation": {"status": "finished"}},
-                    {"operations": [{"id": "op-reset"}]},
+                    {
+                        "role": {
+                            "branch_id": "br-new",
+                            "name": "neondb_owner",
+                            "password": "local@test",
+                        },
+                        "operations": [{"id": "op-reset"}],
+                    },
                     {"operation": {"status": "finished"}},
                     {"uri": URI},
                 ],
@@ -142,6 +155,35 @@ class NonproductionTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     ci.prepare_database()
                 self.assertEqual(neon.call_count, 1)
+
+    def test_previous_role_password_is_never_exported(self):
+        with (
+            patch.object(
+                ci,
+                "neon",
+                side_effect=[
+                    {"branches": [ROOT]},
+                    {"branch": CURRENT},
+                    {
+                        "role": {
+                            "branch_id": "br-new",
+                            "name": "neondb_owner",
+                            "password": "rotated",
+                        }
+                    },
+                    {"uri": URI},
+                    {"branches": [ROOT, CURRENT]},
+                    {},
+                ],
+            ) as neon,
+            redirect_stdout(io.StringIO()) as logs,
+        ):
+            with self.assertRaisesRegex(ValueError, "invalid database URI"):
+                ci.prepare_database()
+            self.assertEqual(logs.getvalue(), "")
+            self.assertEqual(
+                neon.call_args_list[-1], call("/branches/br-new", "DELETE")
+            )
 
     def test_password_reset_failure_discards_only_new_database(self):
         with patch.object(
