@@ -121,14 +121,14 @@
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "@vitejs/plugin-react": "^5.0.4",
-    "@vitest/ui": "^4.1.10",
+    "@vitest/ui": "^4.1.12",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.2",
     "eslint-config-next": "^15.5.29",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-unicorn": "^50.0.0",
-    "happy-dom": "^20.0.8",
+    "happy-dom": "^21.0.4",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
@@ -140,7 +140,7 @@
     "tailwindcss": "^3.4.1",
     "tsx": "^4.19.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.12"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -161,6 +161,21 @@
     },
     "@scalar/agent-chat@0.12.18": {
       "@ai-sdk/provider-utils": "4.0.67"
+    },
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "6.1.6"
+    },
+    "@jest/reporters@30.2.0": {
+      "glob": "14.0.6"
+    },
+    "jest-config@30.2.0": {
+      "glob": "14.0.6"
+    },
+    "jest-runtime@30.2.0": {
+      "glob": "14.0.6"
+    },
+    "test-exclude@6.0.0": {
+      "glob": "7.2.3"
     }
   }
 }
