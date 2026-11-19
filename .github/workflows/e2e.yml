@@ -5,8 +5,13 @@ on:
     paths:
       - "e2e/**"
       - "playwright.config.ts"
+      - "src/app/planejador/**"
+      - "src/app/api/curriculos/grade/**"
       - "src/components/pages/planejador/**"
       - "src/lib/shared/planner/**"
+      # The seed builds the curricula the scenarios rely on from this submodule.
+      - "content/aquario-curriculos"
+      - "content/aquario-curriculos/**"
       - "prisma/**"
       - "package.json"
       - "package-lock.json"

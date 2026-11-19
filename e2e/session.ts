@@ -1,13 +1,17 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
+/** Where the setup project stores the signed-in session that every test reuses. */
+export const STORAGE_STATE = "e2e/.auth/student.json";
+
 /** Seeded Ciência da Computação course (see prisma/seed.ts); looked up by name, not by id. */
 const COURSE_NAME = "Ciência da Computação";
 
 /**
- * Registers a throwaway student through the real API and signs in by storing the JWT the way the
- * app does (`localStorage.token`). Without RESEND_API_KEY the account is auto-verified.
+ * Registers a throwaway student through the real API and returns its JWT, which the app keeps in
+ * `localStorage.token`. Without RESEND_API_KEY the account is auto-verified. Login is limited to
+ * five attempts per IP per minute, so this runs once per test run (see auth.setup.ts), not per test.
  */
-export async function signInAsNewStudent(page: Page, request: APIRequestContext) {
+export async function createStudentToken(request: APIRequestContext): Promise<string> {
   const options = await request.get("/api/cursos");
   expect(options.ok(), "GET /api/cursos (is the database seeded?)").toBeTruthy();
   const course = (await options.json()).find((item: { nome: string }) => item.nome === COURSE_NAME);
@@ -24,8 +28,11 @@ export async function signInAsNewStudent(page: Page, request: APIRequestContext)
   expect(login.ok(), `login: ${await login.text()}`).toBeTruthy();
   const { token } = await login.json();
   await completeOnboarding(request, token);
-  await page.addInitScript(value => window.localStorage.setItem("token", value), token);
-  // The "Conecte com o SIGAA" prompt can appear at any moment after sign-in; dismiss it whenever it does.
+  return token;
+}
+
+/** The "Conecte com o SIGAA" prompt can appear at any moment after sign-in; dismiss it whenever it does. */
+export async function dismissSigaaPrompt(page: Page) {
   await page.addLocatorHandler(page.getByRole("dialog", { name: "Conecte com o SIGAA" }), dialog =>
     dialog.getByRole("button", { name: "Deixar pra depois" }).click()
   );
