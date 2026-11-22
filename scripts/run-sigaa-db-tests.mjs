@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 
 const databaseNamePattern = /^aquario_sigaa_test(?:_[a-z0-9]+)?$/;
 const reversalFiles = [
+  "scripts/sql/verify-sigaa-class-deadlines-reversal.sql",
   "scripts/sql/verify-sigaa-course-change-reversal.sql",
   "scripts/sql/verify-sigaa-persistence-reversal.sql",
 ];

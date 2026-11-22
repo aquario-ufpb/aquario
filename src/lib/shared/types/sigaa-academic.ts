@@ -72,6 +72,23 @@ const gradeSchema = z
   .strict()
   .readonly();
 
+export const SIGAA_DEADLINES_HEADER = "X-Aquario-Sigaa-Deadlines";
+
+export const sigaaClassDeadlinesSchema = z
+  .array(
+    z
+      .object({
+        id: requiredText(64),
+        kind: requiredText(64),
+        title: requiredText(256),
+        date: z.string().max(256),
+      })
+      .strict()
+      .readonly()
+  )
+  .max(256)
+  .readonly();
+
 const classSchema = z
   .object({
     sourceKey: requiredText(64),
@@ -79,6 +96,7 @@ const classSchema = z
     code: nullableText(64),
     room: nullableText(256),
     scheduleRaw: nullableText(256),
+    deadlines: sigaaClassDeadlinesSchema.optional(),
     semester: nullableText(64),
   })
   .strict()
@@ -161,6 +179,7 @@ export const sigaaAcademicSnapshotPayloadSchema = z
   .strict()
   .readonly();
 
+export type SigaaClassDeadline = z.infer<typeof sigaaClassDeadlinesSchema>[number];
 export type SigaaComponentState = z.infer<typeof sigaaComponentStateSchema>;
 export type SigaaAcademicComponent = z.infer<typeof sigaaAcademicComponentSchema>;
 export type SigaaAcademicSnapshotPayload = z.infer<typeof sigaaAcademicSnapshotPayloadSchema>;

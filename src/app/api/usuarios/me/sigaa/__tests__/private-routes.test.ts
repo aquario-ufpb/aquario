@@ -33,6 +33,7 @@ jest.mock("@/lib/server/services/sigaa/create-connector", () => ({
   }),
 }));
 
+import { SIGAA_CONSENT_VERSION } from "@/lib/shared/sigaa/consent";
 import { GET as getAcademicState } from "../../academico/route";
 import { DELETE as deleteImportedData } from "../data/route";
 import { POST as disconnect } from "../disconnect/route";
@@ -91,7 +92,15 @@ describe("private SIGAA route exports", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
-    expect(mockReadImportedState).toHaveBeenCalledWith(OWNER_ID);
+    expect(mockReadImportedState).toHaveBeenCalledWith(OWNER_ID, { includeDeadlines: false });
+  });
+
+  it("requests class deadlines only when the authenticated client opts in", async () => {
+    const incoming = request("/usuarios/me/academico", "GET");
+    incoming.headers.set("X-Aquario-Sigaa-Deadlines", "1");
+    mockReadImportedState.mockResolvedValue({ matricula: null, connection: null, snapshot: null });
+    expect((await getAcademicState(incoming)).status).toBe(200);
+    expect(mockReadImportedState).toHaveBeenCalledWith(OWNER_ID, { includeDeadlines: true });
   });
 
   it("derives the disconnect owner from auth and preserves private caching", async () => {
@@ -135,7 +144,7 @@ describe("private SIGAA route exports", () => {
         username: "test-user",
         password: "test-password",
         idempotencyKey: "550e8400-e29b-41d4-a716-446655440002",
-        consentVersion: "sigaa-v1-2026-08",
+        consentVersion: SIGAA_CONSENT_VERSION,
       })
     );
 
@@ -144,7 +153,7 @@ describe("private SIGAA route exports", () => {
     expect(mockReserveAttempt).toHaveBeenCalledWith({
       ownerId: OWNER_ID,
       idempotencyKey: "550e8400-e29b-41d4-a716-446655440002",
-      consentVersion: "sigaa-v1-2026-08",
+      consentVersion: SIGAA_CONSENT_VERSION,
     });
     expect(mockConnectorSynchronize).not.toHaveBeenCalled();
   });
@@ -168,7 +177,7 @@ describe("private SIGAA route exports", () => {
         username: "test-user",
         password: "test-password",
         idempotencyKey: "550e8400-e29b-41d4-a716-446655440002",
-        consentVersion: "sigaa-v1-2026-08",
+        consentVersion: SIGAA_CONSENT_VERSION,
       })
     );
 
@@ -196,7 +205,7 @@ describe("private SIGAA route exports", () => {
           username: "fresh-user",
           password: "fresh-password",
           idempotencyKey: "550e8400-e29b-41d4-a716-446655440008",
-          consentVersion: "sigaa-v1-2026-08",
+          consentVersion: SIGAA_CONSENT_VERSION,
         },
         boundProof
       )

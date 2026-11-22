@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react";
 
+import { SIGAA_TOOLS_URL } from "@/components/shared/resource-links";
 import { cn } from "@/lib/client/utils";
 
 type SigaaIntegrationCreditsProps = {
@@ -13,13 +14,8 @@ export function SigaaIntegrationCredits({ className }: SigaaIntegrationCreditsPr
   return (
     <p className={cn("text-xs leading-relaxed text-muted-foreground", className)}>
       Fonte de dados:{" "}
-      <a
-        href="https://github.com/PucaVaz/sigaa-for-ai-agents"
-        target="_blank"
-        rel="noreferrer"
-        className={creditLinkClassName}
-      >
-        sigaa-for-ai-agents, de PucaVaz
+      <a href={SIGAA_TOOLS_URL} target="_blank" rel="noreferrer" className={creditLinkClassName}>
+        sigaa-tools, de PucaVaz
         <ExternalLink className="ml-1 inline h-3 w-3" aria-hidden="true" />
         <span className="sr-only"> (abre em nova aba)</span>
       </a>

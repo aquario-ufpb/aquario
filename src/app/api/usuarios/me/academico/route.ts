@@ -4,13 +4,16 @@ import { importedStateResponse } from "@/lib/server/services/sigaa/http-response
 import { privateSigaaResponse, withSigaaOwner } from "@/lib/server/services/sigaa/reauth";
 import { usuarioIdSchema } from "@/lib/server/services/sigaa/storage.types";
 
+import { SIGAA_DEADLINES_HEADER } from "@/lib/shared/types/sigaa-academic";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request): Promise<Response> {
   try {
     return await withSigaaOwner(request, async (_authenticatedRequest, owner) => {
       const state = await getContainer().sigaaRepository.readImportedState(
-        usuarioIdSchema.parse(owner.usuarioId)
+        usuarioIdSchema.parse(owner.usuarioId),
+        { includeDeadlines: request.headers.get(SIGAA_DEADLINES_HEADER) === "1" }
       );
       return importedStateResponse(state);
     });

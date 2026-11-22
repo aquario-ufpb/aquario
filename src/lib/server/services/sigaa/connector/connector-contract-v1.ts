@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { sigaaClassDeadlinesSchema } from "@/lib/shared/types/sigaa-academic";
+
 import type {
   SigaaAcademicComponent,
   SigaaClass,
@@ -197,6 +199,7 @@ const gradeSchema = z
 const classSchema = z
   .object({
     source_key: shortTextSchema,
+    deadlines: sigaaClassDeadlinesSchema.optional(),
     name: mediumTextSchema,
     code: nullableShortTextSchema,
     room: nullableMediumTextSchema,
@@ -429,6 +432,7 @@ function mapGrade(grade: SyncWireResponse["grades"][number]): SigaaGrade {
 function mapClass(classData: SyncWireResponse["classes"][number]): SigaaClass {
   return {
     sourceKey: classData.source_key,
+    ...(classData.deadlines && { deadlines: classData.deadlines }),
     name: classData.name,
     code: classData.code === null ? null : normalizeDisciplineCode(classData.code),
     room: classData.room,

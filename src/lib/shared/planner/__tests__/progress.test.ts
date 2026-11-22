@@ -165,3 +165,38 @@ test("does not favor an unnecessary OR route when another branch is already comp
   expect(projection.score).toEqual([0, 0]);
   expect(projection.progress.paths).toEqual([]);
 });
+
+describe("progress characterization", () => {
+  const unlock = { ...settings, progressStrategy: "unlock" as const, progressTarget: null };
+  const targeting = (code: string) => ({ ...settings, progressTarget: code });
+  const codes = (items: { code: string }[]) => items.map(item => item.code);
+
+  it("weight counts reliable downstream goals", () => {
+    const graph = createProgressPlanner(goals, new Set(), unlock);
+    expect(graph.weight("Z1")).toBe(2);
+    expect(graph.weight("C4")).toBe(1);
+    expect(graph.weight("B2")).toBe(1);
+    expect(graph.weight("A0")).toBe(0);
+  });
+
+  it("unlock score counts released and affected goals", () => {
+    const result = createProgressPlanner(goals, new Set(), unlock).evaluate(["Z1"]);
+    expect(result.score).toEqual([1, 1, 2, 2]);
+    expect(codes(result.progress.unlocked)).toEqual(["B2"]);
+  });
+
+  it("any branch prefers the smaller set, then lexicographic order", () => {
+    const flat = [goal("X1"), goal("Y1"), goal("G", "X1 OU Y1")];
+    const flatGraph = createProgressPlanner(flat, new Set(), targeting("G"));
+    expect(codes(flatGraph.evaluate([]).progress.remaining)).toEqual(["X1"]);
+    const deep = [goal("X1", "W1"), goal("W1"), goal("Y1"), goal("G", "X1 OU Y1")];
+    const deepGraph = createProgressPlanner(deep, new Set(), targeting("G"));
+    expect(codes(deepGraph.evaluate([]).progress.remaining)).toEqual(["Y1"]);
+  });
+
+  it("cycles never become guaranteed", () => {
+    const cyclic = [goal("C1", "C2"), goal("C2", "C1")];
+    const result = createProgressPlanner(cyclic, new Set(), targeting("C1")).evaluate([]);
+    expect(result.progress.warnings.join(" ")).toContain("requisitos desconhecidos ou cíclicos");
+  });
+});

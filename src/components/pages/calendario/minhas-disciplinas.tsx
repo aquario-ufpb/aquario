@@ -411,6 +411,7 @@ export function MinhasDisciplinas({ centroSigla, semestreNome }: MinhasDisciplin
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <SigaaEnrollments
                 enrollments={imported.enrollments}
+                observedAt={sigaa.data?.snapshot?.connectorObservedAt}
                 allocations={allPaasClasses}
                 sameSemester={paasSemestreNome === calendarSemester}
                 centerId={centroSigla}

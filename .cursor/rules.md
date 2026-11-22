@@ -28,16 +28,19 @@ return response.json();
 
 ### API Routes (Backend)
 ```typescript
-import { createApiHandler } from "@/lib/server/api/route-handler";
-import { ApiError } from "@/lib/server/api/errors";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/server/services/auth/middleware";
+import { ApiError } from "@/lib/server/errors";
 
-export const GET = createApiHandler(async (req) => {
-  // Throw ApiError with error code for client-friendly errors
-  if (!found) {
-    throw new ApiError("Not found", 404, "RESOURCE_NOT_FOUND");
-  }
-  return NextResponse.json(data);
-});
+export async function GET(request: Request) {
+  return withAuth(request, async (_req, usuario) => {
+    // Return an ApiError response for client-friendly errors
+    if (!found) {
+      return ApiError.notFound("Recurso");
+    }
+    return NextResponse.json(data);
+  });
+}
 ```
 
 ### Database Access

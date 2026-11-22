@@ -545,7 +545,8 @@ export function useSigaaConnectFlowContent({
                 <ul className="list-disc space-y-1 pl-5">
                   <li>matrícula, curso, período, currículo, CRA e progresso;</li>
                   <li>componentes curriculares, cargas, pré-requisitos e correquisitos;</li>
-                  <li>turmas, horários, salas, notas, resultados e faltas.</li>
+                  <li>turmas, horários, salas, notas, resultados e faltas;</li>
+                  <li>títulos e datas de provas e atividades no portal do SIGAA.</li>
                 </ul>
                 <p>
                   O Aquário mantém somente o snapshot mais recente. Metadados seguros das tentativas

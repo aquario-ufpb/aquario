@@ -356,6 +356,53 @@ describe("PrismaSigaaRepository on PostgreSQL", () => {
     });
   });
 
+  it("serves deadlines only to opted-in readers of the same installed run", async () => {
+    const ownerId = await createOwner();
+    const lease = await reserve(ownerId);
+    const deadlines = [{ id: "42", kind: "avaliacao", title: "Prova", date: "18/12" }];
+    const currentClass = {
+      sourceKey: "101",
+      name: "Redes",
+      code: "DCC101",
+      semester: "2026.1",
+      scheduleRaw: null,
+      room: null,
+    };
+    const result = await repository.commitLatest({
+      ownerId,
+      lease,
+      candidate: {
+        ...candidate("20260000001", await ownerCourse(ownerId)),
+        classes: [{ ...currentClass, deadlines }],
+      },
+    });
+    expect(result.kind).toBe("committed");
+    const read = async (includeDeadlines: boolean) =>
+      (await repository.readImportedState(ownerId, { includeDeadlines })).snapshot?.payload.classes;
+    expect(await read(true)).toEqual([{ ...currentClass, deadlines }]);
+    expect(await read(false)).toEqual([currentClass]);
+
+    const stored = await database.sigaaAcademicSnapshot.findUniqueOrThrow({
+      where: { usuarioId: ownerId },
+    });
+    expect(stored.payload).toMatchObject({ classes: [currentClass] });
+    expect(JSON.stringify(stored.payload)).not.toContain('"deadlines"');
+
+    await database.sigaaSyncRun.update({
+      where: { id: lease.runId },
+      data: { retentionExpiresAt: new Date(Date.now() - 60_000) },
+    });
+    expect(await repository.deleteExpiredRuns()).toEqual({ deleted: 1 });
+    expect(await read(true)).toEqual([{ ...currentClass, deadlines }]);
+
+    // An older app can write a fresh snapshot without knowing about deadlines.
+    await database.$executeRaw`
+      UPDATE "SigaaAcademicSnapshot" SET payload = payload, "synchronizedAt" = now()
+      WHERE "usuarioId" = ${ownerId}
+    `;
+    expect(await read(true)).toEqual([currentClass]);
+  });
+
   it("supersedes expired generations and rejects their late commits", async () => {
     const ownerId = await createOwner();
     const courseName = await ownerCourse(ownerId);

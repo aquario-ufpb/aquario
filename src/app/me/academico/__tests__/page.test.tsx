@@ -166,6 +166,9 @@ const importedState = (options?: {
           classes: [
             {
               sourceKey: "class-1",
+              deadlines: [
+                { id: "event-1", kind: "avaliacao", title: "Prova de árvores", date: "12/05/2026" },
+              ],
               name: "Estruturas de Dados",
               code: "GDCO0002",
               room: "CI-101",
@@ -287,6 +290,9 @@ describe("MeusDadosAcademicosPage", () => {
       "true"
     );
     expect(screen.getByText("Segunda 07:00–09:00")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Adicionar Prova de árvores ao Google Calendar" })
+    ).toHaveAttribute("href", expect.stringContaining("20260512%2F20260513"));
 
     const gradesTrigger = screen.getByRole("button", { name: /Notas, resultados e faltas/ });
     expect(gradesTrigger).toHaveAttribute("aria-expanded", "false");

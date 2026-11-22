@@ -22,6 +22,7 @@
     "test:sigaa-db": "node scripts/run-sigaa-db-tests.mjs",
     "verify:sigaa-boundary": "node scripts/verify-sigaa-boundary.mjs",
     "test:all": "npm run test && npm run test:integration",
+    "test:e2e": "playwright test",
     "db:generate": "prisma generate",
     "db:migrate": "dotenv -e .env -- prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
@@ -109,6 +110,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
