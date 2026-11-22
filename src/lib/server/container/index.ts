@@ -129,6 +129,8 @@ function createPrismaContainer(): Container {
   } = require("@/lib/server/db/implementations/prisma/prisma-sigaa-repository");
 
   return {
+    pushDispositivosRepository:
+      new (require("@/lib/server/db/implementations/prisma/prisma-push-dispositivos-repository").PrismaPushDispositivosRepository)(),
     calendarRoomBindingRepository:
       new (require("@/lib/server/db/implementations/prisma/prisma-calendar-room-binding-repository").PrismaCalendarRoomBindingRepository)(),
     publicOfferingCacheRepository:

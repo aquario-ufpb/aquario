@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { agendarAvisoDeNovoProjeto } from "@/lib/server/services/push/novo-projeto";
+
 export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
 import { StatusProjeto } from "@prisma/client";
@@ -44,6 +46,8 @@ export function POST(request: NextRequest, context: RouteContext) {
         StatusProjeto.PUBLICADO,
         new Date()
       );
+
+      agendarAvisoDeNovoProjeto(projeto);
 
       return NextResponse.json(updatedProjeto);
     } catch (error) {

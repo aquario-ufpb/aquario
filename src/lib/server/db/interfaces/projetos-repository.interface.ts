@@ -92,6 +92,8 @@ export type CreateProjetoInput = {
   textContent?: string | null;
   urlImagem?: string | null;
   status?: string;
+  /** Preenchido pela rota quando o projeto já nasce `PUBLICADO`. */
+  publicadoEm?: Date | null;
   tags?: string[];
   dataInicio?: Date | null;
   dataFim?: Date | null;
@@ -125,6 +127,13 @@ export type IProjetosRepository = {
     status: StatusProjeto,
     publicadoEm: Date | null
   ): Promise<ProjetoWithRelations>;
+
+  /**
+   * Grava `notificadoEm` só se ainda estiver vazio. Atômico: entre requisições concorrentes,
+   * apenas uma recebe o projeto e envia o push de "novo projeto". Usa o `id`, que não muda,
+   * e devolve título e slug atuais da mesma linha (o slug pode ter mudado desde o agendamento).
+   */
+  marcarNotificado(id: string): Promise<{ slug: string; titulo: string } | null>;
 
   replaceAutores(
     projetoId: string,
