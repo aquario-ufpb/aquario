@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-11-22
+
 ### Added
 - **Notificações push do app (opcionais)**: Novas rotas autenticadas `GET`/`PUT`/`DELETE /api/usuarios/me/push-dispositivos` registram o token Expo do aparelho com as categorias escolhidas (prazos, vagas, entidades — todas desligadas por padrão); o aparelho passa para a conta que entrar nele e some junto com a conta. Envio pelo Expo Push Service, em lotes, removendo tokens `DeviceNotRegistered`: vaga criada (categoria vagas), primeira publicação de projeto de entidade (entidades), seja pela criação já publicada, pelo `PATCH` de status ou por `/publish`, e cron diário `/api/internal/push/prazos` às 8h de Brasília com os eventos do calendário do dia seguinte (prazos, uma notificação por dia, reservada atomicamente para que uma segunda execução do cron não repita o envio, e expirando à meia-noite). Título e corpo são cortados em bytes para respeitar o limite de 4 KiB do Expo. O envio roda depois da resposta (`after`) e não afeta a criação. Requer as migrations `20261103000000_add_push_devices` e `20261122000000_add_push_envios` e o `CRON_SECRET` já usado pelo cron do SIGAA.
 - Em Minhas Disciplinas e Meu Acadêmico, as turmas importadas do SIGAA exibem provas e atividades do portal. É possível exportar as datas de uma turma em ICS ou abrir um evento no Google Calendar. Requer a migration `20261119000000_add_sigaa_class_deadlines`.
