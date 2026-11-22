@@ -79,6 +79,7 @@ describe("paths registry sanity checks", () => {
         "delete /usuarios/me/membros/{membroId}",
         "get /usuarios/me/onboarding",
         "patch /usuarios/me/onboarding",
+        "delete /usuarios/me",
         "patch /usuarios/me/photo",
         "delete /usuarios/me/photo",
       ];

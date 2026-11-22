@@ -247,7 +247,8 @@ model MembroEntidade {
   startedAt  DateTime    @default(now())
   endedAt    DateTime?
 
-  usuario  Usuario  @relation(fields: [usuarioId], references: [id])
+  /// Excluir a conta apaga os vínculos (inclusive o histórico de membro antigo).
+  usuario  Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   entidade Entidade @relation(fields: [entidadeId], references: [id])
   cargo    Cargo?   @relation(fields: [cargoId], references: [id], onDelete: SetNull)
 
@@ -266,7 +267,8 @@ model Vaga {
   descricao             String
   tipoVaga             TipoVaga
   entidadeId           String
-  criadoPorUsuarioId   String
+  /// Nulo quando quem publicou excluiu a conta: a vaga continua da entidade.
+  criadoPorUsuarioId   String?
   linkInscricao        String
   dataFinalizacao      DateTime
   criadoEm             DateTime  @default(now())
@@ -282,7 +284,7 @@ model Vaga {
   etapasProcesso       String[]  @default([])
 
   entidade   Entidade @relation(fields: [entidadeId], references: [id], onDelete: Cascade)
-  criadoPor  Usuario  @relation(fields: [criadoPorUsuarioId], references: [id], onDelete: Cascade)
+  criadoPor  Usuario? @relation(fields: [criadoPorUsuarioId], references: [id], onDelete: SetNull)
 
   @@index([entidadeId])
   @@index([dataFinalizacao])

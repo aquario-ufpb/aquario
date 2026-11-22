@@ -60,6 +60,7 @@ function makeMockRepo(usuario: UsuarioWithRelations | null = null): IUsuariosRep
     updateOnboardingMetadata: jest.fn(),
     clearOnboardingMetadata: jest.fn(),
     delete: jest.fn(),
+    excluirConta: jest.fn(),
   };
 }
 

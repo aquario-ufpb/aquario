@@ -436,4 +436,53 @@ export class PrismaUsuariosRepository implements IUsuariosRepository {
       where: { id },
     });
   }
+
+  excluirConta(id: string): Promise<{ imagensOrfas: string[] }> {
+    return prisma.$transaction(async tx => {
+      const usuario = await tx.usuario.findUniqueOrThrow({
+        where: { id },
+        select: { urlFotoPerfil: true },
+      });
+      const autorias = await tx.projetoAutor.findMany({
+        where: { usuarioId: id },
+        select: {
+          autorPrincipal: true,
+          projeto: {
+            select: {
+              id: true,
+              urlImagem: true,
+              autores: { select: { id: true, usuarioId: true, entidadeId: true } },
+            },
+          },
+        },
+      });
+
+      const imagensOrfas = usuario.urlFotoPerfil ? [usuario.urlFotoPerfil] : [];
+      for (const { autorPrincipal, projeto } of autorias) {
+        const outros = projeto.autores.filter(autor => autor.usuarioId !== id);
+        if (outros.length === 0) {
+          await tx.projeto.delete({ where: { id: projeto.id } });
+          if (projeto.urlImagem) {
+            imagensOrfas.push(projeto.urlImagem);
+          }
+        } else if (autorPrincipal) {
+          const sucessor = outros.find(autor => autor.entidadeId) ?? outros[0];
+          if (sucessor) {
+            // Índice único parcial: um principal por projeto. Tira o atual antes de promover.
+            await tx.projetoAutor.updateMany({
+              where: { projetoId: projeto.id, usuarioId: id },
+              data: { autorPrincipal: false },
+            });
+            await tx.projetoAutor.update({
+              where: { id: sucessor.id },
+              data: { autorPrincipal: true },
+            });
+          }
+        }
+      }
+
+      await tx.usuario.delete({ where: { id } });
+      return { imagensOrfas };
+    });
+  }
 }
