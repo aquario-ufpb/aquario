@@ -21,16 +21,20 @@ function getClientIp(request: Request): string | null {
   return request.headers.get("x-real-ip");
 }
 
+/**
+ * `actor` nulo registra uma ação de quem já não existe (ex.: a própria conta acabou de ser
+ * excluída); o id fica em `resourceId`.
+ */
 export async function recordAuditLog(
   request: Request,
-  actor: UsuarioWithRelations,
+  actor: UsuarioWithRelations | null,
   event: AuditLogEvent
 ): Promise<void> {
   try {
     const { auditLogsRepository } = getContainer();
 
     await auditLogsRepository.create({
-      actorUsuarioId: actor.id,
+      actorUsuarioId: actor?.id ?? null,
       action: event.action,
       resourceType: event.resourceType,
       resourceId: event.resourceId ?? null,
@@ -43,7 +47,7 @@ export async function recordAuditLog(
       action: event.action,
       resourceType: event.resourceType,
       resourceId: event.resourceId,
-      actorUsuarioId: actor.id,
+      actorUsuarioId: actor?.id ?? null,
     });
   }
 }

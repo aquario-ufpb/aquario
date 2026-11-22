@@ -23,9 +23,15 @@ export function mapVagaToJson(vaga: VagaWithRelations) {
       tipo: vaga.entidade.tipo,
       urlFoto: vaga.entidade.urlFoto ?? undefined,
     },
-    publicador: {
-      nome: vaga.criadoPor.nome,
-      urlFotoPerfil: vaga.criadoPor.urlFotoPerfil ?? undefined,
-    },
+    // Quem publicou pode ter excluído a conta: a vaga segue em nome da entidade.
+    publicador: vaga.criadoPor
+      ? {
+          nome: vaga.criadoPor.nome,
+          urlFotoPerfil: vaga.criadoPor.urlFotoPerfil ?? undefined,
+        }
+      : {
+          nome: vaga.entidade.nome,
+          urlFotoPerfil: vaga.entidade.urlFoto ?? undefined,
+        },
   };
 }
