@@ -101,4 +101,14 @@ export type IUsuariosRepository = {
    * Delete a user
    */
   delete(id: string): Promise<void>;
+
+  /**
+   * Autoexclusão (LGPD / política da Google Play), numa transação:
+   * - projetos em que o usuário é o único autor são apagados;
+   * - nos compartilhados, se ele era o autor principal, outro autor assume (entidade primeiro);
+   * - a conta é removida; vínculos, sessões, dados do SIGAA e aparelhos de push vão em cascata,
+   *   e as vagas que ele publicou continuam na entidade.
+   * Devolve as imagens que ficaram sem dono (foto de perfil e capas dos projetos apagados).
+   */
+  excluirConta(id: string): Promise<{ imagensOrfas: string[] }>;
 };

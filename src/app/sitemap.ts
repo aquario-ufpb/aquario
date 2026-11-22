@@ -15,6 +15,8 @@ const STATIC_PATHS: {
 }[] = [
   { path: "/", priority: 1.0, changeFrequency: "daily" },
   { path: "/sobre", priority: 0.6, changeFrequency: "monthly" },
+  { path: "/privacidade", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/excluir-conta", priority: 0.2, changeFrequency: "yearly" },
   { path: "/recursos", priority: 0.7, changeFrequency: "monthly" },
   { path: "/projetos", priority: 0.9, changeFrequency: "daily" },
   { path: "/entidades", priority: 0.9, changeFrequency: "weekly" },
