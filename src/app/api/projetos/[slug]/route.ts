@@ -6,6 +6,7 @@ import { updateProjetoSchema } from "@/lib/shared/validations/projetos";
 import { ApiError, fromZodError } from "@/lib/server/errors";
 import { SlugConflictError } from "@/lib/server/db/errors";
 import { withAuth, canManageProjeto, getOptionalUser } from "@/lib/server/services/auth/middleware";
+import { agendarAvisoDeNovoProjeto } from "@/lib/server/services/push/novo-projeto";
 
 type RouteContext = {
   params: Promise<{ slug: string }>;
@@ -118,6 +119,10 @@ export function PATCH(request: NextRequest, context: RouteContext) {
       }
 
       const projeto = await projetosRepository.update(slug, data);
+
+      if (targetStatus === StatusProjeto.PUBLICADO && existingProjeto.status !== targetStatus) {
+        agendarAvisoDeNovoProjeto(projeto);
+      }
 
       // GC the old cover blob if urlImagem changed. Fire-and-forget — failure
       // here would leak a blob but shouldn't fail the user-facing update.

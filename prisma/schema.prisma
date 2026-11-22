@@ -780,6 +780,13 @@ model DispositivoPush {
   @@index([usuarioId])
 }
 
+// One row per scheduled push (e.g. "prazos:2026-11-05"). The primary key makes a repeated cron
+// invocation on the same day skip the send instead of notifying everyone twice.
+model PushEnvio {
+  chave    String   @id
+  criadoEm DateTime @default(now())
+}
+
 // Distributed request budget shared by public offering routes and all instances.
 model PublicOfferingRequestLimit {
   key String @id

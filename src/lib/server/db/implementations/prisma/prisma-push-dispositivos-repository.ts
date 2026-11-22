@@ -24,9 +24,17 @@ export class PrismaPushDispositivosRepository implements IPushDispositivosReposi
       where: { usuarioId },
       orderBy: { atualizadoEm: "desc" },
       skip: MAX_DISPOSITIVOS_POR_CONTA,
-      select: { token: true },
+      select: { token: true, atualizadoEm: true },
     });
-    await this.deleteTokens(excedentes.map(row => row.token));
+    if (excedentes.length) {
+      // Apaga só o registro observado: se o aparelho mudou de conta ou foi renovado entre a
+      // consulta e a exclusão, `usuarioId` ou `atualizadoEm` não batem mais e ele fica.
+      await prisma.dispositivoPush.deleteMany({
+        where: {
+          OR: excedentes.map(({ token, atualizadoEm }) => ({ token, usuarioId, atualizadoEm })),
+        },
+      });
+    }
   }
 
   async delete(usuarioId: string, token: string) {
@@ -39,6 +47,14 @@ export class PrismaPushDispositivosRepository implements IPushDispositivosReposi
       select: { token: true },
     });
     return rows.map(row => row.token);
+  }
+
+  async reservarEnvio(chave: string) {
+    const { count } = await prisma.pushEnvio.createMany({
+      data: [{ chave }],
+      skipDuplicates: true,
+    });
+    return count === 1;
   }
 
   async deleteTokens(tokens: string[]) {

@@ -17,9 +17,18 @@ export function amanhaNoBrasil(now: Date): { inicio: Date; fim: Date } {
   return { inicio: new Date(amanha), fim: new Date(amanha + DIA_MS) };
 }
 
+/**
+ * Próxima meia-noite em João Pessoa: a partir dela o "Amanhã" do lembrete deixa de valer, então o
+ * Expo não deve entregá-lo a quem ficou offline.
+ */
+export function fimDeHojeNoBrasil(now: Date): Date {
+  return new Date(amanhaNoBrasil(now).inicio.getTime() + OFFSET_BRASIL_MS);
+}
+
 /** Uma notificação por dia, mesmo com vários eventos, para não lotar a bandeja. */
 export function mensagemDePrazos(
-  eventos: Pick<EventoCalendario, "descricao">[]
+  eventos: Pick<EventoCalendario, "descricao">[],
+  expiration?: Date
 ): PushMessage | null {
   const [primeiro, ...resto] = eventos;
   if (!primeiro) {
@@ -35,14 +44,26 @@ export function mensagemDePrazos(
     title: "Amanhã no calendário acadêmico",
     body: `${primeiro.descricao}${extra}.`,
     url: "/calendario",
+    ...(expiration && { expiration }),
   };
 }
 
 export async function notificarPrazosDeAmanha(now = new Date()) {
+  const nada = { enviados: 0, removidos: 0 };
   const { inicio, fim } = amanhaNoBrasil(now);
-  const eventos = await getContainer().calendarioRepository.findEventosIniciandoEntre(inicio, fim);
-  const mensagem = mensagemDePrazos(eventos);
-  return mensagem ? notifyCategoria("prazos", mensagem) : { enviados: 0, removidos: 0 };
+  const { calendarioRepository, pushDispositivosRepository } = getContainer();
+  const eventos = await calendarioRepository.findEventosIniciandoEntre(inicio, fim);
+  const mensagem = mensagemDePrazos(eventos, fimDeHojeNoBrasil(now));
+  if (!mensagem) {
+    return nada;
+  }
+  // A Vercel pode chamar o cron mais de uma vez no mesmo dia: só a primeira chamada envia.
+  // Se o envio falhar depois da reserva, o lembrete do dia se perde (melhor esforço).
+  const chave = `prazos:${inicio.toISOString().slice(0, 10)}`;
+  if (!(await pushDispositivosRepository.reservarEnvio(chave))) {
+    return nada;
+  }
+  return notifyCategoria("prazos", mensagem);
 }
 
 export function notificarNovaVaga(vaga: {

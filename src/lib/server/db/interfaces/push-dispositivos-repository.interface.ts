@@ -9,6 +9,11 @@ export type IPushDispositivosRepository = {
   delete(usuarioId: string, token: string): Promise<void>;
   /** Tokens de quem ativou a categoria. */
   tokensFor(categoria: PushCategoria): Promise<string[]>;
+  /**
+   * Reserva um envio pela chave (ex.: `prazos:2026-11-05`). Atômico: entre execuções concorrentes,
+   * só uma recebe `true` e envia.
+   */
+  reservarEnvio(chave: string): Promise<boolean>;
   /** Remove tokens que o Expo informou como inválidos. */
   deleteTokens(tokens: string[]): Promise<void>;
 };

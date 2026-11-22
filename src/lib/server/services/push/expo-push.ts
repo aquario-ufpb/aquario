@@ -7,12 +7,42 @@ const BATCH_SIZE = 100;
 /** Cada lote tem prazo próprio: um Expo lento não segura a função até o limite da plataforma. */
 const BATCH_TIMEOUT_MS = 10_000;
 
+/**
+ * O Expo recusa notificações acima de 4 KiB. Título e corpo vêm de texto livre (descrição do
+ * calendário, título da vaga), então são cortados em bytes com folga para o resto do payload.
+ */
+const MAX_TITLE_BYTES = 120;
+const MAX_BODY_BYTES = 360;
+
 export type PushMessage = {
   title: string;
   body: string;
   /** Rota do app (ex.: `/vagas/<id>`), aberta ao tocar na notificação. */
   url: string;
+  /** Depois deste instante o Expo descarta a mensagem em vez de entregá-la atrasada. */
+  expiration?: Date;
 };
+
+const segmenter = new Intl.Segmenter("pt-BR", { granularity: "grapheme" });
+
+/** Corta `texto` em até `maxBytes` bytes UTF-8 sem partir caracteres, terminando em "…". */
+export function truncarBytes(texto: string, maxBytes: number): string {
+  if (Buffer.byteLength(texto) <= maxBytes) {
+    return texto;
+  }
+  const reticencias = "…";
+  let restante = maxBytes - Buffer.byteLength(reticencias);
+  let resultado = "";
+  for (const { segment } of segmenter.segment(texto)) {
+    const bytes = Buffer.byteLength(segment);
+    if (bytes > restante) {
+      break;
+    }
+    resultado += segment;
+    restante -= bytes;
+  }
+  return resultado.trimEnd() + reticencias;
+}
 
 type ExpoTicket = { status: "ok" | "error"; details?: { error?: string } };
 
@@ -43,11 +73,14 @@ export async function sendExpoPush(
         body: JSON.stringify(
           batch.map(to => ({
             to,
-            title: message.title,
-            body: message.body,
+            title: truncarBytes(message.title, MAX_TITLE_BYTES),
+            body: truncarBytes(message.body, MAX_BODY_BYTES),
             data: { url: message.url },
             sound: "default",
             channelId: "default",
+            ...(message.expiration && {
+              expiration: Math.floor(message.expiration.getTime() / 1000),
+            }),
           }))
         ),
       });

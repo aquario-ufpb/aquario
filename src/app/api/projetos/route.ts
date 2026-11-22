@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { StatusProjeto } from "@prisma/client";
+import { agendarAvisoDeNovoProjeto } from "@/lib/server/services/push/novo-projeto";
 export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
 import { createProjetoSchema, listProjetosSchema } from "@/lib/shared/validations/projetos";
@@ -155,7 +157,15 @@ export function POST(request: NextRequest) {
         return ApiError.badRequest("Uma ou mais entidades não existem");
       }
 
-      const projeto = await projetosRepository.create(projetoData, autores);
+      // Criar já publicado (o formulário de novo projeto faz isso) conta como publicar.
+      const publicado = projetoData.status === StatusProjeto.PUBLICADO;
+      const projeto = await projetosRepository.create(
+        publicado ? { ...projetoData, publicadoEm: new Date() } : projetoData,
+        autores
+      );
+      if (publicado) {
+        agendarAvisoDeNovoProjeto(projeto);
+      }
       return NextResponse.json(projeto, { status: 201 });
     } catch (error) {
       // Race window: slugExists() above could pass, then a concurrent create

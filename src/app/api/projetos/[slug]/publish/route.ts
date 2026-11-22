@@ -1,8 +1,6 @@
-import { NextRequest, NextResponse, after } from "next/server";
-import { notificarNovoProjeto } from "@/lib/server/services/push/notificacoes";
-import { createLogger } from "@/lib/server/utils/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { agendarAvisoDeNovoProjeto } from "@/lib/server/services/push/novo-projeto";
 
-const log = createLogger("projetos/publish");
 export const dynamic = "force-dynamic";
 import { getContainer } from "@/lib/server/container";
 import { StatusProjeto } from "@prisma/client";
@@ -49,26 +47,7 @@ export function POST(request: NextRequest, context: RouteContext) {
         new Date()
       );
 
-      // Só projetos de entidade (a categoria do app é "novidades das entidades") e só uma vez por
-      // projeto: `marcarNotificado` é atômico e não é limpo ao despublicar.
-      const entidadeId = projeto.autores.find(
-        autor => autor.autorPrincipal && autor.entidadeId
-      )?.entidadeId;
-      if (entidadeId) {
-        after(async () => {
-          try {
-            if (!(await projetosRepository.marcarNotificado(slug))) {
-              return;
-            }
-            const entidade = await getContainer().entidadesRepository.findById(entidadeId);
-            if (entidade) {
-              await notificarNovoProjeto(projeto, entidade.nome);
-            }
-          } catch (error) {
-            log.error("Falha ao notificar novo projeto", { slug, error: String(error) });
-          }
-        });
-      }
+      agendarAvisoDeNovoProjeto(projeto);
 
       return NextResponse.json(updatedProjeto);
     } catch (error) {

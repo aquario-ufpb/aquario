@@ -16,7 +16,9 @@ CREATE TABLE "DispositivoPush" (
 ALTER TABLE "Projeto" ADD COLUMN "notificadoEm" TIMESTAMP(3);
 
 -- Projetos já publicados contam como notificados: republicá-los não dispara aviso.
-UPDATE "Projeto" SET "notificadoEm" = "publicadoEm" WHERE "publicadoEm" IS NOT NULL;
+-- Projetos criados já publicados pelo formulário podem ter `publicadoEm` nulo.
+UPDATE "Projeto" SET "notificadoEm" = COALESCE("publicadoEm", "criadoEm")
+WHERE "publicadoEm" IS NOT NULL OR "status" = 'PUBLICADO';
 
 -- CreateIndex
 CREATE INDEX "DispositivoPush_usuarioId_idx" ON "DispositivoPush"("usuarioId");

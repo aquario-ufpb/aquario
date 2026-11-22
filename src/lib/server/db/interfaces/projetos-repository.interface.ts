@@ -92,6 +92,8 @@ export type CreateProjetoInput = {
   textContent?: string | null;
   urlImagem?: string | null;
   status?: string;
+  /** Preenchido pela rota quando o projeto já nasce `PUBLICADO`. */
+  publicadoEm?: Date | null;
   tags?: string[];
   dataInicio?: Date | null;
   dataFim?: Date | null;

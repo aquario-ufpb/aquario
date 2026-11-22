@@ -1,8 +1,9 @@
 /** @jest-environment node */
 import { getContainer } from "@/lib/server/container";
-import { notifyCategoria, sendExpoPush } from "../expo-push";
+import { notifyCategoria, sendExpoPush, truncarBytes } from "../expo-push";
 import {
   amanhaNoBrasil,
+  fimDeHojeNoBrasil,
   mensagemDePrazos,
   notificarNovaVaga,
   notificarPrazosDeAmanha,
@@ -10,13 +11,27 @@ import {
 
 jest.mock("@/lib/server/container", () => ({ getContainer: jest.fn() }));
 
-const repository = { tokensFor: jest.fn(), deleteTokens: jest.fn() };
+const repository = { tokensFor: jest.fn(), deleteTokens: jest.fn(), reservarEnvio: jest.fn() };
 const calendarioRepository = { findEventosIniciandoEntre: jest.fn() };
 const message = { title: "T", body: "B", url: "/vagas/1" };
 
 function expoResponse(tickets: unknown[]) {
   return Promise.resolve(new Response(JSON.stringify({ data: tickets }), { status: 200 }));
 }
+
+/** Espiona o `fetch` global e devolve as mensagens de cada requisição ao Expo. */
+function spyExpo() {
+  const spy = jest
+    .spyOn(global, "fetch")
+    .mockImplementation((_url, init) =>
+      expoResponse((JSON.parse(String(init?.body)) as unknown[]).map(() => ({ status: "ok" })))
+    );
+  const mensagens = () =>
+    spy.mock.calls.map(([, init]) => JSON.parse(String(init?.body)) as Record<string, unknown>[]);
+  return { spy, mensagens };
+}
+
+afterEach(() => jest.restoreAllMocks());
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -74,6 +89,49 @@ describe("sendExpoPush", () => {
     await expect(
       sendExpoPush(["ExponentPushToken[a]"], message, fetchImpl as unknown as typeof fetch)
     ).resolves.toEqual({ aceitos: 0, invalidos: [] });
+  });
+});
+
+describe("limites do payload", () => {
+  it("corta texto longo em bytes sem partir caracteres multibyte", () => {
+    const descricao = "Prazo de trancamento 📚 — ação obrigatória ".repeat(200);
+    const cortado = truncarBytes(descricao, 360);
+    expect(Buffer.byteLength(cortado)).toBeLessThanOrEqual(360);
+    expect(cortado.endsWith("…")).toBe(true);
+    expect(cortado).not.toContain("\uFFFD");
+    expect(descricao.startsWith(cortado.slice(0, -1))).toBe(true);
+    expect(truncarBytes("curto", 360)).toBe("curto");
+  });
+
+  it("uma descrição enorme não estoura o limite de 4 KiB do Expo", async () => {
+    const fetchImpl = jest.fn<Promise<Response>, [string, RequestInit]>(() =>
+      expoResponse([{ status: "ok" }])
+    );
+    const enorme = { ...message, title: "Título ".repeat(100), body: "ção ".repeat(5000) };
+
+    await sendExpoPush(["ExponentPushToken[a]"], enorme, fetchImpl as unknown as typeof fetch);
+
+    const [enviada] = JSON.parse(String(fetchImpl.mock.calls[0]?.[1].body)) as unknown[];
+    expect(Buffer.byteLength(JSON.stringify(enviada))).toBeLessThan(4096);
+  });
+
+  it("manda expiration em segundos só quando a mensagem tem validade", async () => {
+    const fetchImpl = jest.fn<Promise<Response>, [string, RequestInit]>(() =>
+      expoResponse([{ status: "ok" }])
+    );
+    const expiration = new Date("2026-11-05T03:00:00Z");
+
+    await sendExpoPush(
+      ["ExponentPushToken[a]"],
+      { ...message, expiration },
+      fetchImpl as unknown as typeof fetch
+    );
+
+    const [enviada] = JSON.parse(String(fetchImpl.mock.calls[0]?.[1].body)) as Record<
+      string,
+      unknown
+    >[];
+    expect(enviada?.expiration).toBe(expiration.getTime() / 1000);
   });
 });
 
@@ -151,10 +209,56 @@ describe("prazos", () => {
   });
 });
 
+describe("prazos: execuções repetidas e validade", () => {
+  // 2026-11-04 08:00 em João Pessoa, horário do cron.
+  const agora = new Date("2026-11-04T11:00:00Z");
+
+  beforeEach(() => {
+    calendarioRepository.findEventosIniciandoEntre.mockResolvedValue([
+      { descricao: "Último dia de trancamento" },
+    ]);
+    repository.tokensFor.mockResolvedValue(["ExponentPushToken[a]"]);
+  });
+
+  it("o lembrete expira na próxima meia-noite de João Pessoa", async () => {
+    expect(fimDeHojeNoBrasil(agora)).toEqual(new Date("2026-11-05T03:00:00Z"));
+    // 23:30 em João Pessoa ainda é o mesmo dia local.
+    expect(fimDeHojeNoBrasil(new Date("2026-11-05T02:30:00Z"))).toEqual(
+      new Date("2026-11-05T03:00:00Z")
+    );
+
+    repository.reservarEnvio.mockResolvedValue(true);
+    const { mensagens } = spyExpo();
+    await notificarPrazosDeAmanha(agora);
+
+    expect(mensagens()[0]?.[0]?.expiration).toBe(Date.parse("2026-11-05T03:00:00Z") / 1000);
+  });
+
+  it("duas execuções do cron no mesmo dia enviam uma vez só", async () => {
+    repository.reservarEnvio.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    const { spy } = spyExpo();
+
+    const resultados = await Promise.all([
+      notificarPrazosDeAmanha(agora),
+      notificarPrazosDeAmanha(agora),
+    ]);
+
+    expect(repository.reservarEnvio).toHaveBeenCalledTimes(2);
+    expect(repository.reservarEnvio).toHaveBeenCalledWith("prazos:2026-11-05");
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(resultados).toContainEqual({ enviados: 0, removidos: 0 });
+    expect(resultados).toContainEqual({ enviados: 1, removidos: 0 });
+  });
+});
+
 describe("vaga nova", () => {
   it("aponta para a tela da vaga no app", async () => {
-    repository.tokensFor.mockResolvedValue([]);
+    repository.tokensFor.mockResolvedValue(["ExponentPushToken[a]"]);
+    const { mensagens } = spyExpo();
+
     await notificarNovaVaga({ id: "v1", titulo: "Estágio", entidade: { nome: "ARIA" } });
+
     expect(repository.tokensFor).toHaveBeenCalledWith("vagas");
+    expect(mensagens()[0]?.[0]?.data).toEqual({ url: "/vagas/v1" });
   });
 });
