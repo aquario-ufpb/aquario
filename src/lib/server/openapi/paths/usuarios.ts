@@ -1031,4 +1031,35 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
       }),
     },
   });
+
+  // ============================================================================
+  // DELETE /usuarios/me (autoexclusão de conta)
+  // ============================================================================
+  registry.registerPath({
+    method: "delete",
+    path: "/usuarios/me",
+    tags: ["Usuários"],
+    summary: "Excluir a própria conta",
+    description:
+      "Exclui a conta do usuário autenticado, de forma irreversível (LGPD e política de exclusão de conta da Google Play). Apaga perfil, vínculos com entidades, disciplinas, planejamentos, dados do SIGAA, sessões e aparelhos de push. Projetos em que ele é o único autor são apagados; nos compartilhados, outro autor (de preferência a entidade) passa a ser o principal. Vagas que ele publicou continuam na entidade. Administradores da plataforma recebem 403 e devem ser removidos por outro administrador.",
+    security: [{ bearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Conta excluída.",
+        content: {
+          "application/json": {
+            schema: z.object({ message: z.string() }),
+            example: { message: "Conta excluída com sucesso." },
+          },
+        },
+      },
+      ...errorResponses([403, 500], {
+        403: {
+          message:
+            "Administradores da plataforma não podem excluir a própria conta. Peça a outro administrador.",
+          code: "FORBIDDEN",
+        },
+      }),
+    },
+  });
 }

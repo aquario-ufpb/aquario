@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.3] - 2026-11-22
+
+### Added
+- **Autoexclusão de conta (`DELETE /api/usuarios/me`)**: O usuário exclui a própria conta (LGPD e política de exclusão de conta da Google Play, usada pelo app). Numa transação, apaga os projetos em que é o único autor, passa o autor principal dos compartilhados para a entidade (ou outro autor) e remove a conta; vínculos, disciplinas e sessões vão em cascata. Imagens órfãs são apagadas depois da resposta, e o audit log registra a exclusão sem dados pessoais. Administradores da plataforma recebem 403. Documentado no OpenAPI. Requer a migration `20261122100000_account_self_deletion`.
+- **Páginas `/privacidade` e `/excluir-conta`**: Política de privacidade do site e do app e instruções públicas de exclusão de conta (pelo app ou por e-mail), exigidas pelo Play Console. Incluídas no sitemap.
+
+### Fixed
+- **Exclusão de usuário com vínculo em entidade**: `MembroEntidade` impedia apagar a conta (`RESTRICT`), então a exclusão por admin falhava com 500 para quem era membro de alguma entidade. Agora os vínculos são apagados junto (`CASCADE`).
+- **Vagas de quem excluiu a conta**: deixam de ser apagadas em cascata; ficam na entidade (`criadoPorUsuarioId` vira opcional, `SET NULL`) e a API mostra a entidade como publicadora.
+
+Hotfix a partir da v1.12.2: leva à produção só a exclusão de conta e as páginas de privacidade, exigidas para publicar o app na Google Play. Não inclui o que ainda não foi lançado na `main`.
+
+
 ## [1.12.2] - 2026-10-02
 
 ### Added
