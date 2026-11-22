@@ -130,9 +130,10 @@ export type IProjetosRepository = {
 
   /**
    * Grava `notificadoEm` só se ainda estiver vazio. Atômico: entre requisições concorrentes,
-   * apenas uma recebe `true` e envia o push de "novo projeto".
+   * apenas uma recebe o projeto e envia o push de "novo projeto". Usa o `id`, que não muda,
+   * e devolve título e slug atuais da mesma linha (o slug pode ter mudado desde o agendamento).
    */
-  marcarNotificado(slug: string): Promise<boolean>;
+  marcarNotificado(id: string): Promise<{ slug: string; titulo: string } | null>;
 
   replaceAutores(
     projetoId: string,

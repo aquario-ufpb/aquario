@@ -49,7 +49,7 @@ beforeEach(() => {
   (getContainer as jest.Mock).mockReturnValue({ projetosRepository, entidadesRepository });
   projetosRepository.updateStatus.mockResolvedValue({ slug: "robo", status: "PUBLICADO" });
   entidadesRepository.findById.mockResolvedValue({ id: "e1", nome: "TRIL" });
-  projetosRepository.marcarNotificado.mockResolvedValue(true);
+  projetosRepository.marcarNotificado.mockResolvedValue({ slug: "robo", titulo: "Robô" });
 });
 
 describe("publicar projeto", () => {
@@ -57,9 +57,22 @@ describe("publicar projeto", () => {
     projetosRepository.findBySlugWithAutores.mockResolvedValue(projeto());
 
     expect((await publicar()).status).toBe(200);
-    expect(projetosRepository.marcarNotificado).toHaveBeenCalledWith("robo");
+    expect(projetosRepository.marcarNotificado).toHaveBeenCalledWith("p1");
     expect(notificarNovoProjeto).toHaveBeenCalledWith(
       expect.objectContaining({ slug: "robo", titulo: "Robô" }),
+      "TRIL"
+    );
+  });
+
+  it("marca pelo id e usa o slug atual da linha marcada", async () => {
+    // O projeto foi renomeado entre o agendamento e o envio.
+    projetosRepository.findBySlugWithAutores.mockResolvedValue(projeto());
+    projetosRepository.marcarNotificado.mockResolvedValue({ slug: "robo-v2", titulo: "Robô 2" });
+
+    await publicar();
+    expect(projetosRepository.marcarNotificado).toHaveBeenCalledWith("p1");
+    expect(notificarNovoProjeto).toHaveBeenCalledWith(
+      { slug: "robo-v2", titulo: "Robô 2" },
       "TRIL"
     );
   });
@@ -67,7 +80,7 @@ describe("publicar projeto", () => {
   it("não repete o aviso ao republicar nem em publicações simultâneas", async () => {
     // A marca durável já existe (ou outra requisição acabou de gravá-la).
     projetosRepository.findBySlugWithAutores.mockResolvedValue(projeto());
-    projetosRepository.marcarNotificado.mockResolvedValue(false);
+    projetosRepository.marcarNotificado.mockResolvedValue(null);
 
     await publicar();
     expect(notificarNovoProjeto).not.toHaveBeenCalled();

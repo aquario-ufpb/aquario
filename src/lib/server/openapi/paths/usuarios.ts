@@ -18,6 +18,8 @@ import {
   updateDisciplinaSemestreSchema,
 } from "@/lib/server/api-schemas/usuarios";
 
+import { expoPushTokenSchema, registrarDispositivoSchema } from "@/lib/shared/push/push";
+
 import type { CommonSchemas } from "../common-schemas";
 
 /**
@@ -1029,6 +1031,93 @@ export function registerUsuariosPaths(registry: OpenAPIRegistry, schemas: Common
       ...errorResponses([400, 404], {
         404: { message: "Disciplina do semestre não encontrada", code: "NOT_FOUND" },
       }),
+    },
+  });
+
+  // ============================================================================
+  // /usuarios/me/push-dispositivos (app mobile, notificações opcionais)
+  // ============================================================================
+  const pushTokenQuery = z.object({
+    token: expoPushTokenSchema.openapi({
+      description: "Token do Expo Push Service deste aparelho.",
+      example: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+    }),
+  });
+  const pushPreferenciasSchema = registrarDispositivoSchema.shape.preferencias;
+  const pushDispositivoResponseSchema = z.object({
+    registrado: z.boolean(),
+    preferencias: pushPreferenciasSchema,
+  });
+  const pushHeadersDescription =
+    "Resposta privada (`Cache-Control: private, no-store`), nunca compartilhada entre contas.";
+
+  registry.registerPath({
+    method: "get",
+    path: "/usuarios/me/push-dispositivos",
+    tags: ["Usuários"],
+    summary: "Preferências de push deste aparelho",
+    description: `Retorna as categorias ativas do aparelho na conta atual. Se o aparelho não estiver registrado nesta conta, \`registrado\` é \`false\` e todas as categorias vêm desligadas. ${pushHeadersDescription}`,
+    security: [{ bearerAuth: [] }],
+    request: { query: pushTokenQuery },
+    responses: {
+      200: {
+        description: "Preferências do aparelho.",
+        content: {
+          "application/json": {
+            schema: pushDispositivoResponseSchema,
+            example: {
+              registrado: true,
+              preferencias: { prazos: true, vagas: false, entidades: true },
+            },
+          },
+        },
+      },
+      ...errorResponses([400, 500]),
+    },
+  });
+
+  registry.registerPath({
+    method: "put",
+    path: "/usuarios/me/push-dispositivos",
+    tags: ["Usuários"],
+    summary: "Registrar o aparelho para notificações push",
+    description: `Cria ou atualiza o aparelho pelo token Expo e o transfere para a conta atual (troca de conta no mesmo aparelho). Todas as categorias começam desligadas; o app só as liga com consentimento explícito. Corpo limitado a 2 KB. Cada conta mantém até 10 aparelhos: os atualizados há mais tempo saem. ${pushHeadersDescription}`,
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: registrarDispositivoSchema,
+            example: {
+              token: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+              plataforma: "android",
+              preferencias: { prazos: true, vagas: false, entidades: true },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Aparelho registrado.",
+        content: { "application/json": { schema: pushDispositivoResponseSchema } },
+      },
+      ...errorResponses([400, 500]),
+    },
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/usuarios/me/push-dispositivos",
+    tags: ["Usuários"],
+    summary: "Remover o aparelho das notificações push",
+    description: `Remove o aparelho da conta atual (logout ou todas as categorias desligadas). Idempotente e nunca remove aparelho de outra conta. ${pushHeadersDescription}`,
+    security: [{ bearerAuth: [] }],
+    request: { query: pushTokenQuery },
+    responses: {
+      204: { description: "Aparelho removido (ou já não estava registrado nesta conta)." },
+      ...errorResponses([400, 500]),
     },
   });
 }

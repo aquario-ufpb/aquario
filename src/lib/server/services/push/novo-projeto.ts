@@ -6,6 +6,7 @@ import { notificarNovoProjeto } from "./notificacoes";
 const log = createLogger("push/novo-projeto");
 
 type ProjetoPublicado = {
+  id: string;
   slug: string;
   titulo: string;
   autores: { autorPrincipal: boolean; entidadeId: string | null }[];
@@ -29,12 +30,14 @@ export function agendarAvisoDeNovoProjeto(projeto: ProjetoPublicado) {
   after(async () => {
     try {
       const { projetosRepository, entidadesRepository } = getContainer();
-      if (!(await projetosRepository.marcarNotificado(projeto.slug))) {
+      // Título e URL vêm da linha marcada, não do momento do agendamento.
+      const marcado = await projetosRepository.marcarNotificado(projeto.id);
+      if (!marcado) {
         return;
       }
       const entidade = await entidadesRepository.findById(entidadeId);
       if (entidade) {
-        await notificarNovoProjeto(projeto, entidade.nome);
+        await notificarNovoProjeto(marcado, entidade.nome);
       }
     } catch (error) {
       log.error("Falha ao notificar novo projeto", { slug: projeto.slug, error: String(error) });
