@@ -56,15 +56,20 @@ export type PushResult = {
 /**
  * Envia a mesma notificação para vários tokens, em lotes de 100. Falhas de rede, timeout ou
  * resposta de erro de um lote não derrubam quem chamou: notificação é melhor esforço.
+ *
+ * `onInvalidos` roda ao fim de cada lote: se a função estourar o tempo no meio do envio, os
+ * tokens inválidos dos lotes já enviados continuam removidos.
  */
 export async function sendExpoPush(
   tokens: string[],
   message: PushMessage,
-  fetchImpl: typeof fetch = fetch
+  fetchImpl: typeof fetch = fetch,
+  onInvalidos?: (tokens: string[]) => Promise<void>
 ): Promise<PushResult> {
   const result: PushResult = { aceitos: 0, invalidos: [] };
   for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
     const batch = tokens.slice(i, i + BATCH_SIZE);
+    const invalidosDoLote: string[] = [];
     try {
       const response = await fetchImpl(EXPO_PUSH_URL, {
         method: "POST",
@@ -93,11 +98,19 @@ export async function sendExpoPush(
         if (ticket.status === "ok") {
           result.aceitos += 1;
         } else if (token && ticket.details?.error === "DeviceNotRegistered") {
-          result.invalidos.push(token);
+          invalidosDoLote.push(token);
         }
       });
     } catch {
       // Melhor esforço: segue para o próximo lote.
+    }
+    if (invalidosDoLote.length) {
+      result.invalidos.push(...invalidosDoLote);
+      try {
+        await onInvalidos?.(invalidosDoLote);
+      } catch {
+        // Falha ao limpar não impede os próximos lotes; o token volta a ser marcado no próximo envio.
+      }
     }
   }
   return result;
@@ -114,7 +127,8 @@ export async function notifyCategoria(
   if (!tokens.length) {
     return { enviados: 0, removidos: 0 };
   }
-  const { aceitos, invalidos } = await sendExpoPush(tokens, message, fetchImpl);
-  await pushDispositivosRepository.deleteTokens(invalidos);
+  const { aceitos, invalidos } = await sendExpoPush(tokens, message, fetchImpl, lote =>
+    pushDispositivosRepository.deleteTokens(lote)
+  );
   return { enviados: aceitos, removidos: invalidos.length };
 }

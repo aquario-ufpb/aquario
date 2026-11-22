@@ -149,6 +149,48 @@ describe("notifyCategoria", () => {
     expect(repository.deleteTokens).toHaveBeenCalledWith(["ExponentPushToken[a]"]);
   });
 
+  it("remove os inválidos lote a lote, sem esperar o fim do envio", async () => {
+    const tokens = Array.from({ length: 150 }, (_, i) => `ExponentPushToken[${i}]`);
+    repository.tokensFor.mockResolvedValue(tokens);
+    repository.deleteTokens.mockResolvedValue(undefined);
+    const fetchImpl = jest.fn((_url: string, init: RequestInit) => {
+      // O segundo lote só sai depois que os inválidos do primeiro foram apagados.
+      if (fetchImpl.mock.calls.length === 2) {
+        expect(repository.deleteTokens).toHaveBeenCalledWith(["ExponentPushToken[0]"]);
+      }
+      const batch = JSON.parse(String(init.body)) as unknown[];
+      return expoResponse(
+        batch.map((_, i) =>
+          i === 0
+            ? { status: "error", details: { error: "DeviceNotRegistered" } }
+            : { status: "ok" }
+        )
+      );
+    });
+
+    await expect(
+      notifyCategoria("vagas", message, fetchImpl as unknown as typeof fetch)
+    ).resolves.toEqual({ enviados: 148, removidos: 2 });
+    expect(repository.deleteTokens.mock.calls).toEqual([
+      [["ExponentPushToken[0]"]],
+      [["ExponentPushToken[100]"]],
+    ]);
+  });
+
+  it("falha ao limpar tokens não interrompe os próximos lotes", async () => {
+    const tokens = Array.from({ length: 150 }, (_, i) => `ExponentPushToken[${i}]`);
+    repository.tokensFor.mockResolvedValue(tokens);
+    repository.deleteTokens.mockRejectedValue(new Error("banco fora"));
+    const fetchImpl = jest.fn(() =>
+      expoResponse([{ status: "error", details: { error: "DeviceNotRegistered" } }])
+    );
+
+    await expect(
+      notifyCategoria("vagas", message, fetchImpl as unknown as typeof fetch)
+    ).resolves.toEqual({ enviados: 0, removidos: 2 });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it("conta como enviados só os aceitos pelo Expo", async () => {
     repository.tokensFor.mockResolvedValue(["ExponentPushToken[a]", "ExponentPushToken[b]"]);
     const fetchImpl = jest.fn(() => Promise.resolve(new Response("erro", { status: 500 })));
