@@ -8,8 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Autoexclusão de conta (`DELETE /api/usuarios/me`)**: O usuário exclui a própria conta (LGPD e política de exclusão de conta da Google Play, usada pelo app). Numa transação, apaga os projetos em que é o único autor, passa o autor principal dos compartilhados para a entidade (ou outro autor) e remove a conta; vínculos, disciplinas, planejamentos, dados do SIGAA, sessões e aparelhos de push vão em cascata. Imagens órfãs são apagadas depois da resposta, e o audit log registra a exclusão sem dados pessoais. Administradores da plataforma recebem 403. Documentado no OpenAPI. Requer a migration `20261122100000_account_self_deletion`.
-- **Páginas `/privacidade` e `/excluir-conta`**: Política de privacidade do site e do app e instruções públicas de exclusão de conta (pelo app ou por e-mail), exigidas pelo Play Console. Incluídas no sitemap.
 - **Notificações push do app (opcionais)**: Novas rotas autenticadas `GET`/`PUT`/`DELETE /api/usuarios/me/push-dispositivos` registram o token Expo do aparelho com as categorias escolhidas (prazos, vagas, entidades — todas desligadas por padrão); o aparelho passa para a conta que entrar nele e some junto com a conta. Envio pelo Expo Push Service, em lotes, removendo tokens `DeviceNotRegistered`: vaga criada (categoria vagas), primeira publicação de projeto de entidade (entidades), seja pela criação já publicada, pelo `PATCH` de status ou por `/publish`, e cron diário `/api/internal/push/prazos` às 8h de Brasília com os eventos do calendário do dia seguinte (prazos, uma notificação por dia, reservada atomicamente para que uma segunda execução do cron não repita o envio, e expirando à meia-noite). Título e corpo são cortados em bytes para respeitar o limite de 4 KiB do Expo. O envio roda depois da resposta (`after`) e não afeta a criação. Requer as migrations `20261103000000_add_push_devices` e `20261122000000_add_push_envios` e o `CRON_SECRET` já usado pelo cron do SIGAA.
 - Em Minhas Disciplinas e Meu Acadêmico, as turmas importadas do SIGAA exibem provas e atividades do portal. É possível exportar as datas de uma turma em ICS ou abrir um evento no Google Calendar. Requer a migration `20261119000000_add_sigaa_class_deadlines`.
 - **Testes E2E com Playwright**: Suíte em `e2e/` que cria um estudante pela API real e exercita o painel de bloqueios do `/planejador` (classificação inicial, seleção, remoção e aviso de cadeira indisponível); `npm run test:e2e` e job `E2E` no CI.
@@ -53,8 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SACI/PAAS**: Consulta externa com cancelamento por timeout e conferência do centro/publicação; backup local não é reutilizado para outro centro. Parser de horários aceita múltiplos blocos e o sufixo de vigência SIGAA, preservando a rejeição de tokens desconhecidos e horários parcialmente inválidos.
 
 ### Fixed
-- **Exclusão de usuário com vínculo em entidade**: `MembroEntidade` impedia apagar a conta (`RESTRICT`), então a exclusão por admin falhava com 500 para quem era membro de alguma entidade. Agora os vínculos são apagados junto (`CASCADE`).
-- **Vagas de quem excluiu a conta**: deixam de ser apagadas em cascata; ficam na entidade (`criadoPorUsuarioId` vira opcional, `SET NULL`) e a API mostra a entidade como publicadora.
 - **Projetos criados já publicados**: `POST /api/projetos` com status `PUBLICADO` passa a gravar `publicadoEm`, como o `PATCH` e o `/publish` já faziam.
 - O planejador verifica os pré-requisitos da cadeira selecionada mesmo quando ela vale como equivalente. A contagem de dependentes e a identificação de ciclos consideram apenas os requisitos que ainda faltam após aprovações e dispensas.
 - **Setup local com Docker Compose v2**: `npm run setup` usa `docker compose` ou `docker-compose`, o que existir, e, quando o banco não sobe, o setup avisa, para antes das migrations e sai com código diferente de zero em vez de anunciar sucesso. Mantém a chave `version` do `docker-compose.yml`, necessária ao Compose v1. Alinha o Node.js 22 na documentação (`.nvmrc`) e atualiza `.claude/CLAUDE.md` e `.cursor/rules.md`, que citavam `createApiHandler` e módulos que não existem.
@@ -67,6 +63,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Limite da busca**: O teto de disciplinas incide após filtros e identificação das opções viáveis, evitando bloquear currículos grandes com poucas ofertas aproveitáveis.
 - **Simulação e cenários**: Correquisitos atendidos por aprovação simulada tornam a combinação condicional. Operações de salvar/carregar/excluir cenários são mutuamente bloqueadas para preservar a identidade do rascunho.
 - **Aulas aos domingos**: Grades semanal/mobile e conflitos incluem domingo quando há aula, sem omitir encontros aceitos pelo parser.
+
+## [1.12.3] - 2026-11-22
+
+### Added
+- **Autoexclusão de conta (`DELETE /api/usuarios/me`)**: O usuário exclui a própria conta (LGPD e política de exclusão de conta da Google Play, usada pelo app). Numa transação, apaga os projetos em que é o único autor, passa o autor principal dos compartilhados para a entidade (ou outro autor) e remove a conta; vínculos, disciplinas e sessões vão em cascata. Imagens órfãs são apagadas depois da resposta, e o audit log registra a exclusão sem dados pessoais. Administradores da plataforma recebem 403. Documentado no OpenAPI. Requer a migration `20261122100000_account_self_deletion`.
+- **Páginas `/privacidade` e `/excluir-conta`**: Política de privacidade do site e do app e instruções públicas de exclusão de conta (pelo app ou por e-mail), exigidas pelo Play Console. Incluídas no sitemap.
+
+### Fixed
+- **Exclusão de usuário com vínculo em entidade**: `MembroEntidade` impedia apagar a conta (`RESTRICT`), então a exclusão por admin falhava com 500 para quem era membro de alguma entidade. Agora os vínculos são apagados junto (`CASCADE`).
+- **Vagas de quem excluiu a conta**: deixam de ser apagadas em cascata; ficam na entidade (`criadoPorUsuarioId` vira opcional, `SET NULL`) e a API mostra a entidade como publicadora.
+
+Hotfix a partir da v1.12.2: leva à produção só a exclusão de conta e as páginas de privacidade, exigidas para publicar o app na Google Play. Não inclui o que ainda não foi lançado na `main`.
+
 
 ## [1.12.2] - 2026-10-02
 
